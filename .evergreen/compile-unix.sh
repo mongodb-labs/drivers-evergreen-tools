@@ -63,5 +63,5 @@ echo "RELEASE: $RELEASE"
 echo "OS: $OS"
 
 
-./configure
+#./configure
 make
