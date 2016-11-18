@@ -344,6 +344,7 @@ tasks:
 
 # Compile Matrix {{{
     - name: make-release-archive
+      tags: ["releng"]
       commands:
         - command: shell.exec
           type: test
@@ -358,10 +359,10 @@ tasks:
         - func: "upload build"
 
     - name: release-compile
-      tags: ["release-compile"]
+      tags: ["releng"]
       depends_on:
         - name: "make-release-archive"
-          variant: releng
+          variant: "releng-release-archive-creator"
       commands:
         - command: shell.exec
           type: test
@@ -374,10 +375,10 @@ tasks:
         - func: "upload build"
 
     - name: release-compile-cmake
-      tags: ["release-eng", "releng-cmake-compile"]
+      tags: ["releng"]
       depends_on:
         - name: "make-release-archive"
-          variant: releng
+          variant: "releng-release-archive-creator"
       commands:
         - command: shell.exec
           type: test
@@ -390,7 +391,7 @@ tasks:
         - func: "upload build"
 
     - name: debug-compile
-      tags: ["release-eng", "releng-cmake-compile"]
+      tags: ["releng"]
       commands:
         - command: shell.exec
           type: test
@@ -425,300 +426,219 @@ tasks:
             URI: ""
 # }}}
 
+    - name: test
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: ${VERSION}
+            TOPOLOGY: ${TOPOLOGY}
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+axes:
+  - id: versions
+    display_name: MongoDB Version
+    values:
+      - id: "latest"
+        display_name: "latest"
+        variables:
+           VERSION: "latest"
+      - id: "3.2"
+        display_name: "3.2"
+        variables:
+           VERSION: "3.2"
+      - id: "3.0"
+        display_name: "3.0"
+        variables:
+           VERSION: "3.0"
+      - id: "2.6"
+        display_name: "2.6"
+        variables:
+           VERSION: "2.6"
+  - id: os
+    display_name: OS
+    values:
+      - id: ubuntu-14.04
+        display_name: "Ubuntu 14.04"
+        run_on: ubuntu1404-build
+
+      - id: ubuntu-16.04
+        display_name: "Ubuntu 16.04"
+        run_on: ubuntu1604-build
+
+      - id: archlinux-build
+        display_name: "archlinux-build"
+        run_on: archlinux-build
+
+      - id: debian81-build
+        display_name: "debian81-build"
+        run_on: debian81-build
+
+      - id: osx-1010
+        display_name: "osx-1010"
+        run_on: osx-1010
+
+      - id: rhel70
+        display_name: "rhel70"
+        run_on: rhel70
+
+      - id: rhel71-power8-build
+        display_name: "rhel71-power8-build"
+        run_on: rhel71-power8-build
+
+      - id: rhel71-power8-test
+        display_name: "rhel71-power8-test"
+        run_on: rhel71-power8-test
+
+      - id: rhel72-zseries-build
+        display_name: "rhel72-zseries-build"
+        run_on: rhel72-zseries-build
+
+      - id: rhel72-zseries-test
+        display_name: "rhel72-zseries-test"
+        run_on: rhel72-zseries-test
+
+      - id: solaris
+        display_name: "solaris"
+        run_on: solaris
+
+      - id: suse12-zseries-build
+        display_name: "suse12-zseries-build"
+        run_on: suse12-zseries-build
+
+      - id: suse12-zseries-test
+        display_name: "suse12-zseries-test"
+        run_on: suse12-zseries-test
+
+      - id: ubuntu1204-build
+        display_name: "ubuntu1204-build"
+        run_on: ubuntu1204-build
+
+      - id: ubuntu1404-build
+        display_name: "ubuntu1404-build"
+        run_on: ubuntu1404-build
+
+      - id: ubuntu1604-arm64-large
+        display_name: "ubuntu1604-arm64-large"
+        run_on: ubuntu1604-arm64-large
+
+      - id: ubuntu1604-arm64-small
+        display_name: "ubuntu1604-arm64-small"
+        run_on: ubuntu1604-arm64-small
+
+      - id: ubuntu1604-build
+        display_name: "ubuntu1604-build"
+        run_on: ubuntu1604-build
+
+      - id: ubuntu1604-power8-build
+        display_name: "ubuntu1604-power8-build"
+        run_on: ubuntu1604-power8-build
+
+      - id: ubuntu1604-power8-test
+        display_name: "ubuntu1604-power8-test"
+        run_on: ubuntu1604-power8-test
+
+      - id: ubuntu1604-zseries-large
+        display_name: "ubuntu1604-zseries-large"
+        run_on: ubuntu1604-zseries-large
+
+      - id: ubuntu1604-zseries-small
+        display_name: "ubuntu1604-zseries-small"
+        run_on: ubuntu1604-zseries-small
+
+      - id: windows-64-vs2010-compile
+        display_name: "windows-64-vs2010-compile"
+        run_on: windows-64-vs2010-compile
+
+      - id: windows-64-vs2013-compile
+        display_name: "windows-64-vs2013-compile"
+        run_on: windows-64-vs2013-compile
+
+      - id: windows-64-vs2015-compile
+        display_name: "windows-64-vs2015-compile"
+        run_on: windows-64-vs2015-compile
+
+
+  - id: topology
+    display_name: Topology
+    values:
+      - id: standalone
+        display_name: Standalone
+        variables:
+           TOPOLOGY: "server"
+      - id: replicaset
+        display_name: Replica Set
+        variables:
+           TOPOLOGY: "replica_set"
+      - id: sharded-cluster
+        display_name: Sharded Cluster
+        variables:
+           TOPOLOGY: "sharded_cluster"
+  - id: auth
+    display_name: Authentication
+    values:
+      - id: auth
+        display_name: Auth
+        variables:
+           AUTH: "auth"
+      - id: noauth
+        display_name: NoAuth
+        variables:
+           AUTH: "noauth"
+  - id: ssl
+    display_name: SSL
+    values:
+      - id: ssl
+        display_name: SSL
+        variables:
+           SSL: "ssl"
+      - id: nossl
+        display_name: NoSSL
+        variables:
+           SSL: "nossl"
 
 
 buildvariants:
 
-- name: releng
-  display_name: "**Release Archive Creator"
+- name: releng-release-archive-creator
+  display_name: "** Release Archive Creator"
   run_on:
     - ubuntu1404-build
   tasks:
-    - "make-release-archive"
+    - ".releng" # Run all tasks with the "releng" tag
 
 
-- name: clang34ubuntu
-  display_name: "clang 3.4 (Ubuntu 14.04)"
-  expansions:
-    CC: "clang"
-  run_on:
-    - ubuntu1404-build
+
+- matrix_name: "tests"
+  matrix_spec: {os: "*", versions: "*", topology: "*", auth: "*", ssl: "*" }
+  display_name: "${os} ${versions} ${topology} ${auth} ${ssl}"
   tasks:
-    - "release-compile"
-      # Ubuntu 14.04 only supports 2.6+ with SSL
-
-- name: clang35
-  display_name: "clang 3.5 (Debian 8.1)"
-  expansions:
-    CC: "clang"
-  run_on:
-  - debian81-build
-  tasks:
-    - "release-compile"
-      # Debian 8.1 only supports MongoDB 3.4+
-
-- name: clang37
-  display_name: "clang 3.7 (Archlinux)"
-  expansions:
-    CC: "clang"
-  run_on:
-    - archlinux-build
-  tasks:
-    - "release-compile"
-      # No enterprise build for Archlinux, SSL not available
-
-- name: clang38-i386
-  display_name: "clang 3.8 (i386) (Ubuntu 16.04)"
-  expansions:
-    CC: "clang"
-    MARCH: "i386"
-  run_on:
-    - ubuntu1604-build
-  tasks:
-    - "release-compile"
-      # We don't have i386 builds of OpenSSL or Cyrus SASL installed
-      # Ubuntu16.04 only supports MongoDB 3.4+
-
-- name: clang38
-  display_name: "clang 3.8 (Ubuntu 16.04)"
-  expansions:
-    CC: "clang"
-  run_on:
-    - ubuntu1604-build
-  tasks:
-    - "release-compile"
-      # Ubuntu16.04 only supports MongoDB 3.4+
-
-## GCC
-- name: gcc46
-  display_name: "GCC 4.6 (Ubuntu 12.04)"
-  expansions:
-    CC: "gcc"
-  run_on:
-    - ubuntu1204-build
-  tasks:
-    - "release-compile"
-
-- name: gcc48ubuntu
-  display_name: "GCC 4.8 (Ubuntu 14.04)"
-  expansions:
-    CC: "gcc"
-  run_on:
-    - ubuntu1404-build
-  tasks:
-    - "release-compile"
-      # Ubuntu 14.04 only supports 2.6+ with SSL
-
-- name: gcc48rhel
-  display_name: "GCC 4.8 (RHEL 7.0)"
-  expansions:
-    CC: "gcc"
-  run_on:
-    - rhel70
-  tasks:
-    - "release-compile"
-      # RHEL 7 only supports 2.6+
+     - name: test
 
 
-- name: gcc49
-  display_name: "GCC 4.9 (Debian 8.1)"
-  expansions:
-    CC: "gcc"
-  run_on:
-  - debian81-build
-  tasks:
-    - "release-compile"
-      # Debian 8.1 only supports MongoDB 3.4+
 
-- name: gcc53-i386
-  display_name: "GCC 5.3 (i386) (Ubuntu 16.04)"
-  expansions:
-    CC: "gcc"
-    MARCH: "i386"
-  run_on:
-  - ubuntu1604-build
-  tasks:
-    - "release-compile"
-      # We don't have i386 builds of OpenSSL or Cyrus SASL installed
-      # Ubuntu16.04 only supports MongoDB 3.4+
-
-- name: gcc53
-  display_name: "GCC 5.3 (Ubuntu 16.04)"
-  expansions:
-    CC: "gcc"
-  run_on:
-  - ubuntu1604-build
-  tasks:
-    - "release-compile"
-      # Ubuntu16.04 only supports MongoDB 3.4+
-
-# Interesting platforms
-- name: solaris
-  display_name: "*Solaris (x86-64) (GCC 4.9.2)"
-  expansions:
-    CC: "gcc"
-    MARCH: "x86_64"
-  batchtime: 1440 # 1 day
-  run_on:
-    - solaris
-  tasks:
-    - "release-compile"
-      # No MongoDB SSL builds available for any version
-
-- name: solaris-32
-  display_name: "Solaris (i386) (GCC 4.9.2)"
-  expansions:
-    CC: "gcc"
-    MARCH: "i386"
-  batchtime: 1440 # 1 day
-  run_on:
-    - solaris
-  tasks:
-    - "release-compile"
-      # We don't have i386 builds of OpenSSL or Cyrus SASL installed
-
-- name: darwin
-  display_name: "*Darwin, OS X (Apple LLVM)"
-  expansions:
-    CC: "clang"
-  run_on:
-    - osx-1010
-  tasks:
-    - "release-compile"
-      # No MongoDB SSL builds available for 2.6, 2.4
-
-- name: windows-2015
-  display_name: "Windows (VS 2015)"
-  expansions:
-    CC: "Visual Studio 14 2015 Win64"
-  run_on:
-    - windows-64-vs2015-compile
-  tasks:
-    - "release-compile"
-      # There is no 2.4 build for Windows
-
-- name: windows-2015-32
-  display_name: "Windows (i386) (VS 2015)"
-  expansions:
-    CC: "Visual Studio 14 2015"
-  run_on:
-    - windows-64-vs2015-compile
-  tasks:
-    - "release-compile"
-      # No 32bit OpenSSL builds
-      # There is no 2.4 build for Windows
-
-- name: windows-2013
-  display_name: "Windows (VS 2013)"
-  expansions:
-    CC: "Visual Studio 12 2013 Win64"
-  run_on:
-    - windows-64-vs2013-compile
-  tasks:
-    - "release-compile"
-      # There is no 2.4 build for Windows
-
-- name: windows-2013-32
-  display_name: "Windows (i386) (VS 2013)"
-  expansions:
-    CC: "Visual Studio 12 2013"
-  run_on:
-    - windows-64-vs2013-compile
-  tasks:
-    - "release-compile"
-      # There is no 2.4 build for Windows
-
-- name: windows-2010
-  display_name: "Windows (VS 2010)"
-  expansions:
-    CC: "Visual Studio 10 2010 Win64"
-  run_on:
-    - windows-64-vs2010-compile
-  tasks:
-    - "release-compile"
-      # There is no 2.4 build for Windows
-
-- name: windows-2010-32
-  display_name: "Windows (i386) (VS 2010)"
-  expansions:
-    CC: "Visual Studio 10 2010"
-  run_on:
-    - windows-64-vs2010-compile
-  tasks:
-    - "release-compile"
-      # There is no 2.4 build for Windows
-
-- name: power8-rhel71
-  display_name: "*Power8 (ppc64le) (RHEL 7.1)"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - rhel71-power8-build
-  - rhel71-power8-test
-  tasks:
-    - "release-compile"
-      # RHEL 7.1 ppc64le is only supported by MongoDB 3.2+
-
-- name: power8-ubuntu1604
-  display_name: "Power8 (ppc64le) (Ubuntu 16.04)"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - ubuntu1604-power8-build
-  - ubuntu1604-power8-test
-  tasks:
-    - "release-compile"
+      # Platform notes
+      # i386 builds of OpenSSL or Cyrus SASL are not available
+      # Ubuntu14.04 only supports 2.6+ with SSL
       # Ubuntu16.04 ppc64le is only supported by MongoDB 3.4+
-
-- name: arm-ubuntu1604
-  display_name: "*ARM (aarch64) (Ubuntu 16.04)"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - ubuntu1604-arm64-large
-  - ubuntu1604-arm64-small
-  tasks:
-    - "release-compile"
       # Ubuntu16.04 aarch64 is only supported by MongoDB 3.4+
-
-- name: zseries-rhel72
-  display_name: "*zSeries (s390x) (RHEL 7.2)"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - rhel72-zseries-test
-  - rhel72-zseries-build
-  tasks:
-    - "release-compile"
-#      # RHEL7.2  s390x is only supported by MongoDB 3.4+
-
-- name: zseries-ubuntu1604
-  display_name: "zSeries (s390x) (Ubuntu 16.04)"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - ubuntu1604-zseries-large
-  - ubuntu1604-zseries-small
-  tasks:
-    - "release-compile"
       # Ubuntu16.04 s390x is only supported by MongoDB 3.4+
-
-- name: zseries-suse12
-  display_name: "zSeries (s390x) SUSE12"
-  expansions:
-    CC: "gcc"
-  batchtime: 1440 # 1 day
-  run_on:
-  - suse12-zseries-build
-  - suse12-zseries-test
-  tasks:
-    - "release-compile"
+      # Ubuntu16.04 (x86) only supports MongoDB 3.4+
+      # Debian 8.1 only supports MongoDB 3.4+
       # SUSE12 s390x is only supported by MongoDB 3.4+
-
-
+      # No enterprise build for Archlinux, SSL not available
+      # RHEL 7 only supports 2.6+
+      # RHEL 7.1 ppc64le is only supported by MongoDB 3.2+
+      # RHEL 7.2 s390x is only supported by MongoDB 3.4+
+      # Solaris MongoDB SSL builds are not available
+      # Darwin MongoDB SSL builds are not available for 2.4 and 2.6
+      # Windows does not support MongoDB 2.4
 
