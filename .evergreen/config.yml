@@ -352,10 +352,7 @@ tasks:
             script: |
               set -o errexit
               set -o xtrace
-              export MONGOC_TEST_FUTURE_TIMEOUT_MS=30000
-              export MONGOC_TEST_SKIP_LIVE=on
-              export MONGOC_TEST_SKIP_SLOW=on
-              ./autogen.sh --enable-html-docs --enable-man-pages && make distcheck
+              echo "Hello World"
         - func: "upload docs"
         - func: "upload release"
         - func: "upload build"
@@ -376,7 +373,7 @@ tasks:
               RELEASE=yes CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
         - func: "upload build"
 
-    - name: releng-cmake-compile
+    - name: release-compile-cmake
       tags: ["release-eng", "releng-cmake-compile"]
       depends_on:
         - name: "make-release-archive"
@@ -389,7 +386,20 @@ tasks:
             script: |
               set -o errexit
               set -o xtrace
-              BUILDTOOL="cmake" sh .evergreen/compile.sh
+              RELEASE=yes BUILDTOOL="cmake" CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
+        - func: "upload build"
+
+    - name: debug-compile
+      tags: ["release-eng", "releng-cmake-compile"]
+      commands:
+        - command: shell.exec
+          type: test
+          params:
+            working_dir: "mongoc"
+            script: |
+              set -o errexit
+              set -o xtrace
+              CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
         - func: "upload build"
 # }}}
 
@@ -397,11 +407,11 @@ tasks:
     - name: test-2.4-server-noauth-nosasl-nossl
       tags: ["nossl", "nosasl", "noauth", "server", "2.4"]
       depends_on:
-        - name: "debug-compile-nosasl-nossl"
+        - name: "debug-compile"
       commands:
         - func: "fetch build"
           vars:
-            BUILD_NAME: "debug-compile-nosasl-nossl"
+            BUILD_NAME: "debug-compile"
         - func: "bootstrap mongo-orchestration"
           vars:
             VERSION: "2.4"
@@ -425,13 +435,6 @@ buildvariants:
     - ubuntu1404-build
   tasks:
     - "make-release-archive"
-    - ".release-eng"
-    - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .stdflags !.c89"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - "debug-compile-valgrind"
 
 
 - name: clang34ubuntu
@@ -441,17 +444,7 @@ buildvariants:
   run_on:
     - ubuntu1404-build
   tasks:
-    - "debug-compile-scan-build"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .openssl !.nosasl !.auth"
-    - ".2.6 .openssl !.nosasl !.auth"
       # Ubuntu 14.04 only supports 2.6+ with SSL
 
 - name: clang35
@@ -462,12 +455,6 @@ buildvariants:
   - debian81-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .stdflags !.c89"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Debian 8.1 only supports MongoDB 3.4+
 
 - name: clang37
@@ -478,15 +465,7 @@ buildvariants:
     - archlinux-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .stdflags !.c89"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .nossl !.nosasl" # No enterprise build for Archlinux, SSL not available
-    - ".3.0 .nossl .nosasl !.auth"
-    - ".2.6 .nossl .nosasl !.auth"
-    - ".2.4 .nossl .nosasl !.auth"
+      # No enterprise build for Archlinux, SSL not available
 
 - name: clang38-i386
   display_name: "clang 3.8 (i386) (Ubuntu 16.04)"
@@ -496,12 +475,7 @@ buildvariants:
   run_on:
     - ubuntu1604-build
   tasks:
-    - "debug-compile-scan-build"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .stdflags !.c89"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .nossl .nosasl"
       # We don't have i386 builds of OpenSSL or Cyrus SASL installed
       # Ubuntu16.04 only supports MongoDB 3.4+
 
@@ -512,14 +486,7 @@ buildvariants:
   run_on:
     - ubuntu1604-build
   tasks:
-    - "debug-compile-scan-build"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .stdflags !.c89"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Ubuntu16.04 only supports MongoDB 3.4+
 
 ## GCC
@@ -531,16 +498,6 @@ buildvariants:
     - ubuntu1204-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .openssl !.nosasl !.auth"
-    - ".2.6 .openssl !.nosasl !.auth"
-    - ".2.4 .nossl !.nosasl !.auth"
 
 - name: gcc48ubuntu
   display_name: "GCC 4.8 (Ubuntu 14.04)"
@@ -550,15 +507,6 @@ buildvariants:
     - ubuntu1404-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .openssl !.nosasl !.auth"
-    - ".2.6 .openssl !.nosasl !.auth"
       # Ubuntu 14.04 only supports 2.6+ with SSL
 
 - name: gcc48rhel
@@ -569,15 +517,6 @@ buildvariants:
     - rhel70
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .openssl !.nosasl !.auth"
-    - ".2.6 .openssl !.nosasl !.auth"
       # RHEL 7 only supports 2.6+
 
 
@@ -589,11 +528,6 @@ buildvariants:
   - debian81-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Debian 8.1 only supports MongoDB 3.4+
 
 - name: gcc53-i386
@@ -604,11 +538,7 @@ buildvariants:
   run_on:
   - ubuntu1604-build
   tasks:
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .nossl .nosasl"
       # We don't have i386 builds of OpenSSL or Cyrus SASL installed
       # Ubuntu16.04 only supports MongoDB 3.4+
 
@@ -619,13 +549,7 @@ buildvariants:
   run_on:
   - ubuntu1604-build
   tasks:
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Ubuntu16.04 only supports MongoDB 3.4+
 
 # Interesting platforms
@@ -639,12 +563,7 @@ buildvariants:
     - solaris
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .nossl"
-    - ".latest .nossl" # No MongoDB SSL builds available for any version
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .nossl !.nosasl"
-    - ".2.6 .nossl !.nosasl"
+      # No MongoDB SSL builds available for any version
 
 - name: solaris-32
   display_name: "Solaris (i386) (GCC 4.9.2)"
@@ -656,9 +575,6 @@ buildvariants:
     - solaris
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .nossl .nosasl"
       # We don't have i386 builds of OpenSSL or Cyrus SASL installed
 
 - name: darwin
@@ -668,21 +584,8 @@ buildvariants:
   run_on:
     - osx-1010
   tasks:
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .darwinssl"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".debug-compile .clang"
-    - ".latest .darwinssl !.nosasl .server"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .darwinssl !.nosasl .server"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".2.6 .nossl !.nosasl" # No MongoDB SSL builds available
-    - ".2.4 .nossl !.nosasl"
+      # No MongoDB SSL builds available for 2.6, 2.4
 
 - name: windows-2015
   display_name: "Windows (VS 2015)"
@@ -692,18 +595,6 @@ buildvariants:
     - windows-64-vs2015-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .winssl"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .winssl !.nosasl .server"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .winssl !.nosasl .server"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .nossl !.nosasl"
-    - ".2.6 .nossl !.nosasl"
       # There is no 2.4 build for Windows
 
 - name: windows-2015-32
@@ -714,16 +605,7 @@ buildvariants:
     - windows-64-vs2015-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
       # No 32bit OpenSSL builds
-    - ".debug-compile .winssl .nosasl"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .winssl .nosasl .server"
-    - ".latest .nossl .nosasl"
-    - ".3.2 .winssl .nosasl .server"
-    - ".3.2 .nossl .nosasl"
-    - ".3.0 .nossl .nosasl"
-    - ".2.6 .nossl .nosasl"
       # There is no 2.4 build for Windows
 
 - name: windows-2013
@@ -734,17 +616,6 @@ buildvariants:
     - windows-64-vs2013-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .winssl"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .winssl !.nosasl .server"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .winssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .nossl !.nosasl"
-    - ".2.6 .nossl !.nosasl"
       # There is no 2.4 build for Windows
 
 - name: windows-2013-32
@@ -755,15 +626,6 @@ buildvariants:
     - windows-64-vs2013-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .winssl .nosasl"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .winssl .nosasl .server"
-    - ".latest .nossl .nosasl"
-    - ".3.2 .winssl .nosasl .server"
-    - ".3.2 .nossl .nosasl"
-    - ".3.0 .nossl .nosasl"
-    - ".2.6 .nossl .nosasl"
       # There is no 2.4 build for Windows
 
 - name: windows-2010
@@ -774,18 +636,6 @@ buildvariants:
     - windows-64-vs2010-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .winssl"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .winssl !.nosasl .server"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .winssl !.nosasl .server"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
-    - ".3.0 .nossl !.nosasl"
-    - ".2.6 .nossl !.nosasl"
       # There is no 2.4 build for Windows
 
 - name: windows-2010-32
@@ -796,15 +646,6 @@ buildvariants:
     - windows-64-vs2010-compile
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .winssl .nosasl"
-    - ".debug-compile .nossl .nosasl"
-    - ".latest .winssl .nosasl .server"
-    - ".latest .nossl .nosasl"
-    - ".3.2 .winssl .nosasl .server"
-    - ".3.2 .nossl .nosasl"
-    - ".3.0 .nossl .nosasl"
-    - ".2.6 .nossl .nosasl"
       # There is no 2.4 build for Windows
 
 - name: power8-rhel71
@@ -817,13 +658,6 @@ buildvariants:
   - rhel71-power8-test
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
-    - ".3.2 .openssl !.nosasl .server"
-    - ".3.2 .nossl !.nosasl"
       # RHEL 7.1 ppc64le is only supported by MongoDB 3.2+
 
 - name: power8-ubuntu1604
@@ -835,14 +669,7 @@ buildvariants:
   - ubuntu1604-power8-build
   - ubuntu1604-power8-test
   tasks:
-    - "debug-compile-scan-build"
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Ubuntu16.04 ppc64le is only supported by MongoDB 3.4+
 
 - name: arm-ubuntu1604
@@ -854,14 +681,7 @@ buildvariants:
   - ubuntu1604-arm64-large
   - ubuntu1604-arm64-small
   tasks:
-    - "debug-compile-scan-build"
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Ubuntu16.04 aarch64 is only supported by MongoDB 3.4+
 
 - name: zseries-rhel72
@@ -874,11 +694,6 @@ buildvariants:
   - rhel72-zseries-build
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
 #      # RHEL7.2  s390x is only supported by MongoDB 3.4+
 
 - name: zseries-ubuntu1604
@@ -890,13 +705,7 @@ buildvariants:
   - ubuntu1604-zseries-large
   - ubuntu1604-zseries-small
   tasks:
-    - "debug-compile-coverage"
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # Ubuntu16.04 s390x is only supported by MongoDB 3.4+
 
 - name: zseries-suse12
@@ -909,11 +718,6 @@ buildvariants:
   - suse12-zseries-test
   tasks:
     - "release-compile"
-    - "debug-compile"
-    - ".debug-compile .openssl"
-    - ".debug-compile .nossl"
-    - ".latest .openssl !.nosasl .server"
-    - ".latest .nossl !.nosasl"
       # SUSE12 s390x is only supported by MongoDB 3.4+
 
 
