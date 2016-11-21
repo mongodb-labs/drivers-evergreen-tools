@@ -30,8 +30,8 @@
   ],
   "sslParams": {
       "sslMode": "requireSSL",
-      "sslPEMKeyFile": "/tmp/orchestration-home/server.pem",
-      "sslCAFile": "/tmp/orchestration-home/ca.pem",
+      "sslPEMKeyFile": "/opt/drivers-tools/x509gen/server.pem",
+      "sslCAFile": "/opt/drivers-tools/x509gen/ca.pem",
       "sslAllowInvalidCertificates": true,
       "sslWeakCertificateValidation" : true
   }
