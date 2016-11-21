@@ -29,12 +29,12 @@ functions:
     # Executes git clone and applies the submitted patch, if any
     - command: git.get_project
       params:
-        directory: "mongoc"
+        directory: "src"
     # Applies the subitted patch, if any
     # Deprecated. Should be removed. But still needed for certain agents (ZAP)
     - command: git.apply_patch
       params:
-        directory: "mongoc"
+        directory: "src"
     # Make an evergreen exapanstion file with the current unique version
     - command: shell.exec
       params:
@@ -68,13 +68,13 @@ functions:
     - command: shell.exec
       params:
         script: |
-           [ -f mongoc/mongo*gz ] && mv mongoc/mongo*gz mongoc.tar.gz
+           [ -f src/drivername*gz ] && mv src/drivername*gz drivername.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: mongoc.tar.gz
-        remote_file: mongo-c-driver/mongo-c-driver-${CURRENT_VERSION}.tar.gz
+        local_file: drivername.tar.gz
+        remote_file: ${project}/${project}-${CURRENT_VERSION}.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -88,7 +88,7 @@ functions:
       params:
         # Example: mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
         target: "${build_id}.tar.gz"
-        source_dir: "mongoc"
+        source_dir: "src"
         include:
           - "./**"
     - command: s3.put
@@ -97,7 +97,7 @@ functions:
         aws_secret: ${aws_secret}
         local_file: ${build_id}.tar.gz
         # Example: /mciuploads/mongo-c-driver/gcc49/9dfb7d741efbca16faa7859b9349d7a942273e43/debug-compile-nosasl-nossl/mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
-        remote_file: mongo-c-driver/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -106,25 +106,25 @@ functions:
     - command: shell.exec
       params:
         continue_on_err: true
-        script: "set -o xtrace && rm -rf mongoc"
+        script: "set -o xtrace && rm -rf src"
     - command: s3.get
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        remote_file: mongo-c-driver/${build_variant}/${revision}/${BUILD_NAME}/${build_id}.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${BUILD_NAME}/${build_id}.tar.gz
         bucket: mciuploads
         local_file: build.tar.gz
     - command: shell.exec
       params:
         continue_on_err: true
-        # EVG-1105: Use s3.get extract_to: mongoc/
-        script: "set -o xtrace && mkdir mongoc && tar xf build.tar.gz -C mongoc/"
+        # EVG-1105: Use s3.get extract_to: src/
+        script: "set -o xtrace && mkdir src && tar xf build.tar.gz -C src/"
 
   "upload docs" :
     - command: shell.exec
       params:
         silent: true
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
@@ -133,7 +133,7 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  mongoc/doc/html/index.html
+        local_file:  src/doc/html/index.html
         remote_file: ${project}/docs/${CURRENT_VERSION}/index.html
         bucket: mciuploads
         permissions: public-read
@@ -144,7 +144,7 @@ functions:
     - command: shell.exec
       params:
         silent: true
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
@@ -153,7 +153,7 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  mongoc/coverage/index.html
+        local_file:  src/coverage/index.html
         remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/index.html
         bucket: mciuploads
         permissions: public-read
@@ -164,7 +164,7 @@ functions:
     - command: shell.exec
       type: test
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
           if find scan -name \*.html | grep -q html; then
             (cd scan && find . -name index.html -exec echo "<li><a href='{}'>{}</a></li>" \;) >> scan.html
@@ -174,7 +174,7 @@ functions:
     - command: shell.exec
       params:
         silent: true
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
@@ -183,7 +183,7 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  mongoc/scan.html
+        local_file:  src/scan.html
         remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/scan/index.html
         bucket: mciuploads
         permissions: public-read
@@ -193,17 +193,17 @@ functions:
   "upload mo artifacts":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
-          DIR=MO
+          DIR=/opt/drivers-tools/.evergreen/MO
           [ -d "/cygdrive/c/data/mo" ] && DIR="/cygdrive/c/data/mo"
           [ -d $DIR ] && find $DIR -name \*.log | xargs tar czf mongodb-logs.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: mongoc/mongodb-logs.tar.gz
-        remote_file: mongo-c-driver/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
+        local_file: src/mongodb-logs.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -212,8 +212,8 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: mongoc/MO/server.log
-        remote_file: mongo-c-driver/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
+        local_file: /opt/drivers-tools/.evergreen/MO/server.log
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|text/plain}
@@ -223,7 +223,7 @@ functions:
     - command: archive.targz_pack
       params:
         target: "working-dir.tar.gz"
-        source_dir: "mongoc"
+        source_dir: "src"
         include:
           - "./**"
     - command: s3.put
@@ -231,7 +231,7 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         local_file: working-dir.tar.gz
-        remote_file: mongo-c-driver/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-working-dir.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-working-dir.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -240,12 +240,12 @@ functions:
   "upload test results":
     - command: attach.results
       params:
-        file_location: "mongoc/test-results.json"
+        file_location: "src/test-results.json"
 
   "bootstrap mongo-orchestration":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
           set -o errexit
           set -o xtrace
@@ -255,7 +255,7 @@ functions:
     - command: shell.exec
       type: test
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
           set -o errexit
           AUTH=${AUTH} SSL=${SSL} URI=${URI} sh .evergreen/run-tests.sh
@@ -263,18 +263,19 @@ functions:
   "cleanup":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
         script: |
           set -o errexit
-          cd MO
+          cd /opt/drivers-tools/.evergreen/MO/
           mongo-orchestration stop
+          cd -
+          rm -rf /opt/drivers-tools || true
 
   "windows fix":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
-          for i in $(find .evergreen -name \*.sh); do
+          for i in $(find .evergreen /opt/drivers-tools -name \*.sh); do
             cat $i | tr -d '\r' > $i.new
             mv $i.new $i
           done
@@ -282,16 +283,16 @@ functions:
   "make files executable":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
-          for i in $(find .evergreen -name \*.sh); do
+          for i in $(find .evergreen /opt/drivers-tools -name \*.sh); do
             chmod +x $i
           done
 
   "install dependencies":
     - command: shell.exec
       params:
-        working_dir: "mongoc"
+        working_dir: "src"
         script: |
               sudo apt-get install -y awscli || true
               sudo /opt/csw/bin/pkgutil -y -i sasl_dev || true
@@ -319,7 +320,7 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "mongoc"
+            working_dir: "src"
             script: |
                set -o xtrace
                . ./.evergreen/download-mongodb.sh || true
@@ -349,7 +350,7 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "mongoc"
+            working_dir: "src"
             script: |
               set -o errexit
               set -o xtrace
@@ -367,7 +368,7 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "mongoc"
+            working_dir: "src"
             script: |
               set -o errexit
               set -o xtrace
@@ -383,7 +384,7 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "mongoc"
+            working_dir: "src"
             script: |
               set -o errexit
               set -o xtrace
@@ -396,7 +397,7 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "mongoc"
+            working_dir: "src"
             script: |
               set -o errexit
               set -o xtrace

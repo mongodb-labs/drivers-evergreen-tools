@@ -22,12 +22,9 @@ case "$OS" in
       export MONGO_ORCHESTRATION_HOME="c:/data/MO"
       ;;
    *)
-      export MONGO_ORCHESTRATION_HOME=$(pwd)"/MO"
+      export MONGO_ORCHESTRATION_HOME="/opt/drivers-tools/.evergreen/MO"
       ;;
 esac
-rm -rf $MONGO_ORCHESTRATION_HOME
-mkdir -p $MONGO_ORCHESTRATION_HOME/lib
-mkdir -p $MONGO_ORCHESTRATION_HOME/db
 
 ORCHESTRATION_FILE="basic"
 if [ "$AUTH" = "auth" ]; then
@@ -35,9 +32,6 @@ if [ "$AUTH" = "auth" ]; then
 fi
 
 if [ "$SSL" != "nossl" ]; then
-   cp -f tests/x509gen/* $MONGO_ORCHESTRATION_HOME/lib/
-   # find print0 and xargs -0 not available on Solaris. Lets hope for good paths
-   find orchestration_configs -name \*.json | xargs perl -p -i -e "s|/tmp/orchestration-home|$MONGO_ORCHESTRATION_HOME/lib|g"
    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
 fi
 

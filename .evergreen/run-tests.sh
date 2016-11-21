@@ -63,6 +63,7 @@ case "$OS" in
       ;;
 esac
 
+echo "Running $AUTH tests over $SSL, connecting to $URI"
 # Once the system has been tweaked, actually run the tests, and store the results
 # in a Evergreen compatible JSON results file
 case "$OS" in
