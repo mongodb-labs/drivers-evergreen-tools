@@ -404,37 +404,33 @@ tasks:
         - func: "upload build"
 # }}}
 
-# Test Matrix {{{
-    - name: test-2.4-server-noauth-nosasl-nossl
-      tags: ["nossl", "nosasl", "noauth", "server", "2.4"]
-      depends_on:
-        - name: "debug-compile"
+    - name: "test-latest-replicaset"
       commands:
         - func: "fetch build"
           vars:
             BUILD_NAME: "debug-compile"
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.4"
-            TOPOLOGY: "server"
-            AUTH: "noauth"
-            SSL: "nossl"
+            VERSION: "latest"
+            TOPOLOGY: "replica_set"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
         - func: "run tests"
           vars:
-            AUTH: "noauth"
-            SSL: "nossl"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
             URI: ""
-# }}}
 
-    - name: test
+
+    - name: "test-latest-sharded"
       commands:
         - func: "fetch build"
           vars:
             BUILD_NAME: "debug-compile"
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: ${VERSION}
-            TOPOLOGY: ${TOPOLOGY}
+            VERSION: "latest"
+            TOPOLOGY: "sharded_cluster"
             AUTH: ${AUTH}
             SSL: ${SSL}
         - func: "run tests"
@@ -442,6 +438,134 @@ tasks:
             AUTH: ${AUTH}
             SSL: ${SSL}
             URI: ""
+
+
+    - name: "test-latest-standalone"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "latest"
+            TOPOLOGY: "server"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-3.2-replicaset"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "replica_set"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-2.6-replicaset"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "replica_set"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-3.2-sharded"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "sharded_cluster"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-2.6-sharded"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "sharded_cluster"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-3.2-standalone"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "server"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
+    - name: "test-2.6-standalone"
+      commands:
+        - func: "fetch build"
+          vars:
+            BUILD_NAME: "debug-compile"
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.2"
+            TOPOLOGY: "server"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+            URI: ""
+
+
 
 axes:
   - id: versions
@@ -466,6 +590,10 @@ axes:
   - id: os
     display_name: OS
     values:
+      - id: ubuntu1204-build
+        display_name: "Ubuntu 12.04"
+        run_on: ubuntu1204-build
+
       - id: ubuntu-14.04
         display_name: "Ubuntu 14.04"
         run_on: ubuntu1404-build
@@ -475,95 +603,59 @@ axes:
         run_on: ubuntu1604-build
 
       - id: archlinux-build
-        display_name: "archlinux-build"
+        display_name: "Archlinux"
         run_on: archlinux-build
 
       - id: debian81-build
-        display_name: "debian81-build"
+        display_name: "Debian 8.1"
         run_on: debian81-build
 
       - id: osx-1010
-        display_name: "osx-1010"
+        display_name: "macOS 10.10"
         run_on: osx-1010
 
       - id: rhel70
-        display_name: "rhel70"
+        display_name: "RHEL 7.0"
         run_on: rhel70
 
       - id: rhel71-power8-build
-        display_name: "rhel71-power8-build"
+        display_name: "RHEL 7.1 (POWER8)"
         run_on: rhel71-power8-build
 
-      - id: rhel71-power8-test
-        display_name: "rhel71-power8-test"
-        run_on: rhel71-power8-test
-
       - id: rhel72-zseries-build
-        display_name: "rhel72-zseries-build"
+        display_name: "RHEL 7.2 (zSeries)"
         run_on: rhel72-zseries-build
 
-      - id: rhel72-zseries-test
-        display_name: "rhel72-zseries-test"
-        run_on: rhel72-zseries-test
-
       - id: solaris
-        display_name: "solaris"
+        display_name: "Solaris"
         run_on: solaris
 
       - id: suse12-zseries-build
-        display_name: "suse12-zseries-build"
+        display_name: "SUSE 12 (zSeries)"
         run_on: suse12-zseries-build
 
-      - id: suse12-zseries-test
-        display_name: "suse12-zseries-test"
-        run_on: suse12-zseries-test
-
-      - id: ubuntu1204-build
-        display_name: "ubuntu1204-build"
-        run_on: ubuntu1204-build
-
-      - id: ubuntu1404-build
-        display_name: "ubuntu1404-build"
-        run_on: ubuntu1404-build
-
       - id: ubuntu1604-arm64-large
-        display_name: "ubuntu1604-arm64-large"
+        display_name: "Ubuntu 16.04 (ARM64)"
         run_on: ubuntu1604-arm64-large
 
-      - id: ubuntu1604-arm64-small
-        display_name: "ubuntu1604-arm64-small"
-        run_on: ubuntu1604-arm64-small
-
-      - id: ubuntu1604-build
-        display_name: "ubuntu1604-build"
-        run_on: ubuntu1604-build
-
       - id: ubuntu1604-power8-build
-        display_name: "ubuntu1604-power8-build"
+        display_name: "Ubuntu 16.04 (POWER8)"
         run_on: ubuntu1604-power8-build
 
-      - id: ubuntu1604-power8-test
-        display_name: "ubuntu1604-power8-test"
-        run_on: ubuntu1604-power8-test
-
       - id: ubuntu1604-zseries-large
-        display_name: "ubuntu1604-zseries-large"
+        display_name: "Ubuntu 16.04 (zSeries)"
         run_on: ubuntu1604-zseries-large
 
-      - id: ubuntu1604-zseries-small
-        display_name: "ubuntu1604-zseries-small"
-        run_on: ubuntu1604-zseries-small
-
       - id: windows-64-vs2010-compile
-        display_name: "windows-64-vs2010-compile"
+        display_name: "Windows (VS2010)"
         run_on: windows-64-vs2010-compile
 
       - id: windows-64-vs2013-compile
-        display_name: "windows-64-vs2013-compile"
+        display_name: "Windows (VS2013)"
         run_on: windows-64-vs2013-compile
 
       - id: windows-64-vs2015-compile
-        display_name: "windows-64-vs2015-compile"
+        display_name: "Windows (VS2015)"
         run_on: windows-64-vs2015-compile
 
 
@@ -618,10 +710,19 @@ buildvariants:
 
 
 - matrix_name: "tests"
-  matrix_spec: {os: "*", versions: "*", topology: "*", auth: "*", ssl: "*" }
-  display_name: "${os} ${versions} ${topology} ${auth} ${ssl}"
+#  matrix_spec: {os: "*", topology: "*", auth: "*", ssl: "*", versions: "*" }
+  matrix_spec: {os: "*", auth: "*", ssl: "*" }
+  display_name: "${os} ${auth} ${ssl}"
   tasks:
-     - name: test
+     - name: "test-latest-replicaset"
+     - name: "test-latest-sharded"
+     - name: "test-latest-standalone"
+     - name: "test-3.2-replicaset"
+     - name: "test-3.2-sharded"
+     - name: "test-3.2-standalone"
+     - name: "test-2.6-replicaset"
+     - name: "test-2.6-sharded"
+     - name: "test-2.6-standalone"
 
 
 
