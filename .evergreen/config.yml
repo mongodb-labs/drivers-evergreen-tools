@@ -54,14 +54,14 @@ functions:
            case "$OS" in
               cygwin*)
                  export DRIVERS_TOOLS="c:/drivers-tools"
-                 export MONGO_ORCHESTRATION_HOME="c:/drivers-tools/.evergreen/orchestration"
+                 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
                  # Python has problems with unix style paths in cygwin. Must use c:\\ paths
-                 echo "{ \"releases\": { \"default\": \"c:\\\\mongodb\\\\bin\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+                 echo '{ "releases": { "default": "c:\\\\mongodb\\\\bin" }}' > $MONGO_ORCHESTRATION_HOME/orchestration.config
                  ;;
               *)
-                 export DRIVERS_TOOLS="/opt/drivers-tools"
-                 export MONGO_ORCHESTRATION_HOME="/opt/drivers-tools/.evergreen/orchestration"
-                 echo "{ \"releases\": { \"default\": \"`pwd`/mongodb/bin\" } }" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+                 export DRIVERS_TOOLS="$PWD/drivers-tools"
+                 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
+                 echo '{ "releases": { "default": "$PWD/mongodb/bin" } }' > $MONGO_ORCHESTRATION_HOME/orchestration.config
                  ;;
            esac
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
@@ -76,7 +76,6 @@ functions:
               export DRIVERS_TOOLS=$DRIVERS_TOOLS
               export TMPDIR=$MONGO_ORCHESTRATION_HOME/db
            EOT
-           echo '' > test-results.json
 
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
@@ -246,7 +245,7 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         # FIXME: See EVG-1331
-        local_file: /opt/drivers-tools/.evergreen/orchestration/server.log
+        local_file: drivers-tools/.evergreen/orchestration/server.log
         remote_file: mongo-c-driver/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
         permissions: public-read
@@ -272,8 +271,8 @@ functions:
         display_name: "working-dir.tar.gz"
     - command: archive.targz_pack
       params:
-        target: "working-dir.tar.gz"
-        source_dir: "/opt/drivers-tools"
+        target: "drivers-dir.tar.gz"
+        source_dir: "drivers-tools"
         include:
           - "./**"
     - command: s3.put
@@ -319,6 +318,16 @@ functions:
           cd -
           rm -rf $DRIVERS_TOOLS || true
 
+  "fix absolute paths":
+    - command: shell.exec
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          for filename in $(find ${DRIVERS_TOOLS} -name \*.json); do
+            perl -p -i -e "s/ABSOLUTE_PATH_REPLACEMENT_TOKEN/${DRIVERS_TOOLS}/g" $filename
+          done
+
   "windows fix":
     - command: shell.exec
       params:
@@ -340,6 +349,13 @@ functions:
             chmod +x $i
           done
 
+  "init test-results":
+    - command: shell.exec
+      params:
+        working_dir: "src"
+        script: |
+          echo '' > test-results.json
+
   "install dependencies":
     - command: shell.exec
       params:
@@ -352,6 +368,8 @@ pre:
   - func: "fetch source"
   - func: "fetch resources"
   - func: "windows fix"
+  - func: "fix absolute paths"
+  - func: "init test-results"
   - func: "make files executable"
   - func: "install dependencies"
 

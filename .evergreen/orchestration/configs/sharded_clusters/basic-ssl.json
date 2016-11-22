@@ -30,8 +30,8 @@
   ],
   "sslParams": {
       "sslMode": "requireSSL",
-      "sslPEMKeyFile": "/opt/drivers-tools/.evergreen/x509gen/server.pem",
-      "sslCAFile": "/opt/drivers-tools/.evergreen/x509gen/ca.pem",
+      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/server.pem",
+      "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/ca.pem",
       "sslAllowInvalidCertificates": true,
       "sslWeakCertificateValidation" : true
   }
