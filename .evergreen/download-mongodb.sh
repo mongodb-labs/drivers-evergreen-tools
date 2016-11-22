@@ -210,7 +210,7 @@ download_and_extract ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   pushd $DRIVERS_TOOLS
+   cd $DRIVERS_TOOLS
    curl $MONGODB_DOWNLOAD_URL --silent --max-time 120 --fail --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
@@ -220,5 +220,5 @@ download_and_extract ()
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
    ./mongodb/bin/mongod --version
-   popd
+   cd -
 }
