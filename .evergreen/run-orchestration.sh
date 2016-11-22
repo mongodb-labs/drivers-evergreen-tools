@@ -42,6 +42,7 @@ case "$OS" in
       cd mongo-orchestration
       pip install .
       cd ../..
+      cd $MONGO_ORCHESTRATION_HOME
       nohup mongo-orchestration -f orchestration.config -e default --socket-timeout-ms=60000 --bind=127.0.0.1  --enable-majority-read-concern -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
       ;;
    *)
