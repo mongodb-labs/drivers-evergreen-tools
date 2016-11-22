@@ -43,7 +43,9 @@ functions:
 
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
+              cd src
               VERSION=$(git describe)-patch-${version_id}
+              cd ..
            else
               VERSION=latest
            fi
@@ -72,8 +74,8 @@ functions:
            PREPARE_SHELL: |
               set -o errexit
               set -o xtrace
-              export MONGO_ORCHESTRATION_HOME=$MONGO_ORCHESTRATION_HOME
               export DRIVERS_TOOLS=$DRIVERS_TOOLS
+              export MONGO_ORCHESTRATION_HOME=$MONGO_ORCHESTRATION_HOME
               export TMPDIR=$MONGO_ORCHESTRATION_HOME/db
            EOT
 
@@ -325,7 +327,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           for filename in $(find ${DRIVERS_TOOLS} -name \*.json); do
-            perl -p -i -e "s/ABSOLUTE_PATH_REPLACEMENT_TOKEN/${DRIVERS_TOOLS}/g" $filename
+            perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $filename
           done
 
   "windows fix":
