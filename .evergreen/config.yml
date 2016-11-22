@@ -79,6 +79,7 @@ functions:
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
+              export PATH=$MONGODB_BINARIES:$PATH
            EOT
 
     # Load the expansion file to make an evergreen variable with the current unique version
@@ -100,7 +101,6 @@ functions:
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
           git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
-          echo '{ "releases": { "default": "${MONGODB_BINARIES}" }}' > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
   "upload release":
     - command: shell.exec
