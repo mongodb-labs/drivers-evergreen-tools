@@ -21,8 +21,8 @@ exec_timeout_secs: 1800 # 6 minutes is the longest we'll ever run
 timeout:
   - command: shell.exec
     params:
-        script: |
-           ls -la
+      script: |
+        ls -la
 
 functions:
   "fetch source":
@@ -35,16 +35,49 @@ functions:
     - command: git.apply_patch
       params:
         directory: "src"
-    # Make an evergreen exapanstion file with the current unique version
+    # Make an evergreen exapanstion file with dynamic values
     - command: shell.exec
       params:
         script: |
+           echo "" > expansion.yml
+
+           # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
               VERSION=$(git describe)-patch-${version_id}
            else
               VERSION=latest
            fi
-           echo "CURRENT_VERSION: $VERSION" > expansion.yml
+           echo "CURRENT_VERSION: $VERSION" >> expansion.yml
+
+           # Python has path problems on Windows. Detect prospective mongo-orchestration home directory
+           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+           case "$OS" in
+              cygwin*)
+                 export DRIVERS_TOOLS="c:/drivers-tools"
+                 export MONGO_ORCHESTRATION_HOME="c:/drivers-tools/.evergreen/orchestration"
+                 # Python has problems with unix style paths in cygwin. Must use c:\\ paths
+                 echo "{ \"releases\": { \"default\": \"c:\\\\mongodb\\\\bin\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+                 ;;
+              *)
+                 export DRIVERS_TOOLS="/opt/drivers-tools"
+                 export MONGO_ORCHESTRATION_HOME="/opt/drivers-tools/.evergreen/orchestration"
+                 echo "{ \"releases\": { \"default\": \"`pwd`/mongodb/bin\" } }" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+                 ;;
+           esac
+           echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
+           echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
+
+           # Make it easier to get a good shell
+           cat <<EOT >> expansion.yml
+           PREPARE_SHELL: |
+              set -o errexit
+              set -o xtrace
+              export MONGO_ORCHESTRATION_HOME=$MONGO_ORCHESTRATION_HOME
+              export DRIVERS_TOOLS=$DRIVERS_TOOLS
+              export TMPDIR=$MONGO_ORCHESTRATION_HOME/db
+           EOT
+           echo '' > test-results.json
+
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
       params:
@@ -54,15 +87,16 @@ functions:
         continue_on_err: true
         # Must be http as RHEL55 has https issues
         script: |
-          set -o xtrace
+          ${PREPARE_SHELL}
           pip install --upgrade git+git://github.com/mongodb/mongo-orchestration@master
 
   "fetch resources":
     - command: shell.exec
       params:
         script: |
-           rm -rf /opt/drivers-tools || true
-           git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git /opt/drivers-tools
+          ${PREPARE_SHELL}
+          rm -rf $DRIVERS_TOOLS || true
+          git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
 
   "upload release":
     - command: shell.exec
@@ -195,9 +229,7 @@ functions:
       params:
         working_dir: "src"
         script: |
-          DIR=/opt/drivers-tools/.evergreen/MO
-          [ -d "/cygdrive/c/data/mo" ] && DIR="/cygdrive/c/data/mo"
-          [ -d $DIR ] && find $DIR -name \*.log | xargs tar czf mongodb-logs.tar.gz
+          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf mongodb-logs.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
@@ -212,7 +244,7 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: /opt/drivers-tools/.evergreen/MO/server.log
+        local_file: ${MONGO_ORCHESTRATION_HOME}/server.log
         remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
         permissions: public-read
@@ -247,8 +279,7 @@ functions:
       params:
         working_dir: "src"
         script: |
-          set -o errexit
-          set -o xtrace
+          ${PREPARE_SHELL}
           MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh .evergreen/run-orchestration.sh
 
   "run tests":
@@ -257,25 +288,26 @@ functions:
       params:
         working_dir: "src"
         script: |
-          set -o errexit
+          ${PREPARE_SHELL}
           AUTH=${AUTH} SSL=${SSL} URI=${URI} sh .evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
       params:
         script: |
-          set -o errexit
-          cd /opt/drivers-tools/.evergreen/MO/
+          ${PREPARE_SHELL}
+          cd $MONGO_ORCHESTRATION_HOME
           mongo-orchestration stop
           cd -
-          rm -rf /opt/drivers-tools || true
+          rm -rf $DRIVERS_TOOLS || true
 
   "windows fix":
     - command: shell.exec
       params:
         working_dir: "src"
         script: |
-          for i in $(find .evergreen /opt/drivers-tools -name \*.sh); do
+          ${PREPARE_SHELL}
+          for i in $(find .evergreen ${DRIVERS_TOOLS} -name \*.sh); do
             cat $i | tr -d '\r' > $i.new
             mv $i.new $i
           done
@@ -285,7 +317,8 @@ functions:
       params:
         working_dir: "src"
         script: |
-          for i in $(find .evergreen /opt/drivers-tools -name \*.sh); do
+          ${PREPARE_SHELL}
+          for i in $(find .evergreen ${DRIVERS_TOOLS} -name \*.sh); do
             chmod +x $i
           done
 
@@ -352,8 +385,7 @@ tasks:
           params:
             working_dir: "src"
             script: |
-              set -o errexit
-              set -o xtrace
+              ${PREPARE_SHELL}
               echo "Hello World"
         - func: "upload docs"
         - func: "upload release"
@@ -370,8 +402,7 @@ tasks:
           params:
             working_dir: "src"
             script: |
-              set -o errexit
-              set -o xtrace
+              ${PREPARE_SHELL}
               RELEASE=yes CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
         - func: "upload build"
 
@@ -386,8 +417,7 @@ tasks:
           params:
             working_dir: "src"
             script: |
-              set -o errexit
-              set -o xtrace
+              ${PREPARE_SHELL}
               RELEASE=yes BUILDTOOL="cmake" CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
         - func: "upload build"
 
@@ -399,8 +429,7 @@ tasks:
           params:
             working_dir: "src"
             script: |
-              set -o errexit
-              set -o xtrace
+              ${PREPARE_SHELL}
               CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
         - func: "upload build"
 # }}}
@@ -716,4 +745,5 @@ buildvariants:
       # Solaris MongoDB SSL builds are not available
       # Darwin MongoDB SSL builds are not available for 2.4 and 2.6
       # Windows does not support MongoDB 2.4
+      # vim: set et sw=2 ts=2 :
 

@@ -24,8 +24,8 @@ fi
 
 if [ "$SSL" != "nossl" ]; then
    export MONGOC_TEST_SSL_WEAK_CERT_VALIDATION="on"
-   export MONGOC_TEST_SSL_PEM_FILE=".evergreen/x509gen/client.pem"
-   export MONGOC_TEST_SSL_CA_FILE=".evergreen/x509gen/ca.pem"
+   export MONGOC_TEST_SSL_PEM_FILE="$DRIVERS_TOOLS/.evergreen/x509gen/client.pem"
+   export MONGOC_TEST_SSL_CA_FILE="$DRIVERS_TOOLS/.evergreen/x509gen/ca.pem"
 fi
 
 export MONGOC_ENABLE_MAJORITY_READ_CONCERN=on
@@ -53,12 +53,6 @@ case "$OS" in
       ;;
 
    *)
-      # This libtool wrapper script was built in a unique dir like
-      # "/data/mci/998e754a0d1ed79b8bf733f405b87778/mongoc",
-      # replace its absolute path with "." so it can run in the CWD.
-      # This happens when uploading artifacts from one task
-      # and then executing them in another task
-      sed -i'' 's/\/data\/mci\/[a-z0-9]\{32\}\/mongoc/./g' test-libmongoc
       export LD_LIBRARY_PATH=".libs:src/libbson/.libs"
       ;;
 esac

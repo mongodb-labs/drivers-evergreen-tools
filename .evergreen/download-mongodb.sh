@@ -214,9 +214,8 @@ download_and_extract ()
 
    $EXTRACT mongodb-binaries.tgz
 
-   rm -rf mongodb*tgz mongodb/
-   mv mongodb* mongodb
-   chmod -R +x mongodb
-   find . -name vcredist_x64.exe -exec {} /install /quiet \;
-   ./mongodb/bin/mongod --version
+   mv mongodb* $DRIVERS_TOOLS/mongodb
+   chmod -R +x $DRIVERS_TOOLS/mongodb
+   find $DRIVERS_TOOLS -name vcredist_x64.exe -exec {} /install /quiet \;
+   $DRIVERS_TOOLS/mongodb/bin/mongod --version
 }
