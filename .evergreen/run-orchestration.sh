@@ -34,6 +34,7 @@ echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
 cat $ORCHESTRATION_FILE
 
+cd $MONGO_ORCHESTRATION_HOME
 case "$OS" in
    cygwin*)
       # Crazy python stuff to make sure MO is running latest version
@@ -44,20 +45,24 @@ case "$OS" in
       cd mongo-orchestration
       pip install .
       cd ../..
-      cd $MONGO_ORCHESTRATION_HOME
       nohup mongo-orchestration -f $MONGO_ORCHESTRATION_HOME/orchestration.config -e default --socket-timeout-ms=60000 --bind=127.0.0.1  --enable-majority-read-concern -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
       ;;
    *)
       nohup mongo-orchestration -f $MONGO_ORCHESTRATION_HOME/orchestration.config -e default --socket-timeout-ms=60000 --bind=127.0.0.1  --enable-majority-read-concern start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
       ;;
 esac
+cd -
+
+cat $MONGO_ORCHESTRATION_HOME/orchestration.config || true
+ls -la $MONGO_ORCHESTRATION_HOME
 
 sleep 15
-cat server.log || true
 curl http://localhost:8889/ --silent --max-time 120 --fail
 
 sleep 5
 
 pwd
-curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail
+curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail || true
+cat $MONGO_ORCHESTRATION_HOME/server.log || true
 
+find $MONGO_ORCHESTRATION_HOME $DRIVERS_TOOLS -name \*.log -exec cat {} \;
