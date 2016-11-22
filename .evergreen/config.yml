@@ -63,7 +63,7 @@ functions:
               *)
                  export DRIVERS_TOOLS="$PWD/drivers-tools"
                  export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
-                 export MONGODB_BINARIES="$PWD/mongodb/bin"
+                 export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
                  ;;
            esac
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
@@ -99,8 +99,13 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          rm -rf $DRIVERS_TOOLS || true
-          git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
+          rm -rf $DRIVERS_TOOLS
+          if [ "${project}" = "drivers-tools" ]; then
+            cp -R src $DRIVERS_TOOLS
+          else
+            git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
+          fi
+          echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
   "upload release":
     - command: shell.exec

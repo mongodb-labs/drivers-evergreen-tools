@@ -32,6 +32,7 @@ export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
 
+ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
 case "$OS" in
    cygwin*)
       # Crazy python stuff to make sure MO is running latest version
@@ -42,10 +43,10 @@ case "$OS" in
       cd mongo-orchestration
       pip install .
       cd ../..
-      nohup mongo-orchestration  -e default --socket-timeout-ms=60000 --bind=127.0.0.1  --enable-majority-read-concern -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
+      nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
       ;;
    *)
-      nohup mongo-orchestration  -e default --socket-timeout-ms=60000 --bind=127.0.0.1  --enable-majority-read-concern start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
+      nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
       ;;
 esac
 
