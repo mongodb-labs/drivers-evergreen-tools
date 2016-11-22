@@ -100,7 +100,7 @@ functions:
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
           git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
-          echo '{ "releases": { "default": "$MONGODB_BINARIES" }}' > $MONGO_ORCHESTRATION_HOME/orchestration.config
+          echo '{ "releases": { "default": "${MONGODB_BINARIES}" }}' > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
   "upload release":
     - command: shell.exec
