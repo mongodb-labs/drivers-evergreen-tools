@@ -300,6 +300,9 @@ functions:
     - command: attach.results
       params:
         file_location: "src/test-results.json"
+    - command: attach.results
+      params:
+        file_location: "drivers-tools/results.json"
 
   "bootstrap mongo-orchestration":
     - command: shell.exec
