@@ -66,7 +66,6 @@ curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)
 DL_ELAPSED=$(expr $DL_END - $DL_START)
-MO_LOGS=$(cat $MONGO_ORCHESTRATION_HOME/server.log)
 cat <<EOT >> $DRIVERS_TOOLS/results.json
 {"results": [
   {
@@ -74,8 +73,7 @@ cat <<EOT >> $DRIVERS_TOOLS/results.json
     "test_file": "Orchestration",
     "start": $MO_START,
     "end": $MO_END,
-    "elapsed": $MO_ELAPSED,
-    "log_raw": "$MO_LOGS"
+    "elapsed": $MO_ELAPSED
   },
   {
     "status": "PASS",
