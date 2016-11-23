@@ -55,17 +55,16 @@ functions:
            OS=$(uname -s | tr '[:upper:]' '[:lower:]')
            case "$OS" in
               cygwin*)
-                 export DRIVERS_TOOLS="c:/drivers-tools"
-                 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
                  # Python has problems with unix style paths in cygwin. Must use c:\\ paths
-                 export MONGODB_BINARIES="c:\\\\mongodb\\\\bin"
+                 export DRIVERS_TOOLS="c:/drivers-tools/"
                  ;;
               *)
                  export DRIVERS_TOOLS="$PWD/drivers-tools"
-                 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
-                 export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
                  ;;
            esac
+           export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
+           export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
+
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
            echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
            echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
@@ -79,7 +78,7 @@ functions:
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
-              export PATH=$MONGODB_BINARIES:$PATH
+              export PATH="$MONGODB_BINARIES:$PATH"
            EOT
 
     # Load the expansion file to make an evergreen variable with the current unique version
@@ -775,9 +774,12 @@ buildvariants:
      - name: "test-2.6-replicaset"
      - name: "test-2.6-sharded"
      - name: "test-2.6-standalone"
+    #os: ["debian81-build", "rhel71-power8-build", "rhel72-zseries-build", "suse12-zseries-build", "ubuntu1604-arm64-large", "ubuntu1604-power8-build", "ubuntu1604-zseries-large" ]
   rules:
   - if:
-      os: ["debian81-build", "rhel71-power8-build", "rhel72-zseries-build", "suse12-zseries-build", "ubuntu1604-arm64-large", "ubuntu1604-power8-build", "ubuntu1604-zseries-large" ]
+      os: "debian81-build"
+      auth: "*"
+      ssl: "*"
     then:
       remove_task: ["test-3.2-replicaset", "test-3.2-sharded", "test-3.2-standalone", "test-2.6-replicaset", "test-2.6-sharded", "test-2.6-standalone" ]
 
