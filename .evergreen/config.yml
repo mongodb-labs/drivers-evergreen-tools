@@ -366,15 +366,15 @@ functions:
       params:
         working_dir: "src"
         script: |
-          echo '' > test-results.json
+          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > test-results.json
 
   "install dependencies":
     - command: shell.exec
       params:
         working_dir: "src"
         script: |
-              sudo apt-get install -y awscli || true
-              sudo /opt/csw/bin/pkgutil -y -i sasl_dev || true
+          ${PREPARE_SHELL}
+          sh .evergreen/install-dependencies.sh
 
 pre:
   - func: "fetch source"
