@@ -775,6 +775,11 @@ buildvariants:
      - name: "test-2.6-replicaset"
      - name: "test-2.6-sharded"
      - name: "test-2.6-standalone"
+  rules:
+  - if:
+      os: ["debian81-build", "rhel71-power8-build", "rhel72-zseries-build", "suse12-zseries-build", "ubuntu1604-arm64-large", "ubuntu1604-power8-build", "ubuntu1604-zseries-large" ]
+    then:
+      remove_task: ["test-3.2-replicaset", "test-3.2-sharded", "test-3.2-standalone", "test-2.6-replicaset", "test-2.6-sharded", "test-2.6-standalone" ]
 
 
 
