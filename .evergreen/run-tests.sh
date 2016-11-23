@@ -38,7 +38,7 @@ case "$OS" in
    cygwin*)
       export PATH=$PATH:`pwd`/tests:`pwd`/Debug:`pwd`/src/libbson/Debug
       # Ensure created binaries are executable
-      chmod +x ./Debug/* src/libbson/Debug/*
+      chmod +x ./Debug/* src/libbson/Debug/* || true
       ;;
 
    darwin)
@@ -62,7 +62,7 @@ echo "Running $AUTH tests over $SSL, connecting to $URI"
 # in a Evergreen compatible JSON results file
 case "$OS" in
    cygwin*)
-      ./Debug/test-libmongoc.exe -d -F test-results.json
+      make test
       ;;
 
    sunos)
