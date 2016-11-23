@@ -45,8 +45,8 @@ case "$OS" in
       git clone https://github.com/10gen/mongo-orchestration.git
       cd mongo-orchestration
       pip install .
-      cd ../..
       nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
+      cd ../..
       ;;
    *)
       nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &

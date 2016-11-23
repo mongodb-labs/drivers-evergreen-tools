@@ -56,7 +56,7 @@ functions:
            case "$OS" in
               cygwin*)
                  # Python has problems with unix style paths in cygwin. Must use c:\\ paths
-                 export DRIVERS_TOOLS="c:/drivers-tools/"
+                 export DRIVERS_TOOLS="c:/drivers-tools"
                  ;;
               *)
                  export DRIVERS_TOOLS="$PWD/drivers-tools"
