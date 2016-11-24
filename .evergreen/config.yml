@@ -675,10 +675,6 @@ axes:
         display_name: "Archlinux"
         run_on: archlinux-build
 
-      - id: debian81-build
-        display_name: "Debian 8.1"
-        run_on: debian81-build
-
       - id: solaris
         display_name: "Solaris"
         run_on: solaris
@@ -698,6 +694,10 @@ axes:
   - id: os-requires-34
     display_name: OS
     values:
+      - id: debian81-build
+        display_name: "Debian 8.1"
+        run_on: debian81-build
+
       - id: ubuntu-16.04
         display_name: "Ubuntu 16.04"
         run_on: ubuntu1604-build
