@@ -435,6 +435,7 @@ tasks:
             script: |
               ${PREPARE_SHELL}
               echo "Hello World"
+              sh .evergreen/make-docs.sh
         - func: "upload docs"
         - func: "upload release"
         - func: "upload build"
