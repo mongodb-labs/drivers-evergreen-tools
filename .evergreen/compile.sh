@@ -19,7 +19,6 @@ case "$OS" in
             sh ./.evergreen/compile-unix-cmake.sh
          ;;
          autotools)
-         *)
             sh ./.evergreen/compile-unix.sh
          ;;
       esac
