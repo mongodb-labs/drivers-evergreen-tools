@@ -66,7 +66,7 @@ sleep 5
 pwd
 curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail > $EVG/description.json
 URI=$(python -c 'import sys, json; j=json.load(open("'$EVG'/description.json")); print j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"]')
-echo 'MONGODB_URI: "$URI"' > $EVG/mo-expansion.yml
+echo 'MONGODB_URI: "'$URI'"' > $EVG/mo-expansion.yml
 echo "Cluster URI: $URI"
 
 MO_END=$(date +%s)
