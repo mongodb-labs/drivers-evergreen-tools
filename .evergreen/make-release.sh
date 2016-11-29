@@ -10,4 +10,4 @@ echo "The release archive will have the version automatically derived from the n
 echo "The release file should be called $PROJECT.tar.gz"
 
 
-tar czf $PROJECT.tar.gz src
+cd .. && tar czf $PROJECT.tar.gz src
