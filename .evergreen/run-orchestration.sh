@@ -2,6 +2,14 @@
 set -o xtrace   # Write all commands first to stderr
 set -o errexit  # Exit the script with error if any of the commands fail
 
+
+AUTH=${AUTH:-noauth}
+SSL=${SSL:-nossl}
+TOPOLOGY=${TOPOLOGY:-server}
+MONGODB_VERSION=${MONGODB_VERSION:-latest}
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+
 DL_START=$(date +%s)
 DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries
@@ -13,12 +21,6 @@ download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
 
 DL_END=$(date +%s)
 MO_START=$(date +%s)
-
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-
-AUTH=${AUTH:-noauth}
-SSL=${SSL:-nossl}
-TOPOLOGY=${TOPOLOGY:-server}
 
 ORCHESTRATION_FILE="basic"
 if [ "$AUTH" = "auth" ]; then
@@ -61,7 +63,10 @@ curl http://localhost:8889/ --silent --max-time 120 --fail
 sleep 5
 
 pwd
-curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail
+curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail > description.json
+URI=$(cat description.json | python -c 'import sys, json; print json.load(sys.stdin)["mongodb_auth_uri"]')
+echo 'MONGODB_URI: "$URI"' > $MONGO_ORCHESTRATION_HOME/expansion.yml
+echo "Cluster URI: $URI"
 
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)

@@ -269,6 +269,10 @@ functions:
         script: |
           ${PREPARE_SHELL}
           MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh .evergreen/run-orchestration.sh
+    # run-orchestration generates expansion file with the MONGODB_URI for the cluster
+    - command: expansions.update
+      params:
+        file: ${MONGO_ORCHESTRATION_HOME}/expansion.yml
 
   "run tests":
     - command: shell.exec
@@ -277,7 +281,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} URI=${URI} sh .evergreen/run-tests.sh
+          AUTH=${AUTH} SSL=${SSL} MONGODB_URI=${MONGODB_URI} sh .evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -458,7 +462,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-latest-sharded"
@@ -473,7 +477,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-latest-standalone"
@@ -488,7 +492,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-3.2-replicaset"
@@ -503,7 +507,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-2.6-replicaset"
@@ -518,7 +522,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-3.2-sharded"
@@ -533,7 +537,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-2.6-sharded"
@@ -548,7 +552,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-3.2-standalone"
@@ -563,7 +567,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 
     - name: "test-2.6-standalone"
@@ -578,7 +582,7 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            URI: ""
+            MONGODB_URI: ""
 
 # }}}
 
