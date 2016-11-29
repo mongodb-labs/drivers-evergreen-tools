@@ -79,6 +79,7 @@ functions:
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
               export PATH="$MONGODB_BINARIES:$PATH"
+              export PROJECT="${project}"
            EOT
 
     # Load the expansion file to make an evergreen variable with the current unique version
@@ -110,12 +111,12 @@ functions:
     - command: shell.exec
       params:
         script: |
-           [ -f src/drivername*gz ] && mv src/drivername*gz drivername.tar.gz
+           [ -f src/${project}*gz ] && mv src/${project}*gz ${project}.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: drivername.tar.gz
+        local_file: ${project}.tar.gz
         remote_file: ${project}/${project}-${CURRENT_VERSION}.tar.gz
         bucket: mciuploads
         permissions: public-read
@@ -160,7 +161,7 @@ functions:
       params:
         continue_on_err: true
         # EVG-1105: Use s3.get extract_to: src/
-        script: "set -o xtrace && mkdir src && tar xf build.tar.gz -C src/"
+        script: "set -o xtrace && rm -rf src && mkdir src && tar xf build.tar.gz -C src/"
 
   "upload docs" :
     - command: shell.exec
@@ -424,7 +425,7 @@ tasks:
                genhtml --version || true
                valgrind --version || true
 
-# Compile Matrix {{{
+# Release Engineering Matrix {{{
     - name: make-release-archive
       tags: ["releng"]
       commands:
@@ -434,17 +435,12 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              echo "Hello World"
-              sh .evergreen/make-docs.sh
-        - func: "upload docs"
+              sh .evergreen/make-release.sh
         - func: "upload release"
         - func: "upload build"
 
-    - name: release-compile
+    - name: make-docs
       tags: ["releng"]
-      depends_on:
-        - name: "make-release-archive"
-          variant: "releng-release-archive-creator"
       commands:
         - command: shell.exec
           type: test
@@ -452,7 +448,24 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              RELEASE=yes CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
+              sh .evergreen/make-docs.sh
+        - func: "upload docs"
+
+    - name: release-compile
+      tags: ["releng"]
+      depends_on:
+        - name: "make-release-archive"
+          variant: "releng-release-archive-creator"
+      commands:
+        # Fetch the make-release-archive generated archive, rather then the git clone
+        - func: "fetch build"
+        - command: shell.exec
+          type: test
+          params:
+            working_dir: "src"
+            script: |
+              ${PREPARE_SHELL}
+              sh .evergreen/compile.sh
         - func: "upload build"
 
     - name: release-compile-cmake
@@ -461,28 +474,20 @@ tasks:
         - name: "make-release-archive"
           variant: "releng-release-archive-creator"
       commands:
+        # Fetch the make-release-archive generated archive, rather then the git clone
+        - func: "fetch build"
         - command: shell.exec
           type: test
           params:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              RELEASE=yes BUILDTOOL="cmake" CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
-        - func: "upload build"
-
-    - name: debug-compile
-      tags: ["releng"]
-      commands:
-        - command: shell.exec
-          type: test
-          params:
-            working_dir: "src"
-            script: |
-              ${PREPARE_SHELL}
-              CC='${CC}' MARCH='${MARCH}' sh .evergreen/compile.sh
+              BUILDTOOL="cmake" sh .evergreen/compile.sh
         - func: "upload build"
 # }}}
 
+
+# Standard test tasks {{{
     - name: "test-latest-replicaset"
       commands:
         - func: "bootstrap mongo-orchestration"
@@ -617,6 +622,7 @@ tasks:
             SSL: ${SSL}
             URI: ""
 
+# }}}
 
 
 axes:
@@ -769,6 +775,7 @@ axes:
 
 buildvariants:
 
+# Test packaging and other release related routines
 - name: releng-release-archive-creator
   display_name: "** Release Archive Creator"
   run_on:
