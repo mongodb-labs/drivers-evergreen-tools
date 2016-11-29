@@ -213,7 +213,7 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         # FIXME: See EVG-1331
-        local_file: drivers-tools/.evergreen/orchestration/server.log
+        local_file: ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
         permissions: public-read
@@ -240,7 +240,7 @@ functions:
     - command: archive.targz_pack
       params:
         target: "drivers-dir.tar.gz"
-        source_dir: "drivers-tools"
+        source_dir: ${DRIVERS_TOOLS}
         include:
           - "./**"
     - command: s3.put
@@ -260,7 +260,7 @@ functions:
         file_location: "src/test-results.json"
     - command: attach.results
       params:
-        file_location: "drivers-tools/results.json"
+        file_location: "${DRIVERS_TOOLS}/results.json"
 
   "bootstrap mongo-orchestration":
     - command: shell.exec
@@ -268,7 +268,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh .evergreen/run-orchestration.sh
+          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
@@ -281,7 +281,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI=${MONGODB_URI} sh .evergreen/run-tests.sh
+          AUTH=${AUTH} SSL=${SSL} MONGODB_URI=${MONGODB_URI} sh ${DRIVERS_TOOLS}/.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -309,7 +309,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          for i in $(find .evergreen ${DRIVERS_TOOLS} -name \*.sh); do
+          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${DRIVERS_TOOLS} -name \*.sh); do
             cat $i | tr -d '\r' > $i.new
             mv $i.new $i
           done
@@ -320,7 +320,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          for i in $(find .evergreen ${DRIVERS_TOOLS} -name \*.sh); do
+          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${DRIVERS_TOOLS} -name \*.sh); do
             chmod +x $i
           done
 
@@ -337,7 +337,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          sh .evergreen/install-dependencies.sh
+          sh ${DRIVERS_TOOLS}/.evergreen/install-dependencies.sh
 
 pre:
   - func: "fetch source"
@@ -367,7 +367,7 @@ tasks:
             working_dir: "src"
             script: |
                set -o xtrace
-               . ./.evergreen/download-mongodb.sh || true
+               . ${DRIVERS_TOOLS}/.evergreen/download-mongodb.sh || true
                get_distro || true
                echo $DISTRO
                echo $MARCH
@@ -397,7 +397,7 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              sh .evergreen/make-release.sh
+              sh ${DRIVERS_TOOLS}/.evergreen/make-release.sh
         - func: "upload release"
         - func: "upload build"
 
@@ -410,7 +410,7 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              sh .evergreen/make-docs.sh
+              sh ${DRIVERS_TOOLS}/.evergreen/make-docs.sh
         - func: "upload docs"
 
     - name: release-compile
@@ -427,7 +427,7 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              sh .evergreen/compile.sh
+              sh ${DRIVERS_TOOLS}/.evergreen/compile.sh
         - func: "upload build"
 
     - name: release-compile-cmake
@@ -444,7 +444,7 @@ tasks:
             working_dir: "src"
             script: |
               ${PREPARE_SHELL}
-              BUILDTOOL="cmake" sh .evergreen/compile.sh
+              BUILDTOOL="cmake" sh ${DRIVERS_TOOLS}/.evergreen/compile.sh
         - func: "upload build"
 # }}}
 
