@@ -68,6 +68,7 @@ functions:
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
            echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
            echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
+           echo 'UPLOAD_BUCKET: "mongo-c-driver/changeme"' >> expansion.yml
 
            # Make it easier to get a good shell
            cat <<EOT >> expansion.yml
@@ -76,11 +77,12 @@ functions:
               set -o xtrace
               export DRIVERS_TOOLS="$DRIVERS_TOOLS"
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
-              export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
+              export UPLOAD_BUCKET="mongo-c-driver/changeme"
+
+              export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export PATH="$MONGODB_BINARIES:$PATH"
               export PROJECT="${project}"
-              export UPLOAD_BUCKET="mongo-c-driver/changeme"
            EOT
 
     # Load the expansion file to make an evergreen variable with the current unique version
@@ -112,7 +114,8 @@ functions:
     - command: shell.exec
       params:
         script: |
-           [ -f src/${project}*gz ] && mv src/${project}*gz ${project}.tar.gz
+          ${PREPARE_SHELL}
+          [ -f "src/${project}*gz" ] && mv src/${project}*gz ${project}.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
