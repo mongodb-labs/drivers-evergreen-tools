@@ -326,7 +326,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI=${MONGODB_URI} sh ${DRIVERS_TOOLS}/.evergreen/run-tests.sh
+          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${DRIVERS_TOOLS}/.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
