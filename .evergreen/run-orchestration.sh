@@ -9,8 +9,6 @@ TOPOLOGY=${TOPOLOGY:-server}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-EVG=${EVG:-`pwd`} # The evergreen working directory
-
 DL_START=$(date +%s)
 DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries
@@ -64,9 +62,9 @@ curl http://localhost:8889/ --silent --max-time 120 --fail
 sleep 5
 
 pwd
-curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail > $EVG/description.json
-URI=$(python -c 'import sys, json; j=json.load(open("'$EVG'/description.json")); print j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"]')
-echo 'MONGODB_URI: "'$URI'"' > $EVG/mo-expansion.yml
+curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail > tmp.json
+URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"]')
+echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo "Cluster URI: $URI"
 
 MO_END=$(date +%s)

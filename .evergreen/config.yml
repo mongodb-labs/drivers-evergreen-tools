@@ -311,14 +311,13 @@ functions:
   "bootstrap mongo-orchestration":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} EVG=`pwd` sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
+          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
-        file: src/mo-expansion.yml
+        file: mo-expansion.yml
 
   "run tests":
     - command: shell.exec
@@ -508,7 +507,6 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
 
 
     - name: "test-latest-sharded"
@@ -523,7 +521,6 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
 
 
     - name: "test-latest-standalone"
@@ -538,7 +535,48 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
+
+
+    - name: "test-3.4-replicaset"
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.4"
+            TOPOLOGY: "replica_set"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+
+
+    - name: "test-3.4-sharded"
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.4"
+            TOPOLOGY: "sharded_cluster"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+
+
+    - name: "test-3.4-standalone"
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "3.4"
+            TOPOLOGY: "server"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
 
 
     - name: "test-3.2-replicaset"
@@ -553,22 +591,6 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
-
-
-    - name: "test-2.6-replicaset"
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "3.2"
-            TOPOLOGY: "replica_set"
-            AUTH: ${AUTH}
-            SSL: ${SSL}
-        - func: "run tests"
-          vars:
-            AUTH: ${AUTH}
-            SSL: ${SSL}
-            MONGODB_URI: ""
 
 
     - name: "test-3.2-sharded"
@@ -583,22 +605,6 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
-
-
-    - name: "test-2.6-sharded"
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "3.2"
-            TOPOLOGY: "sharded_cluster"
-            AUTH: ${AUTH}
-            SSL: ${SSL}
-        - func: "run tests"
-          vars:
-            AUTH: ${AUTH}
-            SSL: ${SSL}
-            MONGODB_URI: ""
 
 
     - name: "test-3.2-standalone"
@@ -613,14 +619,41 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
+
+
+    - name: "test-2.6-replicaset"
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "2.6"
+            TOPOLOGY: "replica_set"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+
+
+    - name: "test-2.6-sharded"
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "2.6"
+            TOPOLOGY: "sharded_cluster"
+            AUTH: ${AUTH}
+            SSL: ${SSL}
+        - func: "run tests"
+          vars:
+            AUTH: ${AUTH}
+            SSL: ${SSL}
 
 
     - name: "test-2.6-standalone"
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.2"
+            VERSION: "2.6"
             TOPOLOGY: "server"
             AUTH: ${AUTH}
             SSL: ${SSL}
@@ -628,7 +661,6 @@ tasks:
           vars:
             AUTH: ${AUTH}
             SSL: ${SSL}
-            MONGODB_URI: ""
 
 # }}}
 
@@ -801,6 +833,9 @@ buildvariants:
      - name: "test-latest-replicaset"
      - name: "test-latest-sharded"
      - name: "test-latest-standalone"
+     - name: "test-3.4-replicaset"
+     - name: "test-3.4-sharded"
+     - name: "test-3.4-standalone"
      - name: "test-3.2-replicaset"
      - name: "test-3.2-sharded"
      - name: "test-3.2-standalone"
@@ -815,6 +850,9 @@ buildvariants:
      - name: "test-latest-replicaset"
      - name: "test-latest-sharded"
      - name: "test-latest-standalone"
+     - name: "test-3.4-replicaset"
+     - name: "test-3.4-sharded"
+     - name: "test-3.4-standalone"
 
 - matrix_name: "tests-nossl"
   matrix_spec: {"os-nossl": "*", auth: "*", ssl: "nossl" }
@@ -823,6 +861,9 @@ buildvariants:
      - name: "test-latest-replicaset"
      - name: "test-latest-sharded"
      - name: "test-latest-standalone"
+     - name: "test-3.4-replicaset"
+     - name: "test-3.4-sharded"
+     - name: "test-3.4-standalone"
      - name: "test-3.2-replicaset"
      - name: "test-3.2-sharded"
      - name: "test-3.2-standalone"
@@ -837,6 +878,9 @@ buildvariants:
      - name: "test-latest-replicaset"
      - name: "test-latest-sharded"
      - name: "test-latest-standalone"
+     - name: "test-3.4-replicaset"
+     - name: "test-3.4-sharded"
+     - name: "test-3.4-standalone"
 
 
 
