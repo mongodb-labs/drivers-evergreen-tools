@@ -38,14 +38,13 @@ functions:
     # Make an evergreen exapanstion file with dynamic values
     - command: shell.exec
       params:
+        working_dir: "src"
         script: |
            echo "" > expansion.yml
 
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
-              cd src
               VERSION=$(git describe)-patch-${version_id}
-              cd ..
            else
               VERSION=latest
            fi
@@ -59,16 +58,17 @@ functions:
                  export DRIVERS_TOOLS="c:/drivers-tools"
                  ;;
               *)
-                 export DRIVERS_TOOLS="$PWD/drivers-tools"
+                 export DRIVERS_TOOLS="$PWD/../drivers-tools"
                  ;;
            esac
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
+           export UPLOAD_BUCKET="${project}"
 
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
            echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
            echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
-           echo 'UPLOAD_BUCKET: "mongo-c-driver/changeme"' >> expansion.yml
+           echo 'UPLOAD_BUCKET: "$UPLOAD_BUCKET"' >> expansion.yml
 
            # Make it easier to get a good shell
            cat <<EOT >> expansion.yml
@@ -78,7 +78,7 @@ functions:
               export DRIVERS_TOOLS="$DRIVERS_TOOLS"
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
-              export UPLOAD_BUCKET="mongo-c-driver/changeme"
+              export UPLOAD_BUCKET="$UPLOAD_BUCKET"
 
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export PATH="$MONGODB_BINARIES:$PATH"
@@ -88,7 +88,7 @@ functions:
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
       params:
-        file: expansion.yml
+        file: src/expansion.yml
     - command: shell.exec
       params:
         continue_on_err: true
@@ -104,6 +104,7 @@ functions:
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS
           if [ "${project}" = "drivers-tools" ]; then
+            # If this was a patch build, doing a fresh clone would not actually test the patch
             cp -R src $DRIVERS_TOOLS
           else
             git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
@@ -111,11 +112,6 @@ functions:
           echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
   "upload release":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          [ -f "src/${project}*gz" ] && mv src/${project}*gz ${project}.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
@@ -166,6 +162,24 @@ functions:
         continue_on_err: true
         # EVG-1105: Use s3.get extract_to: src/
         script: "set -o xtrace && rm -rf src && mkdir src && tar xf build.tar.gz -C src/"
+
+  "exec compile script" :
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          [ -f ${file} ] && BUILDTOOL="${buildtool}" sh ${file} || echo "${file} not available, skipping"
+
+  "exec script" :
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
 
   "upload docs" :
     - command: shell.exec
@@ -326,7 +340,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${DRIVERS_TOOLS}/.evergreen/run-tests.sh
+          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ./.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -377,12 +391,13 @@ functions:
           echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > test-results.json
 
   "install dependencies":
-    - command: shell.exec
-      params:
-        working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          sh ${DRIVERS_TOOLS}/.evergreen/install-dependencies.sh
+    type: test
+    params:
+      working_dir: "src"
+      script: |
+        ${PREPARE_SHELL}
+        file=".evergreen/install-dependencies.sh"
+        [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
 
 pre:
   - func: "fetch source"
@@ -436,26 +451,18 @@ tasks:
     - name: make-release-archive
       tags: ["releng"]
       commands:
-        - command: shell.exec
-          type: test
-          params:
-            working_dir: "src"
-            script: |
-              ${PREPARE_SHELL}
-              sh ${DRIVERS_TOOLS}/.evergreen/make-release.sh
+        - func: "exec script"
+          vars:
+            file: ".evergreen/make-release.sh"
         - func: "upload release"
         - func: "upload build"
 
     - name: make-docs
       tags: ["releng"]
       commands:
-        - command: shell.exec
-          type: test
-          params:
-            working_dir: "src"
-            script: |
-              ${PREPARE_SHELL}
-              sh ${DRIVERS_TOOLS}/.evergreen/make-docs.sh
+        - func: "exec script"
+          vars:
+            file: ".evergreen/make-docs.sh"
         - func: "upload docs"
 
     - name: release-compile
@@ -466,13 +473,9 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
-        - command: shell.exec
-          type: test
-          params:
-            working_dir: "src"
-            script: |
-              ${PREPARE_SHELL}
-              sh ${DRIVERS_TOOLS}/.evergreen/compile.sh
+        - func: "exec script"
+          vars:
+            file: ".evergreen/compile.sh"
         - func: "upload build"
 
     - name: release-compile-cmake
@@ -483,13 +486,10 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
-        - command: shell.exec
-          type: test
-          params:
-            working_dir: "src"
-            script: |
-              ${PREPARE_SHELL}
-              BUILDTOOL="cmake" sh ${DRIVERS_TOOLS}/.evergreen/compile.sh
+        - func: "exec compile script"
+          vars:
+            file: ".evergreen/compile.sh"
+            buildtool: "cmake"
         - func: "upload build"
 # }}}
 
