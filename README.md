@@ -22,6 +22,15 @@ It is recommended to copy the entire directory and modify the following scripts:
 - [`make-release.sh`](.evergreen/make-release.sh) - Instructions how to package and release the driver
 
 
+The normal matrix (e.g. all tasks with the exception on those in the `** Release Archive Creator` buildvariant) runs the following two shell scripts:
+- The `install-dependencies.sh` file is always executed by all tasks.
+- The `run-tests.sh` is run by all tasks, except for the `** Release Archive Creator`.
+
+The `** Release Archive Creator` buildvariant is special, and does not run the "standard test matrix", but in stead runs the following:
+- The `compile*.sh` is executed by the `release-compile` and `release-compile-cmake` tasks. These are no commonly used by drivers, so feel free to ignore.
+- The `make-docs.sh` is executed by the `make-docs` task
+- The `make-release.sh` is executed by the `make-release-archive` task
+
 
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
