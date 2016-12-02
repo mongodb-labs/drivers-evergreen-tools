@@ -683,37 +683,37 @@ axes:
   - id: os-fully-featured
     display_name: OS
     values:
-      - id: ubuntu1204-build
+      - id: ubuntu1204-test
         display_name: "Ubuntu 12.04"
-        run_on: ubuntu1204-build
+        run_on: ubuntu1204-test
 
       - id: ubuntu-14.04
         display_name: "Ubuntu 14.04"
-        run_on: ubuntu1404-build
+        run_on: ubuntu1404-test
 
       - id: rhel70
         display_name: "RHEL 7.0"
-        run_on: rhel70
+        run_on: rhel70-small
 
 
   - id: os-nossl
     display_name: OS
     values:
-      - id: windows-64-vs2010-compile
+      - id: windows-64-vs2010-test
         display_name: "Windows (VS2010)"
-        run_on: windows-64-vs2010-compile
+        run_on: windows-64-vs2010-test
 
-      - id: windows-64-vs2013-compile
+      - id: windows-64-vs2013-test
         display_name: "Windows (VS2013)"
-        run_on: windows-64-vs2013-compile
+        run_on: windows-64-vs2013-test
 
-      - id: windows-64-vs2015-compile
+      - id: windows-64-vs2015-test
         display_name: "Windows (VS2015)"
-        run_on: windows-64-vs2015-compile
+        run_on: windows-64-vs2015-test
 
-      - id: archlinux-build
+      - id: archlinux-test
         display_name: "Archlinux"
-        run_on: archlinux-build
+        run_on: archlinux-test
 
       - id: solaris
         display_name: "Solaris"
@@ -734,37 +734,37 @@ axes:
   - id: os-requires-34
     display_name: OS
     values:
-      - id: debian81-build
+      - id: debian81-test
         display_name: "Debian 8.1"
-        run_on: debian81-build
+        run_on: debian81-test
 
       - id: ubuntu-16.04
         display_name: "Ubuntu 16.04"
-        run_on: ubuntu1604-build
+        run_on: ubuntu1604-test
 
-      - id: rhel71-power8-build
+      - id: rhel71-power8-test
         display_name: "RHEL 7.1 (POWER8)"
-        run_on: rhel71-power8-build
+        run_on: rhel71-power8-test
 
-      - id: rhel72-zseries-build
+      - id: rhel72-zseries-test
         display_name: "RHEL 7.2 (zSeries)"
-        run_on: rhel72-zseries-build
+        run_on: rhel72-zseries-test
 
-      - id: suse12-zseries-build
+      - id: suse12-zseries-test
         display_name: "SUSE 12 (zSeries)"
-        run_on: suse12-zseries-build
+        run_on: suse12-zseries-test
 
-      - id: ubuntu1604-arm64-large
+      - id: ubuntu1604-arm64-small
         display_name: "Ubuntu 16.04 (ARM64)"
-        run_on: ubuntu1604-arm64-large
+        run_on: ubuntu1604-arm64-small
 
-      - id: ubuntu1604-power8-build
+      - id: ubuntu1604-power8-test
         display_name: "Ubuntu 16.04 (POWER8)"
-        run_on: ubuntu1604-power8-build
+        run_on: ubuntu1604-power8-test
 
-      - id: ubuntu1604-zseries-large
+      - id: ubuntu1604-zseries-small
         display_name: "Ubuntu 16.04 (zSeries)"
-        run_on: ubuntu1604-zseries-large
+        run_on: ubuntu1604-zseries-small
 
 
   - id: topology
