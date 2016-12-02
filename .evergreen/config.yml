@@ -33,8 +33,6 @@ functions:
     # Applies the subitted patch, if any
     # Deprecated. Should be removed. But still needed for certain agents (ZAP)
     - command: git.apply_patch
-      params:
-        directory: "src"
     # Make an evergreen exapanstion file with dynamic values
     - command: shell.exec
       params:
@@ -64,11 +62,13 @@ functions:
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
            export UPLOAD_BUCKET="${project}"
+           export PROJECT_DIRECTORY="$PWD"
 
            echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
            echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
            echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
            echo 'UPLOAD_BUCKET: "$UPLOAD_BUCKET"' >> expansion.yml
+           echo 'PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"' >> expansion.yml
 
            # Make it easier to get a good shell
            cat <<EOT >> expansion.yml
@@ -79,6 +79,7 @@ functions:
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
               export UPLOAD_BUCKET="$UPLOAD_BUCKET"
+              export PROJECT_DIRECTORY="$PROJECT_DIRECTORY"
 
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export PATH="$MONGODB_BINARIES:$PATH"
@@ -105,7 +106,7 @@ functions:
           rm -rf $DRIVERS_TOOLS
           if [ "${project}" = "drivers-tools" ]; then
             # If this was a patch build, doing a fresh clone would not actually test the patch
-            cp -R src $DRIVERS_TOOLS
+            cp -R ${PROJECT_DIRECTORY}/ $DRIVERS_TOOLS
           else
             git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
           fi
@@ -131,7 +132,7 @@ functions:
       params:
         # Example: mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
         target: "${build_id}.tar.gz"
-        source_dir: "src"
+        source_dir: ${PROJECT_DIRECTORY}/
         include:
           - "./**"
     - command: s3.put
@@ -149,7 +150,7 @@ functions:
     - command: shell.exec
       params:
         continue_on_err: true
-        script: "set -o xtrace && rm -rf src"
+        script: "set -o xtrace && rm -rf ${PROJECT_DIRECTORY}"
     - command: s3.get
       params:
         aws_key: ${aws_key}
@@ -160,8 +161,8 @@ functions:
     - command: shell.exec
       params:
         continue_on_err: true
-        # EVG-1105: Use s3.get extract_to: src/
-        script: "set -o xtrace && rm -rf src && mkdir src && tar xf build.tar.gz -C src/"
+        # EVG-1105: Use s3.get extract_to: ./
+        script: "set -o xtrace && cd .. && rm -rf ${PROJECT_DIRECTORY} && mkdir ${PROJECT_DIRECTORY}/ && tar xf build.tar.gz -C ${PROJECT_DIRECTORY}/"
 
   "exec compile script" :
     - command: shell.exec
@@ -170,7 +171,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${file} ] && BUILDTOOL="${buildtool}" sh ${file} || echo "${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "exec script" :
     - command: shell.exec
@@ -179,22 +180,21 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
     - command: shell.exec
       params:
         silent: true
-        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp doc/html s3://mciuploads/${UPLOAD_BUCKET}/docs/${CURRENT_VERSION} --recursive --acl public-read --region us-east-1
+           aws s3 cp ${PROJECT_DIRECTORY}/doc/html s3://mciuploads/${UPLOAD_BUCKET}/docs/${CURRENT_VERSION} --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  src/doc/html/index.html
+        local_file:  ${PROJECT_DIRECTORY}/doc/html/index.html
         remote_file: ${UPLOAD_BUCKET}/docs/${CURRENT_VERSION}/index.html
         bucket: mciuploads
         permissions: public-read
@@ -205,16 +205,15 @@ functions:
     - command: shell.exec
       params:
         silent: true
-        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp coverage s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/ --recursive --acl public-read --region us-east-1
+           aws s3 cp ${PROJECT_DIRECTORY}/coverage s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/ --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  src/coverage/index.html
+        local_file:  ${PROJECT_DIRECTORY}/coverage/index.html
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/index.html
         bucket: mciuploads
         permissions: public-read
@@ -225,26 +224,25 @@ functions:
     - command: shell.exec
       type: test
       params:
-        working_dir: "src"
         script: |
-          if find scan -name \*.html | grep -q html; then
-            (cd scan && find . -name index.html -exec echo "<li><a href='{}'>{}</a></li>" \;) >> scan.html
+          cd
+          if find ${PROJECT_DIRECTORY}/scan -name \*.html | grep -q html; then
+            (cd ${PROJECT_DIRECTORY}/scan && find . -name index.html -exec echo "<li><a href='{}'>{}</a></li>" \;) >> scan.html
           else
             echo "No issues found" > scan.html
           fi
     - command: shell.exec
       params:
         silent: true
-        working_dir: "src"
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp scan s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/scan/ --recursive --acl public-read --region us-east-1
+           aws s3 cp ${PROJECT_DIRECTORY}/scan s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/scan/ --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  src/scan.html
+        local_file:  ${PROJECT_DIRECTORY}/scan.html
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/scan/index.html
         bucket: mciuploads
         permissions: public-read
@@ -254,15 +252,14 @@ functions:
   "upload mo artifacts":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf mongodb-logs.tar.gz
+          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf ${PROJECT_DIRECTORY}/mongodb-logs.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: src/mongodb-logs.tar.gz
+        local_file: ${PROJECT_DIRECTORY}/mongodb-logs.tar.gz
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
         bucket: mciuploads
         permissions: public-read
@@ -284,7 +281,7 @@ functions:
     - command: archive.targz_pack
       params:
         target: "working-dir.tar.gz"
-        source_dir: "src"
+        source_dir: ${PROJECT_DIRECTORY}/
         include:
           - "./**"
     - command: s3.put
@@ -317,7 +314,7 @@ functions:
   "upload test results":
     - command: attach.results
       params:
-        file_location: "src/test-results.json"
+        file_location: "${PROJECT_DIRECTORY}/test-results.json"
     - command: attach.results
       params:
         file_location: "${DRIVERS_TOOLS}/results.json"
@@ -340,7 +337,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ./.evergreen/run-tests.sh
+          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -355,7 +352,6 @@ functions:
   "fix absolute paths":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
           for filename in $(find ${DRIVERS_TOOLS} -name \*.json); do
@@ -365,10 +361,9 @@ functions:
   "windows fix":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${DRIVERS_TOOLS} -name \*.sh); do
+          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${PROJECT_DIRECTORY}/.evergreen -name \*.sh); do
             cat $i | tr -d '\r' > $i.new
             mv $i.new $i
           done
@@ -376,19 +371,18 @@ functions:
   "make files executable":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${DRIVERS_TOOLS} -name \*.sh); do
+          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${PROJECT_DIRECTORY}/.evergreen -name \*.sh); do
             chmod +x $i
           done
 
   "init test-results":
     - command: shell.exec
       params:
-        working_dir: "src"
         script: |
-          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > test-results.json
+          ${PREPARE_SHELL}
+          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > ${PROJECT_DIRECTORY}/test-results.json
 
   "install dependencies":
     type: test
@@ -396,7 +390,7 @@ functions:
       working_dir: "src"
       script: |
         ${PREPARE_SHELL}
-        file=".evergreen/install-dependencies.sh"
+        file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
         [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
 
 pre:
@@ -424,7 +418,6 @@ tasks:
         - command: shell.exec
           type: test
           params:
-            working_dir: "src"
             script: |
                set -o xtrace
                . ${DRIVERS_TOOLS}/.evergreen/download-mongodb.sh || true

@@ -3,12 +3,14 @@ set -o xtrace   # Write all commands first to stderr
 set -o errexit  # Exit the script with error if any of the commands fail
 
 
+DIR=$(dirname $0)
+
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 BUILDTOOL=${BUILDTOOL:-autotools}
 
 case "$OS" in
    cygwin*)
-      sh ./.evergreen/compile-windows.sh
+      sh $DIR/compile-windows.sh
    ;;
 
    *)
@@ -17,10 +19,10 @@ case "$OS" in
       # this would be a good place to call the different scripts
       case "$BUILDTOOL" in
          cmake)
-            sh ./.evergreen/compile-unix-cmake.sh
+            sh $DIR/compile-unix-cmake.sh
          ;;
          autotools)
-            sh ./.evergreen/compile-unix.sh
+            sh $DIR/compile-unix.sh
          ;;
       esac
    ;;
