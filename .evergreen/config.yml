@@ -56,19 +56,19 @@ functions:
                  export DRIVERS_TOOLS="c:/drivers-tools"
                  ;;
               *)
-                 export DRIVERS_TOOLS="$PWD/../drivers-tools"
+                 export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
                  ;;
            esac
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
            export UPLOAD_BUCKET="${project}"
-           export PROJECT_DIRECTORY="$PWD"
+           export PROJECT_DIRECTORY="$(pwd)"
 
-           echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
-           echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
-           echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
-           echo 'UPLOAD_BUCKET: "$UPLOAD_BUCKET"' >> expansion.yml
-           echo 'PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"' >> expansion.yml
+           echo "DRIVERS_TOOLS: \"$DRIVERS_TOOLS\"" >> expansion.yml
+           echo "MONGO_ORCHESTRATION_HOME: \"$MONGO_ORCHESTRATION_HOME\"" >> expansion.yml
+           echo "MONGODB_BINARIES: \"$MONGODB_BINARIES\"" >> expansion.yml
+           echo "UPLOAD_BUCKET: \"$UPLOAD_BUCKET\"" >> expansion.yml
+           echo "PROJECT_DIRECTORY: \"$PROJECT_DIRECTORY\"" >> expansion.yml
 
            # Make it easier to get a good shell
            cat <<EOT >> expansion.yml
@@ -85,6 +85,8 @@ functions:
               export PATH="$MONGODB_BINARIES:$PATH"
               export PROJECT="${project}"
            EOT
+           # See what we've done
+           cat expansion.yml
 
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
@@ -269,7 +271,6 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        # FIXME: See EVG-1331
         local_file: ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
