@@ -56,13 +56,13 @@ functions:
                  export DRIVERS_TOOLS="c:/drivers-tools"
                  ;;
               *)
-                 export DRIVERS_TOOLS="$PWD/../drivers-tools"
+                 export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
                  ;;
            esac
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
            export UPLOAD_BUCKET="${project}"
-           export PROJECT_DIRECTORY="$PWD"
+           export PROJECT_DIRECTORY="$(pwd)"
 
            echo "DRIVERS_TOOLS: \"$DRIVERS_TOOLS\"" >> expansion.yml
            echo "MONGO_ORCHESTRATION_HOME: \"$MONGO_ORCHESTRATION_HOME\"" >> expansion.yml
