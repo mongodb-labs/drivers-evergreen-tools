@@ -64,11 +64,11 @@ functions:
            export UPLOAD_BUCKET="${project}"
            export PROJECT_DIRECTORY="$PWD"
 
-           echo DRIVERS_TOOLS: "$DRIVERS_TOOLS" >> expansion.yml
-           echo MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME" >> expansion.yml
-           echo MONGODB_BINARIES: "$MONGODB_BINARIES" >> expansion.yml
-           echo UPLOAD_BUCKET: "$UPLOAD_BUCKET" >> expansion.yml
-           echo PROJECT_DIRECTORY: "$PROJECT_DIRECTORY" >> expansion.yml
+           echo "DRIVERS_TOOLS: \"$DRIVERS_TOOLS\"" >> expansion.yml
+           echo "MONGO_ORCHESTRATION_HOME: \"$MONGO_ORCHESTRATION_HOME\"" >> expansion.yml
+           echo "MONGODB_BINARIES: \"$MONGODB_BINARIES\"" >> expansion.yml
+           echo "UPLOAD_BUCKET: \"$UPLOAD_BUCKET\"" >> expansion.yml
+           echo "PROJECT_DIRECTORY: \"$PROJECT_DIRECTORY\"" >> expansion.yml
 
            # Make it easier to get a good shell
            cat <<EOT >> expansion.yml
@@ -85,6 +85,8 @@ functions:
               export PATH="$MONGODB_BINARIES:$PATH"
               export PROJECT="${project}"
            EOT
+           # See what we've done
+           cat expansion.yml
 
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
