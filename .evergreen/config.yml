@@ -36,60 +36,51 @@ functions:
     # Make an evergreen exapanstion file with dynamic values
     - command: shell.exec
       params:
-        working_dir: "src"
+        shell: bash
         script: |
-           echo "" > expansion.yml
-
+           pushd src
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
               VERSION=$(git describe)-patch-${version_id}
            else
               VERSION=latest
            fi
-           echo "CURRENT_VERSION: $VERSION" >> expansion.yml
 
-           # Python has path problems on Windows. Detect prospective mongo-orchestration home directory
-           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-           case "$OS" in
-              cygwin*)
-                 # Python has problems with unix style paths in cygwin. Must use c:\\ paths
-                 export DRIVERS_TOOLS="c:/drivers-tools"
-                 ;;
-              *)
-                 export DRIVERS_TOOLS="$PWD/../drivers-tools"
-                 ;;
-           esac
+           export TASK_DIR=`pwd`
+           if [ "Windows_NT" == "$OS" ]; then
+              export TASK_DIR=$(cygpath -m $TASK_DIR)
+           fi
+           popd
+
+           export DRIVERS_TOOLS="$TASK_DIR/.drivers-tools"
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
-           export UPLOAD_BUCKET="${project}"
-           export PROJECT_DIRECTORY="$PWD"
+           export PROJECT_DIRECTORY="$TASK_DIR"
 
-           echo 'DRIVERS_TOOLS: "$DRIVERS_TOOLS"' >> expansion.yml
-           echo 'MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"' >> expansion.yml
-           echo 'MONGODB_BINARIES: "$MONGODB_BINARIES"' >> expansion.yml
-           echo 'UPLOAD_BUCKET: "$UPLOAD_BUCKET"' >> expansion.yml
-           echo 'PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"' >> expansion.yml
+           cat > expansion.yml << EOF
+           #
+           CURRENT_VERSION: $VERSION
+           DRIVERS_TOOLS: "$PROJECT_DIRECTORY/.drivers-tools"
+           MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"
+           MONGODB_BINARIES: "$MONGODB_BINARIES"
+           PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"
 
            # Make it easier to get a good shell
-           cat <<EOT >> expansion.yml
            PREPARE_SHELL: |
               set -o errexit
               set -o xtrace
               export DRIVERS_TOOLS="$DRIVERS_TOOLS"
               export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
               export MONGODB_BINARIES="$MONGODB_BINARIES"
-              export UPLOAD_BUCKET="$UPLOAD_BUCKET"
               export PROJECT_DIRECTORY="$PROJECT_DIRECTORY"
 
               export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
               export PATH="$MONGODB_BINARIES:$PATH"
-              export PROJECT="${project}"
-           EOT
-
+           EOF
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
       params:
-        file: src/expansion.yml
+        file: expansion.yml
     - command: shell.exec
       params:
         continue_on_err: true
@@ -98,27 +89,13 @@ functions:
           ${PREPARE_SHELL}
           pip install --upgrade git+git://github.com/mongodb/mongo-orchestration@master
 
-  "prepare resources":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          rm -rf $DRIVERS_TOOLS
-          if [ "${project}" = "drivers-tools" ]; then
-            # If this was a patch build, doing a fresh clone would not actually test the patch
-            cp -R ${PROJECT_DIRECTORY}/ $DRIVERS_TOOLS
-          else
-            git clone git://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
-          fi
-          echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
-
   "upload release":
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         local_file: ${project}.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${project}-${CURRENT_VERSION}.tar.gz
+        remote_file: ${project}/${project}-${CURRENT_VERSION}.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -132,7 +109,7 @@ functions:
       params:
         # Example: mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
         target: "${build_id}.tar.gz"
-        source_dir: ${PROJECT_DIRECTORY}/
+        source_dir: "src"
         include:
           - "./**"
     - command: s3.put
@@ -140,8 +117,8 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         local_file: ${build_id}.tar.gz
-        # Example: /mciuploads/${UPLOAD_BUCKET}/gcc49/9dfb7d741efbca16faa7859b9349d7a942273e43/debug-compile-nosasl-nossl/mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
+        # Example: /mciuploads/${project}/gcc49/9dfb7d741efbca16faa7859b9349d7a942273e43/debug-compile-nosasl-nossl/mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -150,52 +127,47 @@ functions:
     - command: shell.exec
       params:
         continue_on_err: true
-        script: "set -o xtrace && rm -rf ${PROJECT_DIRECTORY}"
+        script: "set -o xtrace && rm -rf src"
     - command: s3.get
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${BUILD_NAME}/${build_id}.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
         bucket: mciuploads
-        local_file: build.tar.gz
-    - command: shell.exec
-      params:
-        continue_on_err: true
-        # EVG-1105: Use s3.get extract_to: ./
-        script: "set -o xtrace && cd .. && rm -rf ${PROJECT_DIRECTORY} && mkdir ${PROJECT_DIRECTORY}/ && tar xf build.tar.gz -C ${PROJECT_DIRECTORY}/"
+        extract_to: src
 
   "exec compile script" :
     - command: shell.exec
       type: test
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${file} ] && BUILDTOOL="${buildtool}" sh ${file} || echo "${file} not available, skipping"
 
   "exec script" :
     - command: shell.exec
       type: test
       params:
-        working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
 
   "upload docs" :
     - command: shell.exec
       params:
         silent: true
         script: |
+          ${PREPARE_SHELL}
+
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp ${PROJECT_DIRECTORY}/doc/html s3://mciuploads/${UPLOAD_BUCKET}/docs/${CURRENT_VERSION} --recursive --acl public-read --region us-east-1
+           aws s3 cp doc/html s3://mciuploads/${project}/docs/${CURRENT_VERSION} --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  ${PROJECT_DIRECTORY}/doc/html/index.html
-        remote_file: ${UPLOAD_BUCKET}/docs/${CURRENT_VERSION}/index.html
+        local_file:  doc/html/index.html
+        remote_file: ${project}/docs/${CURRENT_VERSION}/index.html
         bucket: mciuploads
         permissions: public-read
         content_type: text/html
@@ -208,13 +180,13 @@ functions:
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp ${PROJECT_DIRECTORY}/coverage s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/ --recursive --acl public-read --region us-east-1
+           aws s3 cp coverage s3://mciuploads/${project}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/ --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  ${PROJECT_DIRECTORY}/coverage/index.html
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/index.html
+        local_file:  coverage/index.html
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/coverage/index.html
         bucket: mciuploads
         permissions: public-read
         content_type: text/html
@@ -226,8 +198,8 @@ functions:
       params:
         script: |
           cd
-          if find ${PROJECT_DIRECTORY}/scan -name \*.html | grep -q html; then
-            (cd ${PROJECT_DIRECTORY}/scan && find . -name index.html -exec echo "<li><a href='{}'>{}</a></li>" \;) >> scan.html
+          if find scan -name \*.html | grep -q html; then
+            (cd scan && find . -name index.html -exec echo "<li><a href='{}'>{}</a></li>" \;) >> scan.html
           else
             echo "No issues found" > scan.html
           fi
@@ -237,13 +209,13 @@ functions:
         script: |
            export AWS_ACCESS_KEY_ID=${aws_key}
            export AWS_SECRET_ACCESS_KEY=${aws_secret}
-           aws s3 cp ${PROJECT_DIRECTORY}/scan s3://mciuploads/${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/scan/ --recursive --acl public-read --region us-east-1
+           aws s3 cp scan s3://mciuploads/${project}/${build_variant}/${revision}/${version_id}/${build_id}/scan/ --recursive --acl public-read --region us-east-1
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file:  ${PROJECT_DIRECTORY}/scan.html
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/scan/index.html
+        local_file:  scan.html
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/scan/index.html
         bucket: mciuploads
         permissions: public-read
         content_type: text/html
@@ -254,13 +226,13 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf ${PROJECT_DIRECTORY}/mongodb-logs.tar.gz
+          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf mongodb-logs.tar.gz
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: ${PROJECT_DIRECTORY}/mongodb-logs.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
+        local_file: mongodb-logs.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -271,7 +243,7 @@ functions:
         aws_secret: ${aws_secret}
         # FIXME: See EVG-1331
         local_file: ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|text/plain}
@@ -281,7 +253,7 @@ functions:
     - command: archive.targz_pack
       params:
         target: "working-dir.tar.gz"
-        source_dir: ${PROJECT_DIRECTORY}/
+        source_dir: "src"
         include:
           - "./**"
     - command: s3.put
@@ -289,7 +261,7 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         local_file: working-dir.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-working-dir.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-working-dir.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -305,7 +277,7 @@ functions:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
         local_file: drivers-dir.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-drivers-dir.tar.gz
+        remote_file: ${project}/${build_variant}/${revision}/${version_id}/${build_id}/artifacts/${task_id}-${execution}-drivers-dir.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -314,10 +286,10 @@ functions:
   "upload test results":
     - command: attach.results
       params:
-        file_location: "${PROJECT_DIRECTORY}/test-results.json"
+        file_location: "test-results.json"
     - command: attach.results
       params:
-        file_location: "${DRIVERS_TOOLS}/results.json"
+        file_location: "results.json"
 
   "bootstrap mongo-orchestration":
     - command: shell.exec
@@ -382,20 +354,18 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > ${PROJECT_DIRECTORY}/test-results.json
+          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > test-results.json
 
   "install dependencies":
     type: test
     params:
-      working_dir: "src"
       script: |
         ${PREPARE_SHELL}
-        file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
+        file=".evergreen/install-dependencies.sh"
         [ -f ${file} ] && sh ${file} || echo "${file} not available, skipping"
 
 pre:
   - func: "fetch source"
-  - func: "prepare resources"
   - func: "windows fix"
   - func: "fix absolute paths"
   - func: "init test-results"
@@ -408,9 +378,13 @@ post:
   - func: "upload test results"
   - func: "cleanup"
 
+modules:
+  - name: "drivers-tools"
+    repo: github.com:mongodb-labs/drivers-evergreen-tools.git
+    prefix: .drivers-tools
+    brfanch: master
+
 tasks:
-
-
     # Wildcard task. Do you need to find out what tools are available and where?
     # Throw it here, and execute this task on all buildvariants
     - name: getdata
@@ -894,4 +868,3 @@ buildvariants:
       # Darwin MongoDB SSL builds are not available for 2.4 and 2.6
       # Windows does not support MongoDB 2.4
       # vim: set et sw=2 ts=2 :
-
