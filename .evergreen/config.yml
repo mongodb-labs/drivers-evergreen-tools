@@ -38,40 +38,32 @@ functions:
       params:
         working_dir: "src"
         script: |
-           echo "" > expansion.yml
-
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
-              VERSION=$(git describe)-patch-${version_id}
+              CURRENT_VERSION=$(git describe)-patch-${version_id}
            else
-              VERSION=latest
+              CURRENT_VERSION=latest
            fi
-           echo "CURRENT_VERSION: $VERSION" >> expansion.yml
 
-           # Python has path problems on Windows. Detect prospective mongo-orchestration home directory
-           OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-           case "$OS" in
-              cygwin*)
-                 # Python has problems with unix style paths in cygwin. Must use c:\\ paths
-                 export DRIVERS_TOOLS="c:/drivers-tools"
-                 ;;
-              *)
-                 export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
-                 ;;
-           esac
+           export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
+
+           # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
+           if [ "Windows_NT" == "$OS" ]; then # Magic variable in cygwin
+              export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
+           fi
+
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
            export UPLOAD_BUCKET="${project}"
            export PROJECT_DIRECTORY="$(pwd)"
 
-           echo "DRIVERS_TOOLS: \"$DRIVERS_TOOLS\"" >> expansion.yml
-           echo "MONGO_ORCHESTRATION_HOME: \"$MONGO_ORCHESTRATION_HOME\"" >> expansion.yml
-           echo "MONGODB_BINARIES: \"$MONGODB_BINARIES\"" >> expansion.yml
-           echo "UPLOAD_BUCKET: \"$UPLOAD_BUCKET\"" >> expansion.yml
-           echo "PROJECT_DIRECTORY: \"$PROJECT_DIRECTORY\"" >> expansion.yml
-
-           # Make it easier to get a good shell
-           cat <<EOT >> expansion.yml
+           cat <<EOT > expansion.yml
+           CURRENT_VERSION: "$CURRENT_VERSION"
+           DRIVERS_TOOLS: "$DRIVERS_TOOLS"
+           MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"
+           MONGODB_BINARIES: "$MONGODB_BINARIES"
+           UPLOAD_BUCKET: "$UPLOAD_BUCKET"
+           PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"
            PREPARE_SHELL: |
               set -o errexit
               set -o xtrace
