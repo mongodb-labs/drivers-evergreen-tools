@@ -7,7 +7,7 @@ get_distro ()
    if [ -f /etc/os-release ]; then
       . /etc/os-release
       DISTRO="${ID}-${VERSION_ID}"
-   elif command -v lsb_release 2>/dev/null; then
+   elif command -v lsb_release >/dev/null 2>&1; then
       name=$(lsb_release -s -i)
       if [ "$name" = "RedHatEnterpriseServer" ]; then # RHEL 6.2 at least
          name="rhel"
@@ -27,6 +27,8 @@ get_distro ()
    elif [ -f /etc/lsb-release ]; then
       . /etc/lsb-release
       DISTRO="${DISTRIB_ID}-${DISTRIB_RELEASE}"
+   elif grep -R "Amazon Linux" "/etc/system-release" >/dev/null 2>&1; then
+      DISTRO="amzn64"
    fi
 
    OS=$(uname -s)
@@ -110,12 +112,44 @@ get_mongodb_download_url_for ()
              MONGODB_26=""
              MONGODB_24=""
       ;;
+      linux-sles-11*-x86_64)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse11-latest.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse11-${VERSION_34}.tgz"
+             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse11-${VERSION_32}.tgz"
+             MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse11-${VERSION_30}.tgz"
+             MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse11-${VERSION_26}.tgz"
+             MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-subscription-suse11-${VERSION_24}.tgz"
+      ;;
       linux-sles-12.1-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-latest.tgz"
              MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-${VERSION_34}.tgz"
              MONGODB_32=""
              MONGODB_30=""
              MONGODB_26=""
+             MONGODB_24=""
+      ;;
+      linux-sles-12*-x86_64)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-latest.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_34}.tgz"
+             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_32}.tgz"
+             MONGODB_30=""
+             MONGODB_26=""
+             MONGODB_24=""
+      ;;
+      linux-amzn64*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-latest.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_34}.tgz"
+             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_32}.tgz"
+             MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_30}.tgz"
+             MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_26}.tgz"
+             MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-subscription-amzn64-${VERSION_24}.tgz"
+      ;;
+      linux-debian-7*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-latest.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_34}.tgz"
+             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_32}.tgz"
+             MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_30}.tgz"
+             MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_26}.tgz"
              MONGODB_24=""
       ;;
       linux-debian-8*)
