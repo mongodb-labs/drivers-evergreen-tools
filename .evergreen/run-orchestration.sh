@@ -37,22 +37,33 @@ echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
 
 ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
-case "$OS" in
-   cygwin*)
-      # Crazy python stuff to make sure MO is running latest version
-      python -m virtualenv venv
-      cd venv
-      . Scripts/activate
-      git clone https://github.com/10gen/mongo-orchestration.git
-      cd mongo-orchestration
-      pip install .
-      nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS -s wsgiref start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
-      cd ../..
-      ;;
-   *)
-      nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
-      ;;
+
+cd "$MONGO_ORCHESTRATION_HOME"
+# Setup or use the existing virtualenv for mongo-orchestration
+if [ -f venv/bin/activate ]; then
+  . venv/bin/activate
+elif [ -f venv/Scripts/activate ]; then
+  . venv/Scripts/activate
+elif virtualenv venv || python -m virtualenv venv; then
+  if [ -f venv/bin/activate ]; then
+    . venv/bin/activate
+  elif [ -f venv/Scripts/activate ]; then
+    . venv/Scripts/activate
+  fi
+  # Install from github otherwise mongo-orchestration won't download simplejson
+  # with Python 2.6.
+  pip install --upgrade 'git+git://github.com/mongodb/mongo-orchestration@master'
+  pip freeze
+fi
+cd -
+
+case "$DISTRO" in
+  cygwin*)
+    ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
+    ;;
 esac
+
+nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
 
 ls -la $MONGO_ORCHESTRATION_HOME
 
