@@ -31,9 +31,9 @@ get_distro ()
       DISTRO="amzn64"
    fi
 
-   OS=$(uname -s)
+   OS_NAME=$(uname -s)
    MARCH=$(uname -m)
-   DISTRO=$(echo "$OS-$DISTRO-$MARCH" | tr '[:upper:]' '[:lower:]')
+   DISTRO=$(echo "$OS_NAME-$DISTRO-$MARCH" | tr '[:upper:]' '[:lower:]')
 
    echo $DISTRO
 }
