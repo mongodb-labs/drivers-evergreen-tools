@@ -57,7 +57,7 @@ elif virtualenv venv || python -m virtualenv venv; then
 fi
 cd -
 
-case "$DISTRO" in
+case "$OS" in
   cygwin*)
     ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
     ;;
