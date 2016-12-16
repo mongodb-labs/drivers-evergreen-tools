@@ -687,6 +687,17 @@ axes:
         display_name: "RHEL 7.0"
         run_on: rhel70-small
 
+      - id: suse11-x86-64-test
+        display_name: "SUSE 11 (x86_64)"
+        run_on: suse11-test
+
+      - id: linux-64-amzn-test
+        display_name: "Amazon Linux (Enterprise)"
+        run_on: linux-64-amzn-test
+
+      - id: debian71-test
+        display_name: "Debian 7.1"
+        run_on: debian71-test
 
   - id: os-nossl
     display_name: OS
@@ -757,6 +768,13 @@ axes:
       - id: ubuntu1604-zseries-small
         display_name: "Ubuntu 16.04 (zSeries)"
         run_on: ubuntu1604-zseries-small
+
+  - id: os-requires-32
+    display_name: OS
+    values:
+      - id: suse12-x86-64-test
+        display_name: "SUSE 12 (x86_64)"
+        run_on: suse12-test
 
 
   - id: topology
@@ -867,6 +885,19 @@ buildvariants:
      - name: "test-3.4-sharded"
      - name: "test-3.4-standalone"
 
+- matrix_name: "tests-os-requires-32"
+  matrix_spec: {"os-requires-32": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-32} ${auth} ${ssl}"
+  tasks:
+     - name: "test-latest-replicaset"
+     - name: "test-latest-sharded"
+     - name: "test-latest-standalone"
+     - name: "test-3.4-replicaset"
+     - name: "test-3.4-sharded"
+     - name: "test-3.4-standalone"
+     - name: "test-3.2-replicaset"
+     - name: "test-3.2-sharded"
+     - name: "test-3.2-standalone"
 
 
       # Platform notes
@@ -885,5 +916,7 @@ buildvariants:
       # Solaris MongoDB SSL builds are not available
       # Darwin MongoDB SSL builds are not available for 2.4 and 2.6
       # Windows does not support MongoDB 2.4
+      # Debian 7.1 does not support MongoDB 2.4
+      # SUSE12 x86_64 is only supported by MongoDB 3.2+
       # vim: set et sw=2 ts=2 :
 
