@@ -50,7 +50,7 @@ get_mongodb_download_url_for ()
    VERSION_32="3.2.11"
    VERSION_30="3.0.14"
    VERSION_26="2.6.12"
-   VERSION_24="2.4.12"
+   VERSION_24="2.4.14"
 
    EXTRACT="tar zxf"
    # getdata matrix on:
@@ -102,7 +102,7 @@ get_mongodb_download_url_for ()
              MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_32}.tgz"
              MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_30}.tgz"
              MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_26}.tgz"
-             MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_24}.tgz"
+             MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-subscription-rhel62-${VERSION_24}.tgz"
       ;;
       linux-rhel-5.5*)
          MONGODB_LATEST="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-rhel55-latest.tgz"
