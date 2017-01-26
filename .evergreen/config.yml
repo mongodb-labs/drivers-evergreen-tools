@@ -741,10 +741,6 @@ axes:
         display_name: "Debian 8.1"
         run_on: debian81-test
 
-      - id: ubuntu-16.04
-        display_name: "Ubuntu 16.04"
-        run_on: ubuntu1604-test
-
       - id: rhel71-power8-test
         display_name: "RHEL 7.1 (POWER8)"
         run_on: rhel71-power8-test
@@ -775,6 +771,10 @@ axes:
       - id: suse12-x86-64-test
         display_name: "SUSE 12 (x86_64)"
         run_on: suse12-test
+
+      - id: ubuntu-16.04
+        display_name: "Ubuntu 16.04"
+        run_on: ubuntu1604-test
 
 
   - id: topology
