@@ -235,13 +235,17 @@ get_mongodb_download_url_for ()
              MONGODB_26="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_26}.zip"
              MONGODB_24=""
       ;;
+   esac
+
+   # Fallback to generic Linux x86_64 builds (without SSL) when no platform specific link is available.
+   case "$_DISTRO" in
       *linux*x86_64)
-         MONGODB_LATEST="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-latest.tgz"
-             MONGODB_34="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_34}.tgz"
-             MONGODB_32="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_32}.tgz"
-             MONGODB_30="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_30}.tgz"
-             MONGODB_26="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_26}.tgz"
-             MONGODB_24="http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_24}.tgz"
+         MONGODB_LATEST=${MONGODB_LATEST:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-latest.tgz"}
+                 MONGODB_34=${MONGODB_34:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_34}.tgz"}
+                 MONGODB_32=${MONGODB_32:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_32}.tgz"}
+                 MONGODB_30=${MONGODB_30:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_30}.tgz"}
+                 MONGODB_26=${MONGODB_26:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_26}.tgz"}
+                 MONGODB_24=${MONGODB_24:-"http://downloads.mongodb.org/linux/mongodb-linux-x86_64-${VERSION_24}.tgz"}
       ;;
    esac
 
