@@ -9,10 +9,9 @@
       "port": 27017
    },
    "sslParams": {
-      "sslMode": "requireSSL",
+      "sslOnNormalPorts": true,
       "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/server.pem",
       "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/ca.pem",
-      "sslAllowInvalidCertificates": true,
       "sslWeakCertificateValidation" : true
    }
 }
