@@ -316,6 +316,13 @@ functions:
       params:
         file: mo-expansion.yml
 
+  "stop mongo-orchestration":
+    - command: shell.exec
+      params:
+        script: |
+          ${PREPARE_SHELL}
+          sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
+
   "run tests":
     - command: shell.exec
       type: test
@@ -330,15 +337,6 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          cd "$MONGO_ORCHESTRATION_HOME"
-          # source the mongo-orchestration virtualenv if it exists
-          if [ -f venv/bin/activate ]; then
-            . venv/bin/activate
-          elif [ -f venv/Scripts/activate ]; then
-            . venv/Scripts/activate
-          fi
-          mongo-orchestration stop
-          cd -
           rm -rf $DRIVERS_TOOLS || true
 
   "fix absolute paths":
@@ -398,6 +396,7 @@ post:
   - func: "upload working dir"
   - func: "upload mo artifacts"
   - func: "upload test results"
+  - func: "stop mongo-orchestration"
   - func: "cleanup"
 
 tasks:
