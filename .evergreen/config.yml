@@ -708,6 +708,21 @@ axes:
         display_name: "Solaris"
         run_on: solaris
 
+      # TODO: move Windows to a matrix that runs SSL tests with MongoDB >= 2.6.
+      # SSL is available on Windows since MongoDB 2.6 but mongo-orchestration
+      # fails setting up the cluster.
+      - id: windows-64-vs2010-test
+        display_name: "Windows (VS2010)"
+        run_on: windows-64-vs2010-test
+
+      - id: windows-64-vs2013-test
+        display_name: "Windows (VS2013)"
+        run_on: windows-64-vs2013-test
+
+      - id: windows-64-vs2015-test
+        display_name: "Windows (VS2015)"
+        run_on: windows-64-vs2015-test
+
   # OSes that support versions of MongoDB>=2.6 with SSL.
   - id: os-requires-26
     display_name: OS
@@ -723,18 +738,6 @@ axes:
       - id: debian71-test
         display_name: "Debian 7.1"
         run_on: debian71-test
-
-      - id: windows-64-vs2010-test
-        display_name: "Windows (VS2010)"
-        run_on: windows-64-vs2010-test
-
-      - id: windows-64-vs2013-test
-        display_name: "Windows (VS2013)"
-        run_on: windows-64-vs2013-test
-
-      - id: windows-64-vs2015-test
-        display_name: "Windows (VS2015)"
-        run_on: windows-64-vs2015-test
 
   # OSes that support versions of MongoDB>=3.2 with SSL.
   - id: os-requires-32
@@ -949,7 +952,7 @@ buildvariants:
       # Ubuntu16.04 ppc64le is only supported by MongoDB 3.4+
       # Ubuntu16.04 aarch64 is only supported by MongoDB 3.4+
       # Ubuntu16.04 s390x is only supported by MongoDB 3.4+
-      # Ubuntu16.04 (x86) only supports MongoDB 3.4+
+      # Ubuntu16.04 (x86) only supports MongoDB 3.2+
       # Debian 8.1 only supports MongoDB 3.4+
       # SUSE12 s390x is only supported by MongoDB 3.4+
       # No enterprise build for Archlinux, SSL not available
@@ -958,7 +961,7 @@ buildvariants:
       # RHEL 7.2 s390x is only supported by MongoDB 3.4+
       # Solaris MongoDB SSL builds are not available
       # Darwin MongoDB SSL builds are not available for 2.4 and 2.6
-      # Windows does not support MongoDB 2.4
+      # Windows does not support MongoDB 2.4 with SSL
       # Debian 7.1 does not support MongoDB 2.4
       # SUSE12 x86_64 is only supported by MongoDB 3.2+
       # vim: set et sw=2 ts=2 :
