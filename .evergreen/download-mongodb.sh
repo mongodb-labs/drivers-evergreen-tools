@@ -249,7 +249,6 @@ get_mongodb_download_url_for ()
       ;;
    esac
 
-   MONGODB_DOWNLOAD_URL=""
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
       3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34 ;;
@@ -271,7 +270,6 @@ download_and_extract ()
 
    cd $DRIVERS_TOOLS
    curl $MONGODB_DOWNLOAD_URL --silent --max-time 120 --fail --output mongodb-binaries.tgz
-
    $EXTRACT mongodb-binaries.tgz
 
    rm mongodb-binaries.tgz
