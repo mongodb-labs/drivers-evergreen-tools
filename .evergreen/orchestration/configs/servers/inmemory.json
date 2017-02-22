@@ -5,7 +5,7 @@
         "bind_ip": "localhost,::1",
         "logappend": true,
         "journal": true,
-        "storageEngine": "wiredTiger",
+        "storageEngine": "inMemory",
         "port": 27017
     }
 }
