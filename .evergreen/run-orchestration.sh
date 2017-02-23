@@ -31,14 +31,9 @@ if [ "$SSL" != "nossl" ]; then
    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
 fi
 
+# Storage engine config files do not exist for different topology, auth, or ssl modes.
 if [ ! -z "$STORAGE_ENGINE" ]; then
   ORCHESTRATION_FILE="$STORAGE_ENGINE"
-fi
-
-# Only wiredTiger supports enableMajorityReadConcern. This can be removed once
-# mongo-orchestration properly checks the storageEngine is compatible.
-if [ -z "$STORAGE_ENGINE" || "$STORAGE_ENGINE" = "wiredtiger" ]; then
-  ENABLE_MAJORITY_READ_CONCERN="--enable-majority-read-concern"
 fi
 
 export ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/configs/${TOPOLOGY}s/${ORCHESTRATION_FILE}.json"
@@ -47,7 +42,7 @@ export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
 
-ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 $ENABLE_MAJORITY_READ_CONCERN"
+ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
 
 cd "$MONGO_ORCHESTRATION_HOME"
 # Setup or use the existing virtualenv for mongo-orchestration

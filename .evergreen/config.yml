@@ -965,7 +965,7 @@ buildvariants:
      - name: "test-3.4-sharded_cluster"
      - name: "test-3.4-standalone"
 
-# Storage Engine Tests
+# Storage Engine Tests on Amazon Linux (Enterprise)
 - matrix_name: "tests-storage-engines"
   matrix_spec: {"os-fully-featured": "linux-64-amzn-test", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
