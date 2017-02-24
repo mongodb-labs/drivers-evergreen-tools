@@ -6,6 +6,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
+STORAGE_ENGINE=${STORAGE_ENGINE}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -28,6 +29,11 @@ fi
 
 if [ "$SSL" != "nossl" ]; then
    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
+fi
+
+# Storage engine config files do not exist for different topology, auth, or ssl modes.
+if [ ! -z "$STORAGE_ENGINE" ]; then
+  ORCHESTRATION_FILE="$STORAGE_ENGINE"
 fi
 
 export ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/configs/${TOPOLOGY}s/${ORCHESTRATION_FILE}.json"

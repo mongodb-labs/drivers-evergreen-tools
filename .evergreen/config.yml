@@ -314,7 +314,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
+          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
@@ -832,6 +832,21 @@ axes:
         display_name: NoSSL
         variables:
            SSL: "nossl"
+  - id: storage-engine
+    display_name: Storage
+    values:
+      - id: mmapv1
+        display_name: MMAPv1
+        variables:
+           STORAGE_ENGINE: "mmapv1"
+      - id: wiredtiger
+        display_name: WiredTiger
+        variables:
+           STORAGE_ENGINE: "wiredtiger"
+      - id: inmemory
+        display_name: InMemory
+        variables:
+           STORAGE_ENGINE: "inmemory"
 
 
 buildvariants:
@@ -949,6 +964,26 @@ buildvariants:
      - name: "test-3.4-replica_set"
      - name: "test-3.4-sharded_cluster"
      - name: "test-3.4-standalone"
+
+# Storage Engine Tests on Amazon Linux (Enterprise)
+- matrix_name: "tests-storage-engines"
+  matrix_spec: {"os-fully-featured": "linux-64-amzn-test", storage-engine: "*" }
+  display_name: "${os-fully-featured} ${storage-engine}"
+  rules:
+    - if:
+        os-fully-featured: "*"
+        storage-engine: ["mmapv1", "inmemory"]
+      then:
+        add_tasks:
+          - "test-latest-standalone"
+          - "test-3.4-standalone"
+          - "test-3.2-standalone"
+    - if:
+        os-fully-featured: "*"
+        storage-engine: "wiredtiger"
+      then:
+        add_tasks:
+          - "test-3.0-standalone"
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
