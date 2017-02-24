@@ -361,6 +361,8 @@ functions:
             cat $i | tr -d '\r' > $i.new
             mv $i.new $i
           done
+          # Copy client certificate because symlinks do not work on Windows.
+          cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem
 
   "make files executable":
     - command: shell.exec
@@ -712,9 +714,9 @@ axes:
         display_name: "Solaris"
         run_on: solaris
 
-      # TODO: move Windows to a matrix that runs SSL tests with MongoDB >= 2.6.
-      # SSL is available on Windows since MongoDB 2.6 but mongo-orchestration
-      # fails setting up the cluster.
+  - id: os-windows
+    display_name: OS
+    values:
       - id: windows-64-vs2010-test
         display_name: "Windows (VS2010)"
         run_on: windows-64-vs2010-test
@@ -984,6 +986,37 @@ buildvariants:
       then:
         add_tasks:
           - "test-3.0-standalone"
+
+- matrix_name: "tests-windows"
+  matrix_spec: {os-windows: "*", auth: "*", ssl: "*" }
+  display_name: "${os-windows} ${auth} ${ssl}"
+  tasks:
+     - name: "test-latest-replica_set"
+     - name: "test-latest-sharded_cluster"
+     - name: "test-latest-standalone"
+     - name: "test-3.4-replica_set"
+     - name: "test-3.4-sharded_cluster"
+     - name: "test-3.4-standalone"
+     - name: "test-3.2-replica_set"
+     - name: "test-3.2-sharded_cluster"
+     - name: "test-3.2-standalone"
+     - name: "test-3.0-replica_set"
+     - name: "test-3.0-sharded_cluster"
+     - name: "test-3.0-standalone"
+     - name: "test-2.6-replica_set"
+     - name: "test-2.6-sharded_cluster"
+     - name: "test-2.6-standalone"
+  rules:
+     # Windows MongoDB 2.4 does not support SSL.
+     - if:
+         os-windows: "*"
+         auth: "*"
+         ssl: "nossl"
+       then:
+         add_tasks:
+           - name: "test-2.4-replica_set"
+           - name: "test-2.4-sharded_cluster"
+           - name: "test-2.4-standalone"
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
