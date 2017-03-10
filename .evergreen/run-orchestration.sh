@@ -8,7 +8,6 @@ SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
 STORAGE_ENGINE=${STORAGE_ENGINE}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 DL_START=$(date +%s)
 DIR=$(dirname $0)
@@ -41,9 +40,6 @@ export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
-
-ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
-
 cd "$MONGO_ORCHESTRATION_HOME"
 # Setup or use the existing virtualenv for mongo-orchestration
 if [ -f venv/bin/activate ]; then
@@ -63,11 +59,24 @@ elif virtualenv --system-site-packages venv || python -m virtualenv --system-sit
 fi
 cd -
 
-case "$OS" in
-  cygwin*)
-    ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
-    ;;
-esac
+ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
+  ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
+fi
+
+# Forcibly kill the process listening on port 8889, most likey a wild
+# mongo-orchestration left running from a previous task.
+if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
+  OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
+  if [ ! -z "$OLD_MO_PID" ]; then
+    taskkill /F /T /PID "$OLD_MO_PID" || true
+  fi
+else
+  OLD_MO_PID=$(lsof -t -i:8889 || true)
+  if [ ! -z "$OLD_MO_PID" ]; then
+    kill -9 "$OLD_MO_PID" || true
+  fi
+fi
 
 nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
 
