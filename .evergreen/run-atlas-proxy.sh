@@ -4,6 +4,10 @@
 # to build and launch an Atlas proxy for testing.  It works directly from
 # their master branch, so may fail if they break something.
 #
+# There is no corresponding 'shutdown' script; the Atlas proxy project
+# relies on Evergreen to terminate processes and clean up when tasks end,
+# so we do the same.
+#
 # The URI is harded coded as:
 # mongodb://user:pencil@host.local.10gen.cc:9900,host.local.10gen.cc:9910,host.local.10gen.cc:9920/admin?replicaSet=eliot1p
 #
