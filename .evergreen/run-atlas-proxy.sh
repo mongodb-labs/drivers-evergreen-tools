@@ -9,7 +9,7 @@
 # so we do the same.
 #
 # The URI is harded coded as:
-# mongodb://user:pencil@host.local.10gen.cc:9900,host.local.10gen.cc:9910,host.local.10gen.cc:9920/admin?replicaSet=eliot1p
+# mongodb://user:pencil@host5.local.10gen.cc:9900/admin?replicaSet=benchmark
 #
 # Connections requires SSL and the CA file is 'main/ca.pem' in the atlasproxy repo.
 #
