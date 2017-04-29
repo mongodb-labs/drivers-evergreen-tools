@@ -7,8 +7,7 @@
     {
       "procParams": {
         "ipv6": true,
-	"bind_ip": "localhost,::1",
-        "nohttpinterface": true,
+        "bind_ip": "localhost,::1",
         "journal": true,
         "noprealloc": true,
         "nssize": 1,
@@ -25,8 +24,7 @@
     {
       "procParams": {
         "ipv6": true,
-	"bind_ip": "localhost,::1",
-        "nohttpinterface": true,
+        "bind_ip": "localhost,::1",
         "journal": true,
         "noprealloc": true,
         "nssize": 1,
@@ -43,8 +41,7 @@
     {
       "procParams": {
         "ipv6": true,
-	"bind_ip": "localhost,::1",
-        "nohttpinterface": true,
+        "bind_ip": "localhost,::1",
         "journal": true,
         "noprealloc": true,
         "nssize": 1,
