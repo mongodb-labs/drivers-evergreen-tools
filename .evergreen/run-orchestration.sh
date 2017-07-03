@@ -15,7 +15,11 @@ DIR=$(dirname $0)
 . $DIR/download-mongodb.sh
 
 get_distro
-get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
+if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
+    get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
+fi
+# Even though we have the MONGODB_DOWNLOAD_URL, we still call this to get the proper EXTRACT variable
+get_mongodb_download_url_for "$DISTRO"
 download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
 
 DL_END=$(date +%s)
