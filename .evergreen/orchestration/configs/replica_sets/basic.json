@@ -7,6 +7,7 @@
         "bind_ip": "localhost,::1",
         "journal": true,
         "noprealloc": true,
+	"oplogSize": 500,
         "nssize": 1,
         "port": 27017,
         "smallfiles": true
@@ -24,6 +25,7 @@
         "bind_ip": "localhost,::1",
         "journal": true,
         "noprealloc": true,
+	"oplogSize": 500,
         "nssize": 1,
         "port": 27018,
         "smallfiles": true
