@@ -9,7 +9,7 @@
       "shardParams": {
         "procParams": {
           "ipv6": true,
-          "bind_ip": "localhost,::1",
+          "bind_ip": "127.0.0.1,::1",
           "shardsvr": true,
           "setParameter" : { "enableTestCommands": 1 },
           "port": 27217
@@ -21,7 +21,7 @@
       "shardParams": {
         "procParams": {
           "ipv6": true,
-          "bind_ip": "localhost,::1",
+          "bind_ip": "127.0.0.1,::1",
           "shardsvr": true,
           "setParameter" : { "enableTestCommands": 1 },
           "port": 27218
@@ -32,13 +32,13 @@
   "routers": [
     {
       "ipv6": true,
-      "bind_ip": "localhost,::1",
+      "bind_ip": "127.0.0.1,::1",
       "setParameter" : { "enableTestCommands": 1 },
       "port": 27017
     },
     {
       "ipv6": true,
-      "bind_ip": "localhost,::1",
+      "bind_ip": "127.0.0.1,::1",
       "setParameter" : { "enableTestCommands": 1 },
       "port": 27018
     }
