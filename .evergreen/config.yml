@@ -710,10 +710,6 @@ axes:
         display_name: "macOS 10.12"
         run_on: macos-1012
 
-      - id: solaris
-        display_name: "Solaris"
-        run_on: solaris
-
   - id: os-windows
     display_name: OS
     values:
