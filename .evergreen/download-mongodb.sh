@@ -159,6 +159,7 @@ get_mongodb_download_url_for ()
       linux-debian-7*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-latest.tgz"
              MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_36}.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_34}.tgz"
              MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_32}.tgz"
              MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_30}.tgz"
              MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_26}.tgz"
