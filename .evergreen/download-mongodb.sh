@@ -52,7 +52,7 @@ get_mongodb_download_url_for ()
    VERSION_36="3.6.0-rc7"
    VERSION_34="3.4.10"
    VERSION_32="3.2.18"
-   VERSION_30="3.0.14"
+   VERSION_30="3.0.15"
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
 
@@ -73,7 +73,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-latest.tgz"
              MONGODB_36=""
              MONGODB_34="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-3.4.5.tgz"
-             MONGODB_32=""
+             MONGODB_32="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-3.2.14.tgz"
              MONGODB_30="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-${VERSION_30}.tgz"
              MONGODB_26="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-${VERSION_26}.tgz"
              MONGODB_24="https://fastdl.mongodb.org/sunos5/mongodb-sunos5-x86_64-${VERSION_24}.tgz"
