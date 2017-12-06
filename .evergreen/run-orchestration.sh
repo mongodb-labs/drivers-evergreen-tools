@@ -96,12 +96,12 @@ nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_
 ls -la $MONGO_ORCHESTRATION_HOME
 
 sleep 15
-curl http://localhost:8889/ --silent --max-time 120 --fail
+curl http://localhost:8889/ --silent --show-errors --max-time 120 --fail
 
 sleep 5
 
 pwd
-curl --silent --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 300 --fail > tmp.json
+curl --silent --show-errors --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json
 URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo "Cluster URI: $URI"
