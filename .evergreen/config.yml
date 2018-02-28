@@ -823,6 +823,14 @@ axes:
         display_name: "Ubuntu 16.04 (zSeries)"
         run_on: ubuntu1604-zseries-small
 
+  # OSes that support versions of MongoDB>=4.0 with SSL.
+  - id: os-requires-40
+    display_name: OS
+    values:
+      - id: debian92-test
+        display_name: "Debian 9.2"
+        run_on: debian92-test
+
   - id: topology
     display_name: Topology
     values:
@@ -1010,6 +1018,14 @@ buildvariants:
      - name: "test-3.4-replica_set"
      - name: "test-3.4-sharded_cluster"
      - name: "test-3.4-standalone"
+
+- matrix_name: "tests-os-requires-40"
+  matrix_spec: {"os-requires-40": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-40} ${auth} ${ssl}"
+  tasks:
+     - name: "test-latest-replica_set"
+     - name: "test-latest-sharded_cluster"
+     - name: "test-latest-standalone"
 
 # Storage Engine Tests on Amazon Linux (Enterprise)
 - matrix_name: "tests-storage-engines"
