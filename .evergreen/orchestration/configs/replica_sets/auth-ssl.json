@@ -51,7 +51,6 @@
         "smallfiles": true
       },
       "rsParams": {
-        "arbiterOnly": true
       }
     }
   ],
