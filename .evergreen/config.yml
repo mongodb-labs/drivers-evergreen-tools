@@ -716,13 +716,6 @@ axes:
   - id: os-fully-featured
     display_name: OS
     values:
-      - id: ubuntu1204-test
-        display_name: "Ubuntu 12.04"
-        run_on: ubuntu1204-test
-
-      - id: suse11-x86-64-test
-        display_name: "SUSE 11 (x86_64)"
-        run_on: suse11-test
 
       - id: linux-64-amzn-test
         display_name: "Amazon Linux (Enterprise)"
