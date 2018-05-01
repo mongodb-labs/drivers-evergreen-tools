@@ -102,6 +102,7 @@ sleep 5
 
 pwd
 curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json
+cat tmp.json
 URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo "Cluster URI: $URI"
