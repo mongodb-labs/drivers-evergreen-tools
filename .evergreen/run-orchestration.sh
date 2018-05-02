@@ -59,7 +59,7 @@ if [ -f venv/bin/activate ]; then
   . venv/bin/activate
 elif [ -f venv/Scripts/activate ]; then
   . venv/Scripts/activate
-elif virtualenv --system-site-packages --no-download venv || virtualenv --system-site-packages venv  || python -m virtualenv --system-site-packages --no-download venv || python -m virtualenv --system-site-packages venv; then
+elif python -m virtualenv --system-site-packages --no-download venv || python -m virtualenv --system-site-packages venv || virtualenv --system-site-packages --no-download venv || virtualenv --system-site-packages venv; then
   if [ -f venv/bin/activate ]; then
     . venv/bin/activate
   elif [ -f venv/Scripts/activate ]; then
