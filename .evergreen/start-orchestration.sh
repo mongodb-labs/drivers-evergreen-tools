@@ -22,14 +22,12 @@ cd "$MONGO_ORCHESTRATION_HOME"
 # pip, wheel) have dropped, or soon will drop, support for Python
 # 2.6. Starting with version 14, virtualenv upgrades these libraries
 # to the latest available on pypi when creating the virtual environment
-# unless you pass --no-download. The --no-download option was also added
-# in virtualenv 14. We try with and without --no-download to support
-# older versions of virtualenv.
+# unless you pass --never-download.
 if [ -f venv/bin/activate ]; then
   . venv/bin/activate
 elif [ -f venv/Scripts/activate ]; then
   . venv/Scripts/activate
-elif python  -m virtualenv --system-site-packages --no-download venv || python -m virtualenv --system-site-packages venv || virtualenv --system-site-packages --no-download venv || virtualenv --system-site-packages venv; then
+elif python -m virtualenv --system-site-packages --never-download venv || virtualenv --system-site-packages --never-download venv; then
   if [ -f venv/bin/activate ]; then
     . venv/bin/activate
   elif [ -f venv/Scripts/activate ]; then
