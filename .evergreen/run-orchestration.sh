@@ -47,7 +47,7 @@ echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 cd "$MONGO_ORCHESTRATION_HOME"
 
 # Prefer using Python 3 from the toolchain over the default system python.
-PYTHON=$(command -v /opt/mongodbtoolchain/v2/bin/python3 || command -v python3 || python)
+PYTHON=$(command -v /opt/mongodbtoolchain/v2/bin/python3 || command -v python3 || command -v python)
 $PYTHON -c 'import sys; print(sys.version)'
 $PYTHON -c 'import ssl; print(ssl.OPENSSL_VERSION)'
 
