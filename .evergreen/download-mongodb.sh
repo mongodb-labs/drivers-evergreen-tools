@@ -50,9 +50,9 @@ get_mongodb_download_url_for ()
    _VERSION=$2
 
    VERSION_40="4.0.0-rc0"
-   VERSION_36="3.6.3"
-   VERSION_34="3.4.14"
-   VERSION_32="3.2.19"
+   VERSION_36="3.6.5"
+   VERSION_34="3.4.15"
+   VERSION_32="3.2.20"
    VERSION_30="3.0.15"
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
@@ -184,9 +184,10 @@ get_mongodb_download_url_for ()
       linux-debian-7*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-latest.tgz"
              MONGODB_40=""
-             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_36}.tgz"
-             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_34}.tgz"
-             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_32}.tgz"
+             # SERVER-32999 removed support for Debian 7.
+             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-3.6.5.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-3.4.15.tgz"
+             MONGODB_32="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-3.2.20.tgz"
              MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_30}.tgz"
              MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-${VERSION_26}.tgz"
              MONGODB_24=""
