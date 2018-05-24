@@ -45,6 +45,12 @@ export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
 cd "$MONGO_ORCHESTRATION_HOME"
+
+# Prefer using Python 3 from the toolchain over the default system python.
+PYTHON=$(command -v /opt/mongodbtoolchain/v2/bin/python3 || command -v python3 || python)
+$PYTHON -c 'import sys; print(sys.version)'
+$PYTHON -c 'import ssl; print(ssl.OPENSSL_VERSION)'
+
 # Setup or use the existing virtualenv for mongo-orchestration.
 #
 # Many of the Linux distros in Evergreen ship Python 2.6 as the
@@ -59,7 +65,7 @@ if [ -f venv/bin/activate ]; then
   . venv/bin/activate
 elif [ -f venv/Scripts/activate ]; then
   . venv/Scripts/activate
-elif python -m virtualenv --system-site-packages --no-download venv || python -m virtualenv --system-site-packages venv || virtualenv --system-site-packages --no-download venv || virtualenv --system-site-packages venv; then
+elif $PYTHON -m virtualenv --system-site-packages --no-download venv || $PYTHON -m virtualenv --system-site-packages venv || virtualenv --system-site-packages --no-download venv || virtualenv --system-site-packages venv; then
   if [ -f venv/bin/activate ]; then
     . venv/bin/activate
   elif [ -f venv/Scripts/activate ]; then
