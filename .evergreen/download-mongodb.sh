@@ -155,7 +155,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-latest.tgz"
              MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-v4.0-latest.tgz"
              MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-3.6.3.tgz"
-             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-3.4.13.tgz.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-3.4.13.tgz"
              MONGODB_32=""
              MONGODB_30=""
              MONGODB_26=""
