@@ -49,7 +49,7 @@ get_mongodb_download_url_for ()
    _DISTRO=$1
    _VERSION=$2
 
-   VERSION_40="4.0.0-rc7"
+   VERSION_40="4.0.0"
    VERSION_36="3.6.5"
    VERSION_34="3.4.15"
    VERSION_32="3.2.20"
@@ -83,9 +83,9 @@ get_mongodb_download_url_for ()
       ;;
       linux-rhel-7*-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-latest.tgz"
-             MONGODB_40=""
-             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_36}.tgz"
-             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_34}.tgz"
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-v4.0-latest.tgz"
+             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-3.6.4.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-3.4.14.tgz"
              MONGODB_32=""
              MONGODB_30=""
              MONGODB_26=""
@@ -153,9 +153,9 @@ get_mongodb_download_url_for ()
       ;;
       linux-sles-12*-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-latest.tgz"
-             MONGODB_40=""
-             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-${VERSION_36}.tgz"
-             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-${VERSION_34}.tgz"
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-v4.0-latest.tgz"
+             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-3.6.3.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-suse12-3.4.13.tgz.tgz"
              MONGODB_32=""
              MONGODB_30=""
              MONGODB_26=""
@@ -214,9 +214,9 @@ get_mongodb_download_url_for ()
       ;;
       linux-ubuntu-16.04-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-latest.tgz"
-             MONGODB_40=""
-             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-${VERSION_36}.tgz"
-             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-${VERSION_34}.tgz"
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-v4.0-latest.tgz"
+             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-3.6.4.tgz"
+             MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-3.4.14.tgz"
              MONGODB_32=""
              MONGODB_30=""
              MONGODB_26=""
