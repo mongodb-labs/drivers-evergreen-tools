@@ -6,11 +6,8 @@
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
         "journal": true,
-        "noprealloc": true,
-	"oplogSize": 500,
-        "nssize": 1,
-        "port": 27017,
-        "smallfiles": true
+        "oplogSize": 500,
+        "port": 27017
       },
       "rsParams": {
         "tags": {
@@ -24,11 +21,8 @@
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
         "journal": true,
-        "noprealloc": true,
-	"oplogSize": 500,
-        "nssize": 1,
-        "port": 27018,
-        "smallfiles": true
+        "oplogSize": 500,
+        "port": 27018
       },
       "rsParams": {
         "tags": {
@@ -42,10 +36,7 @@
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
         "journal": true,
-        "noprealloc": true,
-        "nssize": 1,
-        "port": 27019,
-        "smallfiles": true
+        "port": 27019
       },
       "rsParams": {
         "arbiterOnly": true
