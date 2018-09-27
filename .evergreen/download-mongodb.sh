@@ -344,7 +344,7 @@ download_and_extract ()
    EXTRACT=$2
 
    cd $DRIVERS_TOOLS
-   curl --retry 5 -sS $MONGODB_DOWNLOAD_URL --max-time 300 --output mongodb-binaries.tgz
+   curl --retry 8 -sS $MONGODB_DOWNLOAD_URL --max-time 300 --output mongodb-binaries.tgz
    $EXTRACT mongodb-binaries.tgz
 
    rm mongodb-binaries.tgz
