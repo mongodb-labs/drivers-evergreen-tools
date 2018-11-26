@@ -34,3 +34,8 @@ The `** Release Archive Creator` buildvariant is special, and does not run the "
 
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
+
+# evergreen_config_generator
+
+This repo also contains a Python package for use in scripts that generate
+Evergreen config files from Python dicts. See evergreen_config_generator/README.

@@ -1,1 +1,4 @@
 *.swp
+evergreen_config_generator/build
+evergreen_config_generator/dist
+*.egg-info
