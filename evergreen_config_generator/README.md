@@ -13,7 +13,7 @@ install this package with:
 
 ```
 python -m pip install -e \
- git+https://github.com/mongodb-labs/drivers-evergreen-tools#subdirectory=evergreen_config_generator
+ git+https://github.com/mongodb-labs/drivers-evergreen-tools#subdirectory=evergreen_config_generator&egg=evergreen_config_generator
 ```
 
 Write a script that creates an `OrderedDict` of Evergreen functions, tasks, and
