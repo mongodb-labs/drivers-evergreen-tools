@@ -1,3 +1,5 @@
+# This Repository is NOT a supported MongoDB product
+
 # drivers-evergreen-tools
 
 This repo is meant for MongoDB drivers to bootstrap their Evergreen
