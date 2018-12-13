@@ -14,20 +14,6 @@
           }
         }]
       }
-    },
-    {
-      "id": "sh02",
-      "shardParams": {
-        "members": [{
-          "procParams": {
-            "ipv6": true,
-            "bind_ip": "127.0.0.1,::1",
-            "shardsvr": true,
-            "setParameter" : { "enableTestCommands": 1 },
-            "port": 27218
-          }
-        }]
-      }
     }
   ],
   "routers": [
