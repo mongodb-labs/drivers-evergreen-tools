@@ -49,10 +49,10 @@ get_mongodb_download_url_for ()
    _DISTRO=$1
    _VERSION=$2
 
-   VERSION_40="4.0.3"
-   VERSION_36="3.6.8"
-   VERSION_34="3.4.18"
-   VERSION_32="3.2.20"
+   VERSION_40="4.0.6"
+   VERSION_36="3.6.10"
+   VERSION_34="3.4.19"
+   VERSION_32="3.2.22"
    VERSION_30="3.0.15"
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
