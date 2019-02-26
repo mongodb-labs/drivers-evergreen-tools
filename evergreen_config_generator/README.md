@@ -6,8 +6,7 @@ We find that generating configuration from Python data structures is more
 legible than Evergreen's matrix syntax or a handwritten file for the C and C++
 Drivers' config files, and perhaps other for other projects.
 
-This package is currently used by the C Driver, see [`generate-evergreen-config.py`]
-(https://github.com/mongodb/mongo-c-driver/blob/master/build/generate-evergreen-config.py).
+This package is currently used by the C Driver, see [`generate-evergreen-config.py`](https://github.com/mongodb/mongo-c-driver/blob/master/build/generate-evergreen-config.py).
 If you plan to write such an Evergreen-config-generator script in Python,
 install this package with:
 
