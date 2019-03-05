@@ -10,7 +10,7 @@
         "port": 27017
       },
       "rsParams": {
-        "priority": 1,
+        "priority": 10,
         "tags": {
           "ordinal": "one",
           "dc": "ny"
