@@ -1,8 +1,5 @@
 {
   "id": "shard_cluster_1",
-  "login": "bob",
-  "password": "pwd123",
-  "auth_key": "secret",
   "shards": [
     {
       "id": "sh01",
@@ -12,7 +9,8 @@
             "ipv6": true,
             "bind_ip": "127.0.0.1,::1",
             "shardsvr": true,
-            "port": 27217
+            "port": 27217,
+            "setParameter" : { "enableTestCommands": 0 }
           }
         }]
       }
@@ -22,18 +20,14 @@
     {
       "ipv6": true,
       "bind_ip": "127.0.0.1,::1",
-      "port": 27017
+      "port": 27017,
+      "setParameter" : { "enableTestCommands": 0 }
     },
     {
       "ipv6": true,
       "bind_ip": "127.0.0.1,::1",
-      "port": 27018
+      "port": 27018,
+      "setParameter" : { "enableTestCommands": 0 }
     }
-  ],
-  "sslParams": {
-      "sslOnNormalPorts": true,
-      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/server.pem",
-      "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen/ca.pem",
-      "sslWeakCertificateValidation" : true
-  }
+  ]
 }

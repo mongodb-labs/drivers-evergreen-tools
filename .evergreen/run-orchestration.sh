@@ -7,6 +7,9 @@ AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
 STORAGE_ENGINE=${STORAGE_ENGINE}
+# Set to a non-empty string to use the <topology>/disableTestCommands.json
+# cluster config, eg DISABLE_TEST_COMMANDS=1
+DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
 DL_START=$(date +%s)
@@ -33,6 +36,11 @@ fi
 
 if [ "$SSL" != "nossl" ]; then
    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
+fi
+
+# disableTestCommands files do not exist for different auth or ssl modes.
+if [ ! -z "$DISABLE_TEST_COMMANDS" ]; then
+  ORCHESTRATION_FILE="disableTestCommands"
 fi
 
 # Storage engine config files do not exist for different topology, auth, or ssl modes.
