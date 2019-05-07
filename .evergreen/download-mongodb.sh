@@ -171,7 +171,7 @@ get_mongodb_download_url_for ()
              MONGODB_26=""
              MONGODB_24=""
       ;;
-      linux-amzn64*)
+      linux-amzn*-x86_64)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-latest.tgz"
              MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_40}.tgz"
              MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_36}.tgz"
