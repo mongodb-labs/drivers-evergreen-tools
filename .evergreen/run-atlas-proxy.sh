@@ -68,6 +68,8 @@ git clone git@github.com:10gen/atlasproxy.git
 cd atlasproxy
 
 # This section copied from atlasproxy's .evergreen.yml: <<<
+export PATH="/opt/golang/go1.11/bin:$PATH"
+export GOROOT="/opt/golang/go1.11"
 export GOPATH=`pwd`/.gopath
 go version
 ./gpm
