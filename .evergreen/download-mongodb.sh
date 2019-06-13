@@ -365,6 +365,7 @@ get_mongodb_download_url_for ()
 
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
+      4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42 ;;
       4.0) MONGODB_DOWNLOAD_URL=$MONGODB_40 ;;
       3.6) MONGODB_DOWNLOAD_URL=$MONGODB_36 ;;
       3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34 ;;
