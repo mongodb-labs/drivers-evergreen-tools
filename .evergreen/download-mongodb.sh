@@ -229,6 +229,39 @@ get_mongodb_download_url_for ()
              MONGODB_26=""
              MONGODB_24=""
       ;;
+      linux-ubuntu-18.04-s390x)
+         MONGODB_LATEST=""
+             MONGODB_42=""
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1804-${VERSION_40}.tgz"
+             MONGODB_36=""
+             MONGODB_34=""
+             MONGODB_32=""
+             MONGODB_30=""
+             MONGODB_26=""
+             MONGODB_24=""
+      ;;
+      linux-ubuntu-18.04-aarch64)
+         MONGODB_LATEST="http://fastdl.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-latest.tgz"
+             MONGODB_42="http://fastdl.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-${VERSION_42}.tgz"
+             MONGODB_40=""
+             MONGODB_36=""
+             MONGODB_34=""
+             MONGODB_32=""
+             MONGODB_30=""
+             MONGODB_26=""
+             MONGODB_24=""
+      ;;
+      linux-ubuntu-18.04*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-latest.tgz"
+             MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_42}.tgz"
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_40}.tgz"
+             MONGODB_36=""
+             MONGODB_34=""
+             MONGODB_32=""
+             MONGODB_30=""
+             MONGODB_26=""
+             MONGODB_24=""
+      ;;
       linux-ubuntu-16.04-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-latest.tgz"
              MONGODB_42=""
