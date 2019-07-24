@@ -183,7 +183,7 @@ get_mongodb_download_url_for ()
              MONGODB_26=""
              MONGODB_24=""
       ;;
-      linux-amzn*-x86_64)
+      linux-amzn-2018*-x86_64)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-latest.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_42}.tgz"
              MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_40}.tgz"
@@ -193,6 +193,17 @@ get_mongodb_download_url_for ()
              MONGODB_30="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_30}.tgz"
              MONGODB_26="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_26}.tgz"
              MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-subscription-amzn64-${VERSION_24}.tgz"
+      ;;
+      linux-amzn-2-x86_64)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-latest.tgz"
+             MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_42}.tgz"
+             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_40}.tgz"
+             MONGODB_36=""
+             MONGODB_34=""
+             MONGODB_32=""
+             MONGODB_30=""
+             MONGODB_26=""
+             MONGODB_24=""
       ;;
       linux-debian-7*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian71-latest.tgz"
