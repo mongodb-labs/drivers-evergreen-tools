@@ -43,7 +43,7 @@ if [ ! -z "$DISABLE_TEST_COMMANDS" ]; then
   ORCHESTRATION_FILE="disableTestCommands"
 fi
 
-# Storage engine config files do not exist for different topology, auth, or ssl modes.
+# Storage engine config files do not exist for different auth or ssl modes.
 if [ ! -z "$STORAGE_ENGINE" ]; then
   ORCHESTRATION_FILE="$STORAGE_ENGINE"
 fi
