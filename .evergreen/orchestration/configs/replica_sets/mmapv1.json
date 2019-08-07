@@ -38,7 +38,6 @@
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
         "journal": true, 
-        "storageEngine": "mmapv1",
         "port": 27019
       },
       "rsParams": {
