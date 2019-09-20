@@ -241,10 +241,10 @@ get_mongodb_download_url_for ()
              MONGODB_24=""
       ;;
       linux-debian-10*)
-         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-latest.tgz"
-             MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_42}.tgz"
-             MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_40}.tgz"
-             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_36}.tgz"
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-latest.tgz"
+             MONGODB_42=""
+             MONGODB_40=""
+             MONGODB_36=""
              MONGODB_34=""
              MONGODB_32=""
              MONGODB_30=""
