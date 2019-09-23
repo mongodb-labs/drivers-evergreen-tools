@@ -94,6 +94,7 @@ get_mongodb_download_url_for ()
              MONGODB_30=""
              MONGODB_26=""
              MONGODB_24=""
+      ;;
       linux-rhel-7*-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-latest.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_42}.tgz"
