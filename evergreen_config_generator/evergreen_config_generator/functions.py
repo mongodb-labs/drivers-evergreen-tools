@@ -90,6 +90,7 @@ def shell_exec(script, test=True, errexit=True, xtrace=True, silent=False,
     if continue_on_err:
         command['params']['continue_on_err'] = True
 
+    command['params']['shell'] = 'bash'
     command['params']['script'] = dedented
     return command
 
