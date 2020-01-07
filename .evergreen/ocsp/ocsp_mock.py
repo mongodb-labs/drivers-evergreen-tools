@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+# Taken from https://github.com/mongodb/mongo/blob/master/jstests/ocsp/lib/ocsp_mock.py
 """
 Python script to interface as a mock OCSP responder.
 """

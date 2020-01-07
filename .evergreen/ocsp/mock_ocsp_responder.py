@@ -1,3 +1,4 @@
+# Taken from https://github.com/mongodb/mongo/blob/master/src/third_party/mock_ocsp_responder/mock_ocsp_responder.py
 #
 # This file has been modified in 2019 by MongoDB Inc.
 #
