@@ -1,7 +1,7 @@
 global:
   # All subject names will have these elements automatically,
   # unless `explicit_subject: true` is specified.
-  output_path: '../drivers-evergreen-tools/.evergreen/ocsp/'
+  output_path: '../drivers-evergreen-tools/.evergreen/ocsp/' # See README.md if customizing this path
   Subject:
     C: 'US'
     ST: 'New York'
