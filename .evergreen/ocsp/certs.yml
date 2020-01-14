@@ -62,7 +62,7 @@ certs:
       DNS: localhost
       IP: 127.0.0.1
     authorityInfoAccess: 'OCSP;URI:http://localhost:8100/status/'
-    tlsfeature: status_request
+    mustStaple: true
     subjectKeyIdentifier: hash
     keyUsage: [digitalSignature, keyEncipherment]
     extendedKeyUsage: [serverAuth, clientAuth]
