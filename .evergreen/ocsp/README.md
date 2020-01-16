@@ -4,7 +4,7 @@ The test certificates here were generating using the server team's [`mkcert.py`]
 
 In order to generate a fresh set of certificates, clone the [`mongo` repository](https://github.com/mongodb/mongo) and run the following command from the root of the `mongo` repository:
 
-'python3 jstests/ssl/x509/mkcert.py --config ../drivers-evergreen-tools/.evergreen/ocsp/certs.yml'
+`python3 jstests/ssl/x509/mkcert.py --config ../drivers-evergreen-tools/.evergreen/ocsp/certs.yml`
 
 The certificates will be output into the folder specified by the `global.output_path` option in `certs.yml`, which defaults to the same directory as this README file and `certs.yml`. The default configuration also assumes that the `mongo` repository and the `driver-evergreen-tools` repository have the same parent directory.
 
