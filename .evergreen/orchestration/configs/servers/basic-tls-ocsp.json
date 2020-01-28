@@ -13,6 +13,7 @@
       "sslOnNormalPorts": true,
       "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/server_ocsp.pem",
       "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/ca_ocsp.pem",
-      "sslWeakCertificateValidation" : true
+      "sslWeakCertificateValidation" : true,
+      "sslAllowInvalidCertificates": true
    }
 }
