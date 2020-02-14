@@ -61,7 +61,13 @@ export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 sh $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
 pwd
-curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json
+if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
+  echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/out.log:
+  cat $MONGO_ORCHESTRATION_HOME/out.log
+  echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/server.log:
+  cat $MONGO_ORCHESTRATION_HOME/server.log
+  exit 1
+fi
 cat tmp.json
 URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml

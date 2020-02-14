@@ -59,10 +59,16 @@ else
   fi
 fi
 
-nohup mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
+mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2>&1 < /dev/null &
 
 ls -la $MONGO_ORCHESTRATION_HOME
 
 sleep 5
-curl http://localhost:8889/ --silent --show-error --max-time 120 --fail
+if ! curl http://localhost:8889/ --silent --show-error --max-time 120 --fail; then
+  echo Failed to start mongo-orchestration, see $MONGO_ORCHESTRATION_HOME/out.log:
+  cat $MONGO_ORCHESTRATION_HOME/out.log
+  echo Failed to start mongo-orchestration, see $MONGO_ORCHESTRATION_HOME/server.log:
+  cat $MONGO_ORCHESTRATION_HOME/server.log
+  exit 1
+fi
 sleep 5
