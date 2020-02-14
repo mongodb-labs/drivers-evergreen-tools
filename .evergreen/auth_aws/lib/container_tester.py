@@ -224,7 +224,7 @@ def remote_gc_services_container(cluster):
         if created_at < not_expired_now:
             print("DELETING expired service %s which was created at %s." % (service["serviceName"], created_at))
 
-           remote_stop_container(cluster, service["serviceName"])
+            remote_stop_container(cluster, service["serviceName"])
 
 def remote_get_public_endpoint_str(cluster, service_name):
     """

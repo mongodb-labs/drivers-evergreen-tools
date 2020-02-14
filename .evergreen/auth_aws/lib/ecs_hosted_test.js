@@ -23,7 +23,7 @@ assert(admin.auth("admin", "pwd"));
 
 assert.commandWorked(external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]}));
 
-const uri = "mongodb://localhost/aws?authMechanism=MONGODB-AWS";
+const uri = "mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS";
 const program = "/root/src/.evergreen/run-mongodb-aws-ecs-test.sh";
 
 // Try the command line
