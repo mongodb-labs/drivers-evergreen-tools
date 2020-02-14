@@ -59,7 +59,7 @@ else
   fi
 fi
 
-mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2> $MONGO_ORCHESTRATION_HOME/err.log < /dev/null &
+set -o pipefail && mongo-orchestration $ORCHESTRATION_ARGUMENTS start < /dev/null | tee $MONGO_ORCHESTRATION_HOME/out.log
 
 ls -la $MONGO_ORCHESTRATION_HOME
 
