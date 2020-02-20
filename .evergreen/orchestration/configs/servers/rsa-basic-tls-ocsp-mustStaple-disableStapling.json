@@ -7,12 +7,12 @@
       "logappend": true,
       "journal": true,
       "port": 27017,
-      "setParameter": {"ocspEnabled": true}
+      "setParameter": {"failpoint.disableStapling":"{\"mode\":\"alwaysOn\"}}"}
    },
    "sslParams": {
       "sslOnNormalPorts": true,
-      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/server_ocsp_mustStaple.pem",
-      "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/ca_ocsp.pem",
+      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/rsa/server-mustStaple.pem",
+      "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/rsa/ca.pem",
       "sslWeakCertificateValidation" : true,
       "sslAllowInvalidCertificates": true
    }
