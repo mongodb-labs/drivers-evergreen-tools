@@ -387,15 +387,16 @@ get_mongodb_download_url_for ()
              MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-i386-${VERSION_24}.zip"
       ;;
       windows64*)
+         # same as cygwin*-86-64
          EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
-         MONGODB_LATEST="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2012plus-latest.zip"
-             MONGODB_42=""
-             MONGODB_40="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-${VERSION_40}.zip"
-             MONGODB_36="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-${VERSION_36}.zip"
-             MONGODB_34="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${VERSION_34}.zip"
-             MONGODB_32="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${VERSION_32}.zip"
-             MONGODB_30="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${VERSION_30}.zip"
-             MONGODB_26="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${VERSION_26}.zip"
+         MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-latest.zip"
+             MONGODB_42="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_42}.zip"
+             MONGODB_40="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_40}.zip"
+             MONGODB_36="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_36}.zip"
+             MONGODB_34="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_34}.zip"
+             MONGODB_32="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_32}.zip"
+             MONGODB_30="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_30}.zip"
+             MONGODB_26="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_26}.zip"
              MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-${VERSION_24}.zip"
       ;;
       cygwin*-x86_64)
