@@ -377,7 +377,6 @@ get_mongodb_download_url_for ()
       ;;
       windows32*)
          EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
-         MONGODB_LATEST="https://fastdl.mongodb.org/win32/mongodb-win32-i386-latest.zip"
              MONGODB_42=""
              MONGODB_40=""
              MONGODB_36=""
@@ -413,7 +412,6 @@ get_mongodb_download_url_for ()
       ;;
       cygwin*-i686)
          EXTRACT="/cygdrive/c/Progra~1/7-Zip/7z.exe x"
-         MONGODB_LATEST="https://fastdl.mongodb.org/win32/mongodb-win32-i386-latest.zip"
              MONGODB_40=""
              MONGODB_36=""
              MONGODB_34=""
