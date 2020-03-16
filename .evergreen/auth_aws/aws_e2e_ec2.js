@@ -22,12 +22,20 @@ function assignInstanceProfile() {
         ` -u lib/aws_assign_instance_profile.py --instance_profile_arn=${instanceProfileName}`;
 
     const ret = runShellCmdWithEnv(python_command, env);
+    if (ret == 2) {
+        print("WARNING: Request limit exceeded for AWS API");
+        return false;
+    }
+
     assert.eq(ret, 0, "Failed to assign an instance profile to the current machine");
+    return true;
 }
 
-assignInstanceProfile();
+if (!assignInstanceProfile()) {
+    return;
+}
 
-const admin = Mongo().getDB("admin")
+const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
