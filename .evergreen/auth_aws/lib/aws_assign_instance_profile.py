@@ -9,6 +9,7 @@ import logging
 import time
 
 import boto3
+import botocore
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,16 +45,23 @@ def _assign_instance_policy(iam_instance_arn):
     ec2_client = boto3.client("ec2", 'us-east-1')
 
     #https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.associate_iam_instance_profile
-    response = ec2_client.associate_iam_instance_profile(
-        IamInstanceProfile={
-            'Arn' : iam_instance_arn,
-        },
-        InstanceId = instance_id)
+    try:
+        response = ec2_client.associate_iam_instance_profile(
+            IamInstanceProfile={
+                'Arn' : iam_instance_arn,
+            },
+            InstanceId = instance_id)
 
-    print(response)
+        print(response)
 
-    # Wait for the instance profile to be assigned by polling the local instance metadata service
-    _wait_instance_profile()
+        # Wait for the instance profile to be assigned by polling the local instance metadata service
+        _wait_instance_profile()
+
+    except botocore.exceptions.ClientError as ce:
+        if ce.response["Error"]["Code"] == "RequestLimitExceeded":
+            print("WARNING: RequestLimitExceeded, exiting with error code 2")
+            sys.exit(2)
+        raise
 
 def main() -> None:
     """Execute Main entry point."""
