@@ -50,8 +50,8 @@ get_mongodb_download_url_for ()
    _VERSION=$2
 
    VERSION_44="v4.4-latest"
-   VERSION_42="4.2.3"
-   VERSION_40="4.0.16"
+   VERSION_42="4.2.5"
+   VERSION_40="4.0.17"
    VERSION_36="3.6.17"
    VERSION_34="3.4.24"
    VERSION_32="3.2.22"
