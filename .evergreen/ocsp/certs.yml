@@ -51,7 +51,7 @@ certs:
 
 - name: 'server-mustStaple.pem'
   description: >-
-    Certficiate with Must Staple OCSP for the mongodb server.
+    Certificate with Must Staple OCSP for the mongodb server.
   Subject:
     CN: 'localhost'
     C: US
@@ -66,6 +66,49 @@ certs:
       DNS: localhost
       IP: 127.0.0.1
     authorityInfoAccess: 'OCSP;URI:http://localhost:9001/power/level,OCSP;URI:http://localhost:8100/status'
+    mustStaple: true
+    subjectKeyIdentifier: hash
+    keyUsage: [digitalSignature, keyEncipherment]
+    extendedKeyUsage: [serverAuth, clientAuth]
+
+- name: 'server-singleEndpoint.pem'
+  description: >-
+    Certificate with a single OCSP endpoint for the mongodb server.
+  Subject:
+    CN: 'localhost'
+    C: US
+    ST: NY
+    L: OCSP-1
+  Issuer: 'ca.pem'
+  include_header: false
+  output_path: '../drivers-evergreen-tools/.evergreen/ocsp/rsa'
+  extensions:
+    basicConstraints: {CA: false}
+    subjectAltName:
+      DNS: localhost
+      IP: 127.0.0.1
+    authorityInfoAccess: 'OCSP;URI:http://localhost:8100/status'
+    subjectKeyIdentifier: hash
+    keyUsage: [digitalSignature, keyEncipherment]
+    extendedKeyUsage: [serverAuth, clientAuth]
+
+- name: 'server-mustStaple-singleEndpoint.pem'
+  description: >-
+    Certificate with Must Staple OCSP and one OCSP endpoint for the mongodb server.
+  Subject:
+    CN: 'localhost'
+    C: US
+    ST: NY
+    L: OCSP-1
+  Issuer: 'ca.pem'
+  include_header: false
+  output_path: '../drivers-evergreen-tools/.evergreen/ocsp/rsa'
+  extensions:
+    basicConstraints: {CA: false}
+    subjectAltName:
+      DNS: localhost
+      IP: 127.0.0.1
+    authorityInfoAccess: 'OCSP;URI:http://localhost:8100/status'
     mustStaple: true
     subjectKeyIdentifier: hash
     keyUsage: [digitalSignature, keyEncipherment]
@@ -114,3 +157,13 @@ certs:
   description: ECDSA certificate and key for OCSP responder
   Issuer: 'ecdsa-ca-ocsp.pem'
   tags: [ecdsa, ocsp, responder ]
+
+- name: 'ecdsa-server-ocsp-singleEndpoint.pem'
+  description: ECDSA server certificate w/OCSP + one OCSP endpoint
+  Issuer: 'ecdsa-ca-ocsp.pem'
+  tags: [ecdsa, ocsp, single-ocsp-endpoint]
+
+- name: 'ecdsa-server-ocsp-mustStaple-singleEndpoint.pem'
+  description: ECDSA server certificate w/OCSP + must-staple + one OCSP endpoint
+  Issuer: 'ecdsa-ca-ocsp.pem'
+  tags: [ecdsa, ocsp, must-staple, single-ocsp-endpoint]
