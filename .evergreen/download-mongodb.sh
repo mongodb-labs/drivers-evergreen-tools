@@ -64,8 +64,6 @@ get_mongodb_download_url_for ()
    # https://evergreen.mongodb.com/version/5797f0493ff12235e5001f05
    case "$_DISTRO" in
       darwin*)
-         # BF-16283 is blocking the v4.4-latest build on macOS.
-         VERSION_44="4.3.5"
          MONGODB_LATEST="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-latest.tgz"
              MONGODB_44="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_42}.tgz"
