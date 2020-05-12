@@ -343,6 +343,18 @@ get_mongodb_download_url_for ()
       ;;
    esac
 
+   # PYTHON-2238 On Archlinux MongoDB <= 3.2 requires LC_ALL=C.
+   case "$_DISTRO" in
+      linux-arch-*)
+        case "$_VERSION" in
+           3.2) export LC_ALL=C ;;
+           3.0) export LC_ALL=C ;;
+           2.6) export LC_ALL=C ;;
+           2.4) export LC_ALL=C ;;
+        esac
+      ;;
+   esac
+
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
       4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
