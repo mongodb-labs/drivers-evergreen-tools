@@ -17,6 +17,13 @@ echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 cd "$MONGO_ORCHESTRATION_HOME"
 # Setup or use the existing virtualenv for mongo-orchestration.
 # Prefer using Python 3 from the toolchain over the default system python.
+# We may still fallback to using an old version of Python here.
+# Many of the Linux distros in Evergreen ship Python 2.6 as the
+# system Python. Core libraries installed by virtualenv (setuptools,
+# pip, wheel) have dropped, or soon will drop, support for Python
+# 2.6. Starting with version 14, virtualenv upgrades these libraries
+# to the latest available on pypi when creating the virtual environment
+# unless you pass --never-download.
 PYTHON=$(command -v /opt/mongodbtoolchain/v2/bin/python3 || command -v python3 || command -v python)
 $PYTHON -c 'import sys; print(sys.version)'
 $PYTHON -c 'import ssl; print(ssl.OPENSSL_VERSION)'
@@ -25,7 +32,7 @@ if [ -f venv/bin/activate ]; then
   . venv/bin/activate
 elif [ -f venv/Scripts/activate ]; then
   . venv/Scripts/activate
-elif $PYTHON -m virtualenv --system-site-packages venv || virtualenv --system-site-packages venv; then
+elif $PYTHON -m virtualenv --system-site-packages --never-download venv || virtualenv --system-site-packages --never-download venv; then
   if [ -f venv/bin/activate ]; then
     . venv/bin/activate
   elif [ -f venv/Scripts/activate ]; then
