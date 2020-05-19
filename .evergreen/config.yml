@@ -400,7 +400,8 @@ pre:
   - func: "install dependencies"
 
 post:
-  - func: "upload working dir"
+  # Skip: uploading the full working directory is not needed by drivers-evergreen-tools.
+  # - func: "upload working dir"
   - func: "upload mo artifacts"
   - func: "upload test results"
   - func: "stop mongo-orchestration"
