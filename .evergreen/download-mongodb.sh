@@ -382,7 +382,7 @@ download_and_extract ()
    curl --retry 8 -sS $MONGODB_DOWNLOAD_URL --max-time 300 --output mongodb-binaries.tgz
    $EXTRACT mongodb-binaries.tgz
 
-   rm mongodb-binaries.tgz
+   rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
