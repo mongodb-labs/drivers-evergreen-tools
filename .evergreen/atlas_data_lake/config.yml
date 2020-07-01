@@ -1,0 +1,46 @@
+environment: development
+
+hosting:
+  frontend:
+    bindAddrs: ["localhost:27017"]
+    cursor:
+      metadata:
+        memory: true
+  showInternalErrors: true
+
+execution:
+  mqlrunPath: ${MONGOHOUSE_MQLRUN}
+
+tenants:
+  config:
+    inline:
+      hostnames:
+        - localhost
+      security:
+        users:
+          - name: mhuser # password: "pencil"
+            credentials:
+              scramSHA1:
+                iterations: 10000
+                salt: "CVmjg1IDp3KfHfiXNZhmbQ=="
+                storedKey: "9cIonYrtLI/+OmZ96wiQkduwXeI="
+                serverKey: "kCfqkc7sgQaihzXHqbxZxz3O3H4="
+              scramSHA256:
+                iterations: 15000
+                salt: "6i+wBCHE21EaI8IF9+tvPkCoYWY+IyedLaVXGQ=="
+                storedKey: "hnn0iJZ6ZNO9X34oyxtZUKLAMScwpCdch3vGPuDXOvM="
+                serverKey: "3Qg6ptTiTvPwhGSZi0NpAkmsW8P5C/J46Is1t7xaIho="
+            roles:
+              - role: readWriteAnyDatabase
+      storage:
+        stores:
+          - name: localstore
+            provider: local
+            path: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake"
+        databases:
+          - name: test
+            collections:
+              - name: driverdata
+                dataSources:
+                  - storeName: localstore
+                    path: test.driverdata.json
