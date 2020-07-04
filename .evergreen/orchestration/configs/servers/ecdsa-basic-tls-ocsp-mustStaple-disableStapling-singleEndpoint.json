@@ -11,7 +11,7 @@
    },
    "sslParams": {
       "sslOnNormalPorts": true,
-      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/ecdsa/server-mustStaple-singlEndpoint.pem",
+      "sslPEMKeyFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/ecdsa/server-mustStaple-singleEndpoint.pem",
       "sslCAFile": "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/ocsp/ecdsa/ca.pem",
       "sslWeakCertificateValidation" : true,
       "sslAllowInvalidCertificates": true
