@@ -17,21 +17,6 @@ tenants:
       hostnames:
         - localhost
       security:
-        roles:
-          # Based on the atlasAdmin custom role defined in NDSDBUser.java in the
-          # 10gen/mms repo.
-          - role: atlasAdmin
-            roles:
-              - role: readWriteAnyDatabase
-              - role: enableSharding
-              - role: dbAdminAnyDatabase
-              - role: backup
-              - role: clusterMonitor
-            privileges:
-              - actions: ["viewRole", "moveChunk", "splitChunk", "viewUser"]
-              - actions: ["flushRouterConfig", "storageGetConfig", "storageSetConfig"]
-                resource:
-                  cluster: true
         users:
           - name: mhuser # password: "pencil"
             credentials:
@@ -46,21 +31,16 @@ tenants:
                 storedKey: "hnn0iJZ6ZNO9X34oyxtZUKLAMScwpCdch3vGPuDXOvM="
                 serverKey: "3Qg6ptTiTvPwhGSZi0NpAkmsW8P5C/J46Is1t7xaIho="
             roles:
-              - role: atlasAdmin
+              - role: readWriteAnyDatabase
       storage:
         stores:
           - name: localstore
             provider: local
-            path: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/testdata/stores/drivers-tests"
+            path: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake"
         databases:
           - name: test
             collections:
               - name: driverdata
                 dataSources:
                   - storeName: localstore
-                    path: /test/*
-  sqlSchema:
-    inline:
-      - database: "test"
-        collection: "driverdata"
-        schemaFile: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/schema/testdata/driver-data.json"
+                    path: test.driverdata.json

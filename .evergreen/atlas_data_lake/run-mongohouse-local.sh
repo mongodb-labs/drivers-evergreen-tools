@@ -39,7 +39,9 @@ export MONGOHOUSE_MQLRUN=`pwd`/artifacts/mqlrun
 ./build.sh build:mongohoused
 
 # Run mongohouse local
-./artifacts/mongohoused --config ${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/drivers-test-local.yaml
+./artifacts/mongohoused --config ${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/config.yml
+
+sleep 5
 
 AP_END=$(date +%s)
 
