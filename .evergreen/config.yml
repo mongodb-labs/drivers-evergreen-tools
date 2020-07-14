@@ -730,24 +730,16 @@ axes:
         display_name: "Archlinux"
         run_on: archlinux-test
 
-      - id: macos-1012
-        display_name: "macOS 10.12"
-        run_on: macos-1012
+      - id: macos-1014
+        display_name: "macOS 10.14"
+        run_on: macos-1014
 
   - id: os-windows
     display_name: OS
     values:
-      - id: windows-64-vs2010-test
-        display_name: "Windows (VS2010)"
-        run_on: windows-64-vs2010-test
-
-      - id: windows-64-vs2013-test
-        display_name: "Windows (VS2013)"
-        run_on: windows-64-vs2013-test
-
-      - id: windows-64-vs2015-test
-        display_name: "Windows (VS2015)"
-        run_on: windows-64-vs2015-test
+      - id: windows-64-vsMulti-small
+        display_name: "Windows 64"
+        run_on: windows-64-vsMulti-small
 
   # OSes that support versions of MongoDB>=2.6 with SSL.
   - id: os-requires-26
@@ -760,10 +752,6 @@ axes:
       - id: rhel70
         display_name: "RHEL 7.0"
         run_on: rhel70-small
-
-      - id: debian71-test
-        display_name: "Debian 7.1"
-        run_on: debian71-test
 
   # OSes that support versions of MongoDB>=3.2 with SSL.
   - id: os-requires-32
@@ -785,9 +773,9 @@ axes:
   - id: os-ssl-requires-32
     display_name: OS
     values:
-      - id: macos-1012
-        display_name: "macOS 10.12"
-        run_on: macos-1012
+      - id: macos-1014
+        display_name: "macOS 10.14"
+        run_on: macos-1014
 
   # OSes that support versions of MongoDB>=3.4 with SSL.
   - id: os-requires-34
