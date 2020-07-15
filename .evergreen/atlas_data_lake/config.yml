@@ -17,6 +17,38 @@ tenants:
       hostnames:
         - localhost
       security:
+        roles:
+          - role: atlasAdmin
+            privileges:
+              - actions:
+                  - "viewRole"
+                  - "moveChunk"
+                  - "splitChunk"
+                resource:
+                  db: ""
+                  collection: ""
+                  cluster: false
+              - actions:
+                  - "flushRouterConfig"
+                  - "storageGetConfig"
+                  - "storageSetConfig"
+                  - "createUser"
+                  - "dropUser"
+                resource:
+                  db: ""
+                  collection: ""
+                  cluster: true
+            roles:
+              - role: "readWriteAnyDatabase"
+                db: ""
+              - role: "enableSharding"
+                db: ""
+              - role: "dbAdminAnyDatabase"
+                db: ""
+              - role: "backup"
+                db: ""
+              - role: "clusterMonitor"
+                db: ""
         users:
           - name: mhuser # password: "pencil"
             credentials:
@@ -31,7 +63,8 @@ tenants:
                 storedKey: "hnn0iJZ6ZNO9X34oyxtZUKLAMScwpCdch3vGPuDXOvM="
                 serverKey: "3Qg6ptTiTvPwhGSZi0NpAkmsW8P5C/J46Is1t7xaIho="
             roles:
-              - role: readWriteAnyDatabase
+              - role: atlasAdmin
+                db: ""
       storage:
         stores:
           - name: localstore
