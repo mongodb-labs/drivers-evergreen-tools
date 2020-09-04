@@ -14,9 +14,16 @@ AP_START=$(date +%s)
 
 # Set up environment variables for Go
 GO_VERSION=1.14
-export PATH="/opt/golang/go${GO_VERSION}/bin:$PATH"
-export GOROOT="/opt/golang/go${GO_VERSION}"
-export GOPATH=`pwd`/.gopath
+if [ "Windows_NT" = "$OS" ]; then
+  export GOPATH="$(cygpath -m "$(pwd)")/.gopath"
+  export GOCACHE="$(cygpath -m "$(pwd)")/.cache"
+  export GOROOT="C:/golang/go${GO_VERSION}"
+  export PATH="/cygdrive/c/golang/go${GO_VERSION}/bin:$PATH"
+else
+  export GOPATH=`pwd`/.gopath
+  export GOROOT="/opt/golang/go${GO_VERSION}"
+  export PATH="$GOROOT/bin:$PATH"
+fi;
 go version
 
 # Clone the mongohouse repo
