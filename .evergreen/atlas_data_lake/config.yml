@@ -1,12 +1,12 @@
 environment: local
 
-hosting:
-  frontend:
-    bindAddrs: ["localhost:27017"]
-    cursor:
-      metadata:
-        memory: true
-  showInternalErrors: true
+showInternalErrors: true
+
+frontend:
+  bindAddrs: ["localhost:27017"]
+  cursor:
+    metadata:
+      memory: true
 
 execution:
   mqlrunPath: ${MONGOHOUSE_MQLRUN}
