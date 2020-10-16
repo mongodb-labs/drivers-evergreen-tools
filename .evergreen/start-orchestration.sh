@@ -67,7 +67,8 @@ fi
 # TooManyFilesOpen: 24: Too many open files
 if [ "$(uname -s)" = "Darwin" ]; then
   ulimit -a
-  ulimit -n 24000
+  ulimit -n 262144
+  ulimit -a
 fi
 
 
