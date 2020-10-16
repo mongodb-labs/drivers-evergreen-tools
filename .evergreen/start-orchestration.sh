@@ -63,6 +63,14 @@ else
   fi
 fi
 
+# Increase file descriptor ulimit to avoid errors like:
+# TooManyFilesOpen: 24: Too many open files
+if [ "$(uname -s)" = "Darwin" ]; then
+  ulimit -a
+  ulimit -n 24000
+fi
+
+
 mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2>&1 < /dev/null &
 
 ls -la $MONGO_ORCHESTRATION_HOME
