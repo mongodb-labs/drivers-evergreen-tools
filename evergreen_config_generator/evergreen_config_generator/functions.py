@@ -67,7 +67,7 @@ def strip_lines(s):
 
 
 def shell_exec(script, test=True, errexit=True, xtrace=True, silent=False,
-               continue_on_err=False, working_dir=None):
+               continue_on_err=False, working_dir=None, background=False):
     dedented = ''
     if errexit:
         dedented += 'set -o errexit\n'
@@ -89,6 +89,9 @@ def shell_exec(script, test=True, errexit=True, xtrace=True, silent=False,
 
     if continue_on_err:
         command['params']['continue_on_err'] = True
+
+    if background:
+        command['params']['background'] = True
 
     command['params']['shell'] = 'bash'
     command['params']['script'] = dedented
