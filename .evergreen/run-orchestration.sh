@@ -7,6 +7,9 @@ AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
 STORAGE_ENGINE=${STORAGE_ENGINE}
+# Set to a non-empty string to set the requireApiVersion parameter
+# This is currently only supported for standalone servers
+REQUIRE_API_VERSION=${REQUIRE_API_VERSION}
 # Set to a non-empty string to use the <topology>/disableTestCommands.json
 # cluster config, eg DISABLE_TEST_COMMANDS=1
 DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
@@ -95,3 +98,8 @@ cat <<EOT >> $DRIVERS_TOOLS/results.json
 ]}
 
 EOT
+
+# Set the requireApiVersion parameter
+if [ ! -z "$REQUIRE_API_VERSION" ]; then
+  mongo $URI $MONGO_ORCHESTRATION_HOME/require-api-version.js
+fi
