@@ -3,7 +3,7 @@ environment: local
 showInternalErrors: true
 
 frontend:
-  bindAddrs: ["localhost:27017"]
+  bindAddr: "localhost:27017"
   cursor:
     metadata:
       memory: true
