@@ -4,11 +4,13 @@
 
 This repo is meant for MongoDB drivers to bootstrap their Evergreen
 configuration files.
-It contains set of scripts for tasks that most drivers will need to perfrom,
+It contains set of scripts for tasks that most drivers will need to perform,
 such as downloading MongoDB for the current platform, and launching various
 topologies.
 
 # Using
+
+## In Evergreen
 
 The bundled [`.evergreen/config.yml`](.evergreen/config.yml) file contains a
 suggested template for drivers to use.
@@ -37,7 +39,48 @@ The `** Release Archive Creator` buildvariant is special, and does not run the "
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
 
-# evergreen_config_generator
+## evergreen_config_generator
 
 This repo also contains a Python package for use in scripts that generate
 Evergreen config files from Python dicts. See evergreen_config_generator/README.
+
+# Using With GitHub Actions
+
+This repository includes a metadata file for GitHub Actions to allow downloading
+MongoDB and launching topologies from a GitHub Action Workflow. To use this
+action, use the following template:
+
+```yaml
+    steps:
+      # [...]
+      - id: setup-mongodb
+        uses: mongodb-labs/drivers-evergreen-tools@master
+        # Set configuration
+        with:
+          version: ${{ matrix.mongodb-version }}
+```
+
+The following inputs exist:
+
+| Name | Description |
+| --- | --- |
+| `version` | MongoDB version to install |
+| `topology` | Topology of the deployment (server, replica_set, sharded_cluster) |
+| `auth` | Whether to enable auth |
+| `ssl` | Whether to enable SSL |
+| `storage-engine` | Storage engine to use |
+| `require-api-version` | Whether to start the server with requireApiVersion enabled (defaults to false) |
+
+These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
+
+After the cluster is started, its URI is exposed via the `cluster-uri` output.
+This configuration snippet sets an environment variable with the cluster URI
+returned from the `setup-mongodb` workflow step when running tests:
+```yaml
+    steps:
+      # [...]
+      - name: "Run Tests"
+        run: "run-tests.sh"
+        env:
+          MONGODB_URI: ${{ steps.setup-mongodb.outputs.cluster-uri }}
+```

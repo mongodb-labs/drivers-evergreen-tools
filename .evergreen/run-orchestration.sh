@@ -74,6 +74,7 @@ fi
 cat tmp.json
 URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
+echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
 
 MO_END=$(date +%s)

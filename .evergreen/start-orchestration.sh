@@ -38,11 +38,17 @@ elif $PYTHON -m virtualenv --system-site-packages --never-download venv || virtu
   elif [ -f venv/Scripts/activate ]; then
     . venv/Scripts/activate
   fi
-  # Install from github to get the latest mongo-orchestration.
-  pip install --upgrade 'git+git://github.com/mongodb/mongo-orchestration@master'
-  pip list
 fi
+
+# Install from github to get the latest mongo-orchestration.
+pip install --upgrade 'git+git://github.com/mongodb/mongo-orchestration@master'
+pip list
 cd -
+
+# Create default config file if it doesn't exist
+if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then
+  echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+fi
 
 ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
 if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin

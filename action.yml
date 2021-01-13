@@ -1,0 +1,54 @@
+name: "Set up MongoDB Cluster"
+description: "Downloads MongoDB and runs a cluster using mongo-orchestration"
+inputs:
+  version:
+    description: "MongoDB version to install"
+    required: false
+  topology:
+    description: "Topology of the deployment"
+    required: false
+  auth:
+    description: "Whether to enable auth"
+    required: false
+  ssl:
+    description: "Whether to enable SSL"
+    required: false
+  storage-engine:
+    description: "Storage engine to use"
+    required: false
+  require-api-version:
+    description: "Whether to start the server with requireApiVersion enabled (defaults to false)"
+    required: false
+outputs:
+  cluster-uri:
+    description: "URI of the cluster"
+    value: ${{ steps.get-cluster-uri.outputs.cluster-uri }}
+runs:
+  using: "composite"
+  steps:
+    - id: "add-pip-path"
+      name: "Add PIP install folder to path"
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      shell: bash
+    - id: "add-mongodb-binary-path"
+      name: "Add PIP install folder to path"
+      run: echo "${{ github.action_path }}/mongodb/bin" >> $GITHUB_PATH
+      shell: bash
+    - id: "run-orchestration"
+      name: "Download MongoDB"
+      run: ${{ github.action_path }}/.evergreen/run-orchestration.sh
+      env:
+        DRIVERS_TOOLS: ${{ github.action_path }}
+        MONGODB_BINARIES: ${{ github.action_path }}/mongodb/bin
+        MONGO_ORCHESTRATION_HOME: ${{ github.action_path }}/.evergreen/orchestration
+        MONGODB_VERSION: ${{ inputs.version }}
+        TOPOLOGY: ${{ inputs.topology }}
+        AUTH: ${{ inputs.auth }}
+        SSL: ${{ inputs.ssl }}
+        STORAGE_ENGINE: ${{ inputs.storage-engine }}
+        REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
+      shell: sh
+    - id: "get-cluster-uri"
+      name: "Expose Cluster URI"
+      run: echo "::set-output name=cluster-uri::$(cat ${{ github.action_path }}/uri.txt)"
+      shell: bash
