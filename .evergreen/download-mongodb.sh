@@ -41,17 +41,17 @@ get_distro ()
    echo $DISTRO
 }
 
-# get_mongodb_download_url_for "linux-distro-version-architecture" "latest|40|36|34|32|30|28|26|24"
-# Sets EXTRACT to aproprate extract command
-# Sets MONGODB_DOWNLOAD_URL to the aproprate download url
+# get_mongodb_download_url_for "linux-distro-version-architecture" "latest|44|42|40|36|34|32|30|28|26|24"
+# Sets EXTRACT to appropriate extract command
+# Sets MONGODB_DOWNLOAD_URL to the appropriate download url
 get_mongodb_download_url_for ()
 {
    _DISTRO=$1
    _VERSION=$2
 
-   VERSION_44="4.4.2"
+   VERSION_44="4.4.3"
    VERSION_42="4.2.11"
-   VERSION_40="4.0.21"
+   VERSION_40="4.0.22"
    VERSION_36="3.6.21"
    VERSION_34="3.4.24"
    VERSION_32="3.2.22"
@@ -211,6 +211,14 @@ get_mongodb_download_url_for ()
       linux-debian-10*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-latest.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_44}.tgz"
+      ;;
+      linux-ubuntu-20.04-aarch64)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-latest.tgz"
+             MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_44}.tgz"
+      ;;
+      linux-ubuntu-20.04*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-latest.tgz"
+             MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_44}.tgz"
       ;;
       linux-ubuntu-18.04-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1804-latest.tgz"
