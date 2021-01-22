@@ -41,6 +41,7 @@ runs:
         DRIVERS_TOOLS: ${{ github.action_path }}
         MONGODB_BINARIES: ${{ github.action_path }}/mongodb/bin
         MONGO_ORCHESTRATION_HOME: ${{ github.action_path }}/.evergreen/orchestration
+        PROJECT_ORCHESTRATION_HOME: ${{ github.workspace }}/.evergreen/orchestration
         MONGODB_VERSION: ${{ inputs.version }}
         TOPOLOGY: ${{ inputs.topology }}
         AUTH: ${{ inputs.auth }}
