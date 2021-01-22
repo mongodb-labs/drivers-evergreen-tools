@@ -69,6 +69,8 @@ else
   exit 1
 fi
 
+perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
+
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
