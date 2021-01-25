@@ -190,7 +190,7 @@ def remote_stop_container(cluster, service_name):
     """
     ecs_client = boto3.client('ecs', region_name=_get_region(cluster))
 
-    resp = ecs_client.delete_service(cluster=cluster, service=service_name, force=True)
+    resp = ecs_client.delete_service(cluster=cluster, service=service_name)
     pprint.pprint(resp)
 
     service_arn = resp["service"]["serviceArn"]
