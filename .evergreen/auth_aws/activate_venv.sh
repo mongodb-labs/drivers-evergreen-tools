@@ -1,7 +1,7 @@
 set +x
 
 if [ "Windows_NT" = "$OS" ]; then
-  PYTHON_BINARY=python.exe
+  PYTHON_BINARY=C:/python/Python38/python.exe
 else
   PYTHON_BINARY=python3
 fi
