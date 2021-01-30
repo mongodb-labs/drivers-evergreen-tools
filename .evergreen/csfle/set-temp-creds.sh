@@ -22,8 +22,18 @@
 
 set +o xtrace # Disable tracing.
 
+get_creds() {
+    $PYTHON - "$@" << 'EOF'
+import boto3
+
+client = boto3.client('sts')
+credentials = client.get_session_token()["Credentials"]
+print (credentials["AccessKeyId"] + " " + credentials["SecretAccessKey"] + " " + credentials["SessionToken"])
+EOF
+}
+
 PYTHON=${PYTHON:-python}
-CREDS=$($PYTHON print-temp-creds.py)
+CREDS=$(get_creds)
 
 export CSFLE_AWS_TEMP_ACCESS_KEY_ID=$(echo $CREDS | awk '{print $1}')
 export CSFLE_AWS_TEMP_SECRET_ACCESS_KEY=$(echo $CREDS | awk '{print $2}')
