@@ -10,9 +10,9 @@
 # Requires AWS credentials for CSFLE to obtain temporary credentials.
 # Those credentials can be passed through the following environment variables:
 #
-# AWS_ACCESS_KEY_ID=...
-# AWS_SECRET_ACCESS_KEY=...
-# AWS_DEFAULT_REGION=us-east-1
+# export AWS_ACCESS_KEY_ID=...
+# export AWS_SECRET_ACCESS_KEY=...
+# export AWS_DEFAULT_REGION=us-east-1
 #
 # After running this script, the following shell variables are set:
 # - CSFLE_AWS_TEMP_ACCESS_KEY_ID
@@ -21,10 +21,6 @@
 #
 
 set +o xtrace # Disable tracing.
-
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
 
 get_creds() {
     $PYTHON - "$@" << 'EOF'
