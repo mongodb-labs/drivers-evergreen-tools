@@ -10,6 +10,9 @@ get_distro ()
    if [ -f /etc/os-release ]; then
       . /etc/os-release
       DISTRO="${ID}-${VERSION_ID}"
+   elif [ -f /etc/centos-release ]; then
+      version=$(cat /etc/centos-release | tr -dc '0-9.' | cut -d '.' -f1)
+      DISTRO="centos-${version}"
    elif command -v lsb_release >/dev/null 2>&1; then
       name=$(lsb_release -s -i)
       if [ "$name" = "RedHatEnterpriseServer" ]; then # RHEL 6.2 at least
@@ -123,7 +126,7 @@ get_mongodb_download_url_for ()
              MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel67-${VERSION_36}.tgz"
              MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel67-${VERSION_34}.tgz"
       ;;
-      linux-rhel-6.2*)
+      linux-rhel-6.2*|linux-centos-6*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-latest.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel62-${VERSION_42}.tgz"
