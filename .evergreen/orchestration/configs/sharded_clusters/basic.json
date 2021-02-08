@@ -4,14 +4,32 @@
     {
       "id": "sh01",
       "shardParams": {
-        "members": [{
-          "procParams": {
-            "ipv6": true,
-            "bind_ip": "127.0.0.1,::1",
-            "shardsvr": true,
-            "port": 27217
+        "members": [
+          {
+            "procParams": {
+              "ipv6": true,
+              "bind_ip": "127.0.0.1,::1",
+              "shardsvr": true,
+              "port": 27217
+            }
+          },
+          {
+            "procParams": {
+              "ipv6": true,
+              "bind_ip": "127.0.0.1,::1",
+              "shardsvr": true,
+              "port": 27218
+            }
+          },
+          {
+            "procParams": {
+              "ipv6": true,
+              "bind_ip": "127.0.0.1,::1",
+              "shardsvr": true,
+              "port": 27219
+            }
           }
-        }]
+        ]
       }
     }
   ],
