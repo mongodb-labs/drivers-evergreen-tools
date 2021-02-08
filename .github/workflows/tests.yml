@@ -1,0 +1,43 @@
+name: "Tests"
+
+on:
+  pull_request:
+    branches:
+      - "master"
+  push:
+    branches:
+      - "master"
+
+jobs:
+  tests:
+    name: "Tests"
+    runs-on: "ubuntu-20.04"
+
+    strategy:
+      matrix:
+        mongodb-version:
+          - "4.4"
+        topology:
+          - "server"
+          - "replica_set"
+          - "sharded_cluster"
+        auth:
+          - "noauth"
+          - "auth"
+        ssl:
+          - "nossl"
+          - "ssl"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 2
+
+      - id: setup-mongodb
+        uses: ./
+        with:
+          version: ${{ matrix.mongodb-version }}
+          topology: ${{ matrix.topology }}
+          auth: ${{ matrix.auth }}
+          ssl: ${{ matrix.ssl }}
