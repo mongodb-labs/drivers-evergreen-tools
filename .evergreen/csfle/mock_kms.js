@@ -3,11 +3,11 @@
  */
 load("lib/kms_lib.js");
 
-// Directory containing certificates to reference for starting KMS server.
-const CERT_DIRECTORY = "../x509gen/"
-
 (function() {
 "use strict";
+
+// Directory containing certificates to reference for starting KMS server.
+const CERT_DIRECTORY = "../x509gen/";
 
 const config = readSetupJson();
 
@@ -16,7 +16,7 @@ const certFile = CERT_DIRECTORY + config["kms_cert_file"];
 
 const pythonCommand = getPython3Binary() +
     ` -u lib/kms_http_server.py --ca_file ${caFile} --cert_file ${certFile}`;
-const ret = runShellCmdWithEnv(pythonCommand, _);
+const ret = runShellCmdWithEnv(pythonCommand, {});
 
 assert.eq(ret, 0, "Failed to start kms mock server");
 }());

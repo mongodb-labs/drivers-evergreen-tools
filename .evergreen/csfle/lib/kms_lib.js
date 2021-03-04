@@ -28,7 +28,7 @@ function readSetupJson() {
         throw new Error("Value for kms_cert_file must be supplied in kms_setup.json")
     }
 
-    return
+    return config
 }
 
 function runWithEnv(args, env) {
