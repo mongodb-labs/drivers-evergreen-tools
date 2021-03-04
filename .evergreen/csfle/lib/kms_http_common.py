@@ -135,7 +135,7 @@ def run(port, cert_file, ca_file, handler_class, server_class=http.server.HTTPSe
                                    certfile=cert_file,
                                    ca_certs=ca_file, server_side=True)
 
-    print("Mock KMS Web Server Listening on port " + str(server_address))
+    print("Mock KMS Web Server Listening on port " + str(server_address[1]))
 
     httpd.serve_forever()
 
