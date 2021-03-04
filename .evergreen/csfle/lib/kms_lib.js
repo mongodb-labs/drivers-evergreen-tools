@@ -6,8 +6,7 @@ function readSetupJson() {
     try {
         result = cat("kms_setup.json");
     } catch (e) {
-        jsTestLog(
-            `${PARSE_FAILURE}. See evergreen.yml for how to generate this file which contains evergreen secrets.`);
+        jsTestLog(PARSE_FAILURE);
         throw e;
     }
 
