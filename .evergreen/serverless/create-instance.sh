@@ -8,6 +8,7 @@ if [ -z "$1" ]; then
     echo "Instance name must be provided as a command line argument"
     exit 1
 fi
+INSTANCE_NAME="$1"
 
 echo "instance name provided"
 
@@ -32,6 +33,7 @@ fi
 
 echo "public key provided"
 
+DIR=$(dirname $0)
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
 
 curl \
@@ -44,7 +46,7 @@ curl \
   "$API_BASE_URL/serverless/instances?pretty=true" \
   --data "
     {
-      \"name\" : \"${1}\",
+      \"name\" : \"${INSTANCE_NAME}\",
       \"providerSettings\" : {
         \"providerName\": \"SERVERLESS\",
         \"backingProviderName\": \"AWS\",
@@ -55,12 +57,10 @@ curl \
 
 echo ""
 
-echo "curl done"
-
 SECONDS=0
 while [ true ]; do
     echo "checking status of instance..."
-    API_RESPONSE=`bash get-instance.sh $1`
+    API_RESPONSE=`bash $DIR/get-instance.sh $INSTANCE_NAME`
     STATE_NAME=`echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['stateName'])"`
 
     if [ ${STATE_NAME} == "IDLE" ]; then
@@ -73,6 +73,7 @@ while [ true ]; do
         cat <<EOF > serverless-expansion.yml
 MONGODB_URI: "$STANDARD_ADDRESS"
 MONGODB_SRV_URI: "$SRV_ADDRESS"
+SERVERLESS_INSTANCE_NAME: "$INSTANCE_NAME"
 SSL: ssl
 AUTH: auth
 TOPOLOGY: sharded_cluster
