@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-    echo "Instance name must be provided as a command line argument"
+if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
+    echo "Instance name must be provided via SERVERLESS_INSTANCE_NAME environment variable"
     exit 1
 fi
 
@@ -29,6 +29,6 @@ curl \
   --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
-  "$API_BASE_URL/serverless/instances/$1?pretty=true"
+  "${API_BASE_URL}/serverless/instances/${SERVERLESS_INSTANCE_NAME}?pretty=true"
 
 echo ""

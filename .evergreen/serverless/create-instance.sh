@@ -4,11 +4,11 @@ set -o errexit
 
 echo "in create instance"
 
-if [ -z "$1" ]; then
-    echo "Instance name must be provided as a command line argument"
+if [ -z "$PROJECT" ]; then
+    echo "Project name must be provided via PROJECT environment variable"
     exit 1
 fi
-INSTANCE_NAME="$1"
+INSTANCE_NAME="$RANDOM-$PROJECT"
 
 echo "instance name provided"
 
@@ -60,16 +60,17 @@ echo ""
 SECONDS=0
 while [ true ]; do
     echo "checking status of instance..."
-    API_RESPONSE=`bash $DIR/get-instance.sh $INSTANCE_NAME`
+    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$INSTANCE_NAME bash $DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['stateName'])"`
 
     if [ ${STATE_NAME} == "IDLE" ]; then
         duration="$SECONDS"
         echo "setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
+        echo "SERVERLESS_INSTANCE_NAME=\"$INSTANCE_NAME\""
         SRV_ADDRESS=$(echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])")
-        echo "MONGODB_SRV_URI=$SRV_ADDRESS"
+        echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
         STANDARD_ADDRESS=$(echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])")
-        echo "MONGODB_URI=$STANDARD_ADDRESS"
+        echo "MONGODB_URI=\"$STANDARD_ADDRESS\""
         cat <<EOF > serverless-expansion.yml
 MONGODB_URI: "$STANDARD_ADDRESS"
 MONGODB_SRV_URI: "$SRV_ADDRESS"
