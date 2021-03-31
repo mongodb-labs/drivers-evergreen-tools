@@ -2,25 +2,35 @@
 
 set -o errexit
 
+echo "in create instance"
+
 if [ -z "$1" ]; then
     echo "Instance name must be provided as a command line argument"
     exit 1
 fi
+
+echo "instance name provided"
 
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
     exit 1
 fi
 
+echo "group provided"
+
 if [ -z "$SERVERLESS_API_PRIVATE_KEY" ]; then
     echo "Atlas API private key must be provided via SERVERLESS_API_PRIVATE_KEY environment variable"
     exit 1
 fi
 
+echo "private key provideD"
+
 if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
     echo "Atlas API public key must be provided via SERVERLESS_API_PUBLIC_KEY environment variable"
     exit 1
 fi
+
+echo "public key provided"
 
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
 
@@ -44,6 +54,8 @@ curl \
     }"
 
 echo ""
+
+echo "curl done"
 
 SECONDS=0
 while [ true ]; do
