@@ -1130,8 +1130,8 @@ buildvariants:
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-fully-featured:
-      - "ubuntu-18.04"
+    os-requires-32:
+      - "ubuntu-16.04"
   display_name: "Serverless ${os-fully-featured}"
   tasks:
     - "serverless_task_group"
