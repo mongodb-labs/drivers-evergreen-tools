@@ -1,8 +1,7 @@
 #!/bin/bash
 
 set -o errexit
-
-echo "in create instance"
+set +o xtrace # disable xtrace to ensure credentials aren't leaked
 
 if [ -z "$PROJECT" ]; then
     echo "Project name must be provided via PROJECT environment variable"
@@ -10,28 +9,20 @@ if [ -z "$PROJECT" ]; then
 fi
 INSTANCE_NAME="$RANDOM-$PROJECT"
 
-echo "instance name provided"
-
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
     exit 1
 fi
-
-echo "group provided"
 
 if [ -z "$SERVERLESS_API_PRIVATE_KEY" ]; then
     echo "Atlas API private key must be provided via SERVERLESS_API_PRIVATE_KEY environment variable"
     exit 1
 fi
 
-echo "private key provideD"
-
 if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
     echo "Atlas API public key must be provided via SERVERLESS_API_PUBLIC_KEY environment variable"
     exit 1
 fi
-
-echo "public key provided"
 
 DIR=$(dirname $0)
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
@@ -39,6 +30,8 @@ API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_
 curl \
   -i \
   -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
+  --silent \
+  --show-error \
   -X POST \
   --digest \
   --header "Accept: application/json" \
@@ -59,7 +52,6 @@ echo ""
 
 SECONDS=0
 while [ true ]; do
-    echo "checking status of instance..."
     API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$INSTANCE_NAME bash $DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['stateName'])"`
 

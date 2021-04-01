@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -o errexit
+set +o xtrace
+
 if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     echo "Instance name must be provided via SERVERLESS_INSTANCE_NAME environment variable"
     exit 1
@@ -24,6 +27,8 @@ API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_
 
 curl \
   -i \
+  --silent \
+  --show-error \
   -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
   -X DELETE \
   --digest \
