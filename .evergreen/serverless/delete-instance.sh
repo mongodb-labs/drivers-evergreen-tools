@@ -23,10 +23,11 @@ if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
     exit 1
 fi
 
+echo "deleting serverless instance \"${SERVERLESS_INSTANCE_NAME}\"..."
+
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
 
 curl \
-  -i \
   --silent \
   --show-error \
   -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
