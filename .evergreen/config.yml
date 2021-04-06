@@ -338,6 +338,21 @@ functions:
           ${PREPARE_SHELL}
           AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
+  "run serverless tests":
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set +o xtrace
+
+          MONGODB_URI="${MONGODB_URI}" \
+          MONGODB_API_VERSION=${MONGODB_API_VERSION} \
+          SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
+          SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
+            sh ${PROJECT_DIRECTORY}/.evergreen/run-serverless-tests.sh
+
   "cleanup":
     - command: shell.exec
       params:
@@ -677,6 +692,11 @@ tasks:
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
+    - name: "test-serverless"
+      tags: ["serverless"]
+      commands:
+        - func: "run serverless tests"
+
 # }}}
 
 
@@ -813,6 +833,9 @@ axes:
       - id: debian92-test
         display_name: "Debian 9.2"
         run_on: debian92-test
+      - id: ubuntu-18.04
+        display_name: "Ubuntu 18.04"
+        run_on: ubuntu1804-test
 
   - id: topology
     display_name: Topology
@@ -867,6 +890,39 @@ axes:
         variables:
            STORAGE_ENGINE: "inmemory"
 
+task_groups:
+  - name: serverless_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: "fetch source"
+      - func: "prepare resources"
+      - command: shell.exec
+        params:
+          shell: "bash"
+          script: |
+            ${PREPARE_SHELL}
+            set +o xtrace
+            SERVERLESS_DRIVERS_GROUP=${SERVERLESS_DRIVERS_GROUP} \
+            SERVERLESS_API_PUBLIC_KEY=${SERVERLESS_API_PUBLIC_KEY} \
+            SERVERLESS_API_PRIVATE_KEY=${SERVERLESS_API_PRIVATE_KEY} \
+              bash ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
+      - command: expansions.update
+        params:
+          file: serverless-expansion.yml
+    teardown_group:
+      - command: shell.exec
+        params:
+          script: |
+            ${PREPARE_SHELL}
+            set +o xtrace
+            SERVERLESS_DRIVERS_GROUP=${SERVERLESS_DRIVERS_GROUP} \
+            SERVERLESS_API_PUBLIC_KEY=${SERVERLESS_API_PUBLIC_KEY} \
+            SERVERLESS_API_PRIVATE_KEY=${SERVERLESS_API_PRIVATE_KEY} \
+            SERVERLESS_INSTANCE_NAME=${SERVERLESS_INSTANCE_NAME} \
+              bash ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
+    tasks:
+      - ".serverless"
 
 buildvariants:
 
@@ -1072,6 +1128,14 @@ buildvariants:
            - name: "test-2.4-replica_set"
            - name: "test-2.4-sharded_cluster"
            - name: "test-2.4-standalone"
+
+- matrix_name: "serverless"
+  matrix_spec:
+    os-requires-40:
+      - "ubuntu-18.04"
+  display_name: "Serverless ${os-requires-40}"
+  tasks:
+    - "serverless_task_group"
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
