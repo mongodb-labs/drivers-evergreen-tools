@@ -835,6 +835,9 @@ axes:
       - id: debian92-test
         display_name: "Debian 9.2"
         run_on: debian92-test
+      - id: ubuntu-18.04
+        display_name: "Ubuntu 18.04"
+        run_on: ubuntu1804-test
 
   - id: topology
     display_name: Topology
@@ -1130,9 +1133,9 @@ buildvariants:
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-requires-32:
-      - "ubuntu-16.04"
-  display_name: "Serverless ${os-fully-featured}"
+    os-requires-40:
+      - "ubuntu-18.04"
+  display_name: "Serverless ${os-requires-40}"
   tasks:
     - "serverless_task_group"
 
