@@ -1,0 +1,23 @@
+{
+  "auth_key": "secret",
+  "id": "repl0",
+  "login": "bob",
+  "password": "pwd123",
+  "members": [
+    {
+      "procParams": {
+        "ipv6": true,
+        "bind_ip": "127.0.0.1,::1",
+        "journal": true,
+        "oplogSize": 500,
+        "port": 27017
+      },
+      "rsParams": {
+        "tags": {
+          "ordinal": "one",
+          "dc": "ny"
+        }
+      }
+    }
+  ]
+}
