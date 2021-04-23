@@ -8,9 +8,9 @@ start() {
   cat <<EOF_HAPROXY_CONFIG >> $DRIVERS_TOOLS/haproxy.conf
   defaults
       mode tcp
-      timeout connect 5000ms
-      timeout client 5000ms
-      timeout server 5000ms
+      timeout connect 10s
+      timeout client 30m
+      timeout server 30m
 
   frontend mongos_frontend
       bind *:8000
