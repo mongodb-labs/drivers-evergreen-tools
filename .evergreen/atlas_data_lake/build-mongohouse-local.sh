@@ -12,7 +12,7 @@ git config --global url."git@github.com:".insteadof "https://github.com/"
 AP_START=$(date +%s)
 
 # Set up environment variables for Go
-GO_VERSION=1.14
+GO_VERSION=1.16
 if [ "Windows_NT" = "$OS" ]; then
   export GOPATH="$(cygpath -m "$(pwd)")/.gopath"
   export GOCACHE="$(cygpath -m "$(pwd)")/.cache"
@@ -35,11 +35,11 @@ GO111MODULE=on go mod download
 DL_END=$(date +%s)
 
 # Build mqlrun
-./build.sh tools:download:mqlrun
+./cmd/buildscript/build.sh tools:download:mqlrun
 export MONGOHOUSE_MQLRUN=`pwd`/artifacts/mqlrun
 
 # Build mongohouse
-./build.sh build:mongohoused
+./cmd/buildscript/build.sh build:mongohoused
 
 sleep 5
 
