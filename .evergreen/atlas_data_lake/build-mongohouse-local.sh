@@ -35,11 +35,11 @@ GO111MODULE=on go mod download
 DL_END=$(date +%s)
 
 # Build mqlrun
-./build.sh tools:download:mqlrun
+./cmd/buildscript/build.sh tools:download:mqlrun
 export MONGOHOUSE_MQLRUN=`pwd`/artifacts/mqlrun
 
 # Build mongohouse
-./build.sh build:mongohoused
+./cmd/buildscript/build.sh build:mongohoused
 
 sleep 5
 
