@@ -72,7 +72,6 @@ SSL: ssl
 AUTH: auth
 TOPOLOGY: sharded_cluster
 SERVERLESS: serverless
-MONGODB_API_VERSION: 1
 EOF
         exit 0
     else
