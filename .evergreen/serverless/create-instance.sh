@@ -37,7 +37,7 @@ curl \
   --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
-  "$API_BASE_URL/serverless/instances?pretty=true" \
+  "$API_BASE_URL/serverless?pretty=true" \
   --data "
     {
       \"name\" : \"${INSTANCE_NAME}\",

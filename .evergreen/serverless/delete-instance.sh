@@ -35,6 +35,6 @@ curl \
   --digest \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
-  "${API_BASE_URL}/serverless/instances/${SERVERLESS_INSTANCE_NAME}?pretty=true"
+  "${API_BASE_URL}/serverless/${SERVERLESS_INSTANCE_NAME}?pretty=true"
 
 echo ""

@@ -32,6 +32,6 @@ curl \
   -X GET \
   --digest \
   --header "Accept: application/json" \
-  "${API_BASE_URL}/serverless/instances/${SERVERLESS_INSTANCE_NAME}?pretty=true" \
+  "${API_BASE_URL}/serverless/${SERVERLESS_INSTANCE_NAME}?pretty=true" \
 
 echo ""
