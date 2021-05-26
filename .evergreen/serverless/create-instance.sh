@@ -51,18 +51,24 @@ curl \
 
 echo ""
 
+if [ "Windows_NT" = "$OS" ]; then
+  PYTHON_BINARY=C:/python/Python38/python.exe
+else
+  PYTHON_BINARY=python3
+fi
+
 SECONDS=0
 while [ true ]; do
     API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$INSTANCE_NAME bash $DIR/get-instance.sh`
-    STATE_NAME=`echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['stateName'])"`
+    STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
 
-    if [ ${STATE_NAME} == "IDLE" ]; then
+    if [ "$STATE_NAME" = "IDLE" ]; then
         duration="$SECONDS"
         echo "setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
         echo "SERVERLESS_INSTANCE_NAME=\"$INSTANCE_NAME\""
-        SRV_ADDRESS=$(echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])")
+        SRV_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])" | tr -d '\r\n')
         echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
-        STANDARD_ADDRESS=$(echo $API_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])")
+        STANDARD_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])" | tr -d '\r\n')
         echo "MONGODB_URI=\"$STANDARD_ADDRESS\""
         cat <<EOF > serverless-expansion.yml
 MONGODB_URI: "$STANDARD_ADDRESS"
