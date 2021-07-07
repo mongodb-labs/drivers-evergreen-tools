@@ -23,7 +23,7 @@ if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
     exit 1
 fi
 
-API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
+API_BASE_URL="https://account-dev.mongodb.com/api/private/nds/serverless/groups/$SERVERLESS_DRIVERS_GROUP"
 
 curl \
   --silent \
@@ -32,6 +32,6 @@ curl \
   -X GET \
   --digest \
   --header "Accept: application/json" \
-  "${API_BASE_URL}/serverless/${SERVERLESS_INSTANCE_NAME}?pretty=true" \
+  "${API_BASE_URL}/instances/${SERVERLESS_INSTANCE_NAME}?pretty=true" \
 
 echo ""
