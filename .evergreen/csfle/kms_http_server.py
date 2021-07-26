@@ -1,5 +1,11 @@
 #! /usr/bin/env python3
-"""Mock AWS KMS Endpoint."""
+"""
+Mock AWS KMS Endpoint.
+
+To run a KMS mock server on port 8000 with CA file ca.pem and cert file cert.pem:
+python -u kms_http_server.py --ca_file ca.pem --cert_file cert.pem --port 8000
+
+"""
 
 import argparse
 import base64
