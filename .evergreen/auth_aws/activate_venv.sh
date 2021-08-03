@@ -20,6 +20,6 @@ else
 fi
 
 # install dependencies on first run
-if [ -z $FIRST_RUN ]; then
+if [ ! -z $FIRST_RUN ]; then
   pip install --upgrade boto3
 fi
