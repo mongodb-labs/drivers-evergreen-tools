@@ -39,8 +39,8 @@ elif $PYTHON -m virtualenv --system-site-packages --never-download venv || virtu
   fi
 fi
 
-# Install from github to get the latest mongo-orchestration.
-pip install --upgrade 'git+git://github.com/mongodb/mongo-orchestration@master'
+# Install from github to get the latest mongo-orchestration and upgrade pymongo.
+pip install --upgrade 'git+git://github.com/mongodb/mongo-orchestration@master' 'pymongo<4'
 pip list
 cd -
 
