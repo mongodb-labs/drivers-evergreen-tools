@@ -43,9 +43,9 @@ curl \
       \"name\" : \"${INSTANCE_NAME}\",
       \"providerSettings\" : {
         \"providerName\": \"SERVERLESS\",
-        \"backingProviderName\": \"GCP\",
+        \"backingProviderName\": \"AWS\",
         \"instanceSizeName\" : \"SERVERLESS_V2\",
-        \"regionName\" : \"CENTRAL_US\"
+        \"regionName\" : \"US_EAST_1\"
       }
     }"
 
