@@ -69,7 +69,7 @@ while [ true ]; do
         SRV_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])" | tr -d '\r\n')
         echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
         STANDARD_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])" | tr -d '\r\n')
-        echo "MONGODB_URI=\"$STANDARD_ADDRESS\"/?loadBalanced=true"
+        echo "MONGODB_URI=\"$STANDARD_ADDRESS/?loadBalanced=true\""
         cat <<EOF > serverless-expansion.yml
 MONGODB_URI: "$STANDARD_ADDRESS"
 MONGODB_SRV_URI: "$SRV_ADDRESS"
