@@ -70,6 +70,11 @@ while [ true ]; do
         echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
         STANDARD_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])" | tr -d '\r\n')
         echo "MONGODB_URI=\"$STANDARD_ADDRESS/?loadBalanced=true\""
+        MULTI_ATLASPROXY_SERVERLESS_URI="$SRV_ADDRESS"
+        echo "MULTI_ATLASPROXY_SERVERLESS_URI=\"$MULTI_ATLASPROXY_SERVERLESS_URI\""
+        SINGLE_ATLASPROXY_SERVERLESS_URI=$(echo $STANDARD_ADDRESS | $PYTHON_BINARY -c "import sys; uri=sys.stdin.read(); print (uri[0:uri.find(',')] + '/?loadBalanced=true&tls=true')" | tr -d '\r\n')
+        echo "SINGLE_ATLASPROXY_SERVERLESS_URI=\"$SINGLE_ATLASPROXY_SERVERLESS_URI\""
+
         cat <<EOF > serverless-expansion.yml
 MONGODB_URI: "$STANDARD_ADDRESS"
 MONGODB_SRV_URI: "$SRV_ADDRESS"
@@ -78,6 +83,8 @@ SSL: ssl
 AUTH: auth
 TOPOLOGY: sharded_cluster
 SERVERLESS: serverless
+MULTI_ATLASPROXY_SERVERLESS_URI: "$MULTI_ATLASPROXY_SERVERLESS_URI"
+SINGLE_ATLASPROXY_SERVERLESS_URI: "$SINGLE_ATLASPROXY_SERVERLESS_URI"
 EOF
         exit 0
     else
