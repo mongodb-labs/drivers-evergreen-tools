@@ -12,12 +12,12 @@ INSTANCE_NAME="$RANDOM-$PROJECT"
 # Use the LOADBALANCED environment variable to opt-in to testing
 # load balanced serverless instances.
 if [ -z "$LOADBALANCED" ]; then
+    BACKING_PROVIDER_NAME="GCP"
+    INSTANCE_REGION_NAME="CENTRAL_US"
+else
     BACKING_PROVIDER_NAME="AWS"
     INSTANCE_REGION_NAME="US_EAST_1"
     EXTRA_URI_OPTIONS="?loadBalanced=true"
-else
-    BACKING_PROVIDER_NAME="GCP"
-    INSTANCE_REGION_NAME="CENTRAL_US"
 fi
 
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
