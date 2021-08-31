@@ -9,6 +9,17 @@ if [ -z "$PROJECT" ]; then
 fi
 INSTANCE_NAME="$RANDOM-$PROJECT"
 
+# Use the LOADBALANCED environment variable to opt-in to testing
+# load balanced serverless instances.
+if [ -z "$LOADBALANCED" ]; then
+    BACKING_PROVIDER_NAME="AWS"
+    INSTANCE_REGION_NAME="US_EAST_1"
+    EXTRA_URI_OPTIONS="?loadBalanced=true"
+else
+    BACKING_PROVIDER_NAME="GCP"
+    INSTANCE_REGION_NAME="CENTRAL_US"
+fi
+
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
     exit 1
@@ -43,9 +54,9 @@ curl \
       \"name\" : \"${INSTANCE_NAME}\",
       \"providerSettings\" : {
         \"providerName\": \"SERVERLESS\",
-        \"backingProviderName\": \"AWS\",
+        \"backingProviderName\": \"$BACKING_PROVIDER_NAME\",
         \"instanceSizeName\" : \"SERVERLESS_V2\",
-        \"regionName\" : \"US_EAST_1\"
+        \"regionName\" : \"$INSTANCE_REGION_NAME\"
       }
     }"
 
@@ -69,7 +80,7 @@ while [ true ]; do
         SRV_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])" | tr -d '\r\n')
         echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
         STANDARD_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])" | tr -d '\r\n')
-        echo "MONGODB_URI=\"$STANDARD_ADDRESS/?loadBalanced=true\""
+        echo "MONGODB_URI=\"$STANDARD_ADDRESS/$EXTRA_URI_OPTIONS\""
         MULTI_ATLASPROXY_SERVERLESS_URI="$SRV_ADDRESS"
         echo "MULTI_ATLASPROXY_SERVERLESS_URI=\"$MULTI_ATLASPROXY_SERVERLESS_URI\""
         SINGLE_ATLASPROXY_SERVERLESS_URI=$(echo $STANDARD_ADDRESS | $PYTHON_BINARY -c "import sys; uri=sys.stdin.read(); print (uri[0:uri.find(',')] + '/?loadBalanced=true&tls=true')" | tr -d '\r\n')
