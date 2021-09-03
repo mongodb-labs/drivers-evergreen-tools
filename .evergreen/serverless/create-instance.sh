@@ -9,6 +9,17 @@ if [ -z "$PROJECT" ]; then
 fi
 INSTANCE_NAME="$RANDOM-$PROJECT"
 
+# Set the LOADBALANCED environment variable to "ON" to opt-in to
+# testing load balanced serverless instances.
+if [ "$LOADBALANCED" = "ON" ]; then
+    BACKING_PROVIDER_NAME="AWS"
+    INSTANCE_REGION_NAME="US_EAST_1"
+    EXTRA_URI_OPTIONS="?loadBalanced=true"
+else
+    BACKING_PROVIDER_NAME="GCP"
+    INSTANCE_REGION_NAME="CENTRAL_US"
+fi
+
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
     exit 1
@@ -43,9 +54,9 @@ curl \
       \"name\" : \"${INSTANCE_NAME}\",
       \"providerSettings\" : {
         \"providerName\": \"SERVERLESS\",
-        \"backingProviderName\": \"GCP\",
+        \"backingProviderName\": \"$BACKING_PROVIDER_NAME\",
         \"instanceSizeName\" : \"SERVERLESS_V2\",
-        \"regionName\" : \"CENTRAL_US\"
+        \"regionName\" : \"$INSTANCE_REGION_NAME\"
       }
     }"
 
@@ -65,19 +76,54 @@ while [ true ]; do
     if [ "$STATE_NAME" = "IDLE" ]; then
         duration="$SECONDS"
         echo "setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
-        echo "SERVERLESS_INSTANCE_NAME=\"$INSTANCE_NAME\""
-        SRV_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['srvAddress'])" | tr -d '\r\n')
-        echo "MONGODB_SRV_URI=\"$SRV_ADDRESS\""
-        STANDARD_ADDRESS=$(echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoURI'])" | tr -d '\r\n')
-        echo "MONGODB_URI=\"$STANDARD_ADDRESS\""
-        cat <<EOF > serverless-expansion.yml
-MONGODB_URI: "$STANDARD_ADDRESS"
-MONGODB_SRV_URI: "$SRV_ADDRESS"
-SERVERLESS_INSTANCE_NAME: "$INSTANCE_NAME"
-SSL: ssl
-AUTH: auth
-TOPOLOGY: sharded_cluster
-SERVERLESS: serverless
+
+        API_RESPONSE=$API_RESPONSE \
+        INSTANCE_NAME=$INSTANCE_NAME \
+        LOADBALANCED=$LOADBALANCED \
+        $PYTHON_BINARY - << EOF | tee serverless-expansion.yml
+import json
+import sys
+import os
+
+def upsert_option(uri, name, value):
+    # Add the URI option <name>=<value> to the URI if it is not already present.
+    if "?" not in uri:
+        if uri.endswith("/"):
+            return uri + "?" + name + "=" + value
+        else:
+            return uri + "/?" + name + "=" + value
+
+    option_string = uri[uri.find("?")+1:]
+    options = option_string.split("&")
+    option_names = [option.split("=")[0] for option in options]
+    if name in option_names:
+        return uri
+    else:
+        return uri + "&" + name + "=" + value
+
+def select_last_host(uri):
+    return "mongodb://" + uri[uri.rfind(",")+1:]
+
+api_response = json.loads(os.environ["API_RESPONSE"])
+mongodb_srv_uri = api_response['srvAddress']
+mongodb_uri = api_response['mongoURI']
+multi_atlasproxy_serverless_uri = mongodb_srv_uri
+single_atlasproxy_serverless_uri = select_last_host(mongodb_uri)
+single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "loadBalanced", "true")
+single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "tls", "true")
+
+if os.environ["LOADBALANCED"] == "ON":
+    mongodb_uri = upsert_option(mongodb_uri, "loadBalanced", "true")
+
+print (f'MONGODB_URI: "{mongodb_uri}"')
+print (f'MONGODB_SRV_URI: "{mongodb_srv_uri}"')
+print (f'SERVERLESS_INSTANCE_NAME: "{os.environ["INSTANCE_NAME"]}"')
+print (f'SSL: ssl')
+print (f'AUTH: auth')
+print (f'TOPOLOGY: sharded_cluster')
+print (f'SERVERLESS: serverless')
+print (f'MULTI_ATLASPROXY_SERVERLESS_URI: "{multi_atlasproxy_serverless_uri}"')
+print (f'SINGLE_ATLASPROXY_SERVERLESS_URI: "{single_atlasproxy_serverless_uri}"')
 EOF
         exit 0
     else
