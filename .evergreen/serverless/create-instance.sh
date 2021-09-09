@@ -112,7 +112,7 @@ single_atlasproxy_serverless_uri = select_last_host(mongodb_uri)
 single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "loadBalanced", "true")
 single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "tls", "true")
 
-if os.environ["LOADBALANCED"] == "ON":
+if os.environ.get("LOADBALANCED") == "ON":
     mongodb_uri = upsert_option(mongodb_uri, "loadBalanced", "true")
 
 print (f'MONGODB_URI: "{mongodb_uri}"')
