@@ -53,8 +53,8 @@ get_mongodb_download_url_for ()
 
    VERSION_50="5.0.2"
    VERSION_44="4.4.8"
-   VERSION_42="4.2.15"
-   VERSION_40="4.0.26"
+   VERSION_42="4.2.16"
+   VERSION_40="4.0.27"
    VERSION_36="3.6.23"
    VERSION_34="3.4.24"
    VERSION_32="3.2.22"
@@ -269,6 +269,7 @@ get_mongodb_download_url_for ()
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_42}.tgz"
              MONGODB_40="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_40}.tgz"
+             MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_36}.tgz"
       ;;
       linux-ubuntu-16.04-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1604-latest.tgz"
