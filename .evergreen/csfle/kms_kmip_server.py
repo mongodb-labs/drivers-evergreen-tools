@@ -20,6 +20,7 @@ def main():
         certificate_path=os.path.join(drivers_evergreen_tools, ".evergreen/x509gen/server.pem"),
         ca_path=os.path.join(drivers_evergreen_tools, ".evergreen/x509gen/ca.pem"),
         config_path=None,
+        auth_suite="TLS1.2",
         log_path=os.path.join(drivers_evergreen_tools, ".evergreen/csfle/pykmip.log"),
         database_path=os.path.join(drivers_evergreen_tools, ".evergreen/csfle/pykmip.db"),
         logging_level=logging.DEBUG,
