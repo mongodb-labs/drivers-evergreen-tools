@@ -14,6 +14,7 @@ execution:
 tenants:
   config:
     inline:
+      ipList: [ "0.0.0.0" ]
       hostnames:
         - localhost
       security:
