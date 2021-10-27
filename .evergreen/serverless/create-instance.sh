@@ -104,9 +104,18 @@ def select_last_host(uri):
     return "mongodb://" + uri[uri.rfind(",")+1:]
 
 api_response = json.loads(os.environ["API_RESPONSE"])
+
+# The srvAddress response field is an SRV URI pointing to the load balancer. A
+# corresponding TXT record includes the loadBalanced=true URI option. This will
+# be used for MULTI_ATLASPROXY_SERVERLESS_URI.
 mongodb_srv_uri = api_response['srvAddress']
-mongodb_uri = api_response['mongoURI']
 multi_atlasproxy_serverless_uri = mongodb_srv_uri
+
+# The mongoURI response field reports the serverless instance(s) behind the load
+# balancer. This script will reduce it to a single host and append necessary URI
+# options to construct SINGLE_ATLASPROXY_SERVERLESS_URI, which is necessary for
+# testing fail points (much like SINGLE_LB_MONGOS_URI).
+mongodb_uri = api_response['mongoURI']
 single_atlasproxy_serverless_uri = select_last_host(mongodb_uri)
 single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "loadBalanced", "true")
 single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "tls", "true")
