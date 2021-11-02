@@ -27,7 +27,7 @@ const uri = "mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS";
 const program = "/root/src/.evergreen/run-mongodb-aws-ecs-test.sh";
 
 // Try the command line
-const smoke = runMongoProgram(program, uri);
+const smoke = runProgram(program, uri);
 assert.eq(smoke, 0, "Could not auth with smoke user");
 
 // Try the auth function
