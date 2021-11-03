@@ -18,27 +18,23 @@ SECRETDATABYTES = b'\xf5\xc9\x58\x81\xf3\x27\x06\x70\x33\x71\x66\x68\x49\xf9\xfd
 # Regenerate a SecretData.
 # The UID is chosen by the server.
 def regen (client):
-    with client:
-        secretdata = kmip.pie.objects.SecretData(SECRETDATABYTES, kmip.core.enums.SecretDataType.PASSWORD)
-        uid = client.register(secretdata)
-        print(f"created SecretData with UID={uid}")
-
-        client.activate (uid)
-        print(f"activate SecretData {uid}")
-        return uid
+    secretdata = kmip.pie.objects.SecretData(SECRETDATABYTES, kmip.core.enums.SecretDataType.PASSWORD)
+    uid = client.register(secretdata)
+    print(f"Created SecretData with UID={uid}")
+    client.activate (uid)
+    print(f"Activated SecretData {uid}")
+    return uid
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    drivers_evergreen_tools = os.path.join (dir_path, "../../")
-
+    drivers_evergreen_tools = os.path.join (dir_path, "..", "..")
     client = kmip.pie.client.ProxyKmipClient(
         hostname=HOSTNAME,
         port=PORT,
-        cert=os.path.join(drivers_evergreen_tools, ".evergreen/x509gen/client.pem"),
-        ca=os.path.join(drivers_evergreen_tools, ".evergreen/x509gen/ca.pem"),
-        config_file=os.path.join(drivers_evergreen_tools, ".evergreen/csfle/pykmip.conf")
+        cert=os.path.join(drivers_evergreen_tools, ".evergreen", "x509gen", "client.pem"),
+        ca=os.path.join(drivers_evergreen_tools, ".evergreen", "x509gen", "ca.pem"),
+        config_file=os.path.join(drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.conf")
     )
-
     with client:
         try:
             secretdata = client.get(UID)
@@ -49,7 +45,9 @@ def main():
             return
         except kmip.pie.exceptions.KmipOperationFailure as err:
             if err.reason == kmip.core.enums.ResultReason.ITEM_NOT_FOUND:
-                raise AssertionError(f"ERROR. SecretData object not found with UID: {UID}.")
+                print (f"ERROR. SecretData object not found with UID: {UID}.")
+                print ("Attempting to regenerate.")
+                regen (client)
             else:
                 raise err
 
