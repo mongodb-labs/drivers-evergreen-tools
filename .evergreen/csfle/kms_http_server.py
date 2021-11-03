@@ -228,6 +228,8 @@ def main():
 
     parser.add_argument('--cert_file', type=str, required=True, help="TLS Server PEM file")
 
+    parser.add_argument('--require_client_cert', action='store_true', required=False, default=False, help="Require a client certificate in TLS connections")
+
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
@@ -242,7 +244,7 @@ def main():
     if args.disable_faults:
         kms_http_common.disable_faults = True
 
-    kms_http_common.run(args.port, args.cert_file, args.ca_file, AwsKmsHandler)
+    kms_http_common.run(args.port, args.cert_file, args.ca_file, AwsKmsHandler, cert_required=args.require_client_cert)
 
 
 if __name__ == '__main__':

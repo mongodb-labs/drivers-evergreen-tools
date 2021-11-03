@@ -125,15 +125,20 @@ class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
         self._send_header()
 
 
-def run(port, cert_file, ca_file, handler_class, server_class=http.server.HTTPServer):
+def run(port, cert_file, ca_file, handler_class, server_class=http.server.HTTPServer, cert_required=False):
     """Run web server."""
     server_address = ('', port)
 
     httpd = server_class(server_address, handler_class)
 
+    cert_reqs = ssl.CERT_NONE
+    if cert_required:
+        cert_reqs = ssl.CERT_REQUIRED
+
     httpd.socket = ssl.wrap_socket(httpd.socket,
                                    certfile=cert_file,
-                                   ca_certs=ca_file, server_side=True)
+                                   ca_certs=ca_file, server_side=True,
+                                   cert_reqs=cert_reqs)
 
     print("Mock KMS Web Server Listening on port " + str(server_address[1]))
 
