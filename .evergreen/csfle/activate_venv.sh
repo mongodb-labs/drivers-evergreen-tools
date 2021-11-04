@@ -21,5 +21,5 @@ fi
 
 # install dependencies on first run
 if [ ! -z $FIRST_RUN ]; then
-  pip install --upgrade boto3
+  pip install --upgrade boto3~=1.19 pykmip~=0.10.0
 fi
