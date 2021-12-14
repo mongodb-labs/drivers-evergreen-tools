@@ -3,11 +3,9 @@
 set -o errexit
 set +o xtrace # disable xtrace to ensure credentials aren't leaked
 
-if [ -z "$PROJECT" ]; then
-    echo "Project name must be provided via PROJECT environment variable"
-    exit 1
-fi
-INSTANCE_NAME="$RANDOM-$PROJECT"
+# INSTANCE_NAME has the following limitations:
+# https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
+INSTANCE_NAME="$RANDOM-DRIVERTEST"
 
 # Set the LOADBALANCED environment variable to "ON" to opt-in to
 # testing load balanced serverless instances.
