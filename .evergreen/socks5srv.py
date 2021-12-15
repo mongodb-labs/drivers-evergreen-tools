@@ -6,7 +6,6 @@ import re
 import argparse
 
 # Usage: python3 socks5srv.py --port port [--auth username:password] [--map 'host:port to host:port' ...]
-# TODO: Move this script into the shared drivers-evergreen-tools repository
 
 class AddressRemapper:
   """A helper for remapping (host, port) tuples to new (host, port) tuples
@@ -103,13 +102,20 @@ class Socks5Handler(socketserver.BaseRequestHandler):
         return None
       assert len(n) == 1
       n = n[0]
-    result = b''
-    while len(result) < n:
-      buf = self.request.recv(n - len(result))
-      if buf == b'':
-        return None
-      result += buf
-    return result
+
+    buf = bytearray(n)
+    mv = memoryview(buf)
+    bytes_read = 0
+    while bytes_read < n:
+        try:
+            chunk_length = self.request.recv_into(mv[bytes_read:])
+        except OSError as exc:
+            return None
+        if chunk_length == 0:
+            return None
+
+        bytes_read += chunk_length
+    return bytes(buf)
 
   def create_outgoing_tcp_connection(self, dst, port):
     """Create an outgoing TCP connection to dst:port"""
@@ -131,6 +137,17 @@ class Socks5Handler(socketserver.BaseRequestHandler):
 
   def handle(self):
     """Handle the Socks5 communication with a freshly connected client"""
+
+    # This implements the Socks5 protocol as specified in
+    # https://datatracker.ietf.org/doc/html/rfc1928
+    # and username/password authentication as specified in
+    # https://datatracker.ietf.org/doc/html/rfc1929
+    # If you prefer HTML tables over ASCII tables, Wikipedia
+    # also currently has a decent description of the protocol in
+    # https://en.wikipedia.org/wiki/SOCKS#SOCKS5.
+
+    # Receive/send errors are intentionally left unhandled. Closing
+    # the socket is just fine in that case for us.
 
     # Client greeting
     if self.request.recv(1) != b'\x05': # Socks5 only
