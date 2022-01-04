@@ -34,12 +34,12 @@ start() {
 
   backend mongos_backend
       mode tcp
-      server mongos 127.0.0.1:27017 check
+      server mongos 127.0.0.1:27050 check send-proxy-v2
 
   backend mongoses_backend
       mode tcp
-      server mongos_one 127.0.0.1:27017 check
-      server mongos_two 127.0.0.1:27018 check
+      server mongos_one 127.0.0.1:27050 check send-proxy-v2
+      server mongos_two 127.0.0.1:27051 check send-proxy-v2
 EOF_HAPROXY_CONFIG
 
   PREFIX=$(echo $MONGODB_URI | grep -Eo "(.*?)@" | cat)
