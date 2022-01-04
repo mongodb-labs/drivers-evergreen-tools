@@ -39,6 +39,10 @@ if [ -z "$ORCHESTRATION_FILE" ]; then
     ORCHESTRATION_FILE="auth"
   fi
 
+  if [ -n "$LOAD_BALANCER" ]; then
+    ORCHESTRATION_FILE="load-balancer"
+  fi
+
   if [ "$SSL" != "nossl" ]; then
     ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
   fi
