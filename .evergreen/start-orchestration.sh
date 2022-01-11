@@ -40,7 +40,7 @@ elif $PYTHON -m virtualenv --system-site-packages --never-download venv || virtu
 fi
 
 # Install from github to get the latest mongo-orchestration.
-pip install --upgrade 'https://github.com/10gen/mongo-orchestration/archive/DRIVERS-1983.tar.gz'
+pip install --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
 pip list
 cd -
 

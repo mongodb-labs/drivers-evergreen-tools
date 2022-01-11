@@ -38,13 +38,19 @@
       "ipv6": true,
       "bind_ip": "127.0.0.1,::1",
       "port": 27017,
-      "loadBalancerPort": 27050
+      "setParameter": {
+        "featureFlagLoadBalancer": true,
+        "loadBalancerPort": 27050
+      }
     },
     {
       "ipv6": true,
       "bind_ip": "127.0.0.1,::1",
       "port": 27018,
-      "loadBalancerPort": 27051
+      "setParameter": {
+        "featureFlagLoadBalancer": true,
+        "loadBalancerPort": 27051
+      }
     }
   ]
 }
