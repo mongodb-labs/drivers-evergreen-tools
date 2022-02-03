@@ -333,7 +333,7 @@ functions:
     - command: shell.exec
       params:
         script: |
-          DRIVERS_TOOLS=${DRIVERS_TOOLS} MONGODB_URI=${MONGODB_URI} bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh start
+          MONGODB_URI=${MONGODB_URI} bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh start
     - command: expansions.update
       params:
         file: lb-expansion.yml
@@ -342,7 +342,7 @@ functions:
     - command: shell.exec
       params:
         script: |
-          DRIVERS_TOOLS=${DRIVERS_TOOLS} bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh stop
+          bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh stop
 
   "run tests":
     - command: shell.exec
