@@ -1,18 +1,28 @@
 #!/bin/sh
 set -o errexit  # Exit the script with error if any of the commands fail
 
+# Supported environment variables:
+#   AUTH                   Set to "auth" to enable authentication. Defaults to "noauth"
+#   SSL                    Set to "yes" to enable SSL. Defaults to "nossl"
+#   TOPOLOGY               Set to "server", "replica_set", or "sharded_cluster". Defaults to "server" (i.e. standalone).
+#   LOAD_BALANCER          Set to a non-empty string to enable load balancer. Only supported for sharded clusters.
+#   STORAGE_ENGINE         Set to a non-empty string to use the <topology>/<storage_engine>.json configuration (e.g. STORAGE_ENGINE=inmemory).
+#   REQUIRE_API_VERSION    Set to a non-empty string to set the requireApiVersion parameter. Currently only supported for standalone servers.
+#   DISABLE_TEST_COMMANDS  Set to a non-empty string to use the <topology>/disableTestCommands.json configuration (e.g. DISABLE_TEST_COMMANDS=1).
+#   MONGODB_VERSION        Set to a MongoDB version to use for download-mongodb.sh. Defaults to "latest".
+#   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
+#   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
 
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
+LOAD_BALANCER=${LOAD_BALANCER}
 STORAGE_ENGINE=${STORAGE_ENGINE}
-# Set to a non-empty string to set the requireApiVersion parameter
-# This is currently only supported for standalone servers
 REQUIRE_API_VERSION=${REQUIRE_API_VERSION}
-# Set to a non-empty string to use the <topology>/disableTestCommands.json
-# cluster config, eg DISABLE_TEST_COMMANDS=1
 DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
+MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
+ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 
 DL_START=$(date +%s)
 DIR=$(dirname $0)
@@ -31,7 +41,6 @@ download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
 DL_END=$(date +%s)
 MO_START=$(date +%s)
 
-ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 # If no orchestration file was specified, build up the name based on configuration parameters.
 if [ -z "$ORCHESTRATION_FILE" ]; then
   ORCHESTRATION_FILE="basic"
