@@ -52,13 +52,13 @@ get_mongodb_download_url_for ()
    _VERSION=$2
 
    # Set VERSION_RAPID to the latest rapid release each quarter.
-   VERSION_RAPID="5.1.0"
+   VERSION_RAPID="5.2.0"
    # Delete VERSION_51 once VERSION_RAPID is set to 5.2.0
    VERSION_51="5.1.0"
-   VERSION_50="5.0.4"
-   VERSION_44="4.4.10"
-   VERSION_42="4.2.17"
-   VERSION_40="4.0.27"
+   VERSION_50="5.0.6"
+   VERSION_44="4.4.12"
+   VERSION_42="4.2.18"
+   VERSION_40="4.0.28"
    VERSION_36="3.6.23"
    VERSION_34="3.4.24"
    VERSION_32="3.2.22"
