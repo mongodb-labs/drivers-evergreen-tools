@@ -706,6 +706,16 @@ tasks:
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
+    - name: "test-latest-load_balancer"
+      tags: ["latest", "load_balancer"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "latest"
+            TOPOLOGY: "sharded_cluster"
+            LOAD_BALANCER: "true"
+        - func: "run tests"
+
     - name: "test-serverless"
       tags: ["serverless"]
       commands:
@@ -956,6 +966,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -982,6 +993,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1008,6 +1020,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1031,6 +1044,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1048,6 +1062,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1065,6 +1080,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1079,6 +1095,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
 
 # Storage Engine Tests on Amazon Linux (Enterprise)
 - matrix_name: "tests-storage-engines"
@@ -1116,6 +1133,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
