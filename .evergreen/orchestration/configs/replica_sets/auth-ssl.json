@@ -42,6 +42,7 @@
         "port": 27019
       },
       "rsParams": {
+        "arbiterOnly": true
       }
     }
   ],
