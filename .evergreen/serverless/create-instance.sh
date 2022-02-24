@@ -121,15 +121,15 @@ single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_ur
 if os.environ.get("LOADBALANCED") == "ON":
     mongodb_uri = upsert_option(mongodb_uri, "loadBalanced", "true")
 
-print (f'MONGODB_URI: "{mongodb_uri}"')
-print (f'MONGODB_SRV_URI: "{mongodb_srv_uri}"')
-print (f'SERVERLESS_INSTANCE_NAME: "{os.environ["INSTANCE_NAME"]}"')
-print (f'SSL: ssl')
-print (f'AUTH: auth')
-print (f'TOPOLOGY: sharded_cluster')
-print (f'SERVERLESS: serverless')
-print (f'MULTI_ATLASPROXY_SERVERLESS_URI: "{multi_atlasproxy_serverless_uri}"')
-print (f'SINGLE_ATLASPROXY_SERVERLESS_URI: "{single_atlasproxy_serverless_uri}"')
+print('MONGODB_URI: "%s"' % (mongodb_uri))
+print('MONGODB_SRV_URI: "%s"' % (mongodb_srv_uri))
+print('SERVERLESS_INSTANCE_NAME: "%s"' % (os.environ["INSTANCE_NAME"]))
+print('SSL: ssl')
+print('AUTH: auth')
+print('TOPOLOGY: sharded_cluster')
+print('SERVERLESS: serverless')
+print('MULTI_ATLASPROXY_SERVERLESS_URI: "%s"' % (multi_atlasproxy_serverless_uri))
+print('SINGLE_ATLASPROXY_SERVERLESS_URI: "%s"' % (single_atlasproxy_serverless_uri))
 EOF
         exit 0
     else
