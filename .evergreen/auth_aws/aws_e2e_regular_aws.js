@@ -15,7 +15,7 @@ const config = readSetupJson();
 assert.commandWorked(
     external.runCommand({createUser: config["iam_auth_ecs_account_arn"], roles:[{role: 'read', db: "aws"}]}));
 
-const testConn = new Mongo(conn.host);
+const testConn = new Mongo(Mongo().host);
 const testExternal = testConn.getDB('$external');
 assert(testExternal.auth({
     user: config["iam_auth_ecs_account"],

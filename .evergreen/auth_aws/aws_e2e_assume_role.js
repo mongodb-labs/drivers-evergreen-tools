@@ -41,7 +41,7 @@ const external = admin.getMongo().getDB("$external");
 assert(admin.auth("bob", "pwd123"));
 assert.commandWorked(external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]}));
 
-const testConn = new Mongo(conn.host);
+const testConn = new Mongo(Mongo().host);
 const testExternal = testConn.getDB('$external');
 assert(testExternal.auth({
     user: credentials["AccessKeyId"],
