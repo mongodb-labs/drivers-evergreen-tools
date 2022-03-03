@@ -28,10 +28,12 @@ const program = "/root/src/.evergreen/run-mongodb-aws-ecs-test.sh";
 
 // Try the command line
 const smoke = runProgram(program, uri);
-assert.eq(smoke, 0, "Could not auth with smoke user");
+assert.eq(smoke, 0, "Driver .evergreen/run-mongodb-aws-ecs-test.sh script failed");
 
 // Try the auth function
-assert(external.auth({mechanism: 'MONGODB-AWS'}));
+const testConn = new Mongo(conn.host);
+const testExternal = testConn.getDB('$external');
+assert(testExternal.auth({mechanism: 'MONGODB-AWS'}));
 
 MongoRunner.stopMongod(conn);
 }());
