@@ -4,6 +4,7 @@ Download and extract MongoDB components.
 Use '--help' for more information.
 """
 import argparse
+import enum
 import hashlib
 import json
 import os
@@ -11,8 +12,10 @@ import platform
 import re
 import shutil
 import sqlite3
+import sys
 import tarfile
 import tempfile
+import textwrap
 import urllib.error
 import urllib.request
 import zipfile
@@ -20,7 +23,6 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
-import textwrap
 
 DISTRO_ID_MAP = {
     'elementary': 'ubuntu',
@@ -40,7 +42,10 @@ DISTRO_VERSION_MAP = {
 
 DISTRO_ID_TO_TARGET = {
     'ubuntu': {
+        '22.*': 'ubuntu2204',
         '20.*': 'ubuntu2004',
+        '18.*': 'ubuntu1804',
+        '16.*': 'ubuntu1604',
     },
     'debian': {
         '9': 'debian92',
@@ -48,9 +53,9 @@ DISTRO_ID_TO_TARGET = {
         '11': 'debian11',
     },
     'rhel': {
-        '6': 'rhel62',
-        '7': 'rhel73',
-        '8': 'rhel81',
+        '6': 'rhel60',
+        '7': 'rhel70',
+        '8': 'rhel80',
     },
     'sles': {
         '10.*': 'suse10',
@@ -67,15 +72,15 @@ DISTRO_ID_TO_TARGET = {
 
 
 def infer_target():
-    if os.name == 'nt':
+    if sys.platform == 'win32':
         return 'windows'
-    if os.name == 'darwin':
+    if sys.platform == 'darwin':
         return 'macos'
     # Now the tricky bit
     if Path('/etc/os-release').is_file():
         return _infer_target_os_rel()
-    raise RuntimeError("Don't know yet how to find the default download "
-                       "'--target' for this system. Please contribute!")
+    raise RuntimeError("We don't know how to find the default '--target'"
+                       " option for this system. Please contribute!")
 
 
 def _infer_target_os_rel():
@@ -114,10 +119,10 @@ def _infer_target_os_rel():
 
 
 def caches_root():
-    if os.name == 'nt':
+    if sys.platform == 'win32':
         return Path(os.environ['LocalAppData'])
-    if os.name == 'darwin':
-        return Path('~/Library/Caches')
+    if sys.platform == 'darwin':
+        return Path('~/Library/Caches').expanduser()
     xdg_cache = os.getenv('XDG_CACHE_HOME')
     if xdg_cache:
         return Path(xdg_cache)
@@ -135,13 +140,6 @@ def tmp_dir():
         yield Path(tdir)
     finally:
         shutil.rmtree(tdir)
-
-
-def _update_dl_db(db, full_Json):
-    with db:
-        cur = db.cursor()
-        cur.execute('begin')
-        _import_json_data(cur, full_json, got_etag, got_modtime)
 
 
 def _import_json_data(db, json_file):
@@ -265,16 +263,17 @@ def _print_list(db, version, target, arch, edition, component):
                  edition=edition,
                  component=component),
         )
-        found_any = False
         for version, target, arch, edition, comp_key, comp_data in matching:
-            found_any = True
-            print('Download: {}\n'
-                  ' Version: {}\n'
-                  '  Target: {}\n'
-                  '    Arch: {}\n'
-                  ' Edition: {}\n'
-                  '    Info: {}\n'.format(comp_key, version, target, arch,
-                                          edition, comp_data))
+            print('Download: {}\n\n'
+                  ' Version: {}\n\n'
+                  '  Target: {}\n\n'
+                  '    Arch: {}\n\n'
+                  ' Edition: {}\n\n'
+                  '    Info: {}\n\n'.format(comp_key, version, target, arch,
+                                            edition, comp_data))
+        print(f'(Omit filter arguments for a list of available filters)')
+        return
+
     arches, targets, editions, versions, components = next(
         iter(
             db.execute(r'''
@@ -286,8 +285,16 @@ def _print_list(db, version, target, arch, edition, component):
             (select group_concat(key, ', ') from (select distinct key from components))
         )
         ''')))
-    versions = '\n'.join(textwrap.wrap(versions, width=78, initial_indent='  ', subsequent_indent='  '))
-    targets = '\n'.join(textwrap.wrap(targets, width=78, initial_indent='  ', subsequent_indent='  '))
+    versions = '\n'.join(
+        textwrap.wrap(versions,
+                      width=78,
+                      initial_indent='  ',
+                      subsequent_indent='  '))
+    targets = '\n'.join(
+        textwrap.wrap(targets,
+                      width=78,
+                      initial_indent='  ',
+                      subsequent_indent='  '))
     print('Architectures:\n'
           '  {}\n'
           'Targets:\n'
@@ -352,7 +359,7 @@ def _download_file(db, url):
 
 
 def _dl_component(db, out_dir, version, target, arch, edition, component,
-                  pattern, strip_components):
+                  pattern, strip_components, test):
     print('Download {} v{}-{} for {}-{}'.format(component, version, edition,
                                                 target, arch))
     matching = db.execute(
@@ -383,11 +390,17 @@ def _dl_component(db, out_dir, version, target, arch, edition, component,
                 component))
     data = json.loads(found[0][0])
     cached = _download_file(db, data['url']).path
-    _expand_archive(cached, out_dir, pattern, strip_components)
+    return _expand_archive(cached,
+                           out_dir,
+                           pattern,
+                           strip_components,
+                           test=test)
 
 
 def pathjoin(items):
-    'Return a path formed by joining the given path components'
+    """
+    Return a path formed by joining the given path components
+    """
     return PurePath('/'.join(items))
 
 
@@ -426,7 +439,12 @@ def _test_pattern(path, pattern):
     return _test_pattern(pathjoin(path_parts[1:]), pattern_tail)
 
 
-def _expand_archive(ar, dest, pattern, strip_components):
+class ExpandResult(enum.Enum):
+    Empty = 0
+    Okay = 1
+
+
+def _expand_archive(ar, dest, pattern, strip_components, test):
     '''
     Expand the archive members from 'ar' into 'dest'. If 'pattern' is not-None,
     only extracts members that match the pattern.
@@ -434,32 +452,49 @@ def _expand_archive(ar, dest, pattern, strip_components):
     print('Extract from: [{}]'.format(ar.name))
     print('        into: [{}]'.format(dest))
     if ar.suffix == '.zip':
-        n_extracted = _expand_zip(ar, dest, pattern, strip_components)
+        n_extracted = _expand_zip(ar,
+                                  dest,
+                                  pattern,
+                                  strip_components,
+                                  test=test)
     elif ar.suffix == '.tgz':
-        n_extracted = _expand_tgz(ar, dest, pattern, strip_components)
+        n_extracted = _expand_tgz(ar,
+                                  dest,
+                                  pattern,
+                                  strip_components,
+                                  test=test)
     else:
         raise RuntimeError('Unknown archive file extension: ' + ar.suffix)
+    verb = 'would be' if test else 'were'
     if n_extracted == 0:
         if pattern and strip_components:
-            print('NOTE: No files were extracted. Likely all files were '
-                  'excluded by "--only={}" and/or "--strip-components={}"'.
-                  format(pattern, strip_components))
+            print('NOTE: No files {verb} extracted. Likely all files {verb} '
+                  'excluded by "--only={p}" and/or "--strip-components={s}"'.
+                  format(p=pattern, s=strip_components, verb=verb))
         elif pattern:
-            print('NOTE: No files were extracted. Likely all files were '
-                  'excluded by the "--only={}" filter'.format(pattern))
+            print('NOTE: No files {verb} extracted. Likely all files {verb} '
+                  'excluded by the "--only=\'{p}\'" filter'.format(p=pattern,
+                                                                   verb=verb))
         elif strip_components:
-            print('NOTE: No files were extracted. Likely all files were '
-                  'excluded by "--strip-components={}"'.format(
-                      strip_components))
+            print('NOTE: No files {verb} extracted. Likely all files {verb} '
+                  'excluded by "--strip-components={s}"'.format(
+                      s=strip_components, verb=verb))
         else:
-            print('NOTE: No files were extracted. Empty archive?')
+            print('NOTE: No files {verb} extracted. Empty archive?'.format(
+                verb=verb))
+        if pattern and len(PurePath(pattern).parts) == 1:
+            print('      Did you mean to do a recursive match? '
+                  'i.e. "--only=\'**/{p}\'" ?'.format(p=pattern))
+        return ExpandResult.Empty
     elif n_extracted == 1:
-        print('One file extracted')
+        print('One file {v} extracted'.format(v='would be' if test else 'was'))
+        return ExpandResult.Okay
     else:
-        print('{} files extracted'.format(n_extracted))
+        print('{n} files {verb} extracted'.format(n=n_extracted, verb=verb))
+        return ExpandResult.Okay
 
 
-def _expand_tgz(ar, dest, pattern, strip_components):
+def _expand_tgz(ar, dest, pattern, strip_components, test):
     'Expand a tar.gz archive'
     n_extracted = 0
     with tarfile.open(str(ar), 'r:*') as tf:
@@ -472,11 +507,12 @@ def _expand_tgz(ar, dest, pattern, strip_components):
                 mem.isdir(),
                 lambda: tf.extractfile(mem),
                 mem.mode,
+                test=test,
             )
     return n_extracted
 
 
-def _expand_zip(ar, dest, pattern, strip_components):
+def _expand_zip(ar, dest, pattern, strip_components, test):
     'Expand a .zip archive.'
     n_extracted = 0
     with zipfile.ZipFile(ar, 'r') as zf:
@@ -489,14 +525,20 @@ def _expand_zip(ar, dest, pattern, strip_components):
                 item.is_dir(),
                 lambda: zf.open(item, 'r'),
                 0o655,
+                test=test,
             )
     return n_extracted
 
 
 def _maybe_extract_member(out, relpath, pattern, strip, is_dir, opener,
-                          modebits):
+                          modebits, test):
+    """
+    Try to extract an archive member according to the given arguments.
+
+    :return: Zero if the file was excluded by filters, one otherwise.
+    """
     relpath = PurePath(relpath)
-    print('  │ {:┄<65} │'.format(str(relpath)+' '), end='')
+    print('  | {:-<65} |'.format(str(relpath) + ' '), end='')
     if len(relpath.parts) <= strip:
         # Not enough path components
         print(' (Excluded by --strip-components)')
@@ -507,7 +549,10 @@ def _maybe_extract_member(out, relpath, pattern, strip, is_dir, opener,
         return 0
     stripped = pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
-    print('\n    -> [{}]'.format(dest))
+    print('\n     -> [{}]'.format(dest))
+    if test:
+        # We are running in test-only mode: Do not do anything
+        return 1
     if is_dir:
         dest.mkdir(exist_ok=True, parents=True)
         return 1
@@ -520,17 +565,19 @@ def _maybe_extract_member(out, relpath, pattern, strip, is_dir, opener,
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    grp = parser.add_argument_group('List arguments')
-    grp.add_argument('--list',
-                     action='store_true',
-                     help='List available components, targets, editions, and '
-                     'architectures. Donwload arguments will act as filters.')
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=
+        'This tool will only extract one set of files at a time, but makes '
+        'use of caching such that repeated invocations will be reasonably fast.'
+    )
     dl_grp = parser.add_argument_group(
         'Download arguments',
-        description='Select what to download and extract. '
+        description='Select what to download and extract.\n\n'
         'Non-required arguments will be inferred '
-        'based on the host system.')
+        'based on the host system.',
+    )
     dl_grp.add_argument('--target',
                         '-T',
                         help='The target platform for which to download. '
@@ -541,12 +588,13 @@ def main():
     dl_grp.add_argument(
         '--edition',
         '-E',
-        help='The edition of the product to download (Default is "targeted"). '
+        help='The edition of the product to download (Default is "enterprise"). '
         'Use "--list" to list available editions.')
     dl_grp.add_argument(
         '--out',
         '-o',
-        help='The directory in which to download components. (Required)',
+        help=
+        'The directory in which to place the downloaded+extracted files (Required).',
         type=Path)
     dl_grp.add_argument('--version',
                         '-V',
@@ -563,7 +611,8 @@ def main():
         'The full archive member path is matched, so a pattern like "*.exe" '
         'will only match "*.exe" at the top level of the archive. To match '
         'recursively, use the "**" pattern to match any number of '
-        'intermediate directories.')
+        'intermediate directories. (e.g. "**/*.exe" will match any "*.exe" '
+        'file in any directory or subdirectory.)')
     dl_grp.add_argument(
         '--strip-path-components',
         '-p',
@@ -572,13 +621,33 @@ def main():
         default=0,
         type=int,
         help=
-        'Stip the given number of path components from archive members before '
+        'Strip the given number of path components from archive members before '
         'extracting into the destination. The relative path of the archive '
         'member will be used to form the destination path. For example, a '
         'member named [bin/mongod.exe] will be extracted to [<out>/bin/mongod.exe]. '
-        'Using --stip-components=1 will remove the first path component, extracting '
+        'Using --strip-components=1 will remove the first path component, extracting '
         'such an item to [<out>/mongod.exe]. If the path has fewer than N components, '
-        'that archive member will be discarded.')
+        'that archive member will be ignored.')
+    test_grp = parser.add_argument_group(
+        'Testing & Checking Arguments',
+        description='Control failure behavior and test-only mode.')
+    test_grp.add_argument(
+        '--test',
+        action='store_true',
+        help='Do not extract or place any files/directories. '
+        'Only print what would have been extracted without placing any files.')
+    test_grp.add_argument(
+        '--empty-is-error',
+        action='store_true',
+        help='If all files are excluded by other filters, '
+        'treat that situation as an error and exit non-zero.')
+    list_grp = parser.add_argument_group('Listing arguments')
+    list_grp.add_argument(
+        '--list',
+        action='store_true',
+        help='List available components, targets, editions, and'
+        'architectures without downloading or extracting anything. '
+        'In this mode, the "Download arguments" will act as filters.')
     args = parser.parse_args()
     db = get_dl_db()
 
@@ -598,13 +667,23 @@ def main():
 
     target = args.target or infer_target()
     arch = args.arch or infer_arch()
-    edition = args.edition or 'targeted'
+    edition = args.edition or 'enterprise'
     out = args.out or Path.cwd()
     out = out.absolute()
-    _dl_component(db, out, args.version, target, arch, edition, args.component,
-                  args.only, args.strip_components)
-    pass
+    result = _dl_component(db,
+                           out,
+                           version=args.version,
+                           target=target,
+                           arch=arch,
+                           edition=edition,
+                           component=args.component,
+                           pattern=args.only,
+                           strip_components=args.strip_components,
+                           test=args.test)
+    if result is ExpandResult.Empty:
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
