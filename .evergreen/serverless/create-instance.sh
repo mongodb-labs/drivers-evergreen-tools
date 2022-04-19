@@ -50,6 +50,8 @@ echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 # See: https://www.mongodb.com/docs/atlas/reference/api/serverless/create-one-serverless-instance/
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
 
+# Note: backingProviderName and regionName below should correspond to the
+# multi-tenant MongoDB (MTM) associated with $SERVERLESS_DRIVERS_GROUP.
 curl \
   -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
   --silent \
