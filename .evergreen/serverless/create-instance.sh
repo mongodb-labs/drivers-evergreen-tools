@@ -97,7 +97,7 @@ while [ true ]; do
 
         SERVERLESS_URI=$SERVERLESS_URI \
         SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
-        echo << EOF | tee serverless-expansion.yml
+        cat << EOF > serverless-expansion.yml
 SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
