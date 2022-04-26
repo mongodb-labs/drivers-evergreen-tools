@@ -1,21 +1,20 @@
 #!/bin/bash
 
 set -o errexit
-set +o xtrace # disable xtrace to ensure credentials aren't leaked
+set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 
-# INSTANCE_NAME has the following limitations:
-# https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
-INSTANCE_NAME="$RANDOM-DRIVERTEST"
-
-# Set the LOADBALANCED environment variable to "ON" to opt-in to
-# testing load balanced serverless instances.
-if [ "$LOADBALANCED" = "ON" ]; then
-    BACKING_PROVIDER_NAME="AWS"
-    INSTANCE_REGION_NAME="US_EAST_1"
-else
-    BACKING_PROVIDER_NAME="GCP"
-    INSTANCE_REGION_NAME="CENTRAL_US"
-fi
+# Supported environment variables:
+#
+#   SERVERLESS_INSTANCE_NAME    Optional. Serverless instance to create (defaults to a random name).
+#   SERVERLESS_DRIVERS_GROUP    Required. Atlas group for drivers testing.
+#   SERVERLESS_API_PUBLIC_KEY   Required. Public key for Atlas API request.
+#   SERVERLESS_API_PRIVATE_KEY  Required. Private key for Atlas API request.
+#
+# On success, this script will output serverless-expansion.yml with the
+# following expansions:
+#
+#   SERVERLESS_URI            SRV connection string for newly created instance
+#   SERVERLESS_INSTANCE_NAME  Name of newly created instance (required for "get" and "delete" scripts)
 
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
@@ -32,11 +31,27 @@ if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
     exit 1
 fi
 
-echo "creating new serverless instance \"${INSTANCE_NAME}\"..."
+# Historically, this script accepted LOADBALANCED=ON to opt in to testing load
+# balanced serverless instances. Since all serverless instances now use a load
+# balancer, prohibit opting out (i.e. defining LOADBALANCED != ON).
+if [ -n "$LOADBALANCED" -a "$LOADBALANCED" != "ON" ]; then
+    echo "Cannot opt out of testing load balanced serverless instances"
+    exit 1
+fi
 
-DIR=$(dirname $0)
+# Generate a random instance name if one was not provided.
+# See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
+if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
+    SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
+fi
+
+echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
+
+# See: https://www.mongodb.com/docs/atlas/reference/api/serverless/create-one-serverless-instance/
 API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
 
+# Note: backingProviderName and regionName below should correspond to the
+# multi-tenant MongoDB (MTM) associated with $SERVERLESS_DRIVERS_GROUP.
 curl \
   -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
   --silent \
@@ -46,19 +61,21 @@ curl \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" \
   "$API_BASE_URL/serverless?pretty=true" \
-  --data "
-    {
-      \"name\" : \"${INSTANCE_NAME}\",
-      \"providerSettings\" : {
-        \"providerName\": \"SERVERLESS\",
-        \"backingProviderName\": \"$BACKING_PROVIDER_NAME\",
-        \"instanceSizeName\" : \"SERVERLESS_V2\",
-        \"regionName\" : \"$INSTANCE_REGION_NAME\"
-      }
-    }"
+  --data @- << EOF
+{
+  "name" : "$SERVERLESS_INSTANCE_NAME",
+  "providerSettings" : {
+    "providerName": "SERVERLESS",
+    "backingProviderName": "AWS",
+    "instanceSizeName" : "SERVERLESS_V2",
+    "regionName" : "US_EAST_2"
+  }
+}
+EOF
 
 echo ""
 
+# Find the appropriate Python binary for JSON decoding
 if [ "Windows_NT" = "$OS" ]; then
   PYTHON_BINARY=C:/python/Python38/python.exe
 else
@@ -66,74 +83,37 @@ else
 fi
 
 SECONDS=0
+DIR=$(dirname $0)
+
 while [ true ]; do
-    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$INSTANCE_NAME bash $DIR/get-instance.sh`
+    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
 
     if [ "$STATE_NAME" = "IDLE" ]; then
         duration="$SECONDS"
-        echo "setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
+        echo "Setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
 
-        API_RESPONSE=$API_RESPONSE \
-        INSTANCE_NAME=$INSTANCE_NAME \
-        LOADBALANCED=$LOADBALANCED \
-        $PYTHON_BINARY - << EOF | tee serverless-expansion.yml
-import json
-import sys
-import os
+        SERVERLESS_URI=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['connectionStrings']['standardSrv'])" | tr -d '\r\n'`
 
-def upsert_option(uri, name, value):
-    # Add the URI option <name>=<value> to the URI if it is not already present.
-    if "?" not in uri:
-        if uri.endswith("/"):
-            return uri + "?" + name + "=" + value
-        else:
-            return uri + "/?" + name + "=" + value
+        SERVERLESS_URI=$SERVERLESS_URI \
+        SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
+        cat << EOF > serverless-expansion.yml
+SERVERLESS_URI: "$SERVERLESS_URI"
+SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
-    option_string = uri[uri.find("?")+1:]
-    options = option_string.split("&")
-    option_names = [option.split("=")[0] for option in options]
-    if name in option_names:
-        return uri
-    else:
-        return uri + "&" + name + "=" + value
-
-def select_last_host(uri):
-    return "mongodb://" + uri[uri.rfind(",")+1:]
-
-api_response = json.loads(os.environ["API_RESPONSE"])
-
-# The srvAddress response field is an SRV URI pointing to the load balancer. A
-# corresponding TXT record includes the loadBalanced=true URI option. This will
-# be used for MULTI_ATLASPROXY_SERVERLESS_URI.
-mongodb_srv_uri = api_response['srvAddress']
-multi_atlasproxy_serverless_uri = mongodb_srv_uri
-
-# The mongoURI response field reports the serverless instance(s) behind the load
-# balancer. This script will reduce it to a single host and append necessary URI
-# options to construct SINGLE_ATLASPROXY_SERVERLESS_URI, which is necessary for
-# testing fail points (much like SINGLE_LB_MONGOS_URI).
-mongodb_uri = api_response['mongoURI']
-single_atlasproxy_serverless_uri = select_last_host(mongodb_uri)
-single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "loadBalanced", "true")
-single_atlasproxy_serverless_uri = upsert_option(single_atlasproxy_serverless_uri, "tls", "true")
-
-if os.environ.get("LOADBALANCED") == "ON":
-    mongodb_uri = upsert_option(mongodb_uri, "loadBalanced", "true")
-
-print('MONGODB_URI: "%s"' % (mongodb_uri))
-print('MONGODB_SRV_URI: "%s"' % (mongodb_srv_uri))
-print('SERVERLESS_INSTANCE_NAME: "%s"' % (os.environ["INSTANCE_NAME"]))
-print('SSL: ssl')
-print('AUTH: auth')
-print('TOPOLOGY: sharded_cluster')
-print('SERVERLESS: serverless')
-print('MULTI_ATLASPROXY_SERVERLESS_URI: "%s"' % (multi_atlasproxy_serverless_uri))
-print('SINGLE_ATLASPROXY_SERVERLESS_URI: "%s"' % (single_atlasproxy_serverless_uri))
+# Define original variables for backwards compatibility
+MONGODB_URI: "$SERVERLESS_URI"
+MONGODB_SRV_URI: "$SERVERLESS_URI"
+SSL: "ssl"
+AUTH: "auth"
+TOPOLOGY: "sharded_cluster"
+SERVERLESS: "serverless"
+SINGLE_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
+MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 EOF
         exit 0
     else
-        echo "setup still in progress, status=$STATE_NAME, sleeping for 1 minute..."
+        echo "Setup still in progress, status=$STATE_NAME, sleeping for 1 minute..."
         sleep 60
     fi
 done
