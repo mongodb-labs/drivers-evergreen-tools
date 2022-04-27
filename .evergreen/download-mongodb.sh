@@ -51,14 +51,13 @@ get_mongodb_download_url_for ()
    _DISTRO=$1
    _VERSION=$2
 
-   VERSION_60_LATEST="v6.0-latest"
    # Set VERSION_RAPID to the latest rapid release each quarter.
-   VERSION_RAPID="5.2.0"
-   # Delete VERSION_51 once VERSION_RAPID is set to 5.2.0
-   VERSION_51="5.1.0"
-   VERSION_50="5.0.6"
-   VERSION_44="4.4.12"
-   VERSION_42="4.2.18"
+   VERSION_RAPID="5.3.1"
+   VERSION_60_LATEST="v6.0-latest"
+   VERSION_60="6.0.0-rc2"
+   VERSION_50="5.0.8"
+   VERSION_44="4.4.13"
+   VERSION_42="4.2.19"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
    VERSION_34="3.4.24"
@@ -75,7 +74,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_42}.tgz"
@@ -99,16 +98,24 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81-${VERSION_42}.tgz"
+      ;;
+      linux-rhel-8*-s390x)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-latest.tgz"
+             MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_RAPID}.tgz"
+             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_60_LATEST}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_60}.tgz"
+             MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_50}.tgz"
+             # SERVER-44074 Added support for RHEL 8 (zSeries) in 5.0.8 and 6.0.0-rc0.
       ;;
       linux-rhel-8*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-${VERSION_44}.tgz"
       ;;
@@ -116,7 +123,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72-${VERSION_42}.tgz"
@@ -137,7 +144,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel70-${VERSION_42}.tgz"
@@ -195,7 +202,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-suse12-${VERSION_42}.tgz"
@@ -208,7 +215,8 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_51}.tgz"
+             # SERVER-50564 Removed support for Amazon Linux (v1) in 6.0.0-rc1.
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-6.0.0-rc0.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amzn64-${VERSION_42}.tgz"
@@ -224,7 +232,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-amazon2-${VERSION_42}.tgz"
@@ -251,7 +259,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_42}.tgz"
@@ -262,15 +270,23 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian10-${VERSION_44}.tgz"
+      ;;
+      linux-debian-11*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian11-latest.tgz"
+             MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian11-${VERSION_RAPID}.tgz"
+             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian11-${VERSION_60_LATEST}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian11-${VERSION_60}.tgz"
+             MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian11-${VERSION_50}.tgz"
+             # SERVER-62299 Added support for Debian 11 in 5.0.8 and 6.0.0-rc0
       ;;
       linux-ubuntu-20.04-aarch64)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu2004-${VERSION_44}.tgz"
       ;;
@@ -278,7 +294,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_44}.tgz"
       ;;
@@ -292,8 +308,6 @@ get_mongodb_download_url_for ()
       linux-ubuntu-18.04-aarch64)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_RAPID}.tgz"
-             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_51}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_51}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-ubuntu1804-${VERSION_42}.tgz"
@@ -307,7 +321,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_51}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_42}.tgz"
@@ -376,8 +390,8 @@ get_mongodb_download_url_for ()
          EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
          MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-latest.zip"
              MONGODB_RAPID="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_RAPID}.zip"
-             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu1804-${VERSION_60_LATEST}.tgz"
-             MONGODB_51="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_51}.zip"
+             MONGODB_60_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60_LATEST}.tgz"
+             MONGODB_60="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_50}.zip"
              MONGODB_44="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_44}.zip"
              MONGODB_42="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_42}.zip"
@@ -394,7 +408,7 @@ get_mongodb_download_url_for ()
          MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-latest.zip"
              MONGODB_RAPID="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_RAPID}.zip"
              MONGODB_60_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60_LATEST}.zip"
-             MONGODB_51="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_51}.zip"
+             MONGODB_60="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60}.zip"
              MONGODB_50="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_50}.zip"
              MONGODB_44="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_44}.zip"
              MONGODB_42="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_42}.zip"
@@ -446,8 +460,8 @@ get_mongodb_download_url_for ()
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
       rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
-      v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST;;
-      5.1) MONGODB_DOWNLOAD_URL=$MONGODB_51 ;;
+      v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
+      6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50 ;;
       4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
       4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42 ;;
