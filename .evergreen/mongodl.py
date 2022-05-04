@@ -31,6 +31,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
+import re
 
 try:
     # We want to support Python3.4 for now, which does not have a 'typing' module
@@ -199,6 +200,42 @@ else:
         'DownloadableComponent',
         ['version', 'target', 'arch', 'edition', 'key', 'data_json'])
 
+#: Regular expression that matches the version numbers from 'full.json'
+VERSION_RE = re.compile(r'(\d+)\.(\d+)\.(\d+)(?:-([a-z]+)(\d+))?')
+STABLE_MAX_RC = 9999
+
+
+def version_tup(version: str) -> 'tuple[int, int, int, int, int]':
+    mat = VERSION_RE.match(version)
+    assert mat, ('Failed to parse "{}" as a version number'.format(version))
+    major, minor, patch, tag, tagnum = list(mat.groups())
+    if tag is None:
+        # No rc tag is greater than an equal base version with any rc tag
+        tag = STABLE_MAX_RC
+        tagnum = 0
+    else:
+        tag = {
+            'alpha': 1,
+            'beta': 2,
+            'rc': 3,
+        }[tag]
+    return tuple(map(int, (major, minor, patch, tag, tagnum)))
+
+
+def collate_mdb_version(left: str, right: str) -> int:
+    lhs = version_tup(left)
+    rhs = version_tup(right)
+    if lhs < rhs:
+        return -1
+    if lhs > rhs:
+        return 1
+    return 0
+
+
+def mdb_version_not_rc(version: str) -> bool:
+    tup = version_tup(version)
+    return version[-1] == STABLE_MAX_RC
+
 
 class CacheDB:
     """
@@ -222,6 +259,11 @@ class CacheDB:
             etag TEXT,
             last_modified TEXT
         )''')
+        db.create_collation('mdb_version', collate_mdb_version)
+        db.create_function('mdb_version_not_rc',
+                           1,
+                           mdb_version_not_rc,
+                           deterministic=True)
         return CacheDB(db)
 
     def __call__(
@@ -374,7 +416,17 @@ class CacheDB:
               AND (:target IS NULL OR target=:target)
               AND (:arch IS NULL OR arch=:arch)
               AND (:edition IS NULL OR edition=:edition)
-              AND (:version IS NULL OR version=:version)
+              AND (
+                  CASE
+                    WHEN :version='latest'
+                        THEN 1
+                    WHEN :version='latest-stable'
+                        THEN mdb_version_not_rc(version)
+                    WHEN :version IS NULL
+                        THEN 1
+                    ELSE version=:version
+                  END)
+            ORDER BY version COLLATE mdb_version DESC
             ''',
             version=version,
             target=target,
@@ -527,7 +579,9 @@ def _print_list(db: CacheDB, version: 'str | None', target: 'str | None',
             (select group_concat(arch, ', ') from (select distinct arch from mdl_downloads)),
             (select group_concat(target, ', ') from (select distinct target from mdl_downloads)),
             (select group_concat(edition, ', ') from (select distinct edition from mdl_downloads)),
-            (select group_concat(version, ', ') from (select distinct version from mdl_versions)),
+            (select group_concat(version, ', ') from (
+                select distinct version from mdl_versions
+                ORDER BY version COLLATE mdb_version)),
             (select group_concat(key, ', ') from (select distinct key from mdl_components))
         )
         ''')))  # type: tuple[str, str, str, str, str]
@@ -573,8 +627,8 @@ def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
                   arch: str, edition: str, component: str,
                   pattern: 'str | None', strip_components: int,
                   test: bool) -> ExpandResult:
-    print('Download {} v{}-{} for {}-{}'.format(component, version, edition,
-                                                target, arch))
+    print('Download {} {}-{} for {}-{}'.format(component, version, edition,
+                                               target, arch))
     matching = cache.db.iter_available(version=version,
                                        target=target,
                                        arch=arch,
@@ -792,10 +846,14 @@ def main(argv: 'Sequence[str]'):
         '-o',
         help='The directory in which to download components. (Required)',
         type=Path)
-    dl_grp.add_argument('--version',
-                        '-V',
-                        help='The product version to download (Required). '
-                        'Use "--list" to list available versions.')
+    dl_grp.add_argument(
+        '--version',
+        '-V',
+        help=
+        'The product version to download (Required). Use "latest" to download '
+        'the newest available version (including release candidates). Use '
+        '"latest-stable" to download the newest version, excluding release '
+        'candidates. Use "--list" to list available versions.')
     dl_grp.add_argument('--component',
                         '-C',
                         help='The component to download (Required). '
@@ -850,8 +908,12 @@ def main(argv: 'Sequence[str]'):
         raise argparse.ArgumentError(None,
                                      'A "--out" directory should be provided')
 
-    target = args.target or infer_target()
-    arch = args.arch or infer_arch()
+    target = args.target
+    if target in (None, 'auto'):
+        target = infer_target()
+    arch = args.arch
+    if arch in (None, 'auto'):
+        arch = infer_arch()
     edition = args.edition or 'enterprise'
     out = args.out or Path.cwd()
     out = out.absolute()
