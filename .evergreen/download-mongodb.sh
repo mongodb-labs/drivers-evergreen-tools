@@ -54,7 +54,7 @@ get_mongodb_download_url_for ()
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="5.3.1"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.0-rc2"
+   VERSION_60="6.0.0-rc4"
    VERSION_50="5.0.8"
    VERSION_44="4.4.13"
    VERSION_42="4.2.19"
@@ -110,6 +110,15 @@ get_mongodb_download_url_for ()
              MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel83-${VERSION_50}.tgz"
              # SERVER-44074 Added support for RHEL 8 (zSeries) in 5.0.8 and 6.0.0-rc0.
+      ;;
+      linux-rhel-8.2-aarch64)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-latest.tgz"
+             MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-${VERSION_RAPID}.tgz"
+             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-${VERSION_60_LATEST}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-${VERSION_60}.tgz"
+             MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-${VERSION_50}.tgz"
+             MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel82-${VERSION_44}.tgz"
+             # SERVER-48282 Added support for RHEL 8 ARM in 4.4.2.
       ;;
       linux-rhel-8*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80-latest.tgz"
