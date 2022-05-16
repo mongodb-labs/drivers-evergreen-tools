@@ -518,10 +518,10 @@ download_and_extract ()
    if [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
-      # Download 6.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
+      # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
       echo "Legacy 'mongo' shell not detected."
-      echo "Download legacy shell from 6.0 ... begin"
-      get_mongodb_download_url_for "$DISTRO" "6.0"
+      echo "Download legacy shell from 5.0 ... begin"
+      get_mongodb_download_url_for "$DISTRO" "5.0"
 
       SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
       mkdir $DRIVERS_TOOLS/legacy-shell-download
@@ -530,6 +530,6 @@ download_and_extract ()
       cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
       DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
       rm -rf $DRIVERS_TOOLS/legacy-shell-download
-      echo "Download legacy shell from 6.0 ... end"
+      echo "Download legacy shell from 5.0 ... end"
    fi
 }
