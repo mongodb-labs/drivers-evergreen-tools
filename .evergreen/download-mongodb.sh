@@ -507,7 +507,7 @@ download_and_extract_package ()
 }
 
 # download_and_extract downloads a requested MongoDB server package.
-# If the legacy shell is not included in the download, the legacy shell is also downloaded from the 6.0 package.
+# If the legacy shell is not included in the download, the legacy shell is also downloaded from the 5.0 package.
 download_and_extract ()
 {
    MONGODB_DOWNLOAD_URL=$1
