@@ -265,7 +265,7 @@ class CacheDB:
         db.create_function('mdb_version_not_rc',
                            1,
                            mdb_version_not_rc,
-                           deterministic=True)
+                           )
         return CacheDB(db)
 
     def __call__(
