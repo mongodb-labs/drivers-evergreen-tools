@@ -13,7 +13,7 @@ fi
 # create venv on first run
 if [ ! -d kmstlsvenv ]; then
    FIRST_RUN=1
-   virtualenv -p ${PYTHON_BINARY} kmstlsvenv
+   ${PYTHON_BINARY} -m venv kmstlsvenv
 fi
 
 # always activate venv
