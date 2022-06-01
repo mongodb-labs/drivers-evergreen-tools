@@ -18,6 +18,9 @@ fi
 
 # always activate venv
 if [ "Windows_NT" = "$OS" ]; then
+  # Workaround https://bugs.python.org/issue32451:
+  # kmstlsvenv/Scripts/activate: line 3: $'\r': command not found
+  dos2unix kmstlsvenv/Scripts/activate || true
   . kmstlsvenv/Scripts/activate
 else
   . kmstlsvenv/bin/activate
