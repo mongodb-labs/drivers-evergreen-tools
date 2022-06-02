@@ -11,7 +11,7 @@ else
 fi
 
 # Get access to venvcreate.
-. "$(dirname "${BASH_SOURCE[0]:-$0}")/../utils.sh"
+. "$(dirname "${BASH_SOURCE:-$0}")/../utils.sh"
 
 # create venv on first run
 if [ ! -d kmstlsvenv ]; then
