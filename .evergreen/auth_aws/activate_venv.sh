@@ -6,10 +6,13 @@ else
   PYTHON_BINARY=python3
 fi
 
+# Get access to createvirtualenv.
+. "$(dirname "${BASH_SOURCE[0]}")/../utils.sh"
+
 # create venv on first run
 if [ ! -d authawsvenv ]; then
    FIRST_RUN=1
-   ${PYTHON_BINARY} -m venv authawsvenv
+   createvirtualenv "$PYTHON_BINARY" authawsvenv
 fi
 
 # always activate venv

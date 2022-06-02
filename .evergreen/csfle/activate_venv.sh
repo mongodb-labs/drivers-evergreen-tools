@@ -10,10 +10,13 @@ else
   echo "error: unable to find a supported python3 executable"
 fi
 
+# Get access to createvirtualenv.
+. "$(dirname "${BASH_SOURCE[0]}")/../utils.sh"
+
 # create venv on first run
 if [ ! -d kmstlsvenv ]; then
    FIRST_RUN=1
-   ${PYTHON_BINARY} -m venv kmstlsvenv
+   createvirtualenv "$PYTHON_BINARY" kmstlsvenv
 fi
 
 # always activate venv
