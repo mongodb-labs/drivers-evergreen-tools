@@ -7,7 +7,7 @@ else
 fi
 
 # Get access to createvenv.
-. "$(dirname "${BASH_SOURCE[0]}")/../utils.sh"
+. "$(dirname "${BASH_SOURCE[0]:-$0}")/../utils.sh"
 
 # create venv on first run
 if [ ! -d authawsvenv ]; then
