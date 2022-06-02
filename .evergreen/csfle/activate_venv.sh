@@ -10,13 +10,13 @@ else
   echo "error: unable to find a supported python3 executable"
 fi
 
-# Get access to createvenv.
+# Get access to venvcreate.
 . "$(dirname "${BASH_SOURCE[0]:-$0}")/../utils.sh"
 
 # create venv on first run
 if [ ! -d kmstlsvenv ]; then
-  createvenv "$PYTHON_BINARY" kmstlsvenv
+  venvcreate "$PYTHON_BINARY" kmstlsvenv
   CRYPTOGRAPHY_DONT_BUILD_RUST=1 pip install --upgrade boto3~=1.19 cryptography~=3.4.8 pykmip~=0.10.0
 else
-  activatevenv kmstlsvenv
+  venvactivate kmstlsvenv
 fi

@@ -6,13 +6,13 @@ else
   PYTHON_BINARY=python3
 fi
 
-# Get access to createvenv.
+# Get access to venvcreate.
 . "$(dirname "${BASH_SOURCE[0]:-$0}")/../utils.sh"
 
 # create venv on first run
 if [ ! -d authawsvenv ]; then
-  createvenv "$PYTHON_BINARY" authawsvenv
+  venvcreate "$PYTHON_BINARY" authawsvenv
   pip install --upgrade boto3
 else
-  activatevenv authawsvenv
+  venvactivate authawsvenv
 fi
