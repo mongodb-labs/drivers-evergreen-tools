@@ -5,10 +5,10 @@
 venvcreate () {
     PYTHON="$1"
     VENVPATH="$2"
-    if $PYTHON -m venv -h>/dev/null; then
-        VENV="$PYTHON -m venv"
-    elif $PYTHON -m virtualenv --version; then
+    if $PYTHON -m virtualenv --version; then
         VENV="$PYTHON -m virtualenv"
+    elif $PYTHON -m venv -h>/dev/null; then
+        VENV="$PYTHON -m venv"
     else
         echo "Cannot test without venv or virtualenv"
         exit 1
