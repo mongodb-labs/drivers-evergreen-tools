@@ -24,5 +24,7 @@ fi
 
 # install dependencies on first run
 if [ ! -z $FIRST_RUN ]; then
+  pip install --upgrade pip
+  pip install --upgrade setuptools
   pip install --upgrade boto3
 fi

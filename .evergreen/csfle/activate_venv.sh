@@ -28,5 +28,7 @@ fi
 
 # install dependencies on first run
 if [ ! -z $FIRST_RUN ]; then
+  pip install --upgrade pip
+  pip install --upgrade setuptools
   CRYPTOGRAPHY_DONT_BUILD_RUST=1 pip install --upgrade boto3~=1.19 cryptography~=3.4.8 pykmip~=0.10.0
 fi
