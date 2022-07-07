@@ -46,6 +46,7 @@ cd -
 
 # Create default config file if it doesn't exist
 if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then
+  MONGODB_BINARIES=${MONGODB_BINARIES:-$(dirname "$(dirname "$0")")/mongodb/bin}
   echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 fi
 
