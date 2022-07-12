@@ -761,14 +761,14 @@ def _expand_zip(ar: Path, dest: Path, pattern: 'str | None',
                 strip_components: int, test: bool) -> int:
     'Expand a .zip archive.'
     n_extracted = 0
-    with zipfile.ZipFile(ar, 'r') as zf:
+    with zipfile.ZipFile(str(ar), 'r') as zf:
         for item in zf.infolist():
             n_extracted += _maybe_extract_member(
                 dest,
                 PurePath(item.filename),
                 pattern,
                 strip_components,
-                item.is_dir(),
+                item.filename.endswith('/'),  ## Equivalent to: item.is_dir(),
                 lambda: zf.open(item, 'r'),
                 0o655,
                 test=test,
