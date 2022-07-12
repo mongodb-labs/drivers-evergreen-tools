@@ -236,7 +236,7 @@ def collate_mdb_version(left: str, right: str) -> int:
 
 def mdb_version_not_rc(version: str) -> bool:
     tup = version_tup(version)
-    return version[-1] == STABLE_MAX_RC
+    return tup[-1] == STABLE_MAX_RC
 
 
 class CacheDB:
@@ -262,10 +262,7 @@ class CacheDB:
             last_modified TEXT
         )''')
         db.create_collation('mdb_version', collate_mdb_version)
-        db.create_function('mdb_version_not_rc',
-                           1,
-                           mdb_version_not_rc,
-                           )
+        db.create_function('mdb_version_not_rc', 1, mdb_version_not_rc)
         return CacheDB(db)
 
     def __call__(
