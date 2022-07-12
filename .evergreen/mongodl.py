@@ -491,7 +491,8 @@ class Cache:
             resp = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
             if e.code != 304:
-                raise
+                raise RuntimeError(
+                    'Failed to download [{u}]'.format(u=url)) from e
             assert dest.is_file(), (
                 'The download cache is missing an expected file', dest)
             return DownloadResult(False, dest)
