@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Download and extract MongoDB components.
 
@@ -33,7 +32,6 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
-import re
 
 try:
     # We want to support Python3.4 for now, which does not have a 'typing' module
