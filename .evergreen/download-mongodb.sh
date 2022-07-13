@@ -46,6 +46,7 @@ get_distro ()
 # get_mongodb_download_url_for "linux-distro-version-architecture" "latest|44|42|40|36|34|32|30|28|26|24"
 # Sets EXTRACT to appropriate extract command
 # Sets MONGODB_DOWNLOAD_URL to the appropriate download url
+# Sets MONGO_CRYPT_SHARED_DOWNLOAD_URL to the corresponding URL to a crypt_shared library archive
 get_mongodb_download_url_for ()
 {
    _DISTRO=$1
@@ -486,6 +487,10 @@ get_mongodb_download_url_for ()
    esac
 
    [ -z "$MONGODB_DOWNLOAD_URL" ] && MONGODB_DOWNLOAD_URL="Unknown version: $_VERSION for $_DISTRO"
+
+   # The crypt_shared package, if is is present, is simply the same file URL with the "mongodb-"
+   # prefix replaced with "mongo_crypt_shared_v1-"
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
 
    echo $MONGODB_DOWNLOAD_URL
 }
