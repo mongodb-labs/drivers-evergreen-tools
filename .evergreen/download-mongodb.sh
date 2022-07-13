@@ -490,7 +490,7 @@ get_mongodb_download_url_for ()
 
    # The crypt_shared package, if is is present, is simply the same file URL with the "mongodb-"
    # prefix replaced with "mongo_crypt_shared_v1-"
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL="${MONGODB_DOWNLOAD_URL/\/mongodb-/\/mongo_crypt_shared_v1-}"
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
 
    echo $MONGODB_DOWNLOAD_URL
 }
