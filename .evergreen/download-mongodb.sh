@@ -557,3 +557,18 @@ download_and_extract ()
       echo "Download legacy shell from 5.0 ... end"
    fi
 }
+
+# download_and_extract_crypt_shared downloads and extracts a crypt_shared package into the current directory.
+# Use get_mongodb_download_url_for to get a MONGO_CRYPT_SHARED_DOWNLOAD_URL.
+download_and_extract_crypt_shared ()
+{
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
+   EXTRACT=$2
+   mkdir crypt_shared_download
+   cd crypt_shared_download
+   curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
+   $EXTRACT crypt_shared-binaries.tgz
+   cp lib/mongo_crypt_v1.* ..
+   cd ..
+   rm -rf crypt_shared_download
+}
