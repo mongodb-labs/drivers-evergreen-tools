@@ -469,29 +469,43 @@ get_mongodb_download_url_for ()
       ;;
    esac
 
+   # The crypt_shared package is available on server 6.0 and newer.
+   VERSION_INCLUDES_CRYPT_SHARED=YES
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
-      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
+      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
-      5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50 ;;
-      4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
-      4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42 ;;
-      4.0) MONGODB_DOWNLOAD_URL=$MONGODB_40 ;;
-      3.6) MONGODB_DOWNLOAD_URL=$MONGODB_36 ;;
-      3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34 ;;
-      3.2) MONGODB_DOWNLOAD_URL=$MONGODB_32 ;;
-      3.0) MONGODB_DOWNLOAD_URL=$MONGODB_30 ;;
-      2.6) MONGODB_DOWNLOAD_URL=$MONGODB_26 ;;
-      2.4) MONGODB_DOWNLOAD_URL=$MONGODB_24 ;;
+      5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      4.0) MONGODB_DOWNLOAD_URL=$MONGODB_40
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      3.6) MONGODB_DOWNLOAD_URL=$MONGODB_36
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      3.2) MONGODB_DOWNLOAD_URL=$MONGODB_32
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      3.0) MONGODB_DOWNLOAD_URL=$MONGODB_30
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      2.6) MONGODB_DOWNLOAD_URL=$MONGODB_26
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      2.4) MONGODB_DOWNLOAD_URL=$MONGODB_24
+         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
    esac
 
    [ -z "$MONGODB_DOWNLOAD_URL" ] && MONGODB_DOWNLOAD_URL="Unknown version: $_VERSION for $_DISTRO"
 
-   # The crypt_shared package, if is is present, is simply the same file URL with the "mongodb-"
-   # prefix replaced with "mongo_crypt_shared_v1-"
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
-
+   if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
+      # The crypt_shared package is simply the same file URL with the "mongodb-"
+      # prefix replaced with "mongo_crypt_shared_v1-"
+      MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
+   fi
    echo $MONGODB_DOWNLOAD_URL
 }
 
@@ -543,4 +557,19 @@ download_and_extract ()
       rm -rf $DRIVERS_TOOLS/legacy-shell-download
       echo "Download legacy shell from 5.0 ... end"
    fi
+}
+
+# download_and_extract_crypt_shared downloads and extracts a crypt_shared package into the current directory.
+# Use get_mongodb_download_url_for to get a MONGO_CRYPT_SHARED_DOWNLOAD_URL.
+download_and_extract_crypt_shared ()
+{
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
+   EXTRACT=$2
+   mkdir crypt_shared_download
+   cd crypt_shared_download
+   curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
+   $EXTRACT crypt_shared-binaries.tgz
+   cp lib/mongo_crypt_v1.* ..
+   cd ..
+   rm -rf crypt_shared_download
 }
