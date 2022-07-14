@@ -1,5 +1,11 @@
 # Create a GCE instance.
 set -o errexit # Exit on first command error.
+if [ -z "$PROJECT" -o -z "$ZONE" ]; then
+    echo "Please set the following required environment variables"
+    echo " PROJECT to the GCP project"
+    echo " ZONE to the GCP zone"
+    exit 1
+fi
 INSTANCENAME="instancename-$RANDOM"
 SERVICEACCOUNT="test-service-account-kms@csfle-poc.iam.gserviceaccount.com"
 IMAGEPROJECT="debian-cloud"
@@ -11,8 +17,8 @@ echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 echo "Creating GCE instance ($INSTANCENAME) ... begin"
 echo "Using service account: $SERVICEACCOUNT"
 gcloud compute instances create $INSTANCENAME \
-    --zone=us-east1-b \
-    --project csfle-poc \
+    --zone $ZONE \
+    --project $PROJECT \
     --machine-type e2-micro \
     --service-account $SERVICEACCOUNT \
     --image-project $IMAGEPROJECT \
