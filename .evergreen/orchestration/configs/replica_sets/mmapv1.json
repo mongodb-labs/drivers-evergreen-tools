@@ -5,7 +5,6 @@
       "procParams": {
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
-        "journal": true,
         "oplogSize": 500,
         "storageEngine": "mmapv1",
         "port": 27017
@@ -21,7 +20,6 @@
       "procParams": {
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
-        "journal": true,
         "oplogSize": 500,
         "storageEngine": "mmapv1",
         "port": 27018
@@ -37,7 +35,6 @@
       "procParams": {
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
-        "journal": true, 
         "port": 27019
       },
       "rsParams": {
