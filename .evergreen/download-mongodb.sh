@@ -402,8 +402,8 @@ get_mongodb_download_url_for ()
          EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
          MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-latest.zip"
              MONGODB_RAPID="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_RAPID}.zip"
-             MONGODB_60_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60_LATEST}.tgz"
-             MONGODB_60="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60}.tgz"
+             MONGODB_60_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60_LATEST}.zip"
+             MONGODB_60="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_60}.zip"
              MONGODB_50="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_50}.zip"
              MONGODB_44="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-${VERSION_44}.zip"
              MONGODB_42="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64-${VERSION_42}.zip"
@@ -569,7 +569,12 @@ download_and_extract_crypt_shared ()
    cd crypt_shared_download
    curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
-   cp lib/mongo_crypt_v1.* ..
+   # Windows package includes .dll in 'bin' directory.
+   if [ -d ./bin ]; then
+      cp bin/mongo_crypt_v1.* ..
+   else
+      cp lib/mongo_crypt_v1.* ..
+   fi
    cd ..
    rm -rf crypt_shared_download
 }
