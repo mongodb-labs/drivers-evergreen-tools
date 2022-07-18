@@ -10,7 +10,7 @@ if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$INSTANCENAME" -o -z "$C
 fi
 
 echo "Running '$CMD' on GCE instance ... begin"
-gcloud compute ssh "$INSTANCENAME" \
+$GCLOUD compute ssh "$INSTANCENAME" \
     --zone $ZONE \
     --project $PROJECT \
     --command $CMD

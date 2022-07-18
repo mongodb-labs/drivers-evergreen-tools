@@ -10,7 +10,7 @@ if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$INSTANCENAME" ]; then
 fi
 
 echo "Deleting GCE instance ($INSTANCENAME) ... begin"
-yes | gcloud compute instances delete $INSTANCENAME \
+yes | $GCLOUD compute instances delete $INSTANCENAME \
     --zone $ZONE \
     --project $PROJECT
 echo "Deleting GCE instance ($INSTANCENAME) ... end"

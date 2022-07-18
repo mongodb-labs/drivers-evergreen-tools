@@ -13,5 +13,5 @@ fi
 
 echo "Copying $SRC to $DST ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
-gcloud compute scp $SRC $DST --scp-flag="-p"
+$GCLOUD compute scp $SRC $DST --scp-flag="-p"
 echo "Copying $SRC to $DST ... end"

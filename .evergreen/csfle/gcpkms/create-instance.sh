@@ -17,7 +17,7 @@ echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 # Create GCE instance.
 echo "Creating GCE instance ($INSTANCENAME) ... begin"
 echo "Using service account: $SERVICEACCOUNT"
-gcloud compute instances create $INSTANCENAME \
+$GCLOUD compute instances create $INSTANCENAME \
     --zone $ZONE \
     --project $PROJECT \
     --machine-type e2-micro \

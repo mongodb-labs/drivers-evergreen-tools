@@ -12,14 +12,14 @@ fi
 
 echo "Copying setup-gce-instance.sh to GCE instance ($INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
-gcloud compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh "$INSTANCENAME":~ \
+$GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh "$INSTANCENAME":~ \
     --zone $ZONE \
     --project $PROJECT \
     --scp-flag="-p"
 echo "Copying setup-gce-instance.sh to GCE instance ($INSTANCENAME) ... end"
 
 echo "Running setup-gce-instance.sh on GCE instance ($INSTANCENAME) ... begin"
-gcloud compute ssh "$INSTANCENAME" \
+$GCLOUD compute ssh "$INSTANCENAME" \
     --zone $ZONE \
     --project $PROJECT \
     --command "./setup-gce-instance.sh"
