@@ -7,7 +7,7 @@ if [ -z "$PROJECT" -o -z "$ZONE" ]; then
     exit 1
 fi
 INSTANCENAME="instancename-$RANDOM"
-SERVICEACCOUNT="test-service-account-kms@csfle-poc.iam.gserviceaccount.com"
+SERVICEACCOUNT="d2377-937@csfle-poc.iam.gserviceaccount.com"
 IMAGEPROJECT="debian-cloud"
 IMAGEFAMILY="debian-11"
 # Store INSTANCENAME so Evergreen can delete instance later.
