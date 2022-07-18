@@ -13,5 +13,5 @@ echo "Running '$CMD' on GCE instance ... begin"
 $GCLOUD compute ssh "$INSTANCENAME" \
     --zone $ZONE \
     --project $PROJECT \
-    --command $CMD
+    --command "$CMD"
 echo "Running '$CMD' on GCE instance ... end"
