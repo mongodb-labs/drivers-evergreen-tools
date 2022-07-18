@@ -1,7 +1,8 @@
 # Setup a GCE instance.
 set -o errexit # Exit on first command error.
-if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$INSTANCENAME" ]; then
+if [ -z "$DRIVERS_TOOLS" -o -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$INSTANCENAME" ]; then
     echo "Please set the following required environment variables"
+    echo " DRIVERS_TOOLS to the path of the drivers-evergreen-tools directory"
     echo " GCLOUD to the path of the gcloud binary"
     echo " PROJECT to the GCP project"
     echo " ZONE to the GCP zone"
@@ -11,7 +12,7 @@ fi
 
 echo "Copying setup-gce-instance.sh to GCE instance ($INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
-gcloud compute scp ./remote-scripts/setup-gce-instance.sh "$INSTANCENAME":~ \
+gcloud compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh "$INSTANCENAME":~ \
     --zone $ZONE \
     --project $PROJECT \
     --scp-flag="-p"
