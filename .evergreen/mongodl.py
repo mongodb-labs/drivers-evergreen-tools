@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Download and extract MongoDB components.
 
@@ -33,7 +32,6 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
-import re
 
 try:
     # We want to support Python3.4 for now, which does not have a 'typing' module
@@ -236,7 +234,7 @@ def collate_mdb_version(left: str, right: str) -> int:
 
 def mdb_version_not_rc(version: str) -> bool:
     tup = version_tup(version)
-    return version[-1] == STABLE_MAX_RC
+    return tup[-1] == STABLE_MAX_RC
 
 
 class CacheDB:
@@ -262,10 +260,7 @@ class CacheDB:
             last_modified TEXT
         )''')
         db.create_collation('mdb_version', collate_mdb_version)
-        db.create_function('mdb_version_not_rc',
-                           1,
-                           mdb_version_not_rc,
-                           )
+        db.create_function('mdb_version_not_rc', 1, mdb_version_not_rc)
         return CacheDB(db)
 
     def __call__(
@@ -494,7 +489,8 @@ class Cache:
             resp = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
             if e.code != 304:
-                raise
+                raise RuntimeError(
+                    'Failed to download [{u}]'.format(u=url)) from e
             assert dest.is_file(), (
                 'The download cache is missing an expected file', dest)
             return DownloadResult(False, dest)
@@ -625,12 +621,11 @@ class ExpandResult(enum.Enum):
     "One or more files were/would be extracted"
 
 
-def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
-                  arch: str, edition: str, component: str,
-                  pattern: 'str | None', strip_components: int,
-                  test: bool) -> ExpandResult:
-    print('Download {} {}-{} for {}-{}'.format(component, version, edition,
-                                               target, arch))
+def _published_build_url(cache: Cache, version: str, target: str, arch: str,
+                         edition: str, component: str) -> str:
+    """
+    Get the URL for a "published" build (that is: a build that was published in full.json)
+    """
     matching = cache.db.iter_available(version=version,
                                        target=target,
                                        arch=arch,
@@ -643,7 +638,70 @@ def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
             'the requested version+target+architecture+edition'.format(
                 component))
     data = json.loads(tup.data_json)
-    cached = cache.download_file(data['url']).path
+    return data['url']
+
+
+def _latest_build_url(target: str, arch: str, edition: str, component: str,
+                      branch: 'str|None') -> str:
+    """
+    Get the URL for an "unpublished" "latest" build.
+
+    These builds aren't published in a JSON manifest, so we have to form the URL
+    according to the user's parameters. We might fail to download a build if
+    there is no matching file.
+    """
+    # Normalize the filename components based on the download target
+    platform = {
+        'windows': 'windows',
+        'win32': 'win32',
+        'macos': 'osx',
+    }.get(target, 'linux')
+    typ = {
+        'windows': 'windows',
+        'win32': 'win32',
+        'macos': 'macos',
+    }.get(target, 'linux')
+    component_name = {
+        'archive': 'mongodb',
+        'crypt_shared': 'mongo_crypt_shared_v1',
+    }.get(component, component)
+    base = 'https://downloads.10gen.com/{plat}'.format(plat=platform)
+    # Windows has Zip files
+    ext = 'zip' if target == 'windows' else 'tgz'
+    # Enterprise builds have an "enterprise" infix
+    ent_infix = 'enterprise-' if edition == 'enterprise' else ''
+    # Some platforms have a filename infix
+    tgt_infix = ((target + '-')  #
+                 if target not in ('windows', 'win32', 'macos')  #
+                 else '')
+    # Non-master branch uses a filename infix
+    br_infix = ((branch + '-') if
+                (branch is not None and branch != 'master')  #
+                else '')
+    filename = '{comp}-{typ}-{arch}-{enterprise_}{target_}{br_}latest.{ext}'.format(
+        comp=component_name,
+        typ=typ,
+        arch=arch,
+        enterprise_=ent_infix,
+        target_=tgt_infix,
+        br_=br_infix,
+        ext=ext)
+    return '{}/{}'.format(base, filename)
+
+
+def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
+                  arch: str, edition: str, component: str,
+                  pattern: 'str | None', strip_components: int, test: bool,
+                  latest_build_branch: 'str|None') -> ExpandResult:
+    print('Download {} {}-{} for {}-{}'.format(component, version, edition,
+                                               target, arch))
+    if version == 'latest-build':
+        dl_url = _latest_build_url(target, arch, edition, component,
+                                   latest_build_branch)
+    else:
+        dl_url = _published_build_url(cache, version, target, arch, edition,
+                                      component)
+    cached = cache.download_file(dl_url).path
     return _expand_archive(cached,
                            out_dir,
                            pattern,
@@ -761,14 +819,14 @@ def _expand_zip(ar: Path, dest: Path, pattern: 'str | None',
                 strip_components: int, test: bool) -> int:
     'Expand a .zip archive.'
     n_extracted = 0
-    with zipfile.ZipFile(ar, 'r') as zf:
+    with zipfile.ZipFile(str(ar), 'r') as zf:
         for item in zf.infolist():
             n_extracted += _maybe_extract_member(
                 dest,
                 PurePath(item.filename),
                 pattern,
                 strip_components,
-                item.is_dir(),
+                item.filename.endswith('/'),  ## Equivalent to: item.is_dir(),
                 lambda: zf.open(item, 'r'),
                 0o655,
                 test=test,
@@ -855,7 +913,8 @@ def main(argv: 'Sequence[str]'):
         'The product version to download (Required). Use "latest" to download '
         'the newest available version (including release candidates). Use '
         '"latest-stable" to download the newest version, excluding release '
-        'candidates. Use "--list" to list available versions.')
+        'candidates. Use "latest-build" to download the most recent build of '
+        'the named component. Use "--list" to list available versions.')
     dl_grp.add_argument('--component',
                         '-C',
                         help='The component to download (Required). '
@@ -892,6 +951,10 @@ def main(argv: 'Sequence[str]'):
                         action='store_true',
                         help='If all files are excluded by other filters, '
                         'treat that situation as an error and exit non-zero.')
+    dl_grp.add_argument('--latest-build-branch',
+                        help='Specify the name of the branch to '
+                        'download the with "--version=latest-build"',
+                        metavar='BRANCH_NAME')
     args = parser.parse_args()
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
@@ -928,7 +991,8 @@ def main(argv: 'Sequence[str]'):
                            component=args.component,
                            pattern=args.only,
                            strip_components=args.strip_components,
-                           test=args.test)
+                           test=args.test,
+                           latest_build_branch=args.latest_build_branch)
     if result is ExpandResult.Empty and args.empty_is_error:
         return 1
     return 0

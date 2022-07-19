@@ -8,7 +8,6 @@
       "procParams": {
         "ipv6": true,
         "bind_ip": "127.0.0.1,::1",
-        "journal": true,
         "oplogSize": 500,
         "port": 27017
       },
