@@ -9,8 +9,8 @@ if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$SERVICEACCOUNT" ]; then
     exit 1
 fi
 INSTANCENAME="instancename-$RANDOM"
-IMAGEPROJECT="debian-cloud"
-IMAGEFAMILY="debian-11"
+IMAGEPROJECT=${IMAGEPROJECT:-"debian-cloud"}
+IMAGEFAMILY=${IMAGEFAMILY:-"debian-11"}
 # Store INSTANCENAME so Evergreen can delete instance later.
 echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 
