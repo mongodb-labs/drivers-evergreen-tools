@@ -11,6 +11,7 @@ fi
 INSTANCENAME="instancename-$RANDOM"
 IMAGEPROJECT=${IMAGEPROJECT:-"debian-cloud"}
 IMAGEFAMILY=${IMAGEFAMILY:-"debian-11"}
+MACHINETIME=${MACHINETYPE:-"e2-micro"}
 # Store INSTANCENAME so Evergreen can delete instance later.
 echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 
@@ -20,7 +21,7 @@ echo "Using service account: $SERVICEACCOUNT"
 $GCLOUD compute instances create $INSTANCENAME \
     --zone $ZONE \
     --project $PROJECT \
-    --machine-type e2-micro \
+    --machine-type $MACHINETYPE \
     --service-account $SERVICEACCOUNT \
     --image-project $IMAGEPROJECT \
     --image-family $IMAGEFAMILY \
