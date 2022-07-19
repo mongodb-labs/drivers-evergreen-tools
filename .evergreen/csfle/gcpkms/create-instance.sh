@@ -1,14 +1,14 @@
 # Create a GCE instance.
 set -o errexit # Exit on first command error.
-if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" ]; then
+if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
     echo " GCLOUD to the path of the gcloud binary"
     echo " PROJECT to the GCP project"
     echo " ZONE to the GCP zone"
+    echo " SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
     exit 1
 fi
 INSTANCENAME="instancename-$RANDOM"
-SERVICEACCOUNT="d2377-937@csfle-poc.iam.gserviceaccount.com"
 IMAGEPROJECT="debian-cloud"
 IMAGEFAMILY="debian-11"
 # Store INSTANCENAME so Evergreen can delete instance later.
