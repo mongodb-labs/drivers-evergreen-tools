@@ -11,7 +11,7 @@ fi
 INSTANCENAME="instancename-$RANDOM"
 IMAGEPROJECT=${IMAGEPROJECT:-"debian-cloud"}
 IMAGEFAMILY=${IMAGEFAMILY:-"debian-11"}
-MACHINETIME=${MACHINETYPE:-"e2-micro"}
+MACHINETYPE=${MACHINETYPE:-"e2-micro"}
 # Store INSTANCENAME so Evergreen can delete instance later.
 echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 
