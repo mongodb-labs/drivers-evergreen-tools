@@ -7,3 +7,5 @@ The expected flow is:
 - Copy driver test files to the GCE instance.
 - Run driver tests on the GCE instance.
 - Delete the GCE instance.
+
+The included mock_server may be useful for local development. It simulates a [Metadata Server](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances#applications).
