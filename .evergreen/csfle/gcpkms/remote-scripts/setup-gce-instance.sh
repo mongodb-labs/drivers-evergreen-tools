@@ -13,8 +13,8 @@ sudo apt-get -y install git
 echo "Installing dependencies ... end"
 
 echo "Starting MongoDB server ... begin"
-git clone https://github.com/kevinAlbs/drivers-evergreen-tools --branch D2377 drivers-evergreen-tools-D2377
-export DRIVERS_TOOLS=$(pwd)/drivers-evergreen-tools-D2377
+git clone https://github.com/mongodb-labs/drivers-evergreen-tools
+export DRIVERS_TOOLS=$(pwd)/drivers-evergreen-tools
 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
 export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
 echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
