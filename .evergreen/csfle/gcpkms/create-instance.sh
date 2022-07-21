@@ -38,9 +38,3 @@ $GCLOUD compute instances create $INSTANCENAME \
     --metadata-from-file=startup-script=$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/startup.sh \
     --scopes https://www.googleapis.com/auth/cloudkms,https://www.googleapis.com/auth/compute
 echo "Creating GCE instance ($INSTANCENAME) ... end"
-
-# Sleep for 60 seconds for VM to finish booting.
-# Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
-echo "Sleeping for 60 seconds ... begin"
-sleep 60
-echo "Sleeping for 60 seconds ... end"
