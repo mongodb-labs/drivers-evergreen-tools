@@ -10,6 +10,11 @@ if [ -z "$KEYFILE" -o -z "$DRIVERS_TOOLS" -o -z "$PROJECT" -o -z "$ZONE" -o -z "
     exit 1
 fi
 
+# Set defaults.
+export IMAGEPROJECT=${IMAGEPROJECT:-"debian-cloud"}
+export IMAGEFAMILY=${IMAGEFAMILY:-"debian-11"}
+export MACHINETYPE=${MACHINETYPE:-"e2-micro"}
+
 # download-gcloud.sh sets GCLOUD.
 echo "download-gcloud.sh ... begin"
 . $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
