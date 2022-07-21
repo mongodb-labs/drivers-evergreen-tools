@@ -6,11 +6,11 @@ set -o xtrace
 
 if command -v gcloud &> /dev/null; then
     echo "gcloud is on the path"
-    GCLOUD=gcloud
+    GCPKMS_GCLOUD=gcloud
 else
     echo "Download gcloud ... begin"
     wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-393.0.0-linux-x86_64.tar.gz
     tar xf google-cloud-cli-393.0.0-linux-x86_64.tar.gz
-    GCLOUD=$(pwd)/google-cloud-sdk/bin/gcloud
+    GCPKMS_GCLOUD=$(pwd)/google-cloud-sdk/bin/gcloud
     echo "Download gcloud ... end"
 fi
