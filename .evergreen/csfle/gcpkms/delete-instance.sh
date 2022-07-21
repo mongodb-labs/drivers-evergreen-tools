@@ -1,5 +1,6 @@
 # Delete GCE instance.
 set -o errexit # Exit on first command error.
+set -o xtrace
 if [ -z "$GCLOUD" -o -z "$PROJECT" -o -z "$ZONE" -o -z "$INSTANCENAME" ]; then
     echo "Please set the following required environment variables"
     echo " GCLOUD to the path of the gcloud binary"
