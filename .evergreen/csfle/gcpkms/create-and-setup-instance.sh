@@ -33,3 +33,5 @@ echo "setup-instance.sh ... end"
 
 echo "GCLOUD: $GCLOUD" > testgcpkms-expansions.yml
 echo "INSTANCENAME: $INSTANCENAME" >> testgcpkms-expansions.yml
+echo "PROJECT: $PROJECT" >> testgcpkms-expansions.yml
+echo "ZONE: $ZONE" >> testgcpkms-expansions.yml
