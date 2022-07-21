@@ -13,4 +13,3 @@ else
     GCLOUD=$(pwd)/google-cloud-sdk/bin/gcloud
     echo "Download gcloud ... end"
 fi
-echo "GCLOUD: $GCLOUD" > gcloud-expansions.yml

@@ -20,8 +20,6 @@ if [ -z "$DRIVERS_TOOLS" -o \
     exit 1
 fi
 INSTANCENAME="instancename-$RANDOM"
-# Store INSTANCENAME so Evergreen can delete instance later.
-echo "INSTANCENAME: $INSTANCENAME" > gcpkms-expansions.yml
 
 # Create GCE instance.
 echo "Creating GCE instance ($INSTANCENAME) ... begin"
