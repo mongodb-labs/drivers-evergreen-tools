@@ -2,7 +2,6 @@
 # On success, a gcloud-expansions.yml file is created with the expansion GCLOUD to the gcloud binary.
 # Evergreen scripts must use the expansions.update command to load the expansion.
 set -o errexit # Exit on first command error.
-set -o xtrace
 
 if command -v gcloud &> /dev/null; then
     echo "gcloud is on the path"

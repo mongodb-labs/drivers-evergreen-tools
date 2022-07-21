@@ -1,6 +1,5 @@
 # Create a GCE instance.
 set -o errexit # Exit on first command error.
-set -o xtrace
 if [ -z "$GCPKMS_DRIVERS_TOOLS" -o \
      -z "$GCPKMS_GCLOUD" -o \
      -z "$GCPKMS_PROJECT" -o \

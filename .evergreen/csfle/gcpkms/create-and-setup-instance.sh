@@ -1,7 +1,6 @@
 # Create and setup a GCE instance.
 # On success, creates testgcpkms-expansions.yml expansions 
 set -o errexit # Exit on first command error.
-set -o xtrace
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_DRIVERS_TOOLS" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_KEYFILE to the JSON file for the service account"

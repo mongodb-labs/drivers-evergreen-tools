@@ -1,6 +1,5 @@
 # Copy a file to or from a GCE instance.
 set -o errexit # Exit on first command error.
-set -o xtrace
 if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_SRC" -o -z "$GCPKMS_DST" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"
