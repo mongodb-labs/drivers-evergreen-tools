@@ -25,4 +25,3 @@ $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
     --command "./setup-gce-instance.sh"
 echo "Exit code of test-script is: $?"
 echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"
-
