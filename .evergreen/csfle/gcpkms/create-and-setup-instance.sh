@@ -28,11 +28,23 @@ echo "create-instance.sh ... begin"
 . $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/create-instance.sh
 echo "create-instance.sh ... end"
 
-# Sleep for 60 seconds for VM to finish booting.
+# Wait for a maximum of five minutes for VM to finish booting.
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
-echo "Sleeping for 60 seconds ... begin"
-sleep 60
-echo "Sleeping for 60 seconds ... end"
+wait_for_server () {
+    for i in $(seq 300); do
+        if $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping'" >/dev/null 2>&1; then
+            echo "ssh succeeded"
+            return 0
+        else
+            sleep 1
+        fi
+    done
+    echo "failed to ssh into '$GCPKMS_INSTANCENAME'"
+    return 1
+}
+echo "waiting for server to start ... begin"
+wait_for_server
+echo "waiting for server to start ... end"
 
 echo "setup-instance.sh ... begin"
 . $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
