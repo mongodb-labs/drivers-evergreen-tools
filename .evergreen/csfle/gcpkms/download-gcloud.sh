@@ -1,5 +1,4 @@
 # Download gcloud CLI for Linux 64-bit (x86_64).
-# On success, a gcloud-expansions.yml file is created with the expansion GCLOUD to the gcloud binary.
 # Evergreen scripts must use the expansions.update command to load the expansion.
 set -o errexit # Exit on first command error.
 
