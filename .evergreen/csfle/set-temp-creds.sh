@@ -24,11 +24,12 @@ set +o xtrace # Disable tracing.
 
 get_creds() {
     $PYTHON - "$@" << 'EOF'
+import sys
 import boto3
 
 client = boto3.client('sts')
 credentials = client.get_session_token()["Credentials"]
-print (credentials["AccessKeyId"] + " " + credentials["SecretAccessKey"] + " " + credentials["SessionToken"], end="")
+sys.stdout.write(credentials["AccessKeyId"] + " " + credentials["SecretAccessKey"] + " " + credentials["SessionToken"])
 EOF
 }
 
