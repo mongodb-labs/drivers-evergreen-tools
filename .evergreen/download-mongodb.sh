@@ -565,6 +565,7 @@ download_and_extract_crypt_shared ()
 {
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
    EXTRACT=$2
+   __CRYPT_SHARED_LIB_PATH=$3
    mkdir crypt_shared_download
    cd crypt_shared_download
    curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
@@ -577,4 +578,8 @@ download_and_extract_crypt_shared ()
    fi
    cd ..
    rm -rf crypt_shared_download
+
+   RELATIVE_CRYPT_SHARED_LIB_PATH="$(find -type f \( -name "mongo_crypt_v1.dll" -o -name "mongo_crypt_v1.so" -o -name "mongo_crypt_v1.dylib" \))"
+   eval $__CRYPT_SHARED_LIB_PATH=$DRIVERS_TOOLS/../$(basename $RELATIVE_CRYPT_SHARED_LIB_PATH)
+
 }
