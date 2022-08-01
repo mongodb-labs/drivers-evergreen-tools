@@ -579,7 +579,7 @@ download_and_extract_crypt_shared ()
    cd ..
    rm -rf crypt_shared_download
 
-   RELATIVE_CRYPT_SHARED_LIB_PATH="$(find -type f \( -name "mongo_crypt_v1.dll" -o -name "mongo_crypt_v1.so" -o -name "mongo_crypt_v1.dylib" \))"
+   RELATIVE_CRYPT_SHARED_LIB_PATH="$(find . -type f \( -name "mongo_crypt_v1.dll" -o -name "mongo_crypt_v1.so" -o -name "mongo_crypt_v1.dylib" \))"
    eval $__CRYPT_SHARED_LIB_PATH=$DRIVERS_TOOLS/../$(basename $RELATIVE_CRYPT_SHARED_LIB_PATH)
 
 }
