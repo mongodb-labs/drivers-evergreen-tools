@@ -565,7 +565,7 @@ download_and_extract_crypt_shared ()
 {
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
    EXTRACT=$2
-   __CRYPT_SHARED_LIB_PATH=$3
+   __CRYPT_SHARED_LIB_PATH=${3:-CRYPT_SHARED_LIB_PATH}
    mkdir crypt_shared_download
    cd crypt_shared_download
    curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
