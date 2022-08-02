@@ -42,7 +42,6 @@
       "bind_ip": "127.0.0.1,::1",
       "port": 27017,
       "setParameter": {
-        "featureFlagLoadBalancer": true,
         "loadBalancerPort": 27050
       }
     },
@@ -51,7 +50,6 @@
       "bind_ip": "127.0.0.1,::1",
       "port": 27018,
       "setParameter": {
-        "featureFlagLoadBalancer": true,
         "loadBalancerPort": 27051
       }
     }

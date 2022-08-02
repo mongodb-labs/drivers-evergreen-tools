@@ -55,7 +55,7 @@ get_mongodb_download_url_for ()
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="5.3.1"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.0-rc12"
+   VERSION_60="6.0.0"
    VERSION_50="5.0.9"
    VERSION_44="4.4.15"
    VERSION_42="4.2.21"
@@ -472,7 +472,11 @@ get_mongodb_download_url_for ()
    # The crypt_shared package is available on server 6.0 and newer.
    VERSION_INCLUDES_CRYPT_SHARED=YES
    case "$_VERSION" in
-      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
+      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST
+         # If latest is not at least 6.0 on this OS, the crypt_shared package will not be available.
+         if [ -z $MONGODB_60 ]; then
+           VERSION_INCLUDES_CRYPT_SHARED=NO
+         fi ;;
       rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID
          VERSION_INCLUDES_CRYPT_SHARED=NO ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
