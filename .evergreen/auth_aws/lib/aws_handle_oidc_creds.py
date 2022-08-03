@@ -8,7 +8,7 @@ import os
 import time
 import uuid
 
-from jwkest.jwk import RSAKey
+from jwkest.jwk import RSAKey, import_rsa_key
 from pyop.authz_state import AuthorizationState
 from pyop.provider import Provider
 from pyop.subject_identifier import HashBasedSubjectIdentifierFactory
@@ -62,8 +62,7 @@ def get_provider(client_id=None, client_secret=None):
     }
 
     userinfo_db = Userinfo({'test_user': {}})
-    rsa_path = os.path.join(HERE, 'signing_key.pem')
-    signing_key = RSAKey(key=RSA_KEY, alg='RS256')
+    signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256')
 
     if client_id:
         client_info = {

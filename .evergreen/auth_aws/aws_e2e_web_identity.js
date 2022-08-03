@@ -15,8 +15,6 @@ function unAssignInstanceProfile() {
         AWS_ACCESS_KEY_ID: config["iam_auth_ec2_instance_account"],
         AWS_SECRET_ACCESS_KEY: config["iam_auth_ec2_instance_secret_access_key"],
     };
-
-    const instanceProfileName = config["iam_auth_ec2_instance_profile"];
     const python_command = getPython3Binary() +
         " -u lib/aws_unassign_instance_profile.py";
 
@@ -60,7 +58,7 @@ function getWebIdentityCredentials() {
         AWS_WEB_IDENTITY_TOKEN_FILE: config['iam_web_identity_token_file'],
     };
 
-    const role_name = config["iam_auth_assume_role_name"];
+    const role_name = config["iam_auth_assume_web_role_name"];
 
     const python_command = getPython3Binary() +
         ` -u lib/aws_assume_web_role.py --role_name=${role_name} > creds.json`;

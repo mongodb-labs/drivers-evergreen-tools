@@ -2,5 +2,6 @@
 evergreen_config_generator/build
 evergreen_config_generator/dist
 *.egg-info
-# The credentials file should not be checked in to version control.
+# The credentials files should not be checked in to version control.
 .evergreen/auth_aws/aws_e2e_setup.json
+.evergreen/auth_aws/creds.json
