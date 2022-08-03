@@ -56,7 +56,7 @@ def get_access_token():
     })
 
     if resp.status_code != 200:
-        msg = textwrap.dedent("""
+        msg = textwrap.dedent(f"""
         Unexpected non-200 status.
         Got status {resp.status_code} on HTTP response:
             Headers:{resp.headers}
