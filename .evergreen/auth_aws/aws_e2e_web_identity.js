@@ -79,7 +79,7 @@ const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
 const config = readSetupJson();
-const assumed_role = config["iam_auth_assume_web_role_name"];
+const assumed_role = `${config["iam_auth_assume_web_role_name"]}/*`;
 assert.commandWorked(external.runCommand({createUser: assumed_role, roles:[{role: 'read', db: "aws"}]}));
 
 const testConn = new Mongo();
