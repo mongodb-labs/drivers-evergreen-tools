@@ -6,7 +6,6 @@ load("lib/aws_e2e_lib.js");
 (function() {
 "use strict";
 
-const ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*";
 
 function unAssignInstanceProfile() {
     const config = readSetupJson();
@@ -79,7 +78,9 @@ const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
-assert.commandWorked(external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]}));
+const config = readSetupJson();
+const assumed_role = config["iam_auth_assume_web_role_name"];
+assert.commandWorked(external.runCommand({createUser: assumed_role, roles:[{role: 'read', db: "aws"}]}));
 
 const testConn = new Mongo();
 const testExternal = testConn.getDB('$external');
