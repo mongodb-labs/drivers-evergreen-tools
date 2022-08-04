@@ -12,14 +12,13 @@ import boto3
 
 LOGGER = logging.getLogger(__name__)
 
-STS_DEFAULT_ROLE_NAME = "arn:aws:iam::579766882180:role/mark.benvenuto"
-
-def _assume_role_with_web_identity(role_name):
+def _assume_role_with_web_identity():
     sts_client = boto3.client("sts")
 
     token_file = os.environ['AWS_WEB_IDENTITY_TOKEN_FILE']
     with open(token_file) as fid:
         token = fid.read()
+    role_name = os.environ['AWS_ROLE_ARN']
 
     response = sts_client.assume_role_with_web_identity(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), WebIdentityToken=token, DurationSeconds=900)
 
@@ -42,8 +41,6 @@ def main() -> None:
     parser.add_argument('-v', "--verbose", action='store_true', help="Enable verbose logging")
     parser.add_argument('-d', "--debug", action='store_true', help="Enable debug logging")
 
-    parser.add_argument('--role_name', type=str, default=STS_DEFAULT_ROLE_NAME, help="Role to assume")
-
     args = parser.parse_args()
 
     if args.debug:
@@ -51,7 +48,7 @@ def main() -> None:
     elif args.verbose:
         logging.basicConfig(level=logging.INFO)
 
-    _assume_role_with_web_identity(args.role_name)
+    _assume_role_with_web_identity()
 
 
 if __name__ == "__main__":

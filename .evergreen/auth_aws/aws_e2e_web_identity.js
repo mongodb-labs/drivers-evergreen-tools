@@ -56,12 +56,11 @@ function getWebIdentityCredentials() {
 
     const env = {
         AWS_WEB_IDENTITY_TOKEN_FILE: config['iam_web_identity_token_file'],
+        AWS_ROLE_ARN: config["iam_auth_assume_web_role_name"]
     };
 
-    const role_name = config["iam_auth_assume_web_role_name"];
-
     const python_command = getPython3Binary() +
-        ` -u lib/aws_assume_web_role.py --role_name=${role_name} > creds.json`;
+        ` -u lib/aws_assume_web_role.py > creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
     assert.eq(ret, 0, "Failed to assume role on the current machine");
