@@ -18,28 +18,8 @@ from pyop.userinfo import Userinfo
 HERE = os.path.abspath(os.path.dirname(__file__))
 ISSUER = os.environ['IDP_ISSUER']
 JWKS_URI = os.environ['IDP_JWKS_URI']
+RSA_KEY = os.environ["IDP_RSA_KEY"]
 AUDIENCE = 'sts.amazonaws.com'
-
-# Note: these credentials should be used for testing purposes only!
-# This was created by running `ssh-keygen -t rsa -b 1024`.
-RSA_KEY = """
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAlwAAAAdzc2gtcn
-NhAAAAAwEAAQAAAIEA3CYUq1wGEfg9jWUpV2a57Uekb/jFUQPCLgrHxF36adxPqjWWYB/y
-6pNArQem1xCmoReprFiIOd8CW/Tg7vpauFcymiW69DKvThdARgCmSf4wF5oStCGYqHEesp
-Is6RaGEgiJ/LmYUz63LOodOfaRSUtfHiAuBkFEo+mozLv0WYcAAAIYEQoNoREKDaEAAAAH
-c3NoLXJzYQAAAIEA3CYUq1wGEfg9jWUpV2a57Uekb/jFUQPCLgrHxF36adxPqjWWYB/y6p
-NArQem1xCmoReprFiIOd8CW/Tg7vpauFcymiW69DKvThdARgCmSf4wF5oStCGYqHEespIs
-6RaGEgiJ/LmYUz63LOodOfaRSUtfHiAuBkFEo+mozLv0WYcAAAADAQABAAAAgQCXW08mqX
-Q68pNPHVgZETWPX4w8t6rhklX01dCWv44lLiVPftxOZmjawjbbP8GDZ51IcD5lkdDHCP5U
-Pr5PT60CfdfTtAeap1dVbxCh2dIP76OlO0/txPUZEBuoCiEQhRgQpOUlqJKUkkuhJtsJ3P
-ZYmJKEpo1LpRJc0vbxXlqIIQAAAEEAuOrt2VPyufkIpCJEtLT2chF9Zb+MwNYbqYto9ewc
-NOWWCBuVKFQvjrQQwhYdwQy8Z6ebuWiGdrSadYooBuMVngAAAEEA80tTheU8oqg0WsaQ/8
-4yFxSL+rMmlamq0ua+CRus2BQ6YN00Lf9kkyDxjGNqKiNsMBtc+ViJnwl4PXdVCBon+QAA
-AEEA56VQwtZTpw+Vmnzn/5sklfFwpwOYp5v1zgIAkfhBZuH8lGd85CM3Ejeusvt5pK4C1p
-dHJqnuTAqvSMRkGAHtfwAAAB5zdGV2ZS5zaWx2ZXN0ZXJATS1DMDJGRzAzVU1MODUBAgM=
------END OPENSSH PRIVATE KEY-----
-""".strip()
 
 
 def get_provider(client_id=None, client_secret=None):

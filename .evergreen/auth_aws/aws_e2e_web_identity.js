@@ -37,6 +37,7 @@ function writeWebTokenFile() {
     const env = {
         IDP_ISSUER: config["iam_web_identity_issuer"],
         IDP_JWKS_URI: config["iam_web_identity_jwks_uri"],
+        IDP_RSA_KEY: config["iam_web_identity_rsa_key"],
         AWS_WEB_IDENTITY_TOKEN_FILE: config['iam_web_identity_token_file']
     };
 
