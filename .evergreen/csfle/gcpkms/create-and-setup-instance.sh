@@ -10,7 +10,7 @@ if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_DRIVERS_TOOLS" -o -z "$GCPKMS_SERVICEAC
 fi
 
 # Set defaults.
-export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"csfle-poc"}
+export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"devprod-drivers"}
 export GCPKMS_ZONE=${GCPKMS_ZONE:-"us-east1-b"}
 export GCPKMS_IMAGEPROJECT=${GCPKMS_IMAGEPROJECT:-"debian-cloud"}
 export GCPKMS_IMAGEFAMILY=${GCPKMS_IMAGEFAMILY:-"debian-11"}
