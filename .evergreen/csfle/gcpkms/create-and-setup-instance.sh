@@ -32,14 +32,14 @@ echo "create-instance.sh ... end"
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
 wait_for_server () {
     for i in $(seq 300); do
-        if $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping'" >/dev/null 2>&1; then
+        if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping'" 2>&1); then
             echo "ssh succeeded"
             return 0
         else
             sleep 1
         fi
     done
-    echo "failed to ssh into '$GCPKMS_INSTANCENAME'"
+    echo "failed to ssh into '$GCPKMS_INSTANCENAME'. Output of last attempt: $SSHOUTPUT"
     return 1
 }
 echo "waiting for server to start ... begin"
