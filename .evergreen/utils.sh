@@ -6,7 +6,10 @@ venvcreate () {
     PYTHON="$1"
     VENVPATH="$2"
     if $PYTHON -m virtualenv --version; then
-        VENV="$PYTHON -m virtualenv"
+        # The system-installed virtualenv on Debian 10 is buggy and will default
+        # to creating a python2 environment even when invoked from python3; the
+        # '-p' parameter ensures that we always use the desired interpreter
+        VENV="$PYTHON -m virtualenv -p $PYTHON"
     elif $PYTHON -m venv -h>/dev/null; then
         VENV="$PYTHON -m venv"
     else
