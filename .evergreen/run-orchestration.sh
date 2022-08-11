@@ -108,7 +108,10 @@ else
   echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
   download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
   echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
-
+  if [ -z $CRYPT_SHARED_LIB_PATH ]; then
+    echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
+    exit 1
+  fi
 cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
 EOT
