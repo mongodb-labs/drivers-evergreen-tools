@@ -569,16 +569,22 @@ download_and_extract_crypt_shared ()
 {
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
    EXTRACT=$2
+   __CRYPT_SHARED_LIB_PATH=${3:-CRYPT_SHARED_LIB_PATH}
    mkdir crypt_shared_download
    cd crypt_shared_download
    curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
+
+   LIBRARY_NAME="mongo_crypt_v1"
    # Windows package includes .dll in 'bin' directory.
    if [ -d ./bin ]; then
-      cp bin/mongo_crypt_v1.* ..
+      cp bin/$LIBRARY_NAME.* ..
    else
-      cp lib/mongo_crypt_v1.* ..
+      cp lib/$LIBRARY_NAME.* ..
    fi
    cd ..
    rm -rf crypt_shared_download
+
+   RELATIVE_CRYPT_SHARED_LIB_PATH="$(find . -maxdepth 1 -type f \( -name "$LIBRARY_NAME.dll" -o -name "$LIBRARY_NAME.so" -o -name "$LIBRARY_NAME.dylib" \))"
+   eval $__CRYPT_SHARED_LIB_PATH=$DRIVERS_TOOLS/../$(basename $RELATIVE_CRYPT_SHARED_LIB_PATH)
 }

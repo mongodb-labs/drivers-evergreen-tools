@@ -102,6 +102,22 @@ echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
 
+if [ -z $MONGO_CRYPT_SHARED_DOWNLOAD_URL ]; then
+  echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
+else
+  echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+  download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
+  echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
+  if [ -z $CRYPT_SHARED_LIB_PATH ]; then
+    echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
+    exit 1
+  fi
+cat <<EOT >> mo-expansion.yml
+CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
+EOT
+
+fi
+
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)
 DL_ELAPSED=$(expr $DL_END - $DL_START)
