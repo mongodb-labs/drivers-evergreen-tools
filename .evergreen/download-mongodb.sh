@@ -586,5 +586,10 @@ download_and_extract_crypt_shared ()
    rm -rf crypt_shared_download
 
    RELATIVE_CRYPT_SHARED_LIB_PATH="$(find . -maxdepth 1 -type f \( -name "$LIBRARY_NAME.dll" -o -name "$LIBRARY_NAME.so" -o -name "$LIBRARY_NAME.dylib" \))"
-   eval $__CRYPT_SHARED_LIB_PATH=$DRIVERS_TOOLS/../$(basename $RELATIVE_CRYPT_SHARED_LIB_PATH)
+   ABSOLUTE_CRYPT_SHARED_LIB_PATH=$(pwd)/$(basename $RELATIVE_CRYPT_SHARED_LIB_PATH)
+   if [ "Windows_NT" = "$OS" ]; then
+      # If we're on Windows, convert the "cygdrive" path to Windows-style paths.
+      ABSOLUTE_CRYPT_SHARED_LIB_PATH=$(cygpath -m $ABSOLUTE_CRYPT_SHARED_LIB_PATH)
+   fi
+   eval $__CRYPT_SHARED_LIB_PATH=$ABSOLUTE_CRYPT_SHARED_LIB_PATH
 }
