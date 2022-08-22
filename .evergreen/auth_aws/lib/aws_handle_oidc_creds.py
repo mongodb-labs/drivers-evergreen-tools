@@ -42,6 +42,9 @@ def get_provider(client_id=None, client_secret=None):
     }
 
     userinfo_db = Userinfo({'test_user': {}})
+
+    if RSA_KEY.endswith('='):
+        RSA_KEY = base64.urlsafe_b64decode(RSA_KEY).decode('utf-8')
     signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256')
 
     if client_id:
