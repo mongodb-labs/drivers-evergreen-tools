@@ -6,7 +6,7 @@ load("lib/aws_e2e_lib.js");
 (function() {
 "use strict";
 
-const ASSUMED_ROLE = "arn:aws:sts::267234750605:assumed-role/mock_idp_role/*"
+const ASSUMED_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
 
 function unAssignInstanceProfile() {
     const config = readSetupJson();
