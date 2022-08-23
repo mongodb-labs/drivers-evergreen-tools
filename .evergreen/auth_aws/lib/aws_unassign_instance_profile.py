@@ -4,6 +4,7 @@ Script for unassigning an instance policy from the current machine.
 """
 
 import argparse
+import urllib.error
 import urllib.request
 import logging
 import sys
@@ -15,7 +16,7 @@ import botocore
 LOGGER = logging.getLogger(__name__)
 
 def _get_local_instance_id():
-    return urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id').read().decode()
+    return urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id', timeout=5).read().decode()
 
 def _has_instance_profile():
     base_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
@@ -51,7 +52,11 @@ def _wait_no_instance_profile():
 
 def _unassign_instance_policy():
 
-    instance_id = _get_local_instance_id()
+    try:
+        instance_id = _get_local_instance_id()
+    except urllib.error.URLError as e:
+        print(e)
+        sys.exit(0)
 
     ec2_client = boto3.client("ec2", 'us-east-1')
 

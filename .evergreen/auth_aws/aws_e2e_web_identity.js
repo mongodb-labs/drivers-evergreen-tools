@@ -42,7 +42,7 @@ function writeWebTokenFile() {
     };
 
     const python_command = getPython3Binary() +
-        " -u lib/aws_handle_oidc_creds.py token"
+        " -u lib/aws_handle_oidc_creds.py token > /dev/null"
 
     const ret = runShellCmdWithEnv(python_command, env);
     assert.eq(ret, 0, "Failed to write the web token");
