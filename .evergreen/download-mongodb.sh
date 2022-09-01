@@ -71,7 +71,7 @@ get_mongodb_download_url_for ()
    # getdata matrix on:
    # https://evergreen.mongodb.com/version/5797f0493ff12235e5001f05
    case "$_DISTRO" in
-      darwin-arm64)
+      darwin--arm64)
          MONGODB_LATEST="http://downloads.10gen.com/osx/mongodb-macos-arm64-enterprise-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/osx/mongodb-macos-arm64-enterprise-${VERSION_60_LATEST}.tgz"
@@ -87,7 +87,7 @@ get_mongodb_download_url_for ()
              MONGODB_26="https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-${VERSION_26}.tgz"
              MONGODB_24="https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-${VERSION_24}.tgz"
       ;;
-      darwin-x86_64)
+      darwin--x86_64)
          MONGODB_LATEST="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-latest.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_RAPID}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/osx/mongodb-macos-x86_64-enterprise-${VERSION_60_LATEST}.tgz"
