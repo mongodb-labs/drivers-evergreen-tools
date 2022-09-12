@@ -88,6 +88,7 @@ DIR=$(dirname $0)
 while [ true ]; do
     API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
+    SERVERLESS_MONGODB_VERSION=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoDBVersion'])" | tr -d '\r\n'`
 
     if [ "$STATE_NAME" = "IDLE" ]; then
         duration="$SECONDS"
@@ -110,6 +111,7 @@ TOPOLOGY: "sharded_cluster"
 SERVERLESS: "serverless"
 SINGLE_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
+SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
         exit 0
     else
