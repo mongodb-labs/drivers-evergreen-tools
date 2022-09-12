@@ -1,0 +1,38 @@
+{
+  "auth_key": "secret",
+  "id": "repl0",
+  "login": "bob",
+  "password": "pwd123",
+  "members": [
+    {
+      "procParams": {
+        "ipv6": true,
+        "bind_ip": "127.0.0.1,::1",
+        "oplogSize": 500,
+        "port": 27017,
+        "logappend": true,
+        "setParameter": {"enableTestCommands": 1, "authenticationMechanisms": "MONGODB-AWS,SCRAM-SHA-256,SCRAM-SHA-1"}
+      }
+    },
+    {
+      "procParams": {
+        "ipv6": true,
+        "bind_ip": "127.0.0.1,::1",
+        "oplogSize": 500,
+        "port": 27018,
+        "logappend": true,
+        "setParameter": {"enableTestCommands": 1, "authenticationMechanisms": "MONGODB-AWS,SCRAM-SHA-256,SCRAM-SHA-1"}
+      }
+    },
+    {
+      "procParams": {
+        "ipv6": true,
+        "bind_ip": "127.0.0.1,::1",
+        "oplogSize": 500,
+        "port": 27019,
+        "logappend": true,
+        "setParameter": {"enableTestCommands": 1, "authenticationMechanisms": "MONGODB-AWS,SCRAM-SHA-256,SCRAM-SHA-1"}
+      }
+    }
+  ]
+}
