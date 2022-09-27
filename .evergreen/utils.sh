@@ -17,6 +17,13 @@ venvcreate () {
         exit 1
     fi
     $VENV "$VENVPATH"
+
+    # Workaround https://bugs.python.org/issue32451:
+    # mongovenv/Scripts/activate: line 3: $'\r': command not found
+    if [ "Windows_NT" = "$OS" ]; then
+        dos2unix "$VENVPATH/Scripts/activate" || true
+    fi
+
     venvactivate "$VENVPATH"
 
     python -m pip install --upgrade pip
@@ -29,9 +36,6 @@ venvcreate () {
 venvactivate () {
     VENVPATH="$1"
     if [ "Windows_NT" = "$OS" ]; then
-        # Workaround https://bugs.python.org/issue32451:
-        # mongovenv/Scripts/activate: line 3: $'\r': command not found
-        dos2unix "$VENVPATH/Scripts/activate" || true
         . $VENVPATH/Scripts/activate
     else
         . $VENVPATH/bin/activate
