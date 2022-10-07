@@ -35,14 +35,10 @@ is_python3() (
   local -r bin="${1:?'is_python3 requires a name or path of a python binary to test'}"
 
   # Binary must be executable.
-  if ! command -V "$bin" &>/dev/null; then
-    return 1
-  fi
+  command -V "$bin" &>/dev/null || return 1
 
   # Reject binaries that do not support argument "-V".
-  if ! "$bin" -V &>/dev/null; then
-    return 1
-  fi
+  "$bin" -V &>/dev/null || return 1
 
   # Expect an output of the form: "Python x.y.z".
   # Note: Python 2 binaries output to stderr rather than stdout.
