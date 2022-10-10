@@ -32,7 +32,7 @@ is_python3() (
   set -o pipefail
 
   # Binary to use, e.g. "python".
-  local -r bin="${1:?'is_python requires a name or path of a python binary to test'}"
+  local -r bin="${1:?'is_python3 requires a name or path of a python binary to test'}"
 
   # Binary must be executable.
   if ! command -V "$bin" &>/dev/null; then
