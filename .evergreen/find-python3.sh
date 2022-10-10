@@ -184,8 +184,14 @@ find_python3() (
     append_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python"
   } 1>&2
 
-  # For diagnostic purposes.
   {
+    # Some environments trigger an unbound variable error if "${bins[@]}" is empty when used below.
+    if (("${#bins[@]}" == 0)); then
+      echo "Could not find any python3 binaries!"
+      return 1
+    fi
+
+    # For diagnostic purposes.
     echo "List of python3 binaries to test:"
     for bin in "${bins[@]}"; do
       echo " - $bin"
