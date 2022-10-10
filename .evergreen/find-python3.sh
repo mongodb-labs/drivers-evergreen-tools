@@ -44,12 +44,15 @@ is_python3() (
   # Note: Python 2 binaries output to stderr rather than stdout.
   local -r version_output="$("$bin" -V 2>&1)"
 
+  # For diagnostic purposes.
+  echo " - $bin: $version_output"
+
   # "Python x.y.z" -> "x.y.z"
   local -r version_str="$(perl -lne 'print $1 if m/.*([0-9]+\.[0-9]+\.[0-9]*)/' -- <(printf "%s" "$version_output"))"
 
   # Evaluate 3.0.0 <= x.y.z.
   sort -CV -- <(printf "%s\n%s\n" "3.0.0" "$version_str")
-)
+) 1>&2
 
 # is_venv_capable
 #
@@ -152,6 +155,8 @@ find_python3() (
   # The list of Python binaries to test for venv or virtualenv support.
   # The binaries are tested in the order of their position in the array.
   {
+    echo "Finding python3 binaries to test..."
+
     append_bins() {
       local -r path="${1:?'missing path'}"
       shift
