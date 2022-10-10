@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# find-python.sh
+# find-python3.sh
 #
 # Usage:
-#   . /path/to/find-python.sh
+#   . /path/to/find-python3.sh
 #
 # This file defines the following utility functions:
 #   - is_python3
@@ -78,7 +78,7 @@ is_venv_capable() (
 
   local -r bin="${1:?'is_venv_capable requires a name or path of a python binary to test'}"
 
-  # Use a temporary directory to avoid polluting the caller's enviornment.
+  # Use a temporary directory to avoid polluting the caller's environment.
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
@@ -109,7 +109,7 @@ is_virtualenv_capable() (
 
   local -r bin="${1:?'is_virtualenv_capable requires a name or path of a python binary to test'}"
 
-  # Use a temporary directory to avoid polluting the caller's enviornment.
+  # Use a temporary directory to avoid polluting the caller's environment.
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
