@@ -168,10 +168,10 @@ find_python3() (
       done
     }
 
-    bin="python"
+    bin="python3"
     if is_python3 "$bin"; then bins+=("$bin"); fi
 
-    bin="python3"
+    bin="python"
     if is_python3 "$bin"; then bins+=("$bin"); fi
 
     # C:/python/Python3X/bin/python
