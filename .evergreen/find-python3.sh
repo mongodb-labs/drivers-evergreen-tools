@@ -35,10 +35,10 @@ is_python3() (
   local -r bin="${1:?'is_python3 requires a name or path of a python binary to test'}"
 
   # Binary must be executable.
-  command -V "$bin" &>/dev/null || return 1
+  command -V "$bin" &>/dev/null || return
 
   # Reject binaries that do not support argument "-V".
-  "$bin" -V &>/dev/null || return 1
+  "$bin" -V &>/dev/null || return
 
   # Expect an output of the form: "Python x.y.z".
   # Note: Python 2 binaries output to stderr rather than stdout.
@@ -82,7 +82,7 @@ is_venv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m venv "$tmp" || return 1
+  "$bin" -m venv "$tmp" || return
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
@@ -122,7 +122,7 @@ is_virtualenv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m virtualenv -p "$bin" "$tmp" || return 1
+  "$bin" -m virtualenv -p "$bin" "$tmp" || return
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null

@@ -12,15 +12,15 @@
 # Automatically invoked by activate-kmstlsvenv.sh.
 activate_kmstlsvenv() {
   # shellcheck source=.evergreen/venv-utils.sh
-  . ../venv-utils.sh || return 1
+  . ../venv-utils.sh || return
 
   if [[ -d kmstlsvenv ]]; then
     venvactivate kmstlsvenv
   else
     # shellcheck source=.evergreen/find-python3.sh
-    . ../find-python3.sh || return 1
+    . ../find-python3.sh || return
 
-    venvcreate "$(find_python3)" kmstlsvenv || return 1
+    venvcreate "$(find_python3)" kmstlsvenv || return
 
     CRYPTOGRAPHY_DONT_BUILD_RUST=1 python -m pip install --upgrade boto3~=1.19 cryptography~=3.4.8 pykmip~=0.10.0
   fi
