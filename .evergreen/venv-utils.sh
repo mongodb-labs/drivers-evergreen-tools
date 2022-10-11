@@ -55,7 +55,7 @@ venvcreate() {
     fi
   done
 
-  echo "Could not use either venv or virtualenv to create the virtual environment at $path!" 1>&2
+  echo "Could not use either venv or virtualenv with $bin to create a virtual environment at $path!" 1>&2
   return 1
 }
 
