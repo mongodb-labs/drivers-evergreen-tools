@@ -39,7 +39,7 @@ venvcreate() {
       # Workaround https://bugs.python.org/issue32451:
       # mongovenv/Scripts/activate: line 3: $'\r': command not found
       if [[ -f "$path/Scripts/activate" ]]; then
-        dos2unix "$path/Scripts/activate" || true
+        dos2unix "$path/Scripts/activate" || return
       fi
 
       if venvactivate "$path"; then

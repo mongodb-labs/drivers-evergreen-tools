@@ -88,7 +88,7 @@ is_venv_capable() (
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
   else
-    dos2unix "$tmp/Scripts/activate" || true
+    dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
   fi
@@ -128,7 +128,7 @@ is_virtualenv_capable() (
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
   else
-    dos2unix "$tmp/Scripts/activate" || true
+    dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
   fi
