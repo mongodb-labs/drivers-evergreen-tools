@@ -66,6 +66,7 @@ is_python3() (
 # Return 0 (true) if the given argument "$1" can successfully evaluate the
 # command:
 #   "$1" -m venv venv
+# and activate the created virtual environment.
 # Return a non-zero value (false) otherwise.
 #
 # Diagnostic messages may be printed to stderr (pipe 2). Redirect to /dev/null
@@ -81,8 +82,16 @@ is_venv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  # Evaluate the result of this function.
-  "$bin" -m venv "$tmp" 1>&2
+  "$bin" -m venv "$tmp" || return 1
+
+  if [[ -f "$tmp/bin/activate" ]]; then
+    # shellcheck source=/dev/null
+    . "$tmp/bin/activate"
+  else
+    dos2unix "$tmp/Scripts/activate" || true
+    # shellcheck source=/dev/null
+    . "$tmp/Scripts/activate"
+  fi
 ) 1>&2
 
 # is_virtualenv_capable
@@ -97,6 +106,7 @@ is_venv_capable() (
 # Return 0 (true) if the given argument $1 can successfully evaluate the
 # command:
 #   "$1" -m virtualenv -p "$1" venv
+# and activate the created virtual environment.
 # Return a non-zero value (false) otherwise.
 #
 # Diagnostic messages may be printed to stderr (pipe 2). Redirect to /dev/null
@@ -112,8 +122,16 @@ is_virtualenv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  # Evaluate the result of this function.
-  "$bin" -m virtualenv -p "$bin" "$tmp" 1>&2
+  "$bin" -m virtualenv -p "$bin" "$tmp" || return 1
+
+  if [[ -f "$tmp/bin/activate" ]]; then
+    # shellcheck source=/dev/null
+    . "$tmp/bin/activate"
+  else
+    dos2unix "$tmp/Scripts/activate" || true
+    # shellcheck source=/dev/null
+    . "$tmp/Scripts/activate"
+  fi
 ) 1>&2
 
 # find_python3
