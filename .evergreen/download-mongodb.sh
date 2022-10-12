@@ -287,7 +287,6 @@ get_mongodb_download_url_for ()
       linux-debian-9*)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-latest.tgz"
              # SERVER-62308 Removed support for Debian 9 in server version 6.0.0-rc5.
-             MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_RAPID}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_44}.tgz"
              MONGODB_42="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-debian92-${VERSION_42}.tgz"
