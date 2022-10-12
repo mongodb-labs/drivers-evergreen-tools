@@ -62,7 +62,8 @@ DISTRO_ID_MAP = {
 #: Map derived distro versions to their base distribution versions
 DISTRO_VERSION_MAP = {
     'elementary': {
-        '6': '20.04'
+        '6': '20.04',
+        '6.*': '20.04',
     },
     'fedora': {
         '32': '8',
@@ -161,10 +162,20 @@ def infer_target_from_os_release(osr: Path) -> str:
     # Map the ID to the download ID
     mapped_id = DISTRO_ID_MAP.get(os_id)
     if mapped_id:
-        ver_mapper = DISTRO_VERSION_MAP.get(os_id)
-        if ver_mapper:
-            mapped_version = ver_mapper[ver_id]
-            ver_id = mapped_version
+        # Map the distro version to its upstream version
+        ver_mapper = DISTRO_VERSION_MAP.get(os_id, {})
+        # Find the version based on a fnmatch pattern:
+        matching = (ver for pat, ver in ver_mapper.items()
+                    if fnmatch(ver_id, pat))
+        # The default is to keep the version ID.
+        mapped_version = next(iter(matching), None)
+        if mapped_version is None:
+            # If this raises, a version/pattern needs to be added
+            # to DISTRO_VERSION_MAP
+            raise RuntimeError("We don't know how to map {} version '{}' "
+                               "to an upstream {} version. Please contribute!"
+                               "".format(os_id, ver_id, mapped_id))
+        ver_id = mapped_version
         os_id = mapped_id
     os_id = os_id.lower()
     if os_id not in DISTRO_ID_TO_TARGET:
