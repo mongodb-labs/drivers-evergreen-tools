@@ -52,6 +52,7 @@ DISTRO_ID_MAP = {
     'fedora': 'rhel',
     'centos': 'rhel',
     'mint': 'ubuntu',
+    'linuxmint': 'ubuntu',
     'opensuse-leap': 'sles',
     'opensuse': 'sles',
     'redhat': 'rhel',
@@ -69,7 +70,15 @@ DISTRO_VERSION_MAP = {
         '34': '8',
         '35': '8',
         '36': '8',
-    }
+    },
+    'linuxmint': {
+        '19': '18.04',
+        '19.*': '18.04',
+        '20': '20.04',
+        '20.*': '20.04',
+        '21': '22.04',
+        '21.*': '22.04',
+    },
 }
 
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
