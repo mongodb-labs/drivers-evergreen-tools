@@ -52,6 +52,7 @@ DISTRO_ID_MAP = {
     'fedora': 'rhel',
     'centos': 'rhel',
     'mint': 'ubuntu',
+    'linuxmint': 'ubuntu',
     'opensuse-leap': 'sles',
     'opensuse': 'sles',
     'redhat': 'rhel',
@@ -61,7 +62,23 @@ DISTRO_ID_MAP = {
 #: Map derived distro versions to their base distribution versions
 DISTRO_VERSION_MAP = {
     'elementary': {
-        '6': '20.04'
+        '6': '20.04',
+        '6.*': '20.04',
+    },
+    'fedora': {
+        '32': '8',
+        '33': '8',
+        '34': '8',
+        '35': '8',
+        '36': '8',
+    },
+    'linuxmint': {
+        '19': '18.04',
+        '19.*': '18.04',
+        '20': '20.04',
+        '20.*': '20.04',
+        '21': '22.04',
+        '21.*': '22.04',
     },
 }
 
@@ -110,24 +127,26 @@ def infer_target() -> str:
     if sys.platform == 'darwin':
         return 'macos'
     # Now the tricky bit
-    osr = Path('/etc/os-release')
-    if osr.is_file():
-        with osr.open('r', encoding='utf-8') as f:
-            osr_content = f.read()
-        return infer_target_from_os_release(osr_content)
+    cands = (Path(p) for p in ['/etc/os-release', '/usr/lib/os-release'])
+    existing = (p for p in cands if p.is_file())
+    found = next(iter(existing), None)
+    if found:
+        return infer_target_from_os_release(found)
     raise RuntimeError("We don't know how to find the default '--target'"
                        " option for this system. Please contribute!")
 
 
-def infer_target_from_os_release(os_rel: str) -> str:
+def infer_target_from_os_release(osr: Path) -> str:
     """
     Infer the download target based on the content of os-release
     """
+    with osr.open('r', encoding='utf-8') as f:
+        os_rel = f.read()
     # Extract the "ID" field
     id_re = re.compile(r'\bID=("?)(.*)\1')
     mat = id_re.search(os_rel)
-    assert mat, 'Unable to detect ID from [/etc/os-release] content:\n{}'.format(
-        os_rel)
+    assert mat, 'Unable to detect ID from [{}] content:\n{}'.format(
+        osr, os_rel)
     os_id = mat.group(2)
     if os_id == 'arch':
         # There are no Archlinux-specific MongoDB downloads, so we'll just use
@@ -135,18 +154,28 @@ def infer_target_from_os_release(os_rel: str) -> str:
         # distributions (including Arch).
         return 'rhel80'
     # Extract the "VERSION_ID" field
-    ver_id_re = re.compile(r'VERSION_ID=("?)(.*?)\1')
+    ver_id_re = re.compile(r'VERSION_ID=("?)(.*)\1')
     mat = ver_id_re.search(os_rel)
-    assert mat, 'Unable to detect VERSION_ID from [/etc/os-release] content:\n{}'.format(
-        os_rel)
+    assert mat, 'Unable to detect VERSION_ID from [{}] content:\n{}'.format(
+        osr, os_rel)
     ver_id = mat.group(2)
     # Map the ID to the download ID
     mapped_id = DISTRO_ID_MAP.get(os_id)
     if mapped_id:
-        ver_mapper = DISTRO_VERSION_MAP.get(os_id)
-        if ver_mapper:
-            mapped_version = ver_mapper[ver_id]
-            ver_id = mapped_version
+        # Map the distro version to its upstream version
+        ver_mapper = DISTRO_VERSION_MAP.get(os_id, {})
+        # Find the version based on a fnmatch pattern:
+        matching = (ver for pat, ver in ver_mapper.items()
+                    if fnmatch(ver_id, pat))
+        # The default is to keep the version ID.
+        mapped_version = next(iter(matching), None)
+        if mapped_version is None:
+            # If this raises, a version/pattern needs to be added
+            # to DISTRO_VERSION_MAP
+            raise RuntimeError("We don't know how to map {} version '{}' "
+                               "to an upstream {} version. Please contribute!"
+                               "".format(os_id, ver_id, mapped_id))
+        ver_id = mapped_version
         os_id = mapped_id
     os_id = os_id.lower()
     if os_id not in DISTRO_ID_TO_TARGET:
