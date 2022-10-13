@@ -191,12 +191,6 @@ find_python3() (
       done
     }
 
-    bin="python3"
-    if is_python3 "$bin"; then bins+=("$bin"); fi
-
-    bin="python"
-    if is_python3 "$bin"; then bins+=("$bin"); fi
-
     # C:/python/Python3X/bin/python
     append_bins "C:/python" "Python3[0-9]*" "python3.exe" "python.exe"
 
@@ -205,6 +199,12 @@ find_python3() (
 
     # /opt/mongodbtoolchain/vX/bin/python
     append_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python"
+
+    bin="python3"
+    if is_python3 "$bin"; then bins+=("$bin"); fi
+
+    bin="python"
+    if is_python3 "$bin"; then bins+=("$bin"); fi
   } 1>&2
 
   {
