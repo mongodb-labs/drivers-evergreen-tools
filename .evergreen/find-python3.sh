@@ -47,11 +47,8 @@ is_python3() (
   # For diagnostic purposes.
   echo " - $bin: $version_output"
 
-  # "Python x.y.z" -> "x.y.z"
-  local -r version_str="$(perl -lne 'print $1 if m/.*([0-9]+\.[0-9]+\.[0-9]*)/' -- <(printf "%s" "$version_output"))"
-
-  # Evaluate 3.0.0 <= x.y.z.
-  sort -CV -- <(printf "%s\n%s\n" "3.0.0" "$version_str")
+  # Evaluate result of this function (zero == true).
+  "$bin" -c "import sys; exit(sys.version_info[0] < 3)"
 ) 1>&2
 
 # is_venv_capable
