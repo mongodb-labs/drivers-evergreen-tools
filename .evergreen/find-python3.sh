@@ -47,7 +47,9 @@ is_python3() (
   # For diagnostic purposes.
   echo " - $bin: $version_output"
 
-  # Evaluate result of this function (zero == true).
+  # Evaluate result of this function.
+  # Note: Python True (1) and False (0) is treated as fail (1) and success (0)
+  # by Bash; therefore `is_python3` returns "true" when `v < 3` is false.
   "$bin" -c "import sys; exit(sys.version_info[0] < 3)"
 ) 1>&2
 
