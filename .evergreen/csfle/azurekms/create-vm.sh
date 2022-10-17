@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Create an Azure VM. `az` is expected to be logged in.
+if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
+     -z "$AZUREKMS_IMAGE" -o \
+     -z "$AZUREKMS_PUBLICKEYPATH" ]; then
+    echo "Please set the following required environment variables"
+    echo " AZUREKMS_RESOURCEGROUP"
+    echo " AZUREKMS_IMAGE to the image (e.g. Debian)"
+    echo " AZUREKMS_PUBLICKEYPATH to the path to the public SSH key"
+    exit 1
+fi
+
+AZUREKMS_VMNAME="vmname-$RANDOM"
+echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
+# az vm create also creates a "nic" and "public IP" by default.
+# Use --nic-delete-option 'Delete' to delete the NIC.
+# Specify a name for the public IP to delete later.
+# Pipe to /dev/null to hide the output. The output includes tenantId.
+az vm create \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME" \
+    --image Debian \
+    --admin-username azureuser \
+    --ssh-key-values "$AZUREKMS_PUBLICKEYPATH" \
+    --public-ip-sku Standard \
+    --nic-delete-option "Delete" \
+    --data-disk-delete-option "Delete" \
+    --os-disk-delete-option "Delete" \
+    --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
+    --assign-identity [system] \
+    >/dev/null
+echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
