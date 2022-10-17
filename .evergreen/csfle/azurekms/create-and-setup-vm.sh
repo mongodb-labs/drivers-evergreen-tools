@@ -8,6 +8,7 @@ if [ -z "$AZUREKMS_CLIENTID" -o \
      -z "$AZUREKMS_TENANTID" -o \
      -z "$AZUREKMS_SECRET" -o \
      -z "$AZUREKMS_DRIVERS_TOOLS" -o \
+     -z "$AZUREKMS_RESOURCEGROUP" -o \
      -z "$AZUREKMS_PUBLICKEYPATH" -o \
      -z "$AZUREKMS_PRIVATEKEYPATH" -o \
      -z "$AZUREKMS_SCOPE" ]; then
@@ -32,8 +33,7 @@ $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
 . $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
 # Assign role.
-AZUREKMS_SCOPE="/subscriptions/10b880db-9bca-464f-aec4-2b9a1c96572c/resourceGroups/DRIVERS-2411/providers/Microsoft.KeyVault/vaults/KeyVault-DRIVERS-2411" \
-    $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/assign-role.sh
+$AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies.
 AZUREKMS_SRC="$AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
 AZUREKMS_DST="~/" \
