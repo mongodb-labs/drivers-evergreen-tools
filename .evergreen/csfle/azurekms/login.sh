@@ -16,4 +16,5 @@ fi
 az login --service-principal \
     --username "$AZUREKMS_CLIENTID" \
     --password "$AZUREKMS_SECRET" \
-    --tenant "$AZUREKMS_TENANTID"
+    --tenant "$AZUREKMS_TENANTID" \
+    >/dev/null

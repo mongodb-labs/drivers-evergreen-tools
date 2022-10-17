@@ -3,9 +3,13 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "Install az ... begin"
-# Instructions for Debian 11:
+# Install az CLI for Debian 11:
 # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt#option-2-step-by-step-installation-instructions
+echo "Install az ... begin"
+if command -v az &> /dev/null; then
+    echo "az is already installed"
+    exit 0
+fi
 sudo apt-get update
 sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg
 curl -sL https://packages.microsoft.com/keys/microsoft.asc |
