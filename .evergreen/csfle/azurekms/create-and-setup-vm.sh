@@ -32,6 +32,7 @@ $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
 # Create VM.
 . $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
+echo "AZUREKMS_VMNAME: $AZUREKMS_VMNAME" > testazurekms-expansions.yml
 # Assign role.
 $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies.
@@ -40,4 +41,3 @@ AZUREKMS_DST="~/" \
     $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./setup-azure-vm.sh" \
     $AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
-echo "AZUREKMS_VMNAME: $AZUREKMS_VMNAME" > testazurekms-expansions.yml
