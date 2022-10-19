@@ -16,7 +16,6 @@ fi
 
 echo "Assigning a role to a Virtual Machine ... begin"
 PRINCIPAL_ID=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query identity.principalId -o tsv)
-# The scope was determined by going to the "Add role assignment" on the Key Vault.
 az role assignment create \
     --assignee-object-id "$PRINCIPAL_ID" \
     --assignee-principal-type ServicePrincipal \

@@ -3,7 +3,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-# Load AZUREKMS_CLIENTID, AZUREKMS_TENANTID, and AZUREKMS_SECRET
 if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" ] || \
    [ -z "${AZUREKMS_CLIENTID:-}" ] || \
    [ -z "${AZUREKMS_TENANTID:-}" ] || \
