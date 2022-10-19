@@ -4,10 +4,10 @@ set -o pipefail
 set -o nounset
 
 # Create an Azure VM. `az` is expected to be logged in.
-if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" -o \
-     -z "${AZUREKMS_RESOURCEGROUP:-}" -o \
-     -z "${AZUREKMS_IMAGE:-}" -o \
-     -z "${AZUREKMS_PUBLICKEYPATH:-}" ]; then
+if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" ] || \
+   [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
+   [ -z "${AZUREKMS_IMAGE:-}" ] || \
+   [ -z "${AZUREKMS_PUBLICKEYPATH:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREKMS_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
     echo " AZUREKMS_RESOURCEGROUP"
@@ -33,6 +33,6 @@ az vm create \
     --data-disk-delete-option "Delete" \
     --os-disk-delete-option "Delete" \
     --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
-    --assign-identity [system] \
+    --assign-identity "[system]" \
     >/dev/null
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
