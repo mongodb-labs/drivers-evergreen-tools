@@ -4,15 +4,15 @@ set -o pipefail
 set -o nounset
 
 # Load AZUREKMS_CLIENTID, AZUREKMS_TENANTID, and AZUREKMS_SECRET
-if [ -z "$AZUREKMS_VMNAME_PREFIX" -o \
-     -z "$AZUREKMS_CLIENTID" -o \
-     -z "$AZUREKMS_TENANTID" -o \
-     -z "$AZUREKMS_SECRET" -o \
-     -z "$AZUREKMS_DRIVERS_TOOLS" -o \
-     -z "$AZUREKMS_RESOURCEGROUP" -o \
-     -z "$AZUREKMS_PUBLICKEYPATH" -o \
-     -z "$AZUREKMS_PRIVATEKEYPATH" -o \
-     -z "$AZUREKMS_SCOPE" ]; then
+if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" -o \
+     -z "${AZUREKMS_CLIENTID:-}" -o \
+     -z "${AZUREKMS_TENANTID:-}" -o \
+     -z "${AZUREKMS_SECRET:-}" -o \
+     -z "${AZUREKMS_DRIVERS_TOOLS:-}" -o \
+     -z "${AZUREKMS_RESOURCEGROUP:-}" -o \
+     -z "${AZUREKMS_PUBLICKEYPATH:-}" -o \
+     -z "${AZUREKMS_PRIVATEKEYPATH:-}" -o \
+     -z "${AZUREKMS_SCOPE:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREKMS_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
     echo " AZUREKMS_CLIENTID"

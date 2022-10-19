@@ -4,9 +4,9 @@ set -o pipefail
 set -o nounset
 
 # Assign a role to the Azure VM. `az` is expected to be logged in.
-if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
-     -z "$AZUREKMS_VMNAME" -o \
-     -z "$AZUREKMS_SCOPE" ]; then
+if [ -z "${AZUREKMS_RESOURCEGROUP:-}" -o \
+     -z "${AZUREKMS_VMNAME:-}" -o \
+     -z "${AZUREKMS_SCOPE:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREKMS_RESOURCEGROUP"
     echo " AZUREKMS_VMNAME"

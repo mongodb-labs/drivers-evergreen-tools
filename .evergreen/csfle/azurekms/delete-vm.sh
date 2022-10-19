@@ -4,8 +4,8 @@ set -o pipefail
 set -o nounset
 
 # Delete an Azure VM. `az` is expected to be logged in.
-if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
-     -z "$AZUREKMS_VMNAME" ]; then
+if [ -z "${AZUREKMS_RESOURCEGROUP:-}" -o \
+     -z "${AZUREKMS_VMNAME:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREKMS_RESOURCEGROUP"
     echo " AZUREKMS_VMNAME"

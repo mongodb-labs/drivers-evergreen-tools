@@ -4,11 +4,11 @@ set -o pipefail
 set -o nounset
 
 # Copy a file to an Azure VM. `az` is expected to be logged in.
-if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
-     -z "$AZUREKMS_VMNAME" -o \
-     -z "$AZUREKMS_PRIVATEKEYPATH" -o \
-     -z "$AZUREKMS_SRC" -o \
-     -z "$AZUREKMS_DST" ]; then
+if [ -z "${AZUREKMS_RESOURCEGROUP:-}" -o \
+     -z "${AZUREKMS_VMNAME:-}" -o \
+     -z "${AZUREKMS_PRIVATEKEYPATH:-}" -o \
+     -z "${AZUREKMS_SRC:-}" -o \
+     -z "${AZUREKMS_DST:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREKMS_RESOURCEGROUP"
     echo " AZUREKMS_VMNAME"
