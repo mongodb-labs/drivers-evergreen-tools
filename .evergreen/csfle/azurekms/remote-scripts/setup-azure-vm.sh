@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit
 set -o pipefail
-# set -o nounset run-orchestration.sh accesses unbound variables.
+# Do not error on unset variables. run-orchestration.sh accesses unset variables.
 
 echo "Install jq ... begin"
 sudo apt-get install jq -y
