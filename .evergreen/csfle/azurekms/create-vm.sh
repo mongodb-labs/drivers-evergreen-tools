@@ -4,17 +4,19 @@ set -o pipefail
 set -o nounset
 
 # Create an Azure VM. `az` is expected to be logged in.
-if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
+if [ -z "$AZUREKMS_VMNAME_PREFIX" -o \
+     -z "$AZUREKMS_RESOURCEGROUP" -o \
      -z "$AZUREKMS_IMAGE" -o \
      -z "$AZUREKMS_PUBLICKEYPATH" ]; then
     echo "Please set the following required environment variables"
+    echo " AZUREKMS_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
     echo " AZUREKMS_RESOURCEGROUP"
     echo " AZUREKMS_IMAGE to the image (e.g. Debian)"
     echo " AZUREKMS_PUBLICKEYPATH to the path to the public SSH key"
     exit 1
 fi
 
-AZUREKMS_VMNAME="vmname-$RANDOM"
+AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # az vm create also creates a "nic" and "public IP" by default.
 # Use --nic-delete-option 'Delete' to delete the NIC.
