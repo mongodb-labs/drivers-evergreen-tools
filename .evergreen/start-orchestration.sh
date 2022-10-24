@@ -31,11 +31,14 @@ if [ -f venv/bin/activate ]; then
   . venv/bin/activate
 elif [ -f venv/Scripts/activate ]; then
   . venv/Scripts/activate
-elif $PYTHON -m virtualenv --system-site-packages --never-download venv || virtualenv --system-site-packages --never-download venv; then
+elif $PYTHON -m virtualenv --system-site-packages --never-download venv || $PYTHON -m venv  --system-site-packages || virtualenv --system-site-packages --never-download venv; then
   if [ -f venv/bin/activate ]; then
     . venv/bin/activate
   elif [ -f venv/Scripts/activate ]; then
     . venv/Scripts/activate
+  else
+    echo "Unable to create virtual environment"
+    exit 1
   fi
 fi
 
