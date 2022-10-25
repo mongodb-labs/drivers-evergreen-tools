@@ -365,6 +365,7 @@ functions:
           MONGODB_URI="${MONGODB_URI}" \
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
+          CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
             sh ${PROJECT_DIRECTORY}/.evergreen/run-serverless-tests.sh
 
   "cleanup":
