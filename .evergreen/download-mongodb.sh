@@ -520,7 +520,10 @@ get_mongodb_download_url_for ()
          VERSION_INCLUDES_CRYPT_SHARED=NO ;;
    esac
 
-   [ -z "$MONGODB_DOWNLOAD_URL" ] && MONGODB_DOWNLOAD_URL="Unknown version: $_VERSION for $_DISTRO"
+   if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
+     echo "Unknown version: $_VERSION for $_DISTRO"
+     exit 1
+   fi
 
    if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
       # The crypt_shared package is simply the same file URL with the "mongodb-"
