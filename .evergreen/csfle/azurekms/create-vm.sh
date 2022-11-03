@@ -25,7 +25,7 @@ echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 az vm create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
-    --image Debian \
+    --image "$AZUREKMS_IMAGE" \
     --admin-username azureuser \
     --ssh-key-values "$AZUREKMS_PUBLICKEYPATH" \
     --public-ip-sku Standard \
