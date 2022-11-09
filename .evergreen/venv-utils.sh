@@ -50,9 +50,7 @@ venvcreate() {
       fi
 
       if venvactivate "$path"; then
-        # Use --no-cache-dir to ensure ensure the *actual* latest pip is
-        # correctly installed.
-        if python -m pip install --no-cache-dir --upgrade pip; then
+        if python -m pip install --upgrade pip; then
           # Only consider success if activation + pip upgrade was successful.
           return
         fi
