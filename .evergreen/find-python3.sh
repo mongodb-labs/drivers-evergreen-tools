@@ -88,14 +88,23 @@ is_venv_capable() (
     "$bin" -m venv "$tmp" || return
   fi
 
+  # Sanity check: on some environments (such as Cygwin) creation of the virtual
+  # environment may succeed but place the environment in an unexpected location.
+  if [[ -n "$(find "$tmp" -maxdepth 0 -type d -empty 2>/dev/null)" ]]; then
+    echo "$tmp is empty despite successful creation of virtual environment!"
+    return 1
+  fi
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
-  else
+  elif [[ -f "$tmp/Scripts/activate" ]]; then
     dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
+  else
+    echo "Could not find an activation script in $tmp!"
+    return 1
   fi
 ) 1>&2
 
@@ -134,14 +143,23 @@ is_virtualenv_capable() (
     "$bin" -m virtualenv -p "$bin" "$tmp" || return
   fi
 
+  # Sanity check: on some environments (such as Cygwin) creation of the virtual
+  # environment may succeed but place the environment in an unexpected location.
+  if [[ -n "$(find "$tmp" -maxdepth 0 -type d -empty 2>/dev/null)" ]]; then
+    echo "$tmp is empty despite successful creation of virtual environment!"
+    return 1
+  fi
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
-  else
+  elif [[ -f "$tmp/Scripts/activate" ]]; then
     dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
+  else
+    echo "Could not find an activation script in $tmp!"
+    return 1
   fi
 ) 1>&2
 
