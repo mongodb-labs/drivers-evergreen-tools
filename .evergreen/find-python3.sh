@@ -81,7 +81,13 @@ is_venv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m venv "$tmp" || return
+  if [[ "$OSTYPE" == cygwin ]]; then
+    local -r real_path="$(cygpath -aw "$tmp")" || return
+    "$bin" -m venv "$real_path" || return
+  else
+    "$bin" -m venv "$tmp" || return
+  fi
+
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
@@ -121,7 +127,13 @@ is_virtualenv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m virtualenv -p "$bin" "$tmp" || return
+  if [[ "$OSTYPE" == cygwin ]]; then
+    local -r real_path="$(cygpath -aw "$tmp")" || return
+    "$bin" -m virtualenv -p "$bin" "$real_path" || return
+  else
+    "$bin" -m virtualenv -p "$bin" "$tmp" || return
+  fi
+
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null

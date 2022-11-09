@@ -30,12 +30,19 @@ venvcreate() {
   local -r bin="${1:?'venvcreate requires a Python binary to use for the virtual environment'}"
   local -r path="${2:?'venvcreate requires a path to the virtual environment to create'}"
 
+  if [[ "$OSTYPE" == cygwin ]]; then
+    local -r real_path="$(cygpath -aw "$path")" || return
+  else
+    local -r real_path="$path" || return
+  fi
+
   # Prefer venv, but fallback to virtualenv if venv fails.
   for mod in "venv" "virtualenv"; do
-    # Ensure a clean directory before attempting to create a virtual environment.
+    # Ensure a clean directory before attempting to create a virtual
+    # environment.
     rm -rf "$path"
 
-    if "$bin" -m "$mod" "$path"; then
+    if "$bin" -m "$mod" "$real_path"; then
       # Workaround https://bugs.python.org/issue32451:
       # mongovenv/Scripts/activate: line 3: $'\r': command not found
       if [[ -f "$path/Scripts/activate" ]]; then
