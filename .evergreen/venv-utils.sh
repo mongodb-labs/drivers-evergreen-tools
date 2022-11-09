@@ -21,8 +21,13 @@
 #   "$2": The path to the virtual environment (directory) to create.
 #
 # Return 0 (true) if the virtual environment has been successfully created,
-# activated, and the pip package upgraded.
-# Return a non-zero value (false) otherwise.
+# activated, and all seed packages are successfully installed in the new
+# virtual environment.
+# Return a non-zero value (false) in a deactivated state otherwise.
+#
+# The "seed" packages pip, setuptools, and wheel are automatically installed
+# into the virtual environment. All packages must be successfully installed for
+# venvcreate to be considered a success.
 #
 # If a file or directory exists at the given path to the virtual environment,
 # they may be deleted as part of virtual environment creation.
@@ -65,6 +70,18 @@ venvcreate() {
     venvactivate "$path" || continue
 
     if ! python -m pip install -U pip; then
+      deactivate || return 1 # Deactivation should never fail!
+      continue
+    fi
+
+    # Ensure setuptools and wheel are installed in the virtual environment.
+    # virtualenv only guarantees "one or more of" the seed packages are
+    # installed. venv only guarantees pip is installed via ensurepip.
+    #
+    # These packages must be upgraded *after* pip, *separately*, as some old
+    # versions of pip do not handle their simultaneous installation properly.
+    # See: https://github.com/pypa/pip/issues/4253
+    if ! python -m pip install -U setuptools wheel; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi
