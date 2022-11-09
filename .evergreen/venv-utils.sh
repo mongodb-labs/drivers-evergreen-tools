@@ -42,22 +42,35 @@ venvcreate() {
     # environment.
     rm -rf "$path"
 
-    if "$bin" -m "$mod" "$real_path"; then
-      # Workaround https://bugs.python.org/issue32451:
-      # mongovenv/Scripts/activate: line 3: $'\r': command not found
-      if [[ -f "$path/Scripts/activate" ]]; then
-        dos2unix "$path/Scripts/activate" || return
-      fi
+    case "$mod" in
+    venv)
+      "$bin" -m "$mod" "$real_path" || continue
+      ;;
+    virtualenv)
+      # -p: ensure correct Python binary is used by virtual environment.
+      "$bin" -m "$mod" -p "$bin" "$real_path" || continue
+      ;;
+    *)
+      echo "Unexpected virtual environment module $mod!"
+      return 1
+      ;;
+    esac
 
-      if venvactivate "$path"; then
-        if python -m pip install --upgrade pip; then
-          # Only consider success if activation + pip upgrade was successful.
-          return
-        fi
-
-        deactivate
-      fi
+    # Workaround https://bugs.python.org/issue32451:
+    # mongovenv/Scripts/activate: line 3: $'\r': command not found
+    if [[ -f "$path/Scripts/activate" ]]; then
+      dos2unix "$path/Scripts/activate" || continue
     fi
+
+    venvactivate "$path" || continue
+
+    if ! python -m pip install -U pip; then
+      deactivate || return 1 # Deactivation should never fail!
+      continue
+    fi
+
+    # Success only if both activation and package upgrades are successful.
+    return 0
   done
 
   echo "Could not use either venv or virtualenv with $bin to create a virtual environment at $path!" 1>&2
