@@ -49,11 +49,11 @@ venvcreate() {
 
     case "$mod" in
     venv)
-      "$bin" -m "$mod" "$real_path" || continue
+      "$bin" -m "$mod" --system-site-packages "$real_path" || continue
       ;;
     virtualenv)
       # -p: ensure correct Python binary is used by virtual environment.
-      "$bin" -m "$mod" -p "$bin" "$real_path" || continue
+      "$bin" -m "$mod" -p "$bin" --system-site-packages "$real_path" || continue
       ;;
     *)
       echo "Unexpected virtual environment module $mod!"
