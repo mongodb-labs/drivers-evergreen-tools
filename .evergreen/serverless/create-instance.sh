@@ -9,7 +9,7 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_DRIVERS_GROUP    Required. Atlas group for drivers testing.
 #   SERVERLESS_API_PUBLIC_KEY   Required. Public key for Atlas API request.
 #   SERVERLESS_API_PRIVATE_KEY  Required. Private key for Atlas API request.
-#   SERVERLESS_SKIP_CRYPT       Optional. If set, skips installing mongocryptd and crypt_shared (defaults to true)
+#   SERVERLESS_SKIP_CRYPT       Optional. If set, skips installing mongocryptd and crypt_shared (defaults to "ON")
 #
 # On success, this script will output serverless-expansion.yml with the
 # following expansions:
