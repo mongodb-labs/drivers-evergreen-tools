@@ -494,8 +494,7 @@ get_mongodb_download_url_for ()
          if [ -z $MONGODB_60 ]; then
            VERSION_INCLUDES_CRYPT_SHARED=NO
          fi ;;
-      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50
