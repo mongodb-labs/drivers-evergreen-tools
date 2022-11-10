@@ -42,7 +42,7 @@ is_python3() (
 
   # Expect an output of the form: "Python x.y.z".
   # Note: Python 2 binaries output to stderr rather than stdout.
-  local -r version_output="$("$bin" -V 2>&1)"
+  local -r version_output="$("$bin" -V 2>&1 | tr -d '\n')"
 
   # For diagnostic purposes.
   echo " - $bin: $version_output"
