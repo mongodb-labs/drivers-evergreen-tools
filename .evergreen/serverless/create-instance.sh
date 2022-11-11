@@ -9,6 +9,7 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_DRIVERS_GROUP    Required. Atlas group for drivers testing.
 #   SERVERLESS_API_PUBLIC_KEY   Required. Public key for Atlas API request.
 #   SERVERLESS_API_PRIVATE_KEY  Required. Private key for Atlas API request.
+#   SERVERLESS_SKIP_CRYPT       Optional. If set, skips installing mongocryptd and crypt_shared (defaults to "ON")
 #
 # On success, this script will output serverless-expansion.yml with the
 # following expansions:
@@ -113,6 +114,12 @@ SINGLE_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
+
+        if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
+          # Download binaries and crypt_shared
+          MONGODB_VERSION=rapid sh $DIR/download-crypt.sh
+        fi
+
         exit 0
     else
         echo "Setup still in progress, status=$STATE_NAME, sleeping for 1 minute..."

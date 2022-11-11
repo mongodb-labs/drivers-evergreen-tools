@@ -494,8 +494,7 @@ get_mongodb_download_url_for ()
          if [ -z $MONGODB_60 ]; then
            VERSION_INCLUDES_CRYPT_SHARED=NO
          fi ;;
-      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50
@@ -520,7 +519,10 @@ get_mongodb_download_url_for ()
          VERSION_INCLUDES_CRYPT_SHARED=NO ;;
    esac
 
-   [ -z "$MONGODB_DOWNLOAD_URL" ] && MONGODB_DOWNLOAD_URL="Unknown version: $_VERSION for $_DISTRO"
+   if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
+     echo "Unknown version: $_VERSION for $_DISTRO"
+     exit 1
+   fi
 
    if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
       # The crypt_shared package is simply the same file URL with the "mongodb-"
