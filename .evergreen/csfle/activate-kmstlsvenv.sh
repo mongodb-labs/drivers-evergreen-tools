@@ -42,9 +42,9 @@ activate_kmstlsvenv() {
     fi
 
     if [[ "$OSTYPE" == cygwin && "$HOSTTYPE" == x86_64 ]]; then
-      local -r is_win_2016="$(systeminfo.exe /FO LIST | perl -lne 'print $1 if m/^OS Name:\s+(.*)$/' || true)"
+      local -r windows_os_name="$(systeminfo.exe /FO LIST | perl -lne 'print $1 if m/^OS Name:\s+(.*)$/' || true)"
 
-      if [[ "$is_win_2016" =~ 2016 ]]; then
+      if [[ "$windows_os_name" =~ 2016 ]]; then
         # Avoid `RuntimeError: Could not determine home directory.` on
         # windows-64-2016. See BUILD-16233.
         python -m pip install -U "setuptools<65.0" || {
