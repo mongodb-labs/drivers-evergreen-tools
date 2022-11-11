@@ -83,10 +83,11 @@ is_venv_capable() (
 
   if [[ "$OSTYPE" == cygwin ]]; then
     local -r real_path="$(cygpath -aw "$tmp")" || return
-    "$bin" -m venv "$real_path" || return
   else
-    "$bin" -m venv "$tmp" || return
+    local -r real_path="$tmp"
   fi
+
+  "$bin" -m venv "$real_path" || return
 
   # Sanity check: on some environments (such as Cygwin) creation of the virtual
   # environment may succeed but place the environment in an unexpected location.
@@ -138,10 +139,11 @@ is_virtualenv_capable() (
 
   if [[ "$OSTYPE" == cygwin ]]; then
     local -r real_path="$(cygpath -aw "$tmp")" || return
-    "$bin" -m virtualenv -p "$bin" "$real_path" || return
   else
-    "$bin" -m virtualenv -p "$bin" "$tmp" || return
+    local -r real_path="$tmp"
   fi
+
+  "$bin" -m virtualenv -p "$bin" "$real_path" || return
 
   # Sanity check: on some environments (such as Cygwin) creation of the virtual
   # environment may succeed but place the environment in an unexpected location.
