@@ -57,7 +57,7 @@ activate_kmstlsvenv() {
 
     # Avoid `error: can't find Rust compiler`.
     if [[ "$OSTYPE" =~ linux && ! -f /etc/os-release ]]; then
-      # rhel62-* is the only suppoerted Linux-like distro that does not provide
+      # rhel62-* is the only supported Linux-like distro that does not provide
       # /etc/os-release. Remove this condition once support for rhel62 is
       # dropped.
       packages+=("cryptography<3.4")
