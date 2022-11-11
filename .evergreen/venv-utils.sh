@@ -52,7 +52,10 @@ venvcreate() {
       "$bin" -m "$mod" --system-site-packages "$real_path" || continue
       ;;
     virtualenv)
-      # -p: ensure correct Python binary is used by virtual environment.
+      # -p: some old versions of virtualenv (e.g. installed on Debian 10) are
+      # buggy. Without -p, the created virtual environment may use the wrong
+      # Python binary (such as a Python 2 binary) even if it was created by a
+      # Python 3 binary.
       "$bin" -m "$mod" -p "$bin" --system-site-packages "$real_path" || continue
       ;;
     *)
