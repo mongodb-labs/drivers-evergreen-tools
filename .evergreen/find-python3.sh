@@ -89,13 +89,6 @@ is_venv_capable() (
 
   "$bin" -m venv "$real_path" || return
 
-  # Sanity check: on some environments (such as Cygwin) creation of the virtual
-  # environment may succeed but place the environment in an unexpected location.
-  if [[ -n "$(find "$tmp" -maxdepth 0 -type d -empty 2>/dev/null)" ]]; then
-    echo "$tmp is empty despite successful creation of virtual environment!"
-    return 1
-  fi
-
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
@@ -144,13 +137,6 @@ is_virtualenv_capable() (
   fi
 
   "$bin" -m virtualenv -p "$bin" "$real_path" || return
-
-  # Sanity check: on some environments (such as Cygwin) creation of the virtual
-  # environment may succeed but place the environment in an unexpected location.
-  if [[ -n "$(find "$tmp" -maxdepth 0 -type d -empty 2>/dev/null)" ]]; then
-    echo "$tmp is empty despite successful creation of virtual environment!"
-    return 1
-  fi
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
