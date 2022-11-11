@@ -138,7 +138,7 @@ is_virtualenv_capable() (
 
   # -p: some old versions of virtualenv (e.g. installed on Debian 10) are buggy.
   # Without -p, the created virtual environment may use the wrong Python binary
-  # (such as a Python 2 binary) even if it was created by a Python 3 binary.
+  # (e.g. using a Python 2 binary even if it was created by a Python 3 binary).
   "$bin" -m virtualenv -p "$bin" "$real_path" || return
 
   if [[ -f "$tmp/bin/activate" ]]; then
