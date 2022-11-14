@@ -12,7 +12,7 @@ fi
 # create venv on first run
 if [ ! -d authawsvenv ]; then
   venvcreate "$PYTHON_BINARY" authawsvenv
-  pip install --upgrade boto3
+  pip install --upgrade boto3 pyop
 else
   venvactivate authawsvenv
 fi
