@@ -55,43 +55,24 @@ activate_kmstlsvenv() {
       fi
     fi
 
-    # Avoid `error: can't find Rust compiler`.
-    if [[ "$OSTYPE" =~ linux && ! -f /etc/os-release ]]; then
-      # rhel62-* is the only supported Linux-like distro that does not provide
-      # /etc/os-release. Remove this condition once support for rhel62 is
-      # dropped.
+    if ! python -m pip install -U "${packages[@]}"; then
+      # Avoid `error: can't find Rust compiler`.
+      # Assume install failure at this point is due to new versions of
+      # cryptography require a Rust toolchain when a cryptography wheel is not
+      # present due to the package versions available.  This is required by at
+      # least the following distros (by OS and host):
+      #  - RHEL 6.2
+      #  - All RHEL on powerpc64le or s390x.
+      #  - OpenSUSE 12 on s390x.
+      #  - Ubuntu 18.04 on powerpc64le or s390x
       packages+=("cryptography<3.4")
-    elif [[ "$OSTYPE" =~ linux ]]; then
-      local -r os_id="$(perl -lne 'print $1 if m/^ID="?([^"]+)"?/' /etc/os-release || true)"
-      local -r os_ver="$(perl -lne 'print $1 if m/^VERSION_ID="?([^"]+)"?/' /etc/os-release || true)"
 
-      case "$os_id" in
-      rhel)
-        if [[ "$HOSTTYPE" =~ (powerpc64le|s390x) ]]; then
-          # rhelXY-power8-* and rhelXY-zseries-*
-          packages+=("cryptography<3.4")
-        fi
-        ;;
-      sles)
-        if [[ "$os_ver" == 12.3 && "$HOSTTYPE" == s390x ]]; then
-          # suse12-zseries-*
-          packages+=("cryptography<3.4")
-        fi
-        ;;
-      ubuntu)
-        if [[ "$os_ver" == 18.04 && "$HOSTTYPE" =~ (s390x|powerpc64le) ]]; then
-          # ubuntu1804-power8-* and ubuntu1804-zseries-*
-          packages+=("cryptography<3.4")
-        fi
-        ;;
-      esac
+      python -m pip install -U "${packages[@]}" || {
+        local -r ret="$?"
+        deactivate || return 1 # Deactivation should never fail!
+        return "$ret"
+      }
     fi
-
-    python -m pip install -U "${packages[@]}" || {
-      local -r ret="$?"
-      deactivate || return 1 # Deactivation should never fail!
-      return "$ret"
-    }
   fi
 }
 
