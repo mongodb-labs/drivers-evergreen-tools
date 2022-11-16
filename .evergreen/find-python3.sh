@@ -42,7 +42,7 @@ is_python3() (
 
   # Expect an output of the form: "Python x.y.z".
   # Note: Python 2 binaries output to stderr rather than stdout.
-  local -r version_output="$("$bin" -V 2>&1)"
+  local -r version_output="$("$bin" -V 2>&1 | tr -d '\n')"
 
   # For diagnostic purposes.
   echo " - $bin: $version_output"
@@ -81,15 +81,24 @@ is_venv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m venv "$tmp" || return
+  if [[ "$OSTYPE" == cygwin ]]; then
+    local -r real_path="$(cygpath -aw "$tmp")" || return
+  else
+    local -r real_path="$tmp"
+  fi
+
+  "$bin" -m venv "$real_path" || return
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
-  else
+  elif [[ -f "$tmp/Scripts/activate" ]]; then
     dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
+  else
+    echo "Could not find an activation script in $tmp!"
+    return 1
   fi
 ) 1>&2
 
@@ -121,15 +130,27 @@ is_virtualenv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  "$bin" -m virtualenv -p "$bin" "$tmp" || return
+  if [[ "$OSTYPE" == cygwin ]]; then
+    local -r real_path="$(cygpath -aw "$tmp")" || return
+  else
+    local -r real_path="$tmp"
+  fi
+
+  # -p: some old versions of virtualenv (e.g. installed on Debian 10) are buggy.
+  # Without -p, the created virtual environment may use the wrong Python binary
+  # (e.g. using a Python 2 binary even if it was created by a Python 3 binary).
+  "$bin" -m virtualenv -p "$bin" "$real_path" || return
 
   if [[ -f "$tmp/bin/activate" ]]; then
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
-  else
+  elif [[ -f "$tmp/Scripts/activate" ]]; then
     dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
+  else
+    echo "Could not find an activation script in $tmp!"
+    return 1
   fi
 ) 1>&2
 
