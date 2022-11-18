@@ -44,6 +44,7 @@ get_distro ()
 }
 
 # get_mongodb_download_url_for "linux-distro-version-architecture" "latest|44|42|40|36|34|32|30|28|26|24"
+# Set the environment variable REQUESTED_CRYPT_SHARED_VERSION to specify a version of the crypt_shared library to download.
 # Sets EXTRACT to appropriate extract command
 # Sets MONGODB_DOWNLOAD_URL to the appropriate download url
 # Sets MONGO_CRYPT_SHARED_DOWNLOAD_URL to the corresponding URL to a crypt_shared library archive
@@ -487,36 +488,21 @@ get_mongodb_download_url_for ()
    esac
 
    # The crypt_shared package is available on server 6.0 and newer.
-   VERSION_INCLUDES_CRYPT_SHARED=YES
    case "$_VERSION" in
-      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST
-         # If latest is not at least 6.0 on this OS, the crypt_shared package will not be available.
-         if [ -z $MONGODB_60 ]; then
-           VERSION_INCLUDES_CRYPT_SHARED=NO
-         fi ;;
+      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
       rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
-      5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      4.0) MONGODB_DOWNLOAD_URL=$MONGODB_40
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      3.6) MONGODB_DOWNLOAD_URL=$MONGODB_36
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      3.2) MONGODB_DOWNLOAD_URL=$MONGODB_32
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      3.0) MONGODB_DOWNLOAD_URL=$MONGODB_30
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      2.6) MONGODB_DOWNLOAD_URL=$MONGODB_26
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
-      2.4) MONGODB_DOWNLOAD_URL=$MONGODB_24
-         VERSION_INCLUDES_CRYPT_SHARED=NO ;;
+      5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50 ;;
+      4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
+      4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42 ;;
+      4.0) MONGODB_DOWNLOAD_URL=$MONGODB_40 ;;
+      3.6) MONGODB_DOWNLOAD_URL=$MONGODB_36 ;;
+      3.4) MONGODB_DOWNLOAD_URL=$MONGODB_34 ;;
+      3.2) MONGODB_DOWNLOAD_URL=$MONGODB_32 ;;
+      3.0) MONGODB_DOWNLOAD_URL=$MONGODB_30 ;;
+      2.6) MONGODB_DOWNLOAD_URL=$MONGODB_26 ;;
+      2.4) MONGODB_DOWNLOAD_URL=$MONGODB_24 ;;
    esac
 
    if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -524,10 +510,27 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
-   if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
+   if [ -z "$REQUESTED_CRYPT_SHARED_VERSION" ]; then
+      # If no version of the crypt shared library was requested,
+      # use the same version as the server.
+      REQUESTED_CRYPT_SHARED_VERSION="$_VERSION"
+   fi
+
+   case "$REQUESTED_CRYPT_SHARED_VERSION" in
+      latest)
+         # If latest is not at least 6.0 on this OS, the crypt_shared package will not be available.
+         if [ -n "$MONGODB_60" ]; then
+           MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_LATEST
+         fi ;;
+      rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
+      v6.0-latest) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
+      6.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60 ;;
+   esac
+
+   if [ -n "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
       # The crypt_shared package is simply the same file URL with the "mongodb-"
       # prefix replaced with "mongo_crypt_shared_v1-"
-      MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
+      MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
    fi
    echo $MONGODB_DOWNLOAD_URL
 }
