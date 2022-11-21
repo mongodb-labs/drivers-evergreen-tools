@@ -514,6 +514,9 @@ get_mongodb_download_url_for ()
       # If no version of the crypt shared library was requested,
       # use the same version as the server.
       REQUESTED_CRYPT_SHARED_VERSION="$_VERSION"
+   elif [ "$REQUESTED_CRYPT_SHARED_VERSION" = "latest-major" ]; then
+      # Update to the latest Major release. Major releases are expected yearly.
+      REQUESTED_CRYPT_SHARED_VERSION="6.0"
    fi
 
    case "$REQUESTED_CRYPT_SHARED_VERSION" in
@@ -525,6 +528,9 @@ get_mongodb_download_url_for ()
       rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60 ;;
+      *) echo "Unknown version '$REQUESTED_CRYPT_SHARED_VERSION' set for REQUESTED_CRYPT_SHARED_VERSION";
+         exit 1;
+         ;;
    esac
 
    if [ -n "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
