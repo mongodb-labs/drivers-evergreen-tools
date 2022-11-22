@@ -528,6 +528,9 @@ get_mongodb_download_url_for ()
       rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60 ;;
+      5.0 | 4.4 | 4.2 | 4.0 | 3.6 | 3.4 | 3.2 | 3.0 | 2.6 | 2.4)
+         echo "REQUESTED_CRYPT_SHARED_VERSION is set to '$REQUESTED_CRYPT_SHARED_VERSION'. crypt_shared is not available for this version. crypt_shared was introduced in the 6.0 release."
+         ;;
       *) echo "Unknown version '$REQUESTED_CRYPT_SHARED_VERSION' set for REQUESTED_CRYPT_SHARED_VERSION";
          exit 1;
          ;;
