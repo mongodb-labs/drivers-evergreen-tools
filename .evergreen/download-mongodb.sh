@@ -325,6 +325,14 @@ get_mongodb_download_url_for ()
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_50}.tgz"
              MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2004-${VERSION_44}.tgz"
       ;;
+      linux-ubuntu-22.04*)
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-latest.tgz"
+             MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-${VERSION_RAPID}.tgz"
+             MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-${VERSION_60_LATEST}.tgz"
+             MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-${VERSION_60}.tgz"
+             MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-${VERSION_50}.tgz"
+             MONGODB_44="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-ubuntu2204-${VERSION_44}.tgz"
+      ;;
       linux-ubuntu-18.04-s390x)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-ubuntu1804-latest.tgz"
              # SERVER-32999 removed support for s390x (zSeries) on Ubuntu 18.04.
