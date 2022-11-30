@@ -51,6 +51,9 @@ get_mongodb_download_url_for ()
 {
    _DISTRO=$1
    _VERSION=$2
+   
+   echo "^^Distro: $_DISTRO"
+   echo "^^Version: $_VERSION"
 
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="6.1.0"
