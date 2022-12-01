@@ -7,7 +7,7 @@
 #
 # This file creates and/or activates the ocspvenv virtual environment in the
 # current working directory. This file must be invoked from within the
-# .evergreen/csfle directory in the Drivers Evergreen Tools repository.
+# .evergreen/ocsp directory in the Drivers Evergreen Tools repository.
 #
 # If a ocspvenv virtual environment already exists, it will be activated and
 # no further action will be taken. If a ocspvenv virtual environment must be
