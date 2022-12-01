@@ -26,6 +26,7 @@ echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 echo "Using service account: $GCPKMS_SERVICEACCOUNT"
 # Add cloudkms scope for making KMS requests.
 # Add compute scope so instance can self-delete.
+# enable-oslogin enables SSH keys to be managed from the Google account. SSH keys are deleted in delete-instance.sh. Without enable-oslogin, SSH keys are added to Project Metadata and may hit resource limits.
 $GCPKMS_GCLOUD compute instances create $GCPKMS_INSTANCENAME \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT \
@@ -34,5 +35,6 @@ $GCPKMS_GCLOUD compute instances create $GCPKMS_INSTANCENAME \
     --image-project $GCPKMS_IMAGEPROJECT \
     --image-family $GCPKMS_IMAGEFAMILY \
     --metadata-from-file=startup-script=$GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/startup.sh \
-    --scopes https://www.googleapis.com/auth/cloudkms,https://www.googleapis.com/auth/compute
+    --scopes https://www.googleapis.com/auth/cloudkms,https://www.googleapis.com/auth/compute \
+    --metadata enable-oslogin=TRUE
 echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... end"
