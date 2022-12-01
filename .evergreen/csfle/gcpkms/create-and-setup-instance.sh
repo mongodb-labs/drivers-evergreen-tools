@@ -33,7 +33,7 @@ echo "create-instance.sh ... end"
 wait_for_server () {
     for i in $(seq 300); do
         # Specify the non-root username "gcpkms". The instance may be configured to not permit root login.
-        if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "gcpkms@$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping'" 2>&1); then
+        if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "gcpkms@$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping' --ssh-flag='-o ConnectTimeout=10'" 2>&1); then
             echo "ssh succeeded"
             return 0
         else
