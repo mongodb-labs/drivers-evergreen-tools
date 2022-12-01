@@ -32,8 +32,9 @@ echo "create-instance.sh ... end"
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
 wait_for_server () {
     for i in $(seq 300); do
-        # Specify the non-root username "gcpkms". The instance may be configured to not permit root login.
-        if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "gcpkms@$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping' --ssh-flag='-o ConnectTimeout=10'" 2>&1); then
+        # The first `gcloud compute ssh` creates an SSH key pair and stores the public key in the Google Account.
+        # The public key is deleted from the Google Account in delete-instance.sh.
+        if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping' --ssh-flag='-o ConnectTimeout=10'" 2>&1); then
             echo "ssh succeeded"
             return 0
         else
