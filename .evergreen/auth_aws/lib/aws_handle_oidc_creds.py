@@ -44,7 +44,8 @@ def get_provider(client_id=None, client_secret=None):
     }
 
     userinfo_db = Userinfo({'test_user': {}})
-    signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256')
+    kid = '1549e0aef574d1c7bdd136c202b8d290580b165c'
+    signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256', use='sig', kid=kid)
 
     if client_id:
         client_info = {
@@ -65,8 +66,8 @@ def get_provider(client_id=None, client_secret=None):
 
 def get_id_token():
     """Get a valid ID token."""
-    client_id = AUDIENCE
-    client_secret = uuid.uuid4().hex
+    client_id = os.environ.get("IDP_CLIENT_ID", AUDIENCE)
+    client_secret = os.environ.get("IDP_CLIENT_SECRET", uuid.uuid4().hex)
     provider = get_provider(client_id, client_secret)
     response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri=https://example.com')
     resp = provider.authorize(response, 'test_user')
@@ -75,6 +76,7 @@ def get_id_token():
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
     response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers)
+
     token = response["id_token"]
     if 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
         with open(os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'], 'w') as fid:
@@ -84,10 +86,7 @@ def get_id_token():
 
 def get_jwks_data():
     """Get the jkws data for the jwks lambda endpoint."""
-    jwks = get_provider().jwks
-    jwks['keys'][0]['use'] = 'sig'
-    jwks['keys'][0]['kid'] = '1549e0aef574d1c7bdd136c202b8d290580b165c'
-    return jwks
+    return get_provider().jwks
 
 
 def get_config_data():
