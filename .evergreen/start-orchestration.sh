@@ -43,7 +43,7 @@ elif $PYTHON -m virtualenv --system-site-packages --never-download venv || $PYTH
 fi
 
 # Install from github to get the latest mongo-orchestration.
-pip install --upgrade 'https://github.com/ShaneHarvey/mongo-orchestration/archive/replace-cherrypy.tar.gz'
+pip install --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
 pip list
 cd -
 
