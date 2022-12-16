@@ -525,11 +525,11 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
-   if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
-      # The crypt_shared package is simply the same file URL with the "mongodb-"
-      # prefix replaced with "mongo_crypt_shared_v1-"
-      MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
-   fi
+   # if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
+   #    # The crypt_shared package is simply the same file URL with the "mongodb-"
+   #    # prefix replaced with "mongo_crypt_shared_v1-"
+   #    MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
+   # fi
    echo $MONGODB_DOWNLOAD_URL
 }
 
