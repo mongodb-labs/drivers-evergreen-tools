@@ -1,5 +1,5 @@
 /**
- * Verify the AWS IAM EC2 hosted auth works
+ * Verify the AWS Web Identity hosted auth works
  */
 load("lib/aws_e2e_lib.js");
 

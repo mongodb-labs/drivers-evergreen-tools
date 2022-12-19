@@ -22,9 +22,12 @@ RSA_KEY = os.environ["IDP_RSA_KEY"]
 if RSA_KEY.endswith('='):
     RSA_KEY = base64.urlsafe_b64decode(RSA_KEY).decode('utf-8')
 AUDIENCE = 'sts.amazonaws.com'
+CLIENT_ID = os.getenv("IDP_CLIENT_ID", "0oadp0hpl7q3UIehP297")
+CLIENT_SECRET = os.getenv("IDP_CLIENT_SECRET", uuid.uuid4().hex)
+USERNAME = 'test_user'
 
 
-def get_provider(client_id=None, client_secret=None):
+def get_provider():
     """Get a configured OIDC provider."""
     configuration_information = {
         'issuer': ISSUER,
@@ -38,27 +41,24 @@ def get_provider(client_id=None, client_secret=None):
         'response_types_supported': ['code', 'code id_token', 'code token', 'code id_token token'],  # code and hybrid
         'response_modes_supported': ['query', 'fragment'],
         'grant_types_supported': ['authorization_code', 'implicit'],
-        'subject_types_supported': ['pairwise'],
+        'subject_types_supported': ['public'],
         'token_endpoint_auth_methods_supported': ['client_secret_basic'],
         'claims_parameter_supported': True
     }
 
-    userinfo_db = Userinfo({'test_user': {}})
+    userinfo_db = Userinfo({USERNAME: {}})
     kid = '1549e0aef574d1c7bdd136c202b8d290580b165c'
     signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256', use='sig', kid=kid)
 
-    if client_id:
-        client_info = {
-            'client_id': client_id,
-            'client_id_issued_at': int(time.time()),
-            'client_secret': client_secret,
-            'redirect_uris': ['https://example.com'],
-            'response_types': ['code'],
-            'client_secret_expires_at': 0  # never expires
-        }
-        clients = {client_id: client_info}
-    else:
-        clients = {}
+    client_info = {
+        'client_id': CLIENT_ID,
+        'client_id_issued_at': int(time.time()),
+        'client_secret': CLIENT_SECRET,
+        'redirect_uris': ['https://example.com'],
+        'response_types': ['code'],
+        'client_secret_expires_at': 0  # never expires
+    }
+    clients = {CLIENT_ID: client_info}
     auth_state = AuthorizationState(HashBasedSubjectIdentifierFactory('salt'))
     return Provider(signing_key, configuration_information,
                     auth_state, clients, userinfo_db)
@@ -66,13 +66,11 @@ def get_provider(client_id=None, client_secret=None):
 
 def get_id_token():
     """Get a valid ID token."""
-    client_id = os.environ.get("IDP_CLIENT_ID", AUDIENCE)
-    client_secret = os.environ.get("IDP_CLIENT_SECRET", uuid.uuid4().hex)
-    provider = get_provider(client_id, client_secret)
-    response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri=https://example.com')
-    resp = provider.authorize(response, 'test_user')
+    provider = get_provider()
+    response = provider.parse_authentication_request(f'response_type=code&client_id={CLIENT_ID}&scope=openid&redirect_uri=https://example.com')
+    resp = provider.authorize(response, USERNAME)
     code = resp.to_dict()["code"]
-    creds = f'{client_id}:{client_secret}'
+    creds = f'{CLIENT_ID}:{CLIENT_SECRET}'
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
     response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers)
@@ -94,9 +92,14 @@ def get_config_data():
     return get_provider().provider_configuration.to_dict()
 
 
+def get_user_id():
+    """Get the user id (sub) that will be used for authorization."""
+    return get_provider().authz_state.get_subject_identifier('public', USERNAME)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(dest='command', help="The command to run (config, jwks, token)")
+    parser.add_argument(dest='command', help="The command to run (config, jwks, token, user_id)")
 
     # Parse and print the results
     args = parser.parse_args()
@@ -106,5 +109,7 @@ if __name__ == '__main__':
         print(get_config_data())
     elif args.command == 'token':
         print(get_id_token())
+    elif args.command == 'user_id':
+        print(get_user_id())
     else:
-        raise ValueError('Command must be one of: (config, jwks, token)')
+        raise ValueError('Command must be one of: (config, jwks, token, user_id)')
