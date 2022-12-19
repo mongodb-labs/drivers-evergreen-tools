@@ -86,7 +86,7 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
-sh $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
+bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
 pwd
 if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
