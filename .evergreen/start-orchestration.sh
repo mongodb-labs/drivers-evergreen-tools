@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ -z "$BASH_SOURCE" ]; then
+if [ -z "$BASHPID" ]; then
   echo "start-orchestration.sh must be run in a Bash shell!" 1>&2
   exit 1
 fi
