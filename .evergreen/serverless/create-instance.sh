@@ -46,6 +46,17 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
+# Ensure that a Python binary is available for JSON decoding
+# shellcheck source=.evergreen/find-python3.sh
+. ../find-python3.sh || return
+
+PYTHON_BINARY="$(find_python3)"
+
+if [ -z "$PYTHON_BINARY" ]; then
+    echo "Failed to find Python3 binary"
+    exit 1
+fi
+
 echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 
 # See: https://www.mongodb.com/docs/atlas/reference/api/serverless/create-one-serverless-instance/
@@ -75,13 +86,6 @@ curl \
 EOF
 
 echo ""
-
-# Find the appropriate Python binary for JSON decoding
-if [ "Windows_NT" = "$OS" ]; then
-  PYTHON_BINARY=C:/python/Python38/python.exe
-else
-  PYTHON_BINARY=python3
-fi
 
 SECONDS=0
 DIR=$(dirname $0)
