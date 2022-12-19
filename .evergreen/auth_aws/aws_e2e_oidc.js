@@ -27,7 +27,7 @@ function handleOIDCCreds() {
     python_command = getPython3Binary() +
         " -u lib/aws_handle_oidc_creds.py user_id > user_id.txt"
 
-    let ret = runShellCmdWithEnv(python_command, env);
+    ret = runShellCmdWithEnv(python_command, env);
     assert.eq(ret, 0, "Failed to get the user id");
 
     const user_id = cat("user_id.txt");
