@@ -1,3 +1,5 @@
+# This script is deprecated. Use activate-authawsvenv.sh for a hygienic alternative.
+
 set +x
 
 if [ "Windows_NT" = "$OS" ]; then

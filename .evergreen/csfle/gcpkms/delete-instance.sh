@@ -14,3 +14,7 @@ $GCPKMS_GCLOUD --quiet compute instances delete $GCPKMS_INSTANCENAME \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT
 echo "Deleting GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
+echo "Removing SSH key ... begin"
+$GCPKMS_GCLOUD compute os-login ssh-keys remove --key-file ~/.ssh/google_compute_engine.pub
+echo "Removing SSH key ... end"
