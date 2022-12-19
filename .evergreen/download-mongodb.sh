@@ -486,17 +486,11 @@ get_mongodb_download_url_for ()
       ;;
    esac
 
-   # The crypt_shared package is available on server 6.0 and newer.
-   VERSION_INCLUDES_CRYPT_SHARED=NO
    case "$_VERSION" in
-      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST
-         VERSION_INCLUDES_CRYPT_SHARED=YES ;;
-      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID 
-         VERSION_INCLUDES_CRYPT_SHARED=YES ;;
-      v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST
-         VERSION_INCLUDES_CRYPT_SHARED=YES ;;
-      6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60
-         VERSION_INCLUDES_CRYPT_SHARED=YES ;;
+      latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
+      rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
+      v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
+      6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50 ;;
       4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
       4.2) MONGODB_DOWNLOAD_URL=$MONGODB_42 ;;
@@ -514,15 +508,11 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
-   if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
-      # Use the same version as the server.
-      REQUESTED_CRYPT_SHARED_VERSION="$_VERSION"
-   else
-      # Default to using the latest Major release. Major releases are expected yearly.
-      REQUESTED_CRYPT_SHARED_VERSION="6.0"
-   fi
-
-   case "$REQUESTED_CRYPT_SHARED_VERSION" in
+   # Get the download URL for crypt_shared.
+   # The crypt_shared package is available on server 6.0 and newer.
+   # Try to download a version of crypt_shared matching the server version.
+   # If no matching version is available, try to download the latest Major release of crypt_shared.
+   case "$_VERSION" in
       latest)
          # If latest is not at least 6.0 on this OS, the crypt_shared package will not be available.
          if [ -n "$MONGODB_60" ]; then
@@ -531,10 +521,12 @@ get_mongodb_download_url_for ()
       rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
       v6.0-latest) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
       6.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60 ;;
-      5.0 | 4.4 | 4.2 | 4.0 | 3.6 | 3.4 | 3.2 | 3.0 | 2.6 | 2.4 | NONE)
-         # This is not an error. crypt_shared is not available for this version. crypt_shared was introduced in the 6.0 release.
+      5.0 | 4.4 | 4.2 | 4.0 | 3.6 | 3.4 | 3.2 | 3.0 | 2.6 | 2.4)
+         # Default to using the latest Major release. Major releases are expected yearly.
+         # MONGODB_60 may be empty if there is no 6.0 download available for this platform.
+         MONGO_CRYPT_SHARED_DOWNLOAD_URL="$MONGODB_60"
          ;;
-      *) echo "Unknown version '$REQUESTED_CRYPT_SHARED_VERSION' set for REQUESTED_CRYPT_SHARED_VERSION";
+      *) echo "Unknown version '$_VERSION'";
          exit 1;
          ;;
    esac
