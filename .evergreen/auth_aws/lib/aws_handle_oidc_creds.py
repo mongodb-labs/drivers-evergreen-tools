@@ -104,12 +104,12 @@ if __name__ == '__main__':
     # Parse and print the results
     args = parser.parse_args()
     if args.command == 'jwks':
-        print(get_jwks_data())
+        print(get_jwks_data(), end='')
     elif args.command == 'config':
-        print(get_config_data())
+        print(get_config_data(), end='')
     elif args.command == 'token':
-        print(get_id_token())
+        print(get_id_token(), end='')
     elif args.command == 'user_id':
-        print(get_user_id())
+        print(get_user_id(), end='')
     else:
         raise ValueError('Command must be one of: (config, jwks, token, user_id)')
