@@ -44,7 +44,6 @@ get_distro ()
 }
 
 # get_mongodb_download_url_for "linux-distro-version-architecture" "latest|44|42|40|36|34|32|30|28|26|24"
-# Set the environment variable FORCE_CRYPT_SHARED=YES to always download the crypt_shared library. If crypt_shared is unavailable for the requested server version, the latest major version of crypt_shared is downloaded.
 # Sets EXTRACT to appropriate extract command
 # Sets MONGODB_DOWNLOAD_URL to the appropriate download url
 # Sets MONGO_CRYPT_SHARED_DOWNLOAD_URL to the corresponding URL to a crypt_shared library archive
@@ -518,13 +517,9 @@ get_mongodb_download_url_for ()
    if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
       # Use the same version as the server.
       REQUESTED_CRYPT_SHARED_VERSION="$_VERSION"
-   elif [ "${FORCE_CRYPT_SHARED:-NO}" = "YES" ]; then
-      # If configuring CRYPT_SHARED library was forcibly requested,
-      # update to the latest Major release. Major releases are expected yearly.
-      REQUESTED_CRYPT_SHARED_VERSION="6.0"
    else
-      # Server version does not include crypt_shared, and caller did not request forcing.
-      REQUESTED_CRYPT_SHARED_VERSION="NONE"
+      # Default to using the latest Major release. Major releases are expected yearly.
+      REQUESTED_CRYPT_SHARED_VERSION="6.0"
    fi
 
    case "$REQUESTED_CRYPT_SHARED_VERSION" in
