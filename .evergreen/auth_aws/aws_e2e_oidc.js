@@ -36,6 +36,8 @@ function handleOIDCCreds() {
 }
 
 const userID = handleOIDCCreds();
+print('userID');
+print(userID);
 
 const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
