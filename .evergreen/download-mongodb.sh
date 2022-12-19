@@ -572,12 +572,16 @@ download_and_extract ()
       # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
       echo "Legacy 'mongo' shell not detected."
       echo "Download legacy shell from 5.0 ... begin"
-      get_mongodb_download_url_for "$DISTRO" "5.0"
+      # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
+      MONGODB50_DOWNLOAD_URL=$(
+         get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
+         echo $MONGODB_DOWNLOAD_URL
+      )
 
       SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
       mkdir $DRIVERS_TOOLS/legacy-shell-download
       DRIVERS_TOOLS=$DRIVERS_TOOLS/legacy-shell-download
-      download_and_extract_package "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
+      download_and_extract_package "$MONGODB50_DOWNLOAD_URL" "$EXTRACT"
       if [ -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
          cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
       elif [ -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
