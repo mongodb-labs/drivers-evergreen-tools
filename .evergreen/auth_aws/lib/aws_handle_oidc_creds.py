@@ -41,7 +41,7 @@ def get_provider():
         'response_types_supported': ['code', 'code id_token', 'code token', 'code id_token token'],  # code and hybrid
         'response_modes_supported': ['query', 'fragment'],
         'grant_types_supported': ['authorization_code', 'implicit'],
-        'subject_types_supported': ['public'],
+        'subject_types_supported': ['pairwise'],
         'token_endpoint_auth_methods_supported': ['client_secret_basic'],
         'claims_parameter_supported': True
     }
@@ -94,7 +94,7 @@ def get_config_data():
 
 def get_user_id():
     """Get the user id (sub) that will be used for authorization."""
-    return get_provider().authz_state.get_subject_identifier('public', USERNAME)
+    return get_provider().authz_state.get_subject_identifier('pairwise', USERNAME, "example.com")
 
 
 if __name__ == '__main__':
