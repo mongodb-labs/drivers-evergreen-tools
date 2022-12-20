@@ -51,16 +51,11 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
+DIR=$(dirname $0)
+
 # Ensure that a Python binary is available for JSON decoding
-# shellcheck source=.evergreen/find-python3.sh
-. ../find-python3.sh || return
-
-PYTHON_BINARY="$(find_python3)"
-
-if [ -z "$PYTHON_BINARY" ]; then
-    echo "Failed to find Python3 binary"
-    exit 1
-fi
+. $DIR/../find-python3.sh || exit 1
+PYTHON_BINARY="$(find_python3)" || exit 1
 
 echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 
@@ -93,7 +88,6 @@ EOF
 echo ""
 
 SECONDS=0
-DIR=$(dirname $0)
 
 while [ true ]; do
     API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`
