@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ -z "$BASHPID" ]; then
+  echo "create-instance.sh must be run in a Bash shell!" 1>&2
+  exit 1
+fi
+
 set -o errexit
 set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 
