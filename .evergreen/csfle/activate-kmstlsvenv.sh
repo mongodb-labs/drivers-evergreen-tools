@@ -17,7 +17,7 @@
 # the kmstlsvenv virtual environment will be deactivated and activate_kmstlsvenv
 # will return a non-zero value.
 
-if [ -z "$BASHPID" ]; then
+if [ -z "$BASH" ]; then
   echo "activate-kmstlsvenv.sh must be run in a Bash shell!" 1>&2
   return 1
 fi

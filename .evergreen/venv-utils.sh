@@ -10,7 +10,7 @@
 #   - venvactivate
 # These functions may be invoked from any working directory.
 
-if [ -z "$BASHPID" ]; then
+if [ -z "$BASH" ]; then
   echo "venv-utils.sh must be run in a Bash shell!" 1>&2
   return 1
 fi

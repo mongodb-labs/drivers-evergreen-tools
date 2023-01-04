@@ -17,7 +17,7 @@
 # the authawsvenv virtual environment will be deactivated and activate_authawsvenv
 # will return a non-zero value.
 
-if [ -z "$BASHPID" ]; then
+if [ -z "$BASH" ]; then
   echo "activate-authawsvenv.sh must be run in a Bash shell!" 1>&2
   return 1
 fi
