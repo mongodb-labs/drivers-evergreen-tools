@@ -17,6 +17,11 @@
 # the ocspvenv virtual environment will be deactivated and activate_ocspvenv
 # will return a non-zero value.
 
+if [ -z "$BASHPID" ]; then
+  echo "activate-kmstlsvenv.sh must be run in a Bash shell!" 1>&2
+  return 1
+fi
+
 # Automatically invoked by activate-ocspvenv.sh.
 activate_ocspvenv() {
   # shellcheck source=.evergreen/venv-utils.sh
