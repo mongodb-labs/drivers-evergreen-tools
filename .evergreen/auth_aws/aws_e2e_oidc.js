@@ -44,7 +44,7 @@ const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
 const config = readSetupJson();
-assert.commandWorked(external.runCommand({createUser: userID, roles:[{role: 'readWrite', db: "test"}]}));
+assert.commandWorked(admin.runCommand({createUser: userID, roles:[{role: 'readWriteAnyDatabase', db: "admin", privileges: []}]}));
 
 // Note: we cannot test E2E until the mongoshell supports AWS OIDC credentials.
 // const testConn = new Mongo();
