@@ -35,7 +35,7 @@ function handleOIDCCreds() {
     return user_id;
 }
 
-const userID = handleOIDCCreds();
+const userID = "test/" + handleOIDCCreds();
 print('userID');
 print(userID);
 
