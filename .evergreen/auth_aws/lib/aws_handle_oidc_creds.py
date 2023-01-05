@@ -73,7 +73,8 @@ def get_id_token():
     creds = f'{CLIENT_ID}:{CLIENT_SECRET}'
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
-    response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers)
+    extra_claims = {'foo': 'bar'}
+    response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers, extra_id_token_claims=extra_claims)
 
     token = response["id_token"]
     if 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
