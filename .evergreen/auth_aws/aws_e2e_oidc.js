@@ -35,14 +35,9 @@ function handleOIDCCreds() {
     return user_id;
 }
 
-const roleID = "test/" + handleOIDCCreds();
-print('roleID');
-print(roleID);
-
 const admin = Mongo().getDB("admin");
 assert(admin.auth("bob", "pwd123"));
-const config = readSetupJson();
-assert.commandWorked(admin.runCommand({createRole: roleID, roles:[{role: 'readWrite', db: "test"}], privileges: []}));
+assert.commandWorked(admin.runCommand({createRole: 'test/readWrite', roles:[{role: 'readWrite', db: "test"}], privileges: []}));
 
 // Note: we cannot test E2E until the mongoshell supports AWS OIDC credentials.
 // const testConn = new Mongo();
