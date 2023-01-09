@@ -17,6 +17,11 @@
 # the authawsvenv virtual environment will be deactivated and activate_authawsvenv
 # will return a non-zero value.
 
+if [ -z "$BASH" ]; then
+  echo "activate-authawsvenv.sh must be run in a Bash shell!" 1>&2
+  return 1
+fi
+
 # Automatically invoked by activate-authawsvenv.sh.
 activate_authawsvenv() {
   # shellcheck source=.evergreen/venv-utils.sh

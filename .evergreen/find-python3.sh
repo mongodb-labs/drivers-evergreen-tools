@@ -12,6 +12,11 @@
 #   - find_python3
 # These functions may be invoked from any working directory.
 
+if [ -z "$BASH" ]; then
+  echo "find-python3.sh must be run in a Bash shell!" 1>&2
+  return 1
+fi
+
 # is_python3
 #
 # Usage:

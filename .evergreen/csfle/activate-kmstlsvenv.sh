@@ -17,6 +17,11 @@
 # the kmstlsvenv virtual environment will be deactivated and activate_kmstlsvenv
 # will return a non-zero value.
 
+if [ -z "$BASH" ]; then
+  echo "activate-kmstlsvenv.sh must be run in a Bash shell!" 1>&2
+  return 1
+fi
+
 # Automatically invoked by activate-kmstlsvenv.sh.
 activate_kmstlsvenv() {
   # shellcheck source=.evergreen/venv-utils.sh

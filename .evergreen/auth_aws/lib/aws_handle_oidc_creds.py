@@ -16,27 +16,41 @@ from pyop.userinfo import Userinfo
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-ISSUER = os.environ['IDP_ISSUER']
-JWKS_URI = os.environ['IDP_JWKS_URI']
-RSA_KEY = os.environ["IDP_RSA_KEY"]
-if RSA_KEY.endswith('='):
-    RSA_KEY = base64.urlsafe_b64decode(RSA_KEY).decode('utf-8')
-AUDIENCE = 'sts.amazonaws.com'
-CLIENT_ID = os.getenv("IDP_CLIENT_ID", "0oadp0hpl7q3UIehP297")
-CLIENT_SECRET = os.getenv("IDP_CLIENT_SECRET", uuid.uuid4().hex)
-USERNAME = 'test_user'
+DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
+MOCK_ENDPOINT = "example.com"
 
 
-def get_provider():
+def get_default_config():
+    config = {
+        "issuer": os.getenv('IDP_ISSUER', ''),
+        "jwks_uri": os.getenv('IDP_JWKS_URI', ''),
+        'rsa_key': os.getenv('IDP_RSA_KEY', ''),
+        'audience': 'sts.amazonaws.com',
+        'client_id': os.getenv("IDP_CLIENT_ID", DEFAULT_CLIENT),
+        'client_secret': os.getenv("IDP_CLIENT_SECRET", uuid.uuid4().hex),
+        'username': 'test_user',
+        'token_file': os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')
+    }
+
+    if config['rsa_key'].endswith('='):
+        rsa_key = config['rsa_key']
+        rsa_key = base64.urlsafe_b64decode(rsa_key).decode('utf-8')
+        config['rsa_key'] = rsa_key
+
+    return config
+
+
+def get_provider(config=None):
     """Get a configured OIDC provider."""
+    config = config or get_default_config()
     configuration_information = {
-        'issuer': ISSUER,
-        'authorization_endpoint': "https://example.com",
-        'jwks_uri': JWKS_URI,
-        'token_endpoint': "https://example.com",
-        'userinfo_endpoint': "https://example.com",
-        'registration_endpoint': "https://example.com",
-        'end_session_endpoint': "https://example.com",
+        'issuer': config['issuer'],
+        'authorization_endpoint': MOCK_ENDPOINT,
+        'jwks_uri': config['jwks_uri'],
+        'token_endpoint': MOCK_ENDPOINT,
+        'userinfo_endpoint': MOCK_ENDPOINT,
+        'registration_endpoint': MOCK_ENDPOINT,
+        'end_session_endpoint': MOCK_ENDPOINT,
         'scopes_supported': ['openid', 'profile'],
         'response_types_supported': ['code', 'code id_token', 'code token', 'code id_token token'],  # code and hybrid
         'response_modes_supported': ['query', 'fragment'],
@@ -46,39 +60,43 @@ def get_provider():
         'claims_parameter_supported': True
     }
 
-    userinfo_db = Userinfo({USERNAME: {}})
+    userinfo_db = Userinfo({config['username']: {}})
     kid = '1549e0aef574d1c7bdd136c202b8d290580b165c'
-    signing_key = RSAKey(key=import_rsa_key(RSA_KEY), alg='RS256', use='sig', kid=kid)
+    rsa_key = config['rsa_key']
+    signing_key = RSAKey(key=import_rsa_key(rsa_key), alg='RS256', use='sig', kid=kid)
 
     client_info = {
-        'client_id': CLIENT_ID,
+        'client_id': config['client_id'],
         'client_id_issued_at': int(time.time()),
-        'client_secret': CLIENT_SECRET,
+        'client_secret': config['client_secret'],
         'redirect_uris': ['https://example.com'],
         'response_types': ['code'],
         'client_secret_expires_at': 0  # never expires
     }
-    clients = {CLIENT_ID: client_info}
+    clients = {config['client_id']: client_info}
     auth_state = AuthorizationState(HashBasedSubjectIdentifierFactory('salt'))
     return Provider(signing_key, configuration_information,
                     auth_state, clients, userinfo_db)
 
 
-def get_id_token():
+def get_id_token(config=None):
     """Get a valid ID token."""
-    provider = get_provider()
-    response = provider.parse_authentication_request(f'response_type=code&client_id={CLIENT_ID}&scope=openid&redirect_uri=https://example.com')
-    resp = provider.authorize(response, USERNAME)
+    config = config or get_default_config()
+    provider = get_provider(config=config)
+    client_id = config['client_id']
+    client_secret = config['client_secret']
+    response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri=https://example.com')
+    resp = provider.authorize(response, config['username'])
     code = resp.to_dict()["code"]
-    creds = f'{CLIENT_ID}:{CLIENT_SECRET}'
+    creds = f'{client_id}:{client_secret}'
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
-    extra_claims = {'foo': ['readWrite']}
+    extra_claims = {'foo': ['readWrite'], 'bar': ['read'] }
     response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers, extra_id_token_claims=extra_claims)
 
     token = response["id_token"]
-    if 'AWS_WEB_IDENTITY_TOKEN_FILE' in os.environ:
-        with open(os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'], 'w') as fid:
+    if config['token_file']:
+        with open(config['token_file'], 'w') as fid:
             fid.write(token)
     return token
 
@@ -95,7 +113,8 @@ def get_config_data():
 
 def get_user_id():
     """Get the user id (sub) that will be used for authorization."""
-    return get_provider().authz_state.get_subject_identifier('pairwise', USERNAME, "example.com")
+    config = get_default_config()
+    return get_provider(config).authz_state.get_subject_identifier('pairwise', config['username'], "example.com")
 
 
 if __name__ == '__main__':

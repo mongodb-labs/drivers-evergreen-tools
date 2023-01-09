@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+if [ -z "$BASH" ]; then
+  echo "create-instance.sh must be run in a Bash shell!" 1>&2
+  exit 1
+fi
 
 set -o errexit
 set +o xtrace # Disable xtrace to ensure credentials aren't leaked
@@ -46,6 +51,12 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
+DIR=$(dirname $0)
+
+# Ensure that a Python binary is available for JSON decoding
+. $DIR/../find-python3.sh || exit 1
+PYTHON_BINARY="$(find_python3)" || exit 1
+
 echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 
 # See: https://www.mongodb.com/docs/atlas/reference/api/serverless/create-one-serverless-instance/
@@ -76,15 +87,7 @@ EOF
 
 echo ""
 
-# Find the appropriate Python binary for JSON decoding
-if [ "Windows_NT" = "$OS" ]; then
-  PYTHON_BINARY=C:/python/Python38/python.exe
-else
-  PYTHON_BINARY=python3
-fi
-
 SECONDS=0
-DIR=$(dirname $0)
 
 while [ true ]; do
     API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`

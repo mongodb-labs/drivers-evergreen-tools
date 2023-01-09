@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ -z "$BASH" ]; then
+  echo "start-orchestration.sh must be run in a Bash shell!" 1>&2
+  exit 1
+fi
+
 if [ "$#" -ne 1 ]; then
   echo "$0 requires one argument: <MONGO_ORCHESTRATION_HOME>"
   echo "For example: $0 /tmp/mongo-orchestration-home"
@@ -13,10 +18,12 @@ MONGO_ORCHESTRATION_HOME="$1"
 
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
-cd "$MONGO_ORCHESTRATION_HOME"
+declare det_evergreen_dir
+det_evergreen_dir="$(dirname "${BASH_SOURCE[0]}")"
+. "$det_evergreen_dir/find-python3.sh"
+. "$det_evergreen_dir/venv-utils.sh"
 
-. "$DRIVERS_TOOLS/.evergreen/find-python3.sh"
-. "$DRIVERS_TOOLS/.evergreen/venv-utils.sh"
+cd "$MONGO_ORCHESTRATION_HOME"
 
 PYTHON="$(find_python3)"
 
