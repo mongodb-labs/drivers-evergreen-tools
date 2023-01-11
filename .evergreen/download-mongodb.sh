@@ -67,10 +67,6 @@ get_mongodb_download_url_for ()
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
 
-   # Todo remove before merging.
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
-   exit 0
-
    EXTRACT="tar zxf"
    # getdata matrix on:
    # https://evergreen.mongodb.com/version/5797f0493ff12235e5001f05
