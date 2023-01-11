@@ -67,6 +67,10 @@ get_mongodb_download_url_for ()
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
 
+   # Todo remove before merging.
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
+   exit 0
+
    EXTRACT="tar zxf"
    # getdata matrix on:
    # https://evergreen.mongodb.com/version/5797f0493ff12235e5001f05
@@ -508,10 +512,6 @@ get_mongodb_download_url_for ()
      echo "Unknown version: $_VERSION for $_DISTRO"
      exit 1
    fi
-
-   # Todo remove before merging.
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
-   exit 0
 
    # Get the download URL for crypt_shared.
    # The crypt_shared package is available on server 6.0 and newer.
