@@ -509,13 +509,6 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
-<<<<<<< HEAD
-   # if [ "$VERSION_INCLUDES_CRYPT_SHARED" = "YES" ]; then
-   #    # The crypt_shared package is simply the same file URL with the "mongodb-"
-   #    # prefix replaced with "mongo_crypt_shared_v1-"
-   #    MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGODB_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
-   # fi
-=======
    # Get the download URL for crypt_shared.
    # The crypt_shared package is available on server 6.0 and newer.
    # Try to download a version of crypt_shared matching the server version.
@@ -544,7 +537,9 @@ get_mongodb_download_url_for ()
       # prefix replaced with "mongo_crypt_shared_v1-"
       MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
    fi
->>>>>>> e1558a456b158184386e2d41bc101c97f1376170
+
+   # TODO: remove before merging
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
    echo $MONGODB_DOWNLOAD_URL
 }
 
