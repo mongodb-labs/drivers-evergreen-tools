@@ -18,10 +18,10 @@ def get_secrets():
     """Get the driver secret values."""
     # Create a session using the given creds
     session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
-    client = session.client(service_name='secretsmanager', region_name='us-east-1')
+    client = session.client(service_name='secretsmanager', region_name='us-west-2')
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId='test'
+            SecretId='drivers/test'
         )
     except Exception as e:
         # For a list of exceptions thrown, see
