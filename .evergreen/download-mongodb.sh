@@ -509,6 +509,10 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
+   # Todo remove before merging.
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
+   exit 0
+
    # Get the download URL for crypt_shared.
    # The crypt_shared package is available on server 6.0 and newer.
    # Try to download a version of crypt_shared matching the server version.
@@ -538,8 +542,6 @@ get_mongodb_download_url_for ()
       MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
    fi
 
-   # TODO: remove before merging
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=""
    echo $MONGODB_DOWNLOAD_URL
 }
 
