@@ -62,7 +62,7 @@ def main():
     else:
         del provider_info[0]['matchPattern']
 
-    providers = json.dumps(provider_info, item_separator=',', key_separator=':')
+    providers = json.dumps(provider_info, separators=(',',':'))
 
     data = {
         "id": "standalone-oidc",
