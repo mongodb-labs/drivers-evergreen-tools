@@ -5,7 +5,6 @@ Script for managing OIDC.
 import os
 import boto3
 import json
-import pymongo
 import uuid
 import sys
 
@@ -18,19 +17,19 @@ from aws_handle_oidc_creds import get_id_token, DEFAULT_CLIENT, MOCK_ENDPOINT
 def get_secrets():
     """Get the driver secret values."""
     # Create a session using the given creds
-    session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=creds['AWS_SECRET_ACCESS_KEY'], aws_session_token=creds['AWS_SESSION_TOKEN'])
-    client = session.client(service_name='secretsmanager', region_name='us-west-2')
+    session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
+    client = session.client(service_name='secretsmanager', region_name='us-east-1')
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId='drivers-test-secret'
+            SecretId='test'
         )
-    except ClientError as e:
+    except Exception as e:
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
 
     # Decrypts secret using the associated KMS key.
-    return get_secret_value_response['SecretString']
+    return json.loads(get_secret_value_response['SecretString'])
 
 
 def main():
@@ -49,7 +48,7 @@ def main():
         "authorizationClaim": "foo",
         "matchPattern": "test1",
     }]
-    if os.getenv('USE_MULTIPLE_PRINCIPALS').lower() == 'true":'
+    if os.getenv('USE_MULTIPLE_PRINCIPALS', '').lower() == "true":
         provider_info.append({
             "deviceAuthURL": MOCK_ENDPOINT,
             "JWKS": secrets['oidc_jwks_uri'],
@@ -60,6 +59,8 @@ def main():
             "authorizationClaim": "bar",
             "matchPattern": "test2",
         })
+    else:
+        del provider_info[0]['matchPattern']
 
     data = {
         "id": "standalone-oidc",
@@ -80,26 +81,26 @@ def main():
             }
         }
     }
-    orch_file = os.path.abspath(os.path.join(HERE, '..', '..', 'orcestration', 'servers', 'auth-oidc.json'))
+    orch_file = os.path.abspath(os.path.join(HERE, '..', '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
-        json.dump(data, fid)
+        json.dump(data, fid, indent=4)
 
     # Write the token files.
     token_dir = os.environ['AWS_TOKEN_DIR']
-    os.makedirs(token_dir, exists_ok=True)
+    os.makedirs(token_dir, exist_ok=True)
     config = {
         "issuer": secrets['oidc_issuer_1_uri'],
-        "jwks_uri": secrets['oidc_jwks_uri']
+        "jwks_uri": secrets['oidc_jwks_uri'],
         'rsa_key': secrets['oidc_rsa_key'],
-        'audience': client,
-        'client_id': client,
+        'audience': DEFAULT_CLIENT,
+        'client_id': DEFAULT_CLIENT,
         'client_secret':secrets['oidc_client_secret'],
         'username': 'test_user',
-        'token_file': os.path.join(token_dir), 'test1'
+        'token_file': os.path.join(token_dir, 'test1')
     }
     get_id_token(config)
-    config['issuer'] = secrets['oidc_issuer_2_uri'],
-    config['token_file'] = os.path.join(token_dir), 'test1'
+    config['issuer'] = secrets['oidc_issuer_2_uri']
+    config['token_file'] = os.path.join(token_dir, 'test2')
     get_id_token(config)
 
 

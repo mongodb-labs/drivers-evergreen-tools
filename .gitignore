@@ -6,4 +6,4 @@ evergreen_config_generator/dist
 .evergreen/auth_aws/aws_e2e_setup.json
 .evergreen/auth_aws/creds.json
 # The oidc config file is created as needed
-.evergreen/orchestration/servers/auth-oidc.json
+.evergreen/orchestration/configs/servers/auth-oidc.json

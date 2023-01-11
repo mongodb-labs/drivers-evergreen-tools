@@ -17,7 +17,7 @@ from pyop.userinfo import Userinfo
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
-MOCK_ENDPOINT = "example.com"
+MOCK_ENDPOINT = "https://example.com"
 
 
 def get_default_config():
@@ -31,12 +31,6 @@ def get_default_config():
         'username': 'test_user',
         'token_file': os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')
     }
-
-    if config['rsa_key'].endswith('='):
-        rsa_key = config['rsa_key']
-        rsa_key = base64.urlsafe_b64decode(rsa_key).decode('utf-8')
-        config['rsa_key'] = rsa_key
-
     return config
 
 
@@ -63,13 +57,15 @@ def get_provider(config=None):
     userinfo_db = Userinfo({config['username']: {}})
     kid = '1549e0aef574d1c7bdd136c202b8d290580b165c'
     rsa_key = config['rsa_key']
+    if rsa_key.endswith('='):
+        rsa_key = base64.urlsafe_b64decode(rsa_key).decode('utf-8')
     signing_key = RSAKey(key=import_rsa_key(rsa_key), alg='RS256', use='sig', kid=kid)
 
     client_info = {
         'client_id': config['client_id'],
         'client_id_issued_at': int(time.time()),
         'client_secret': config['client_secret'],
-        'redirect_uris': ['https://example.com'],
+        'redirect_uris': [MOCK_ENDPOINT],
         'response_types': ['code'],
         'client_secret_expires_at': 0  # never expires
     }
@@ -85,14 +81,14 @@ def get_id_token(config=None):
     provider = get_provider(config=config)
     client_id = config['client_id']
     client_secret = config['client_secret']
-    response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri=https://example.com')
+    response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri={MOCK_ENDPOINT}')
     resp = provider.authorize(response, config['username'])
     code = resp.to_dict()["code"]
     creds = f'{client_id}:{client_secret}'
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
     extra_claims = {'foo': ['readWrite'], 'bar': ['read'] }
-    response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri=https://example.com', headers, extra_id_token_claims=extra_claims)
+    response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri={MOCK_ENDPOINT}', headers, extra_id_token_claims=extra_claims)
 
     token = response["id_token"]
     if config['token_file']:
