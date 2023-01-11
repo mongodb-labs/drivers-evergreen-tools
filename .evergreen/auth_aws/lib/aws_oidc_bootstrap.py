@@ -62,6 +62,8 @@ def main():
     else:
         del provider_info[0]['matchPattern']
 
+    providers = json.dumps(provider_info, item_separator=',', key_separator='':'')
+
     data = {
         "id": "standalone-oidc",
         "auth_key": "secret",
@@ -76,7 +78,7 @@ def main():
             "setParameter": {
                 "enableTestCommands": 1,
                 "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                "oidcIdentityProviders": json.dumps(provider_info),
+                "oidcIdentityProviders": providers,
                 "featureFlagOIDC": True
             }
         }
