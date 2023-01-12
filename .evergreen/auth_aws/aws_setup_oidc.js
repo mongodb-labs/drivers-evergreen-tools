@@ -1,8 +1,6 @@
 /**
  * Set up OIDC auth roles.
  */
-load("lib/aws_e2e_lib.js");
-
 (function() {
 "use strict";
 

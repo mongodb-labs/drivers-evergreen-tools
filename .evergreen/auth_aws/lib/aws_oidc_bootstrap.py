@@ -33,6 +33,8 @@ def get_secrets():
 
 
 def main():
+    print("Bootstrapping OIDC config")
+
     # Get the secrets.
     secrets = get_secrets()
 
@@ -104,6 +106,8 @@ def main():
     config['issuer'] = secrets['oidc_issuer_2_uri']
     config['token_file'] = os.path.join(token_dir, 'test2')
     get_id_token(config)
+
+    print(f"Wrote tokens to {token_dir}")
 
 
 if __name__ == '__main__':
