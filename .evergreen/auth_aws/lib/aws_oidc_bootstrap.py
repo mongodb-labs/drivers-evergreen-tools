@@ -5,7 +5,6 @@ Script for managing OIDC.
 import os
 import boto3
 import json
-import uuid
 import sys
 
 
@@ -48,7 +47,7 @@ def main():
         "clientId": DEFAULT_CLIENT,
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "foo",
-        "matchPattern": "test1",
+        "matchPattern": "717cc021*",
     }]
     if os.getenv('USE_MULTIPLE_PRINCIPALS', '').lower() == "true":
         provider_info.append({
@@ -59,7 +58,7 @@ def main():
             "clientId": DEFAULT_CLIENT,
             "audience": DEFAULT_CLIENT,
             "authorizationClaim": "bar",
-            "matchPattern": "test2",
+            "matchPattern": "b2326b0b*",
         })
     else:
         del provider_info[0]['matchPattern']
@@ -104,6 +103,7 @@ def main():
     }
     get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_2_uri']
+    config['username'] = 'test_user2'
     config['token_file'] = os.path.join(token_dir, 'test2')
     get_id_token(config)
 

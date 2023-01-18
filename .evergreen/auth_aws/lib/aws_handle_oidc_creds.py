@@ -28,7 +28,7 @@ def get_default_config():
         'audience': 'sts.amazonaws.com',
         'client_id': os.getenv("IDP_CLIENT_ID", DEFAULT_CLIENT),
         'client_secret': os.getenv("IDP_CLIENT_SECRET", uuid.uuid4().hex),
-        'username': 'test_user',
+        'username': os.getenv("IDP_USERNAME", 'test_user'),
         'token_file': os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')
     }
     return config
