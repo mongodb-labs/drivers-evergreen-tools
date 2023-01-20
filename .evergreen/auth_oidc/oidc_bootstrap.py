@@ -9,7 +9,8 @@ import sys
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, HERE)
+aws_lib = os.path.join(os.path.dirname(HERE), 'auth_aws', 'lib')
+sys.path.insert(0, aws_lib)
 from aws_handle_oidc_creds import get_id_token, DEFAULT_CLIENT, MOCK_ENDPOINT
 
 
@@ -84,7 +85,7 @@ def main():
             }
         }
     }
-    orch_file = os.path.abspath(os.path.join(HERE, '..', '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
+    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
         json.dump(data, fid, indent=4)
 
