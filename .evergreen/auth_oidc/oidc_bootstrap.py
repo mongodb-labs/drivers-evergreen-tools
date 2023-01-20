@@ -40,8 +40,11 @@ def main():
         if "AWS_ROLE_ARN" in os.environ:
             session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
             client = session.client(service_name='sts', region_name='us-west-2')
-            creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')
-            os.environ.update(**creds)
+            creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')['Credentials']
+            os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
+            os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
+            os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
+
         else:
             raise ValueError('Missing AWS credentials')
 
@@ -83,7 +86,7 @@ def main():
         "name": "mongod",
         "password": "pwd123",
         "procParams": {
-            "ipv6": "DRIVERS_SECRETS_ARN" not in os.environ,
+            "ipv6": "NO_IPV6" not in os.environ,
             "bind_ip": "127.0.0.1,::1",
             "logappend": True,
             "port": 27017,

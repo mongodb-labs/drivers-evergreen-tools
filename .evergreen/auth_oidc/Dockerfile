@@ -12,6 +12,7 @@ RUN apt-get update -qq && apt-get install -qqy --no-install-recommends \
   python3-virtualenv \
   lsof \
   libsnmp35 \
+  net-tools \
  && rm -rf /var/lib/apt/lists/*
 
 COPY ./docker_entry.sh /home/root/docker_entry.sh

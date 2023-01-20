@@ -34,8 +34,9 @@ python oidc_bootstrap.py
 This will create tokens in /tmp/tokens/test1 and /tmp/tokens/test2 and
 create the file $DRIVERS_TOOLS/orchestration/configs/servers/oidc.json.
 
-You can then run mongo orchestration with TOPOLOGY=server and ORCHESTRATION_FILE=oidc.json.
+You can then run mongo orchestration with `TOPOLOGY=server` and `ORCHESTRATION_FILE=auth-oidc.json`.
 
 To set up the server auth roles, run "mongo setup_oidc.js".
 
-Then, tests can be run against the server.
+Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `/tmp/tokens/test1` or `/tmp/tokens/test2` as desired.
+Also set `USE_MULTIPLE_PRINCIPALS=true` as desired.

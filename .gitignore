@@ -9,3 +9,6 @@ evergreen_config_generator/dist
 .evergreen/orchestration/configs/servers/auth-oidc.json
 authoidcvenv
 authawsvenv
+/uri.txt
+/results.json
+/mongodb
