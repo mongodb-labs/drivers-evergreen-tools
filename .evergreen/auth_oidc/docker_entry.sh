@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+#
+# Entry point for Dockerfile for launching an oidc-enabled server.
+#
 export MONGODB_VERSION=latest
 export TOPOLOGY=server
 export ORCHESTRATION_FILE=oidc.json
