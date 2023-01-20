@@ -16,7 +16,7 @@ from pyop.userinfo import Userinfo
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
+DEFAULT_CLIENT = "sts.amazonaws.com"
 MOCK_ENDPOINT = "https://example.com"
 
 
@@ -25,7 +25,6 @@ def get_default_config():
         "issuer": os.getenv('IDP_ISSUER', ''),
         "jwks_uri": os.getenv('IDP_JWKS_URI', ''),
         'rsa_key': os.getenv('IDP_RSA_KEY', ''),
-        'audience': 'sts.amazonaws.com',
         'client_id': os.getenv("IDP_CLIENT_ID", DEFAULT_CLIENT),
         'client_secret': os.getenv("IDP_CLIENT_SECRET", uuid.uuid4().hex),
         'username': os.getenv("IDP_USERNAME", 'test_user'),

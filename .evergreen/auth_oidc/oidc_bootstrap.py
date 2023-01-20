@@ -11,7 +11,8 @@ import sys
 HERE = os.path.abspath(os.path.dirname(__file__))
 aws_lib = os.path.join(os.path.dirname(HERE), 'auth_aws', 'lib')
 sys.path.insert(0, aws_lib)
-from aws_handle_oidc_creds import get_id_token, DEFAULT_CLIENT, MOCK_ENDPOINT
+from aws_handle_oidc_creds import get_id_token, MOCK_ENDPOINT
+DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
 
 
 def get_secrets():
