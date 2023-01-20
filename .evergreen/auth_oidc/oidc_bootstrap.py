@@ -35,6 +35,16 @@ def get_secrets():
 def main():
     print("Bootstrapping OIDC config")
 
+    # Handle local credentials.
+    if "AWS_SESSION_TOKEN" not in os.environ:
+        if "AWS_ROLE_ARN" in os.environ:
+            session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+            client = session.client(service_name='sts', region_name='us-west-2')
+            creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')
+            os.environ.update(**creds)
+        else:
+            raise ValueError('Missing AWS credentials')
+
     # Get the secrets.
     secrets = get_secrets()
 
@@ -73,7 +83,7 @@ def main():
         "name": "mongod",
         "password": "pwd123",
         "procParams": {
-            "ipv6": True,
+            "ipv6": "DRIVERS_SECRETS_ARN" not in os.environ,
             "bind_ip": "127.0.0.1,::1",
             "logappend": True,
             "port": 27017,
