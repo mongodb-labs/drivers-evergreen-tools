@@ -5,9 +5,12 @@
 # prequisites and usage.
 #
 set -eux
-export AWS_TOKEN_DIR={$AWS_TOKEN_DIR:-/tmp/tokens}
+export AWS_TOKEN_DIR=${AWS_TOKEN_DIR:-/tmp/tokens}
+exit
 . ./activate_venv.sh
 export NO_IPV6=true
+rm -rf $DRIVERS_TOOLS/mongodb
+rm -rf $DRIVERS_TOOLS/legacy-shell-download
 python oidc_bootstrap.py
 docker build -t oidc-test .
 USE_MULTIPLE_PRINCIPALS=${USE_MULTIPLE_PRINCIPALS:-false}
