@@ -71,7 +71,7 @@ def get_provider(config=None):
     clients = {config['client_id']: client_info}
     auth_state = AuthorizationState(HashBasedSubjectIdentifierFactory('salt'))
     return Provider(signing_key, configuration_information,
-                    auth_state, clients, userinfo_db)
+                    auth_state, clients, userinfo_db, id_token_lifetime=24*60*60)
 
 
 def get_id_token(config=None):

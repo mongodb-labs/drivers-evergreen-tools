@@ -5,7 +5,7 @@
 # prequisites and usage.
 #
 set -eux
-export AWS_TOKEN_DIR=/tmp/tokens  
+export AWS_TOKEN_DIR={$AWS_TOKEN_DIR:-/tmp/tokens}
 . ./activate_venv.sh
 export NO_IPV6=true
 python oidc_bootstrap.py
