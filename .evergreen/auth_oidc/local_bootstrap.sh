@@ -6,7 +6,6 @@
 #
 set -eux
 export AWS_TOKEN_DIR=${AWS_TOKEN_DIR:-/tmp/tokens}
-exit
 . ./activate_venv.sh
 export NO_IPV6=true
 rm -rf $DRIVERS_TOOLS/mongodb
