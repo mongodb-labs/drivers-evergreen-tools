@@ -8,6 +8,8 @@ export ORCHESTRATION_FILE=auth-oidc.json
 export DRIVERS_TOOLS=/home/root/drivers-evergreen-tools/
 export PROJECT_ORCHESTRATION_HOME=$DRIVERS_TOOLS/.evergreen/orchestration
 export MONGO_ORCHESTRATION_HOME=/home/root
+rm -rf $DRIVERS_TOOLS/mongodb
+rm -rf $DRIVERS_TOOLS/legacy-shell-download
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 # Wait for the port to be listening.
 while ! netstat -tna | grep 'LISTEN\>' | grep -q ':27017\>'; do
