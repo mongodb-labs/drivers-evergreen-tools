@@ -56,7 +56,7 @@ def main():
     provider_info = [{
         "authURL": MOCK_ENDPOINT,
         "tokenURL": MOCK_ENDPOINT,
-        "JWKS": secrets['oidc_jwks_uri'],
+        "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test1",
         "issuer": secrets['oidc_issuer_1_uri'],
         "clientId": DEFAULT_CLIENT,
@@ -67,7 +67,7 @@ def main():
     if os.getenv('USE_MULTIPLE_PRINCIPALS', '').lower() == "true":
         provider_info.append({
             "deviceAuthURL": MOCK_ENDPOINT,
-            "JWKS": secrets['oidc_jwks_uri'],
+            "JWKSUri": secrets['oidc_jwks_uri'],
             "authNamePrefix": "test2",
             "issuer": secrets['oidc_issuer_2_uri'],
             "clientId": DEFAULT_CLIENT,
