@@ -7,7 +7,8 @@ if [ -z "$GCPKMS_DRIVERS_TOOLS" -o \
      -z "$GCPKMS_SERVICEACCOUNT" -o \
      -z "$GCPKMS_IMAGEPROJECT" -o \
      -z "$GCPKMS_IMAGEFAMILY" -o \
-     -z "$GCPKMS_MACHINETYPE" ]; then
+     -z "$GCPKMS_MACHINETYPE" -o \
+     -z "$GCPKMS_DISKSIZE" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_DRIVERS_TOOLS to the path of the drivers-evergreen-tools directory"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"
@@ -17,6 +18,7 @@ if [ -z "$GCPKMS_DRIVERS_TOOLS" -o \
     echo " GCPKMS_IMAGEPROJECT to the GCE image project (e.g. debian-cloud)"
     echo " GCPKMS_IMAGEFAMILY to the GCE image family (e.g. debian-11)"
     echo " GCPKMS_MACHINETYPE to the GCE machine type (e.g. e2-micro)"
+    echo " GCPKMS_DISKSIZE to the GCE disk size (e.g. 20gb)"
     exit 1
 fi
 GCPKMS_INSTANCENAME="instancename-$RANDOM"
@@ -36,5 +38,6 @@ $GCPKMS_GCLOUD compute instances create $GCPKMS_INSTANCENAME \
     --image-family $GCPKMS_IMAGEFAMILY \
     --metadata-from-file=startup-script=$GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/startup.sh \
     --scopes https://www.googleapis.com/auth/cloudkms,https://www.googleapis.com/auth/compute \
-    --metadata enable-oslogin=TRUE
+    --metadata enable-oslogin=TRUE \
+    --boot-disk-size $GCPKMS_DISKSIZE
 echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... end"

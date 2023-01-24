@@ -15,6 +15,7 @@ export GCPKMS_ZONE=${GCPKMS_ZONE:-"us-east1-b"}
 export GCPKMS_IMAGEPROJECT=${GCPKMS_IMAGEPROJECT:-"debian-cloud"}
 export GCPKMS_IMAGEFAMILY=${GCPKMS_IMAGEFAMILY:-"debian-11"}
 export GCPKMS_MACHINETYPE=${GCPKMS_MACHINETYPE:-"e2-micro"}
+export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 
 # download-gcloud.sh sets GCPKMS_GCLOUD.
 echo "download-gcloud.sh ... begin"
