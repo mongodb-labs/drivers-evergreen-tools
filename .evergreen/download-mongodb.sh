@@ -53,11 +53,11 @@ get_mongodb_download_url_for ()
    _VERSION=$2
 
    # Set VERSION_RAPID to the latest rapid release each quarter.
-   VERSION_RAPID="6.1.0"
+   VERSION_RAPID="6.1.1"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.2"
-   VERSION_50="5.0.13"
-   VERSION_44="4.4.17"
+   VERSION_60="6.0.4"
+   VERSION_50="5.0.14"
+   VERSION_44="4.4.18"
    VERSION_42="4.2.23"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
