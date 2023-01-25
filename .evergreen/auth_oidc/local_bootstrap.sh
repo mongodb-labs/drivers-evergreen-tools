@@ -14,4 +14,4 @@ export NO_IPV6=true
 python oidc_write_orchestration.py
 python oidc_get_tokens.py
 docker build -t oidc-test .
-docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 oidc-test
+docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 -e HOME=/home/root oidc-test
