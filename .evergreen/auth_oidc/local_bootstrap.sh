@@ -8,7 +8,7 @@ set -eux
 export AWS_TOKEN_DIR=${AWS_TOKEN_DIR:-/tmp/tokens}
 . ./activate_venv.sh
 export NO_IPV6=true
-python oidc_bootstrap.py
+python oidc_write_orchestration.py
+python oidc_get_tokens.py
 docker build -t oidc-test .
-USE_MULTIPLE_PRINCIPALS=${USE_MULTIPLE_PRINCIPALS:-false}
-docker run -it -v $(readlink -f ../..):/home/root/drivers-evergreen-tools -e USE_MULTIPLE_PRINCIPALS=$USE_MULTIPLE_PRINCIPALS  -p 27017:27017 oidc-test
+docker run -it -v $(readlink -f ../..):/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 oidc-test
