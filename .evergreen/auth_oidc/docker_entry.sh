@@ -5,7 +5,7 @@
 export MONGODB_VERSION=latest
 export TOPOLOGY=replica_set
 export ORCHESTRATION_FILE=auth-oidc.json
-export DRIVERS_TOOLS=$HOME/drivers-evergreen-tools/
+export DRIVERS_TOOLS=$HOME/drivers-evergreen-tools
 export PROJECT_ORCHESTRATION_HOME=$DRIVERS_TOOLS/.evergreen/orchestration
 export MONGO_ORCHESTRATION_HOME=$HOME
 
