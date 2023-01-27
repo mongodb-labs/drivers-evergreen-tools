@@ -38,7 +38,7 @@ activate_kmstlsvenv() {
     local packages=(
       "boto3~=1.19.0"
       "pykmip~=0.10.0"
-      "sqlalchemy!=2.0.0" # sqlalchemy.exc.InvalidRequestError: Implicitly combining column managed_objects.uid with column crypto_objects.uid under attribute 'unique_identifier'.
+      "sqlalchemy<2.0.0" # sqlalchemy.exc.InvalidRequestError: Implicitly combining column managed_objects.uid with column crypto_objects.uid under attribute 'unique_identifier'.
     )
 
     if [[ "$OSTYPE" == darwin16 && "$HOSTTYPE" == x86_64 ]]; then
