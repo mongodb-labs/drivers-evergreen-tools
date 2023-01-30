@@ -5,13 +5,17 @@
 # prequisites and usage.
 #
 set -eux
+if [ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+    echo "Missing AWS credentials"
+    exit 1
+fi
+
 DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
 echo "Drivers tools: $DRIVERS_TOOLS"
 export AWS_TOKEN_DIR=${AWS_TOKEN_DIR:-/tmp/tokens}
 
+rm -rf authoidcvenv
 . ./activate_venv.sh
-export NO_IPV6=true
-python oidc_write_orchestration.py
 python oidc_get_tokens.py
 docker build -t oidc-test .
-docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 -e HOME=/home/root oidc-test
+docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 -e HOME=/home/root -e AWS_ROLE_ARN=${AWS_ROLE_ARN} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e NO_IPV6=true oidc-test
