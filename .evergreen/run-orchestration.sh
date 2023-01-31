@@ -36,7 +36,7 @@ else
   # Even though we have the MONGODB_DOWNLOAD_URL, we still call this to get the proper EXTRACT variable
   get_mongodb_download_url_for "$DISTRO"
 fi
-download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
+download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
 
 DL_END=$(date +%s)
 MO_START=$(date +%s)
