@@ -13,7 +13,7 @@ installed using brew).
 To run the file locally, the following environment variables are required:
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_ROLE_ARN`.
 
-Running `./oidc_get_tokens.sh`  will create local OIDC tokens as `/tmp/tokens/test1` and `/tmp/tokens/test2`. The token in `/tmp/tokens/test_expired` can be used to test expired credentials.
+Running `./oidc_get_tokens.sh`  will create local OIDC tokens as `/tmp/tokens/test_user1` and `/tmp/tokens/test_user2`. The token in `/tmp/tokens/test_user2_expires` can be used to test expired credentials.
 
 Running `./start_local_server.sh` will use docker to launch the server
 with the correct configuration, and expose the server on local ports 27017
@@ -36,6 +36,6 @@ You can then run mongo orchestration with `TOPOLOGY=server` and `ORCHESTRATION_F
 
 To set up the server auth roles, run `mongo setup_oidc.js`.
 
-Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `/tmp/tokens/test1` or `/tmp/tokens/test2` as desired.
+Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `/tmp/tokens/test_user1` or `/tmp/tokens/test_user2` as desired.
 
-The token in `/tmp/tokens/test_expired` can be used to test expired credentials.
+The token in `/tmp/tokens/test_user2_expires` can be used to test expired credentials.

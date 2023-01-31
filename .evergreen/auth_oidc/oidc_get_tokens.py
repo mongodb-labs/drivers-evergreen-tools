@@ -17,17 +17,17 @@ def main():
         'audience': DEFAULT_CLIENT,
         'client_id': DEFAULT_CLIENT,
         'client_secret':secrets['oidc_client_secret'],
-        'username': 'test_user',
-        'token_file': os.path.join(token_dir, 'test1')
+        'username': 'test_user1',
+        'token_file': os.path.join(token_dir, 'test_user1')
     }
     get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_2_uri']
     config['username'] = 'test_user2'
-    config['token_file'] = os.path.join(token_dir, 'test2')
+    config['token_file'] = os.path.join(token_dir, 'test_user2')
     get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_2_uri']
     config['username'] = 'test_user2'
-    config['token_file'] = os.path.join(token_dir, 'test3')
+    config['token_file'] = os.path.join(token_dir, 'test_user2_expires')
     get_id_token(config, expires=60)
 
     print(f"Wrote tokens to {token_dir}")

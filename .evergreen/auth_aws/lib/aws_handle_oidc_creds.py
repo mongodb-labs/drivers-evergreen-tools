@@ -15,6 +15,18 @@ from pyop.subject_identifier import HashBasedSubjectIdentifierFactory
 from pyop.userinfo import Userinfo
 
 
+
+class CustomSubjectIdentifierFactory(HashBasedSubjectIdentifierFactory):
+    """
+    Implements a hash based algorithm for creating a pairwise subject identifier.
+    """
+    def create_public_identifier(self, user_id):
+        return user_id
+
+    def create_pairwise_identifier(self, user_id, sector_identifier):
+        return self._hash(sector_identifier + user_id)
+
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_CLIENT = "sts.amazonaws.com"
 MOCK_ENDPOINT = "https://example.com"
@@ -48,7 +60,7 @@ def get_provider(config=None, expires=None):
         'response_types_supported': ['code', 'code id_token', 'code token', 'code id_token token'],  # code and hybrid
         'response_modes_supported': ['query', 'fragment'],
         'grant_types_supported': ['authorization_code', 'implicit'],
-        'subject_types_supported': ['pairwise'],
+        'subject_types_supported': ['public'],
         'token_endpoint_auth_methods_supported': ['client_secret_basic'],
         'claims_parameter_supported': True
     }
@@ -69,7 +81,7 @@ def get_provider(config=None, expires=None):
         'client_secret_expires_at': 0  # never expires
     }
     clients = {config['client_id']: client_info}
-    auth_state = AuthorizationState(HashBasedSubjectIdentifierFactory('salt'))
+    auth_state = AuthorizationState(CustomSubjectIdentifierFactory('salt'))
     expires = expires or 24*60*60
     return Provider(signing_key, configuration_information,
                     auth_state, clients, userinfo_db, id_token_lifetime=expires)
@@ -88,7 +100,7 @@ def get_id_token(config=None, expires=None):
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
     extra_claims = {'foo': ['readWrite'], 'bar': ['read'] }
-    response = provider.handle_token_request(f'grant_type=authorization_code&code={code}&redirect_uri={MOCK_ENDPOINT}', headers, extra_id_token_claims=extra_claims)
+    response = provider.handle_token_request(f'grant_type=authorization_code&subject_type=public&code={code}&redirect_uri={MOCK_ENDPOINT}', headers, extra_id_token_claims=extra_claims)
 
     token = response["id_token"]
     if config['token_file']:
@@ -110,7 +122,7 @@ def get_config_data():
 def get_user_id():
     """Get the user id (sub) that will be used for authorization."""
     config = get_default_config()
-    return get_provider(config).authz_state.get_subject_identifier('pairwise', config['username'], "example.com")
+    return get_provider(config).authz_state.get_subject_identifier('public', config['username'], "example.com")
 
 
 if __name__ == '__main__':
