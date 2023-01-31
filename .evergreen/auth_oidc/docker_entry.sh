@@ -13,13 +13,9 @@ export NO_IPV6=${NO_IPV6:-""}
 
 if [ ! -d $DRIVERS_TOOLS ]; then
     git clone --branch DRIVERS-2415 https://github.com/blink1073/drivers-evergreen-tools.git $DRIVERS_TOOLS
-else
-    rm -rf $DRIVERS_TOOLS/mongodb
-    rm -rf $DRIVERS_TOOLS/legacy-shell-download
 fi
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-rm -rf authoidcvenv
 . ./activate_venv.sh
 python oidc_write_orchestration.py
 

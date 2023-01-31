@@ -33,7 +33,7 @@ def get_default_config():
     return config
 
 
-def get_provider(config=None):
+def get_provider(config=None, expires=None):
     """Get a configured OIDC provider."""
     config = config or get_default_config()
     configuration_information = {
@@ -70,14 +70,15 @@ def get_provider(config=None):
     }
     clients = {config['client_id']: client_info}
     auth_state = AuthorizationState(HashBasedSubjectIdentifierFactory('salt'))
+    expires = expires or 24*60*60
     return Provider(signing_key, configuration_information,
-                    auth_state, clients, userinfo_db, id_token_lifetime=24*60*60)
+                    auth_state, clients, userinfo_db, id_token_lifetime=expires)
 
 
-def get_id_token(config=None):
+def get_id_token(config=None, expires=None):
     """Get a valid ID token."""
     config = config or get_default_config()
-    provider = get_provider(config=config)
+    provider = get_provider(config=config, expires=expires)
     client_id = config['client_id']
     client_secret = config['client_secret']
     response = provider.parse_authentication_request(f'response_type=code&client_id={client_id}&scope=openid&redirect_uri={MOCK_ENDPOINT}')
