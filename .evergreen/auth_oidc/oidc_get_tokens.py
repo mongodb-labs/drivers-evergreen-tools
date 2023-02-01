@@ -25,9 +25,9 @@ def main():
     config['username'] = 'test_user2'
     config['token_file'] = os.path.join(token_dir, 'test_user2')
     get_id_token(config)
-    config['issuer'] = secrets['oidc_issuer_2_uri']
-    config['username'] = 'test_user2'
-    config['token_file'] = os.path.join(token_dir, 'test_user2_expires')
+    config['issuer'] = secrets['oidc_issuer_1_uri']
+    config['username'] = 'test_user1'
+    config['token_file'] = os.path.join(token_dir, 'test_user1_expires')
     get_id_token(config, expires=60)
 
     print(f"Wrote tokens to {token_dir}")
