@@ -55,7 +55,7 @@ def main():
         ]
     }
 
-    provider1_info['matchPattern'] = "717cc021*"
+    provider1_info['matchPattern'] = "test_user1"
     provider2_info = {
         "deviceAuthURL": MOCK_ENDPOINT,
         "JWKSUri": secrets['oidc_jwks_uri'],
@@ -64,7 +64,7 @@ def main():
         "clientId": DEFAULT_CLIENT,
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "bar",
-        "matchPattern": "b2326b0b*",
+        "matchPattern": "test_user2",
     }
     providers = [provider1_info, provider2_info]
     providers = json.dumps(providers, separators=(',',':'))
