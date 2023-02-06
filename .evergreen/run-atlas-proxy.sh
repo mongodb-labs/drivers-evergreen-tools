@@ -52,7 +52,7 @@ get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
 
 # extracts to $DRIVERS_TOOLS/mongodb
 rm -rf "$DRIVERS_TOOLS/mongodb"
-download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
+download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
 DL_END=$(date +%s)
 
 #--------------------------------------------------------------------------#
