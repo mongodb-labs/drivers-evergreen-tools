@@ -21,8 +21,8 @@ def main():
 
     # Write the oidc orchestration file.
     provider1_info = {
-        "authURL": MOCK_ENDPOINT,
-        "tokenURL": MOCK_ENDPOINT,
+        "authorizationEndpoint": MOCK_ENDPOINT,
+        "tokenEndpoint": MOCK_ENDPOINT,
         "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test1",
         "issuer": secrets['oidc_issuer_1_uri'],
@@ -57,7 +57,7 @@ def main():
 
     provider1_info['matchPattern'] = "test_user1"
     provider2_info = {
-        "deviceAuthURL": MOCK_ENDPOINT,
+        "deviceAuthorizationEndpoint": MOCK_ENDPOINT,
         "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test2",
         "issuer": secrets['oidc_issuer_2_uri'],
