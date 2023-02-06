@@ -5,7 +5,7 @@
 # prequisites and usage.
 #
 set -eux
-if [ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+if [[ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
     echo "Missing AWS credentials"
     exit 1
 fi
