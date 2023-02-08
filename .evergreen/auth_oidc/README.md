@@ -32,7 +32,7 @@ python oidc_get_tokens.py
 This will create the tokens in `/tmp/tokens` and
 create the file `$DRIVERS_TOOLS/orchestration/configs/servers/auth-oidc.json`.
 
-You can then run mongo orchestration with `TOPOLOGY=server` and `ORCHESTRATION_FILE=auth-oidc.json`.
+You can then run mongo orchestration with `TOPOLOGY=replicaset` and `ORCHESTRATION_FILE=auth-oidc.json`.
 
 To set up the server auth roles, run `mongo setup_oidc.js`.
 
