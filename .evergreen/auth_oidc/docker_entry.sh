@@ -21,5 +21,5 @@ python oidc_write_orchestration.py
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 sleep 2
-$DRIVERS_TOOLS/mongodb/bin/mongo $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
+$DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
 tail -f $MONGO_ORCHESTRATION_HOME/server.log

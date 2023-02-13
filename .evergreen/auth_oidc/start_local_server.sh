@@ -15,5 +15,6 @@ echo "Drivers tools: $DRIVERS_TOOLS"
 rm -rf $DRIVERS_TOOLS/.evergreen/auth_oidc/authoidcvenv
 rm -rf $DRIVERS_TOOLS/mongodb
 rm -rf $DRIVERS_TOOLS/legacy-shell-download
+rm -rf $DRIVERS_TOOLS/mongosh
 docker build -t oidc-test .
 docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 -e HOME=/home/root -e AWS_ROLE_ARN=${AWS_ROLE_ARN} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e NO_IPV6=true oidc-test

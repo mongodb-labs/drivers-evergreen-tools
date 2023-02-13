@@ -12,3 +12,6 @@ authawsvenv
 /uri.txt
 /results.json
 /mongodb
+/mongosh
+mo-expansion.yml
+tmp.json
