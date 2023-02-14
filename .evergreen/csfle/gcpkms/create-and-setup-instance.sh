@@ -29,6 +29,12 @@ echo "create-instance.sh ... begin"
 . $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/create-instance.sh
 echo "create-instance.sh ... end"
 
+# Echo expansions required for delete-instance.sh. If the remaining setup fails, delete-instance.sh can still clean up resources.
+echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > testgcpkms-expansions.yml
+echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> testgcpkms-expansions.yml
+echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> testgcpkms-expansions.yml
+echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> testgcpkms-expansions.yml
+
 # Wait for a maximum of five minutes for VM to finish booting.
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
 wait_for_server () {
@@ -53,7 +59,3 @@ echo "setup-instance.sh ... begin"
 . $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
 echo "setup-instance.sh ... end"
 
-echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > testgcpkms-expansions.yml
-echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> testgcpkms-expansions.yml
-echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> testgcpkms-expansions.yml
-echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> testgcpkms-expansions.yml
