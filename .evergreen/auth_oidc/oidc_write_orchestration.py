@@ -58,6 +58,7 @@ def main():
     provider1_info['matchPattern'] = "test_user1"
     provider2_info = {
         "deviceAuthorizationEndpoint": MOCK_ENDPOINT,
+        "tokenEndpoint": MOCK_ENDPOINT,
         "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test2",
         "issuer": secrets['oidc_issuer_2_uri'],
