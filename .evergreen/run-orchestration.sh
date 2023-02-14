@@ -102,7 +102,7 @@ echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
 if [ -z "$SKIP_CRYPT_SHARED" ]; then
-  if [ -z $MONGO_CRYPT_SHARED_DOWNLOAD_URL ]; then
+  if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
     echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
   else
     echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
