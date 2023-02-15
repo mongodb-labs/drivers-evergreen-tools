@@ -101,7 +101,9 @@ URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongo
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
-if [ -z "${SKIP_CRYPT_SHARED}" ]; then
+# Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
+# server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
+if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
   if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
     echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
   else
