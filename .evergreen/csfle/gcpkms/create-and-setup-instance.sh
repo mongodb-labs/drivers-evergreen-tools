@@ -55,6 +55,11 @@ echo "waiting for server to start ... begin"
 wait_for_server
 echo "waiting for server to start ... end"
 
+# Add expiration to the SSH key created. This is a fallback to identify old keys in case the SSH key is unable to be deleted in delete-instance.sh.
+echo "Adding expiration time to SSH key ... begin"
+$GCPKMS_GCLOUD compute os-login ssh-keys update --key-file ~/.ssh/google_compute_engine.pub --ttl 7200s
+echo "Adding expiration time to SSH key ... end"
+
 echo "setup-instance.sh ... begin"
 . $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
 echo "setup-instance.sh ... end"
