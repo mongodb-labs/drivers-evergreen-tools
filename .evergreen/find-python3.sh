@@ -150,7 +150,7 @@ is_virtualenv_capable() (
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
   elif [[ -f "$tmp/Scripts/activate" ]]; then
-    dos2unix "$tmp/Scripts/activate" || return
+    #dos2unix "$tmp/Scripts/activate" || return
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
   else
