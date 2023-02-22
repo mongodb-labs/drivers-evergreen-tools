@@ -12,5 +12,5 @@ fi
 export OIDC_TOKEN_DIR=${OIDC_TOKEN_DIR:-/tmp/tokens}
 
 rm -rf authoidcvenv
-. ./activate_venv.sh
+. ./activate-authoidcvenv.sh
 python oidc_get_tokens.py

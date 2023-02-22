@@ -25,7 +25,7 @@ and 27018.
 On Evergreen, use `ec2.assume_role` to assume the Drivers Secrets role
 and set the three AWS variables accordingly.
 
-. ./activate_venv.sh
+. ./activate-authoidcvenv.sh
 python oidc_write_orchestration.py
 python oidc_get_tokens.py
 
