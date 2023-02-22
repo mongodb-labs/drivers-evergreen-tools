@@ -54,6 +54,7 @@ activate_authoidcvenv() {
       fi
     fi
 
+    python -m pip install -U pip
     python -m pip install -U "${packages[@]}" || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
