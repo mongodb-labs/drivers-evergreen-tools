@@ -129,13 +129,15 @@ is_virtualenv_capable() (
   local -r bin="${1:?'is_virtualenv_capable requires a name or path of a python binary to test'}"
 
   # Use a temporary directory to avoid polluting the caller's environment.
-  local -r tmp="$(mktemp -d)"
+  local tmp
+  tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
+  local real_path
   if [[ "$OSTYPE" == cygwin ]]; then
-    local -r real_path="$(cygpath -aw "$tmp")" || return
+    real_path="$(cygpath -aw "$tmp")" || return
   else
-    local -r real_path="$tmp"
+    real_path="$tmp"
   fi
 
   # -p: some old versions of virtualenv (e.g. installed on Debian 10) are buggy.
