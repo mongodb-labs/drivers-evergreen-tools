@@ -9,7 +9,7 @@ if [[ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACC
     echo "Missing AWS credentials"
     exit 1
 fi
-export AWS_TOKEN_DIR=${AWS_TOKEN_DIR:-/tmp/tokens}
+export OIDC_TOKEN_DIR=${OIDC_TOKEN_DIR:-/tmp/tokens}
 
 rm -rf authoidcvenv
 . ./activate_venv.sh
