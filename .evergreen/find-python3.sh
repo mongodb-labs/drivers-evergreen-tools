@@ -98,8 +98,8 @@ is_venv_capable() (
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
   elif [[ -f "$tmp/Scripts/activate" ]]; then
-    # Workaround https://bugs.python.org/issue32451:
-    # mongovenv/Scripts/activate: line 3: $'\r': command not found
+    # Workaround https://github.com/python/cpython/issues/76632:
+    # activate: line 3: $'\r': command not found
     dos2unix -q "$tmp/Scripts/activate" || true
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
@@ -152,8 +152,8 @@ is_virtualenv_capable() (
     # shellcheck source=/dev/null
     . "$tmp/bin/activate"
   elif [[ -f "$tmp/Scripts/activate" ]]; then
-    # Workaround https://bugs.python.org/issue32451:
-    # mongovenv/Scripts/activate: line 3: $'\r': command not found
+    # Workaround https://github.com/python/cpython/issues/76632:
+    # activate: line 3: $'\r': command not found
     dos2unix -q "$tmp/Scripts/activate" || true
     # shellcheck source=/dev/null
     . "$tmp/Scripts/activate"
