@@ -33,7 +33,6 @@ fi
 # to silence these messages.
 is_python3() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   # Binary to use, e.g. "python".
@@ -77,7 +76,6 @@ is_python3() (
 # to silence these messages.
 is_venv_capable() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -r bin="${1:?'is_venv_capable requires a name or path of a python binary to test'}"
@@ -126,7 +124,6 @@ is_venv_capable() (
 # to silence these messages.
 is_virtualenv_capable() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -r bin="${1:?'is_virtualenv_capable requires a name or path of a python binary to test'}"
@@ -189,7 +186,6 @@ is_virtualenv_capable() (
 #   fi
 find_python3() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -a bins=()
