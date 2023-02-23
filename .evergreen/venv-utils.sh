@@ -70,10 +70,10 @@ venvcreate() {
       ;;
     esac
 
-    # Workaround https://bugs.python.org/issue32451:
-    # mongovenv/Scripts/activate: line 3: $'\r': command not found
+    # Workaround https://github.com/python/cpython/issues/76632:
+    # activate: line 3: $'\r': command not found
     if [[ -f "$venv_path/Scripts/activate" ]]; then
-      dos2unix "$venv_path/Scripts/activate" || continue
+      dos2unix -q "$venv_path/Scripts/activate" || true
     fi
 
     venvactivate "$venv_path" || continue
