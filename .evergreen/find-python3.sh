@@ -33,7 +33,6 @@ fi
 # to silence these messages.
 is_python3() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   # Binary to use, e.g. "python".
@@ -77,7 +76,6 @@ is_python3() (
 # to silence these messages.
 is_venv_capable() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -r bin="${1:?'is_venv_capable requires a name or path of a python binary to test'}"
@@ -126,19 +124,20 @@ is_venv_capable() (
 # to silence these messages.
 is_virtualenv_capable() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -r bin="${1:?'is_virtualenv_capable requires a name or path of a python binary to test'}"
 
   # Use a temporary directory to avoid polluting the caller's environment.
-  local -r tmp="$(mktemp -d)"
+  local tmp
+  tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
+  local real_path
   if [[ "$OSTYPE" == cygwin ]]; then
-    local -r real_path="$(cygpath -aw "$tmp")" || return
+    real_path="$(cygpath -aw "$tmp")" || return
   else
-    local -r real_path="$tmp"
+    real_path="$tmp"
   fi
 
   # -p: some old versions of virtualenv (e.g. installed on Debian 10) are buggy.
@@ -189,7 +188,6 @@ is_virtualenv_capable() (
 #   fi
 find_python3() (
   set -o errexit
-  set -o nounset
   set -o pipefail
 
   local -a bins=()

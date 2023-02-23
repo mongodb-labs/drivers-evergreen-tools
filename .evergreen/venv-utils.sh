@@ -40,10 +40,11 @@ venvcreate() {
   local -r bin="${1:?'venvcreate requires a Python binary to use for the virtual environment'}"
   local -r venv_path="${2:?'venvcreate requires a path to the virtual environment to create'}"
 
+  local real_path
   if [[ "$OSTYPE" == cygwin ]]; then
-    local -r real_path="$(cygpath -aw "$venv_path")" || return
+    real_path="$(cygpath -aw "$path")" || return
   else
-    local -r real_path="$venv_path" || return
+    real_path="$path"
   fi
 
   # Prefer venv, but fallback to virtualenv if venv fails.
