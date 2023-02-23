@@ -42,9 +42,9 @@ venvcreate() {
 
   local real_path
   if [[ "$OSTYPE" == cygwin ]]; then
-    real_path="$(cygpath -aw "$path")" || return
+    real_path="$(cygpath -aw "$venv_path")" || return
   else
-    real_path="$path"
+    real_path="$venv_path"
   fi
 
   # Prefer venv, but fallback to virtualenv if venv fails.
