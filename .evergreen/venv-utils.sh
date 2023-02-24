@@ -38,20 +38,20 @@ fi
 # they may be deleted as part of virtual environment creation.
 venvcreate() {
   local -r bin="${1:?'venvcreate requires a Python binary to use for the virtual environment'}"
-  local -r path="${2:?'venvcreate requires a path to the virtual environment to create'}"
+  local -r venv_path="${2:?'venvcreate requires a path to the virtual environment to create'}"
 
   local real_path
   if [[ "$OSTYPE" == cygwin ]]; then
-    real_path="$(cygpath -aw "$path")" || return
+    real_path="$(cygpath -aw "$venv_path")" || return
   else
-    real_path="$path"
+    real_path="$venv_path"
   fi
 
   # Prefer venv, but fallback to virtualenv if venv fails.
   for mod in "venv" "virtualenv"; do
     # Ensure a clean directory before attempting to create a virtual
     # environment.
-    rm -rf "$path"
+    rm -rf "$venv_path"
 
     case "$mod" in
     venv)
@@ -72,11 +72,11 @@ venvcreate() {
 
     # Workaround https://github.com/python/cpython/issues/76632:
     # activate: line 3: $'\r': command not found
-    if [[ -f "$path/Scripts/activate" ]]; then
-      dos2unix -q "$path/Scripts/activate" || true
+    if [[ -f "$venv_path/Scripts/activate" ]]; then
+      dos2unix -q "$venv_path/Scripts/activate" || true
     fi
 
-    venvactivate "$path" || continue
+    venvactivate "$venv_path" || continue
 
     if ! python -m pip install -U pip; then
       deactivate || return 1 # Deactivation should never fail!
@@ -99,7 +99,7 @@ venvcreate() {
     return 0
   done
 
-  echo "Could not use either venv or virtualenv with $bin to create a virtual environment at $path!" 1>&2
+  echo "Could not use either venv or virtualenv with $bin to create a virtual environment at $venv_path!" 1>&2
   return 1
 }
 
@@ -115,16 +115,16 @@ venvcreate() {
 # Activate the virtual environment "$1". Designed to work regardless of the
 # target environment.
 venvactivate() {
-  local -r path="${1:?'venvactivate requires a path to an existing virtual environment'}"
+  local -r venv_path="${1:?'venvactivate requires a path to an existing virtual environment'}"
 
-  if [[ -f "$path/bin/activate" ]]; then
+  if [[ -f "$venv_path/bin/activate" ]]; then
     # shellcheck source=/dev/null
-    . "$path/bin/activate"
-  elif [[ -f "$path/Scripts/activate" ]]; then
+    . "$venv_path/bin/activate"
+  elif [[ -f "$venv_path/Scripts/activate" ]]; then
     # shellcheck source=/dev/null
-    . "$path/Scripts/activate"
+    . "$venv_path/Scripts/activate"
   else
-    echo "Could not find the script to activate the virtual environment at $path!" 1>&2
+    echo "Could not find the script to activate the virtual environment at $venv_path!" 1>&2
     return 1
   fi
 }

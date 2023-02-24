@@ -580,6 +580,7 @@ get_mongodb_download_url_for ()
       # prefix replaced with "mongo_crypt_shared_v1-"
       MONGO_CRYPT_SHARED_DOWNLOAD_URL="$(printf '%s' "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" | sed 's|/mongodb-|/mongo_crypt_shared_v1-|')"
    fi
+
    echo $MONGODB_DOWNLOAD_URL
 }
 

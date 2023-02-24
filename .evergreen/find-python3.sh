@@ -203,13 +203,13 @@ find_python3() (
     echo "Finding python3 binaries to test..."
 
     append_bins() {
-      local -r path="${1:?'missing path'}"
+      local -r bin_path="${1:?'missing path'}"
       shift
       local -r pattern="${1:?'missing pattern'}"
       shift
       local -ar suffixes=("${@:?'missing suffixes'}")
 
-      for dir in $(find "$path" -maxdepth 1 -name "$pattern" -type d 2>/dev/null | sort -rV); do
+      for dir in $(find "$bin_path" -maxdepth 1 -name "$pattern" -type d 2>/dev/null | sort -rV); do
         for bin in "${suffixes[@]}"; do
           if is_python3 "$dir/$bin"; then
             bins+=("$dir/$bin")
