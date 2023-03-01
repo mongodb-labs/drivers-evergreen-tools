@@ -3,6 +3,7 @@
 set -o errexit # Exit on first command error.
 
 echo "Installing dependencies ... begin"
+sudo apt-get update
 # Dependencies for mongod: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-enterprise-on-debian-tarball/
 sudo apt-get -y install libcurl4 libgssapi-krb5-2 libldap-2.4-2 libwrap0 libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit snmp openssl liblzma5
 # Dependencies for run-orchestration.sh
