@@ -151,7 +151,8 @@ deploy_lambda_function ()
     --stack-name "${FUNCTION_NAME}" \
     --capabilities CAPABILITY_IAM \
     --resolve-s3 \
-    --parameter-overrides "MongoDbUri=${MONGODB_URI}"
+    --parameter-overrides "MongoDbUri=${MONGODB_URI}" \
+    --region ${AWS_REGION}
 }
 
 # Get the ARN for the Lambda function we created and export it.
