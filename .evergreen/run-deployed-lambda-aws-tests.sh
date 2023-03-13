@@ -2,7 +2,7 @@
 set -o errexit  # Exit the script with error if any of the commands fail
 set -o xtrace   # Write all commands first to stderr
 
-# Explanation of environment variables:
+# Explanation of required environment variables:
 #
 # TEST_LAMBDA_DIRECTORY: The root of the project's Lambda sam project.
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
@@ -11,7 +11,14 @@ set -o xtrace   # Write all commands first to stderr
 # DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
+# AWS_REGION: The region for the function - generally us-east-1
+
+# Explanation of generated variables:
+#
 # MONGODB_URI: The URI for the created Atlas cluster during this script.
+# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
+# CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
+# ATLAS_BASE_URL: Where the Atlas API root resides.
 
 # The base Atlas API url. We use the API directly as the CLI does not yet
 # support testing cluster outages.
