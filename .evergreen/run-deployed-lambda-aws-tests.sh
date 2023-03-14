@@ -161,6 +161,7 @@ get_lambda_function_arn ()
   echo "Getting Lambda function ARN..."
   LAMBDA_FUNCTION_ARN=$(sam list stack-outputs \
     --stack-name ${FUNCTION_NAME} \
+    --region ${AWS_REGION} \
     --output json | jq '.[] | select(.OutputKey == "MongoDBFunction") | .OutputValue'
   )
   echo "Lambda function ARN: $LAMBDA_FUNCTION_ARN"
