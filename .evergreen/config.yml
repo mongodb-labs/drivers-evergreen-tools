@@ -830,8 +830,8 @@ buildvariants:
      - name: "test-3.6-standalone"
 
 - matrix_name: "tests-os-requires-36"
-  matrix_spec: {"os-requires-34": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-34} ${auth} ${ssl}"
+  matrix_spec: {"os-requires-36": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-36} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
@@ -877,7 +877,7 @@ buildvariants:
         storage-engine: "wiredtiger"
       then:
         add_tasks:
-          - "test-3.0-standalone"
+          - "test-3.6-standalone"
 
 - matrix_name: "tests-windows"
   matrix_spec: {os-windows: "*", auth: "*", ssl: "*" }
