@@ -180,19 +180,19 @@ deploy_lambda_function
 
 get_lambda_function_arn
 
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} lambda-invoke-standard.json > /dev/null 2>&1
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
 tail lambda-invoke-standard.json
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} lambda-invoke-frozen.json > /dev/null 2>&1
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json
 tail lambda-invoke-frozen.json
 
 restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} lambda-invoke-outage.json > /dev/null 2>&1
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json
 
 sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
