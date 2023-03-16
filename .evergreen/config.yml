@@ -520,29 +520,29 @@ tasks:
 # Standard test tasks {{{
 
     - name: "test-6.0-standalone"
-      tags: ["3.4", "standalone"]
+      tags: ["6.0", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "6.0"
             TOPOLOGY: "server"
         - func: "run tests"
 
     - name: "test-6.0-replica_set"
-      tags: ["3.4", "replica_set"]
+      tags: ["6.0", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "6.0"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
     - name: "test-6.0-sharded_cluster"
-      tags: ["3.4", "sharded_cluster"]
+      tags: ["6.0", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "6.0"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
