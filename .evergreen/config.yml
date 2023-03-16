@@ -759,14 +759,14 @@ axes:
         variables:
            VERSION: "3.6"
 
-  # OSes that support versions of MongoDB>=2.4 with SSL.
+  # OSes that support versions of MongoDB>=3.6 with SSL.
   - id: os-fully-featured
     display_name: OS
     values:
 
-      - id: amazon1-2018-test
-        display_name: "Amazon Linux 2018 (Enterprise)"
-        run_on: amazon1-2018-test
+      - id: ubuntu-1804
+        display_name: "Ubuntu 18.04"
+        run_on: ubuntu1804-small
 
   # OSes that support versions of MongoDB without SSL.
   - id: os-nossl
