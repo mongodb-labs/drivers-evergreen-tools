@@ -823,7 +823,7 @@ axes:
         display_name: "Debian 9.2"
         run_on: debian92-test
       - id: ubuntu-18.04
-        display_name: "Ubuntu 18.04"
+        display_name: "Ubuntu 18.04 (Requires 4.0)"
         run_on: ubuntu1804-test
 
   - id: topology
