@@ -1002,7 +1002,7 @@ buildvariants:
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
 
-# Storage Engine Tests on Amazon Linux (Enterprise)
+# Storage Engine Tests on Ubuntu 18
 - matrix_name: "tests-storage-engines"
   matrix_spec: {"os-fully-featured": "ubuntu-1804", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
