@@ -1004,7 +1004,7 @@ buildvariants:
 
 # Storage Engine Tests on Amazon Linux (Enterprise)
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-fully-featured": "amazon1-2018-test", storage-engine: "*" }
+  matrix_spec: {"os-fully-featured": "ubuntu-1804", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
     - if:
