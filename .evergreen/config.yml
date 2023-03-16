@@ -986,9 +986,6 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
-     - name: "test-6.0-replica_set"
-     - name: "test-6.0-sharded_cluster"
-     - name: "test-6.0-standalone"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
@@ -1001,6 +998,9 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-4.0-replica_set"
+     - name: "test-4.0-sharded_cluster"
+     - name: "test-4.0-standalone"
 
 # Storage Engine Tests on Ubuntu 18.04
 - matrix_name: "tests-storage-engines"
