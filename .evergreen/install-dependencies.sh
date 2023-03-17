@@ -24,6 +24,7 @@ case "$DISTRO" in
 
    linux-ubuntu*)
       echo "Install Ubuntu dependencies"
+      sudo apt-get update || true
       sudo apt-get install -y awscli || true
       ;;
 

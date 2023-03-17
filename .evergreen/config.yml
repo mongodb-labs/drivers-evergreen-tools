@@ -366,7 +366,7 @@ functions:
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
-            sh ${PROJECT_DIRECTORY}/.evergreen/run-serverless-tests.sh
+            sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -519,140 +519,141 @@ tasks:
 
 # Standard test tasks {{{
 
-    - name: "test-2.4-standalone"
-      tags: ["2.4", "standalone"]
+    - name: "test-6.0-standalone"
+      tags: ["6.0", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.4"
+            VERSION: "6.0"
             TOPOLOGY: "server"
         - func: "run tests"
 
-    - name: "test-2.4-replica_set"
-      tags: ["2.4", "replica_set"]
+    - name: "test-6.0-replica_set"
+      tags: ["6.0", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.4"
+            VERSION: "6.0"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
-    - name: "test-2.4-sharded_cluster"
-      tags: ["2.4", "sharded_cluster"]
+    - name: "test-6.0-sharded_cluster"
+      tags: ["6.0", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.4"
+            VERSION: "6.0"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-2.6-standalone"
-      tags: ["2.6", "standalone"]
+    - name: "test-5.0-standalone"
+      tags: ["5.0", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.6"
+            VERSION: "5.0"
             TOPOLOGY: "server"
         - func: "run tests"
 
-    - name: "test-2.6-replica_set"
-      tags: ["2.6", "replica_set"]
+    - name: "test-5.0-replica_set"
+      tags: ["5.0", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.6"
+            VERSION: "5.0"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
-    - name: "test-2.6-sharded_cluster"
-      tags: ["2.6", "sharded_cluster"]
+    - name: "test-5.0-sharded_cluster"
+      tags: ["5.0", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "2.6"
+            VERSION: "5.0"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-3.0-standalone"
-      tags: ["3.0", "standalone"]
+    - name: "test-4.4-standalone"
+      tags: ["4.4", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.0"
+            VERSION: "4.4"
             TOPOLOGY: "server"
         - func: "run tests"
 
-    - name: "test-3.0-replica_set"
-      tags: ["3.0", "replica_set"]
+    - name: "test-4.4-replica_set"
+      tags: ["4.4", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.0"
+            VERSION: "4.4"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
-    - name: "test-3.0-sharded_cluster"
-      tags: ["3.0", "sharded_cluster"]
+    - name: "test-4.4-sharded_cluster"
+      tags: ["4.4", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.0"
+            VERSION: "4.4"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-3.2-standalone"
-      tags: ["3.2", "standalone"]
+    - name: "test-4.2-standalone"
+      tags: ["4.2", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.2"
+            VERSION: "4.2"
             TOPOLOGY: "server"
         - func: "run tests"
 
-    - name: "test-3.2-replica_set"
-      tags: ["3.2", "replica_set"]
+    - name: "test-4.2-replica_set"
+      tags: ["4.2", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.2"
+            VERSION: "4.2"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
-    - name: "test-3.2-sharded_cluster"
-      tags: ["3.2", "sharded_cluster"]
+    - name: "test-4.2-sharded_cluster"
+      tags: ["4.2", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.2"
+            VERSION: "4.2"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-3.4-standalone"
-      tags: ["3.4", "standalone"]
+    - name: "test-4.0-standalone"
+      tags: ["4.0", "standalone"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "4.0"
             TOPOLOGY: "server"
         - func: "run tests"
 
-    - name: "test-3.4-replica_set"
-      tags: ["3.4", "replica_set"]
+    - name: "test-4.0-replica_set"
+      tags: ["4.0", "replica_set"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "4.0"
             TOPOLOGY: "replica_set"
         - func: "run tests"
 
-    - name: "test-3.4-sharded_cluster"
-      tags: ["3.4", "sharded_cluster"]
+    - name: "test-4.0-sharded_cluster"
+      tags: ["4.0", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
-            VERSION: "3.4"
+            VERSION: "4.0"
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
+
     - name: "test-3.6-standalone"
       tags: ["3.6", "standalone"]
       commands:
@@ -733,48 +734,44 @@ axes:
         display_name: "latest"
         variables:
            VERSION: "latest"
+      - id: "6.0"
+        display_name: "6.0"
+        variables:
+           VERSION: "6.0"
+      - id: "5.0"
+        display_name: "5.0"
+        variables:
+           VERSION: "5.0"
+      - id: "4.4"
+        display_name: "4.4"
+        variables:
+           VERSION: "4.4"
+      - id: "4.2"
+        display_name: "4.2"
+        variables:
+           VERSION: "4.2"
+      - id: "4.0"
+        display_name: "4.0"
+        variables:
+           VERSION: "4.0"
       - id: "3.6"
         display_name: "3.6"
         variables:
            VERSION: "3.6"
-      - id: "3.4"
-        display_name: "3.4"
-        variables:
-           VERSION: "3.4"
-      - id: "3.2"
-        display_name: "3.2"
-        variables:
-           VERSION: "3.2"
-      - id: "3.0"
-        display_name: "3.0"
-        variables:
-           VERSION: "3.0"
-      - id: "2.6"
-        display_name: "2.6"
-        variables:
-           VERSION: "2.6"
-      - id: "2.4"
-        display_name: "2.4"
-        variables:
-           VERSION: "2.4"
 
-
-  # OSes that support versions of MongoDB>=2.4 with SSL.
+  # OSes that support versions of MongoDB>=3.6 with SSL.
   - id: os-fully-featured
     display_name: OS
     values:
 
-      - id: amazon1-2018-test
-        display_name: "Amazon Linux 2018 (Enterprise)"
-        run_on: amazon1-2018-test
+      - id: ubuntu-1804
+        display_name: "Ubuntu 18.04"
+        run_on: ubuntu1804-small
 
   # OSes that support versions of MongoDB without SSL.
   - id: os-nossl
     display_name: OS
     values:
-      - id: archlinux-test
-        display_name: "Archlinux"
-        run_on: archlinux-test
 
       - id: macos-1014
         display_name: "macOS 10.14"
@@ -787,44 +784,8 @@ axes:
         display_name: "Windows 64"
         run_on: windows-64-vsMulti-small
 
-  # OSes that support versions of MongoDB>=2.6 with SSL.
-  - id: os-requires-26
-    display_name: OS
-    values:
-      - id: ubuntu-14.04
-        display_name: "Ubuntu 14.04"
-        run_on: ubuntu1404-test
-
-      - id: rhel70
-        display_name: "RHEL 7.0"
-        run_on: rhel70-small
-
-  # OSes that support versions of MongoDB>=3.2 with SSL.
-  - id: os-requires-32
-    display_name: OS
-    values:
-      - id: suse12-x86-64-test
-        display_name: "SUSE 12 (x86_64)"
-        run_on: suse12-test
-
-      - id: ubuntu-16.04
-        display_name: "Ubuntu 16.04"
-        run_on: ubuntu1604-test
-
-      - id: rhel71-power8-test
-        display_name: "RHEL 7.1 (POWER8)"
-        run_on: rhel71-power8-test
-
-  # OSes that introduced support for SSL with MongoDB>=3.2.
-  - id: os-ssl-requires-32
-    display_name: OS
-    values:
-      - id: macos-1014
-        display_name: "macOS 10.14"
-        run_on: macos-1014
-
-  # OSes that support versions of MongoDB>=3.4 with SSL.
-  - id: os-requires-34
+  # OSes that support versions of MongoDB>=3.6 with SSL.
+  - id: os-requires-36
     display_name: OS
     values:
       - id: debian81-test
@@ -835,32 +796,29 @@ axes:
         display_name: "RHEL 7.2 (zSeries)"
         run_on: rhel72-zseries-test
 
-      - id: suse12-zseries-test
-        display_name: "SUSE 12 (zSeries)"
-        run_on: suse12-zseries-test
-
-      - id: ubuntu1604-arm64-small
-        display_name: "Ubuntu 16.04 (ARM64)"
-        run_on: ubuntu1604-arm64-small
-
-      - id: ubuntu1604-power8-test
-        display_name: "Ubuntu 16.04 (POWER8)"
-        run_on: ubuntu1604-power8-test
-
-      - id: ubuntu1604-zseries-small
-        display_name: "Ubuntu 16.04 (zSeries)"
-        run_on: ubuntu1604-zseries-small
-
-  # OSes that support versions of MongoDB>=4.0 with SSL.
-  - id: os-requires-40
+  # OSes that support versions of MongoDB>=4.2 with SSL.
+  - id: os-requires-42
     display_name: OS
     values:
       - id: debian92-test
         display_name: "Debian 9.2"
         run_on: debian92-test
+
       - id: ubuntu-18.04
-        display_name: "Ubuntu 18.04"
+        display_name: "Ubuntu 18.04 (Requires 4.2)"
         run_on: ubuntu1804-test
+
+      - id: ubuntu1804-arm64-small
+        display_name: "Ubuntu 18.04 (ARM64)"
+        run_on: ubuntu1804-arm64-small
+
+      - id: rhel81-power8
+        display_name: "RHEL 8.1 (POWER8)"
+        run_on: rhel81-power8
+
+      - id: ubuntu1804-zseries-small
+        display_name: "Ubuntu 18.04 (zSeries)"
+        run_on: ubuntu1804-zseries-small
 
   - id: topology
     display_name: Topology
@@ -968,24 +926,24 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-6.0-replica_set"
+     - name: "test-6.0-sharded_cluster"
+     - name: "test-6.0-standalone"
+     - name: "test-5.0-replica_set"
+     - name: "test-5.0-sharded_cluster"
+     - name: "test-5.0-standalone"
+     - name: "test-4.4-replica_set"
+     - name: "test-4.4-sharded_cluster"
+     - name: "test-4.4-standalone"
+     - name: "test-4.2-replica_set"
+     - name: "test-4.2-sharded_cluster"
+     - name: "test-4.2-standalone"
+     - name: "test-4.0-replica_set"
+     - name: "test-4.0-sharded_cluster"
+     - name: "test-4.0-standalone"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
-     - name: "test-3.0-replica_set"
-     - name: "test-3.0-sharded_cluster"
-     - name: "test-3.0-standalone"
-     - name: "test-2.6-replica_set"
-     - name: "test-2.6-sharded_cluster"
-     - name: "test-2.6-standalone"
-     - name: "test-2.4-replica_set"
-     - name: "test-2.4-sharded_cluster"
-     - name: "test-2.4-standalone"
 
 - matrix_name: "tests-nossl"
   matrix_spec: {"os-nossl": "*", auth: "*", ssl: "nossl" }
@@ -995,112 +953,50 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-6.0-replica_set"
+     - name: "test-6.0-sharded_cluster"
+     - name: "test-6.0-standalone"
+     - name: "test-5.0-replica_set"
+     - name: "test-5.0-sharded_cluster"
+     - name: "test-5.0-standalone"
+     - name: "test-4.4-replica_set"
+     - name: "test-4.4-sharded_cluster"
+     - name: "test-4.4-standalone"
+     - name: "test-4.2-replica_set"
+     - name: "test-4.2-sharded_cluster"
+     - name: "test-4.2-standalone"
+     - name: "test-4.0-replica_set"
+     - name: "test-4.0-sharded_cluster"
+     - name: "test-4.0-standalone"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
-     - name: "test-3.0-replica_set"
-     - name: "test-3.0-sharded_cluster"
-     - name: "test-3.0-standalone"
-     - name: "test-2.6-replica_set"
-     - name: "test-2.6-sharded_cluster"
-     - name: "test-2.6-standalone"
-     - name: "test-2.4-replica_set"
-     - name: "test-2.4-sharded_cluster"
-     - name: "test-2.4-standalone"
 
-- matrix_name: "tests-os-requires-26"
-  matrix_spec: {"os-requires-26": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-26} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-36"
+  matrix_spec: {"os-requires-36": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-36} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
-     - name: "test-3.0-replica_set"
-     - name: "test-3.0-sharded_cluster"
-     - name: "test-3.0-standalone"
-     - name: "test-2.6-replica_set"
-     - name: "test-2.6-sharded_cluster"
-     - name: "test-2.6-standalone"
 
-- matrix_name: "tests-os-requires-32"
-  matrix_spec: {"os-requires-32": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-32} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-42"
+  matrix_spec: {"os-requires-42": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-42} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
+     - name: "test-4.2-replica_set"
+     - name: "test-4.2-sharded_cluster"
+     - name: "test-4.2-standalone"
 
-- matrix_name: "tests-ssl-requires-32"
-  matrix_spec: {"os-ssl-requires-32": "*", auth: "*", ssl: "ssl" }
-  display_name: "${os-ssl-requires-32} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
-
-- matrix_name: "tests-os-requires-34"
-  matrix_spec: {"os-requires-34": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-34} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-
-- matrix_name: "tests-os-requires-40"
-  matrix_spec: {"os-requires-40": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-40} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-
-# Storage Engine Tests on Amazon Linux (Enterprise)
+# Storage Engine Tests on Ubuntu 18.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-fully-featured": "amazon1-2018-test", storage-engine: "*" }
+  matrix_spec: {"os-fully-featured": "ubuntu-1804", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
     - if:
@@ -1109,23 +1005,20 @@ buildvariants:
       then:
         add_tasks:
           - "test-3.6-standalone"
-          - "test-3.4-standalone"
-          - "test-3.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: ["inmemory"]
       then:
         add_tasks:
           - "test-latest-standalone"
+          - "test-6.0-standalone"
           - "test-3.6-standalone"
-          - "test-3.4-standalone"
-          - "test-3.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
-          - "test-3.0-standalone"
+          - "test-3.6-standalone"
 
 - matrix_name: "tests-windows"
   matrix_spec: {os-windows: "*", auth: "*", ssl: "*" }
@@ -1135,38 +1028,30 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-6.0-replica_set"
+     - name: "test-6.0-sharded_cluster"
+     - name: "test-6.0-standalone"
+     - name: "test-5.0-replica_set"
+     - name: "test-5.0-sharded_cluster"
+     - name: "test-5.0-standalone"
+     - name: "test-4.4-replica_set"
+     - name: "test-4.4-sharded_cluster"
+     - name: "test-4.4-standalone"
+     - name: "test-4.2-replica_set"
+     - name: "test-4.2-sharded_cluster"
+     - name: "test-4.2-standalone"
+     - name: "test-4.0-replica_set"
+     - name: "test-4.0-sharded_cluster"
+     - name: "test-4.0-standalone"
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
-     - name: "test-3.4-replica_set"
-     - name: "test-3.4-sharded_cluster"
-     - name: "test-3.4-standalone"
-     - name: "test-3.2-replica_set"
-     - name: "test-3.2-sharded_cluster"
-     - name: "test-3.2-standalone"
-     - name: "test-3.0-replica_set"
-     - name: "test-3.0-sharded_cluster"
-     - name: "test-3.0-standalone"
-     - name: "test-2.6-replica_set"
-     - name: "test-2.6-sharded_cluster"
-     - name: "test-2.6-standalone"
-  rules:
-     # Windows MongoDB 2.4 does not support SSL.
-     - if:
-         os-windows: "*"
-         auth: "*"
-         ssl: "nossl"
-       then:
-         add_tasks:
-           - name: "test-2.4-replica_set"
-           - name: "test-2.4-sharded_cluster"
-           - name: "test-2.4-standalone"
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-requires-40:
+    os-requires-42:
       - "ubuntu-18.04"
-  display_name: "Serverless ${os-requires-40}"
+  display_name: "Serverless ${os-requires-42}"
   tasks:
     - "serverless_task_group"
 
