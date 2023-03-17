@@ -772,9 +772,6 @@ axes:
   - id: os-nossl
     display_name: OS
     values:
-      - id: archlinux-test
-        display_name: "Archlinux"
-        run_on: archlinux-test
 
       - id: macos-1014
         display_name: "macOS 10.14"
@@ -798,10 +795,6 @@ axes:
       - id: rhel72-zseries-test
         display_name: "RHEL 7.2 (zSeries)"
         run_on: rhel72-zseries-test
-
-      - id: suse12-zseries-test
-        display_name: "SUSE 12 (zSeries)"
-        run_on: suse12-zseries-test
 
   # OSes that support versions of MongoDB>=4.0 with SSL.
   - id: os-requires-40
