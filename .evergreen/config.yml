@@ -366,7 +366,7 @@ functions:
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
-            sh ${PROJECT_DIRECTORY}/.evergreen/run-serverless-tests.sh
+            sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "cleanup":
     - command: shell.exec
@@ -796,8 +796,8 @@ axes:
         display_name: "RHEL 7.2 (zSeries)"
         run_on: rhel72-zseries-test
 
-  # OSes that support versions of MongoDB>=4.0 with SSL.
-  - id: os-requires-40
+  # OSes that support versions of MongoDB>=4.2 with SSL.
+  - id: os-requires-42
     display_name: OS
     values:
       - id: debian92-test
@@ -983,16 +983,16 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
 
-- matrix_name: "tests-os-requires-40"
-  matrix_spec: {"os-requires-40": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-40} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-42"
+  matrix_spec: {"os-requires-42": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-42} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-4.0-replica_set"
-     - name: "test-4.0-sharded_cluster"
-     - name: "test-4.0-standalone"
+     - name: "test-4.2-replica_set"
+     - name: "test-4.2-sharded_cluster"
+     - name: "test-4.2-standalone"
 
 # Storage Engine Tests on Ubuntu 18.04
 - matrix_name: "tests-storage-engines"
@@ -1049,9 +1049,9 @@ buildvariants:
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-requires-40:
+    os-requires-42:
       - "ubuntu-18.04"
-  display_name: "Serverless ${os-requires-40}"
+  display_name: "Serverless ${os-requires-42}"
   tasks:
     - "serverless_task_group"
 
