@@ -51,10 +51,7 @@ def main():
                     "oidcIdentityProviders": providers,
                     "featureFlagOIDC": True
                 }
-            },
-            "rsParams": {
-                "priority": 99
-            },
+            }
         }]
     }
 
@@ -86,7 +83,7 @@ def main():
             }
         },
         "rsParams": {
-            "priority": 1
+            "priority": 0
         }
     })
 
