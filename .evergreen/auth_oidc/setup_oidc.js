@@ -10,8 +10,15 @@ admin.runCommand({createRole: 'test1/readWrite', roles:[{role: 'readWrite', db: 
 admin.runCommand({createRole: 'test2/read', roles:[{role: 'read', db: 'test'}], privileges: []});
 
 // Wait for the node to be primary.
-while (admin.runCommand('replSetGetStatus').myState != 1) {
-    sleep(50);
+while (true) {
+    try {
+        if (admin.runCommand('replSetGetStatus').myState == 1) {
+            break;
+        }
+    } catch (e) {
+        console.log(e);
+    }
+    sleep(500);
 }
 
 exit();
