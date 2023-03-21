@@ -131,7 +131,7 @@ functions:
         aws_secret: ${aws_secret}
         local_file: ${build_id}.tar.gz
         # Example: /mciuploads/${UPLOAD_BUCKET}/gcc49/9dfb7d741efbca16faa7859b9349d7a942273e43/debug-compile-nosasl-nossl/mongo_c_driver_releng_9dfb7d741efbca16faa7859b9349d7a942273e43_16_11_08_19_29_52.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${task_name}/${build_id}.tar.gz
+        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${branch_name}/${task_name}/build.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
@@ -145,14 +145,9 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${BUILD_NAME}/${build_id}.tar.gz
+        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${branch_name}/${BUILD_NAME}/build.tar.gz
         bucket: mciuploads
-        local_file: build.tar.gz
-    - command: shell.exec
-      params:
-        continue_on_err: true
-        # EVG-1105: Use s3.get extract_to: ./
-        script: "cd .. && rm -rf ${PROJECT_DIRECTORY} && mkdir ${PROJECT_DIRECTORY}/ && tar xf build.tar.gz -C ${PROJECT_DIRECTORY}/"
+        extract_to: ${PROJECT_DIRECTORY}
 
   "exec compile script" :
     - command: shell.exec
@@ -496,6 +491,8 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
+          vars:
+            BUILD_NAME: "make-release-archive"
         - func: "exec script"
           vars:
             file: ".evergreen/compile.sh"
@@ -509,6 +506,8 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
+          vars:
+            BUILD_NAME: "make-release-archive"
         - func: "exec compile script"
           vars:
             file: ".evergreen/compile.sh"
@@ -792,9 +791,9 @@ axes:
         display_name: "Debian 8.1"
         run_on: debian81-test
 
-      - id: rhel72-zseries-test
-        display_name: "RHEL 7.2 (zSeries)"
-        run_on: rhel72-zseries-test
+      - id: rhel70-small
+        display_name: "RHEL 7.0"
+        run_on: rhel70-small
 
   # OSes that support versions of MongoDB>=4.2 with SSL.
   - id: os-requires-42
