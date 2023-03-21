@@ -496,6 +496,8 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
+          vars:
+            BUILD_NAME: "make-release-archive"
         - func: "exec script"
           vars:
             file: ".evergreen/compile.sh"
@@ -509,6 +511,8 @@ tasks:
       commands:
         # Fetch the make-release-archive generated archive, rather then the git clone
         - func: "fetch build"
+          vars:
+            BUILD_NAME: "make-release-archive"
         - func: "exec compile script"
           vars:
             file: ".evergreen/compile.sh"
@@ -792,9 +796,9 @@ axes:
         display_name: "Debian 8.1"
         run_on: debian81-test
 
-      - id: rhel72-zseries-test
-        display_name: "RHEL 7.2 (zSeries)"
-        run_on: rhel72-zseries-test
+      - id: rhel70-small
+        display_name: "RHEL 7.0"
+        run_on: rhel70-small
 
   # OSes that support versions of MongoDB>=4.2 with SSL.
   - id: os-requires-42
@@ -805,7 +809,7 @@ axes:
         run_on: debian92-test
 
       - id: ubuntu-18.04
-        display_name: "Ubuntu 18.04 (Requires 4.2)"
+        display_name: "Ubuntu 18.0ß4 (Requires 4.2)"
         run_on: ubuntu1804-test
 
       - id: ubuntu1804-arm64-small
