@@ -148,11 +148,7 @@ functions:
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${branch_name}/${BUILD_NAME}/build.tar.gz
         bucket: mciuploads
         local_file: build.tar.gz
-    - command: shell.exec
-      params:
-        continue_on_err: true
-        # EVG-1105: Use s3.get extract_to: ./
-        script: "cd .. && rm -rf ${PROJECT_DIRECTORY} && mkdir ${PROJECT_DIRECTORY}/ && tar xf build.tar.gz -C ${PROJECT_DIRECTORY}/"
+        extract_to: ${PROJECT_DIRECTORY}
 
   "exec compile script" :
     - command: shell.exec
