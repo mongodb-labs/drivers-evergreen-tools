@@ -147,7 +147,6 @@ functions:
         aws_secret: ${aws_secret}
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${branch_name}/${BUILD_NAME}/build.tar.gz
         bucket: mciuploads
-        local_file: build.tar.gz
         extract_to: ${PROJECT_DIRECTORY}
 
   "exec compile script" :
