@@ -39,8 +39,8 @@ def main():
         "login": "bob",
         "name": "mongod",
         "password": "pwd123",
-        "members": [
-            {"procParams": {
+        "members": [{
+            "procParams": {
                 "ipv6": "NO_IPV6" not in os.environ,
                 "bind_ip": "0.0.0.0,::1",
                 "logappend": True,
@@ -51,8 +51,8 @@ def main():
                     "oidcIdentityProviders": providers,
                     "featureFlagOIDC": True
                 }
-            }},
-        ]
+            }
+        }]
     }
 
     provider1_info['matchPattern'] = "test_user1"
@@ -69,18 +69,23 @@ def main():
     }
     providers = [provider1_info, provider2_info]
     providers = json.dumps(providers, separators=(',',':'))
-    data['members'].append({"procParams": {
-        "ipv6": "NO_IPV6" not in os.environ,
-        "bind_ip": "0.0.0.0,::1",
-        "logappend": True,
-        "port": 27018,
-        "setParameter": {
-            "enableTestCommands": 1,
-            "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-            "oidcIdentityProviders": providers,
-            "featureFlagOIDC": True
+    data['members'].append({
+        "procParams": {
+            "ipv6": "NO_IPV6" not in os.environ,
+            "bind_ip": "0.0.0.0,::1",
+            "logappend": True,
+            "port": 27018,
+            "setParameter": {
+                "enableTestCommands": 1,
+                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "oidcIdentityProviders": providers,
+                "featureFlagOIDC": True
+            }
+        },
+        "rsParams": {
+            "priority": 0
         }
-    }})
+    })
 
     orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'replica_sets', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
