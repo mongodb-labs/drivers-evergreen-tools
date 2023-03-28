@@ -97,7 +97,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
   exit 1
 fi
 cat tmp.json
-URI=$(python -c 'import sys, json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$(python -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
