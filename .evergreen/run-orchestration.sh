@@ -83,6 +83,16 @@ fi
 
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
+if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" ]; then
+  # This is a temporary workaround until featureFlagFLE2ProtocolVersion2 is enabled by default in SERVER-69563. Once latest server builds have SERVER-69563, this if block may be removed.
+  echo "rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... begin"
+  . "$DIR/find-python3.sh"
+  PYTHON="$(find_python3)"
+  $PYTHON $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
+  mv $ORCHESTRATION_FILE.modified $ORCHESTRATION_FILE
+  echo "rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... end"
+fi
+
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
