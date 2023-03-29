@@ -3,6 +3,7 @@
 setfle2parameter.py modifies and prints an orchestration config file to add the `--setParameter featureFlagFLE2ProtocolVersion2=1` option to mongod and mongos.
 Usage: setfle2parameter.py <orchestration config file path>
 This file is a temporary workaround until featureFlagFLE2ProtocolVersion2 is enabled by default in SERVER-69563. Once latest server builds have SERVER-69563, this file may be removed.
+DRIVERS-2590 tracks removal of this file.
 """
 
 import json
