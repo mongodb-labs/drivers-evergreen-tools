@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -o errexit  # Exit the script with error if any of the commands fail
 
 # Supported environment variables:
@@ -86,9 +86,7 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" -a "$MONGODB_VERSION" = "latest" ]; then
   # This is a temporary workaround until featureFlagFLE2ProtocolVersion2 is enabled by default in SERVER-69563. Once latest server builds have SERVER-69563, this if block may be removed.
   echo "rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... begin"
-  . "$DIR/find-python3.sh"
-  PYTHON="$(find_python3)"
-  $PYTHON $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
+  python $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
   mv $ORCHESTRATION_FILE.modified $ORCHESTRATION_FILE
   echo "rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... end"
 fi

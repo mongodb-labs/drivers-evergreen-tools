@@ -15,7 +15,6 @@ def do_rewrite(config):
     did_rewrite = False
 
     def rewrite_server(server):
-        nonlocal did_rewrite
         if "procParams" in server:
             if "setParameter" in server["procParams"]:
                 server["procParams"]["setParameter"]["featureFlagFLE2ProtocolVersion2"] = "1"
@@ -23,21 +22,25 @@ def do_rewrite(config):
                 server["procParams"]["setParameter"] = {
                     "featureFlagFLE2ProtocolVersion2": "1"
                 }
-            did_rewrite = True
+            return True
+        return False
 
     # Rewrite for a server.
-    rewrite_server(config)
+    if rewrite_server(config):
+        did_rewrite = True
     # Rewrite for each member in a replica set.
     if "members" in config:
         for server in config["members"]:
-            rewrite_server(server)
+            if rewrite_server(server):
+                did_rewrite = True
     # Rewrite each shard.
     if "shards" in config:
         for shard in config["shards"]:
             if "shardParams" in shard:
                 if "members" in shard["shardParams"]:
                     for server in shard["shardParams"]["members"]:
-                        rewrite_server (server)
+                        if rewrite_server (server):
+                            did_rewrite = True
     # Rewrite each router.
     if "routers" in config:
         for router in config["routers"]:
