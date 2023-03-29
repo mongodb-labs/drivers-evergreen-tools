@@ -1,6 +1,9 @@
 environment: local
 # hostProvider is the cloud provider in which this machine is running.
 hostProvider: local
+
+hostRegion: local
+
 # Disable billing to silence a "no billing configured" warning.
 billing:
   enabled: false
