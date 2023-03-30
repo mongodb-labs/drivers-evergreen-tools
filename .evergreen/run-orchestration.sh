@@ -91,7 +91,7 @@ if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" -a "$MONGODB_VERSION" = "l
   ACTUAL_MONGODB_VERSION=$($DRIVERS_TOOLS/mongodb/bin/mongod --version | head -1 | awk '{print $3}')
   case $ACTUAL_MONGODB_VERSION in
   v7*)
-   python $DIR/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
+   python $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
    mv $ORCHESTRATION_FILE.modified $ORCHESTRATION_FILE
    ;;
   *)
