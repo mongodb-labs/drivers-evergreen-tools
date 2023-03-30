@@ -88,7 +88,7 @@ if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" -a "$MONGODB_VERSION" = "l
   # DRIVERS-2590 tracks removal of this workaround.
   echo "SERVER-69563: rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... begin"
   # Only attempt to enable the feature flag if the server is 7.0.0. The 'latest' builds may not be updated to 7.0 yet.
-  ACTUAL_MONGODB_VERSION=$(./mongodb/bin/mongod --version | head -1 | awk '{print $3}')
+  ACTUAL_MONGODB_VERSION=$($DRIVERS_TOOLS/mongodb/bin/mongod --version | head -1 | awk '{print $3}')
   case $ACTUAL_MONGODB_VERSION in
   v7*)
    python $DIR/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
