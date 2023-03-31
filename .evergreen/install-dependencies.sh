@@ -25,7 +25,7 @@ case "$DISTRO" in
    linux-ubuntu*)
       echo "Install Ubuntu dependencies"
       sudo apt-get update || true
-      sudo apt-get install -y awscli || true
+      sudo apt-get -y -o DPkg::Lock::Timeout=-1 install awscli || true
       ;;
 
    sunos*)
@@ -37,4 +37,3 @@ case "$DISTRO" in
       echo "All other platforms..."
       ;;
 esac
-

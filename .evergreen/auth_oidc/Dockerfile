@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-RUN apt-get update -qq && apt-get install -qqy --no-install-recommends \
+RUN apt-get -qq update && apt-get -qqy -o DPkg::Lock::Timeout=-1 install --no-install-recommends \
   git \
   ca-certificates \
   curl \
