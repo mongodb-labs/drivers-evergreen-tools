@@ -55,6 +55,7 @@ DISTRO_ID_MAP = {
     'linuxmint': 'ubuntu',
     'opensuse-leap': 'sles',
     'opensuse': 'sles',
+    'pop': 'ubuntu',
     'redhat': 'rhel',
     'rocky': 'rhel',
 }
@@ -80,6 +81,10 @@ DISTRO_VERSION_MAP = {
         '21': '22.04',
         '21.*': '22.04',
     },
+    'pop': {
+        '20.04': '20.04',
+        '22.04': '22.04',
+    }
 }
 
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
