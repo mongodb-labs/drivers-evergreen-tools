@@ -8,7 +8,7 @@ const admin = Mongo().getDB("admin");
 assert(admin.auth("bob", "pwd123"));
 
 console.log("Setting up User");
-const authorizationClaim = process.env('AZUREOIDC_AUTH_CLAIM');
+const authorizationClaim = process.env['AZUREOIDC_AUTH_CLAIM'];
 console.log("authorizationClaim: ", authorizationClaim);
 
 // Add the role.

@@ -20,4 +20,4 @@ cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 python oidc_write_orchestration_azure.py
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
-$DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
+mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
