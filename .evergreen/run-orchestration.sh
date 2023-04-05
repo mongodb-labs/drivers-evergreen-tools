@@ -29,6 +29,11 @@ DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries
 . $DIR/download-mongodb.sh
 
+# Load the find_python3 function
+. $DIR/find_python3.sh
+
+PYTHON_BINARY=$(find_python3)
+
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
     get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
@@ -91,7 +96,7 @@ if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" -a "$MONGODB_VERSION" = "l
   ACTUAL_MONGODB_VERSION=$($DRIVERS_TOOLS/mongodb/bin/mongod --version | head -1 | awk '{print $3}')
   case $ACTUAL_MONGODB_VERSION in
   v7*)
-   python $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
+   $PYTHON_BINARY $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
    mv $ORCHESTRATION_FILE.modified $ORCHESTRATION_FILE
    ;;
   *)
@@ -115,7 +120,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
   exit 1
 fi
 cat tmp.json
-URI=$(python -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$($PYTHON_BINARY -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"

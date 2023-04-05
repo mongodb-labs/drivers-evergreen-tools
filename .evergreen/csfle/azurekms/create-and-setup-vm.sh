@@ -27,7 +27,7 @@ fi
 # Set defaults.
 export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 # Install az.
-"$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/install-az.sh
+#"$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/install-az.sh
 # Login.
 "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 # Create VM.

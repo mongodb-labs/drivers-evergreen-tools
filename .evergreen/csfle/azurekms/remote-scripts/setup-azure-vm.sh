@@ -17,7 +17,8 @@ sudo apt-get -y -o DPkg::Lock::Timeout=-1 install python3-pip
 sudo apt-get -y -o DPkg::Lock::Timeout=-1 install git
 echo "Installing MongoDB dependencies ... end"
 
-echo "Starting MongoDB server ... begin"
+
+# echo "Starting MongoDB server ... begin"
 git clone https://github.com/mongodb-labs/drivers-evergreen-tools
 DRIVERS_TOOLS=$(pwd)/drivers-evergreen-tools
 export DRIVERS_TOOLS
