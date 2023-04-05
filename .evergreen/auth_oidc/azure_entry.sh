@@ -4,7 +4,7 @@
 #
 set -eux
 export MONGODB_VERSION=latest
-export TOPOLOGY=server
+export TOPOLOGY=servers
 export ORCHESTRATION_FILE=auth-oidc.json
 export DRIVERS_TOOLS=$HOME/drivers-evergreen-tools
 export PROJECT_ORCHESTRATION_HOME=$DRIVERS_TOOLS/.evergreen/orchestration

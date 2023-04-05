@@ -53,7 +53,7 @@ def main():
         }]
     }
 
-    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'server', 'auth-oidc.json'))
+    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
         json.dump(data, fid, indent=4)
 
