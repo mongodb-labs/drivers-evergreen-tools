@@ -37,20 +37,18 @@ def main():
         "login": "bob",
         "name": "mongod",
         "password": "pwd123",
-        "members": [{
-            "procParams": {
-                "ipv6": "NO_IPV6" not in os.environ,
-                "bind_ip": "0.0.0.0,::1",
-                "logappend": True,
-                "port": 27017,
-                "setParameter": {
-                    "enableTestCommands": 1,
-                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                    "oidcIdentityProviders": providers,
-                    "featureFlagOIDC": True
-                }
+        "procParams": {
+            "ipv6": "NO_IPV6" not in os.environ,
+            "bind_ip": "0.0.0.0,::1",
+            "logappend": True,
+            "port": 27017,
+            "setParameter": {
+                "enableTestCommands": 1,
+                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "oidcIdentityProviders": providers,
+                "featureFlagOIDC": True
             }
-        }]
+        }
     }
 
     orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
