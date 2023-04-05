@@ -30,7 +30,7 @@ DIR=$(dirname $0)
 . $DIR/download-mongodb.sh
 
 # Load the find_python3 function
-. $DIR/find_python3.sh
+. $DIR/find-python3.sh
 
 PYTHON_BINARY=$(find_python3)
 
