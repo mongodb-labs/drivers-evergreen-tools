@@ -23,7 +23,7 @@ def main():
     provider_info = {
         "JWKSUri": "https://login.windows.net/common/discovery/keys",
         "authNamePrefix": "OIDC_test",
-        "issuer": f"https://sts.windows.net/{tenant_id}",
+        "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": app_id,
         "authorizationClaim": "foo",
