@@ -17,7 +17,6 @@ def callback(client_info, server_info):
         msg = "Failed to acquire IMDS access token: %s" % e
         raise ValueError(msg)
 
-    import pdb; pdb.set_trace()
     if response.status_code != 200:
         msg = "Failed to acquire IMDS access token."
         raise ValueError(msg)
