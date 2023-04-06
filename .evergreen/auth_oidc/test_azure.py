@@ -33,7 +33,7 @@ def callback(client_info, server_info):
     return dict(access_token=data['access_token'])
 
 
-props = dict(request_callback=callback)
+props = dict(request_token_callback=callback)
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
 c.test.test.find_one({})
 c.close()
