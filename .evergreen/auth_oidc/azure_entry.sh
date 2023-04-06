@@ -29,6 +29,7 @@ if [ ! -d mongo-python-driver ]; then
     git clone --branch PYTHON-3460 https://github.com/blink1073/mongo-python-driver
 fi
 cd mongo-python-driver
-pip install -e .
+python setup.py install --no_ext
 pip install requests
-python test_azure.py
+cd ../drivers-evergreen-tools/.evergreen/auth_oidc
+python3 test_azure.py

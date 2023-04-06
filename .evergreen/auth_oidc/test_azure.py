@@ -34,6 +34,6 @@ def callback(client_info, server_info):
 
 
 props = dict(request_callback=callback)
-c = MongoClient('localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
+c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
 c.test.test.find_one({})
 c.close()
