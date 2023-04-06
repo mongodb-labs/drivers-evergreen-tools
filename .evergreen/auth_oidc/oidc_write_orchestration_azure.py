@@ -25,8 +25,8 @@ def main():
         "authNamePrefix": "OIDC_test",
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
-        "audience": app_id,
-        "authorizationClaim": "foo",
+        "audience": f"api://{app_id}",
+        "authorizationClaim": "groups",
 
     }
     providers = json.dumps([provider_info], separators=(',',':'))
