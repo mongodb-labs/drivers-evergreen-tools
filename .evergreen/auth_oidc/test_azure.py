@@ -8,7 +8,7 @@ client_id = os.environ['AZUREOIDC_CLIENTID']
 def callback(client_info, server_info):
     url = "http://169.254.169.254/metadata/identity/oauth2/token"
     url += "?api-version=2018-02-01"
-    url += f"&resource=api:/{app_id}"
+    url += f"&resource=api://{app_id}"
     url += f"&client_id={client_id}"
     headers = { "Metadata": "true", "Accept": "application/json" }
     try:
