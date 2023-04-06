@@ -15,14 +15,14 @@ if [ ! -d $DRIVERS_TOOLS ]; then
     git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
 fi
 
-# TODO: add mongosh install from https://www.mongodb.com/docs/mongodb-shell/install/
+# TODO: add mongosh install from https://www.mongodb.com/docs/mongodb-shell/install/ ?
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 python oidc_write_orchestration_azure.py
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
-mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
+$DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
 
 cd $HOME
 if [ ! -d mongo-python-driver ]; then
