@@ -26,7 +26,7 @@ mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
 
 cd $HOME
 if [ ! -d mongo-python-driver ]; then
-    git clone --branch PYTHON-3460 https://github.com/mongodb/mongo-python-driver
+    git clone --branch PYTHON-3460 https://github.com/blink1073/mongo-python-driver
 fi
 cd mongo-python-driver
 pip install -e .
