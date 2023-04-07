@@ -21,6 +21,7 @@ echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # az vm create also creates a "nic" and "public IP" by default.
 # Use --nic-delete-option 'Delete' to delete the NIC.
 # Specify a name for the public IP to delete later.
+# Specify a name for the Network Security Group (NSG) to delete later.
 # Pipe to /dev/null to hide the output. The output includes tenantId.
 az vm create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
@@ -33,6 +34,7 @@ az vm create \
     --data-disk-delete-option "Delete" \
     --os-disk-delete-option "Delete" \
     --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
+    --nsg "$AZUREKMS_VMNAME-NSG" \
     --assign-identity "[system]" \
     >/dev/null
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
