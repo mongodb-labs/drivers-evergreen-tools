@@ -21,7 +21,6 @@ def main():
 
     # Write the oidc orchestration file.
     provider1_info = {
-        "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test1",
         "issuer": secrets['oidc_issuer_1_uri'],
         "clientId": DEFAULT_CLIENT,
@@ -55,7 +54,6 @@ def main():
 
     provider1_info['matchPattern'] = "test_user1"
     provider2_info = {
-        "JWKSUri": secrets['oidc_jwks_uri'],
         "authNamePrefix": "test2",
         "issuer": secrets['oidc_issuer_2_uri'],
         "clientId": DEFAULT_CLIENT,
