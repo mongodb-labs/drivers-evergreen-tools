@@ -7,7 +7,7 @@ evergreen_config_generator/dist
 .evergreen/auth_aws/creds.json
 .evergreen/auth_oidc/azure/env.sh
 .evergreen/auth_oidc/azure/keyfile
-.evergreen/auth_oidc/azure/kefile.pub
+.evergreen/auth_oidc/azure/keyfile.pub
 # The oidc config files are created as needed
 .evergreen/orchestration/configs/*/auth-oidc.json
 authoidcvenv

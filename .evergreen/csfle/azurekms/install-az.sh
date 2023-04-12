@@ -3,6 +3,21 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+# Check for already installed az
+if command -v az >/dev/null 2>&1; then
+    echo "Azure cli already installed:"
+    az --version
+    exit 0
+fi
+
+# Install az CLI for Darwin
+if [ $(uname -s) == "Darwin" ]; then
+    echo "Install az ... begin"
+    brew install az
+    echo "Install az ... end"
+    exit 0
+fi
+
 # Install az CLI for Debian/Ubuntu.
 # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt#option-2-step-by-step-installation-instructions
 echo "Install az ... begin"

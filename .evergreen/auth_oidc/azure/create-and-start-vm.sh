@@ -41,10 +41,12 @@ export AZUREOKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 python $BASE_PATH/azure/handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
+exit 0
+
 # Create VM.
 . "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREOIDC_VMNAME="$AZUREOIDC_VMNAME"
-echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazurekms-expansions.yml
+echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
 
 # Assign role.
 "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh

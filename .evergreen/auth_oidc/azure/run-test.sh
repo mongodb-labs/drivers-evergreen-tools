@@ -9,7 +9,8 @@ if [ ! -d mongo-python-driver ]; then
     git clone --branch PYTHON-3460 https://github.com/blink1073/mongo-python-driver
 fi
 pushd mongo-python-driver
+. ./activate-authoidcvenv.sh
 python setup.py install --no_ext
 pip install requests
 popd
-python3 test.py
+python test.py

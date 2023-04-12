@@ -1,7 +1,9 @@
-from azure.keyvault.secrets import SecretClient
-from azure.identity import DefaultAzureCredential
 import os
 from base64 import b64decode
+
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+
 
 def main():
     vault_name = os.environ["AZUREOIDC_KEYVAULT"]
@@ -11,6 +13,7 @@ def main():
     client_id = os.environ['AZUREOIDC_CLIENTID']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
+    print('Getting secrets from vault ... begin')
 
     credential = DefaultAzureCredential()
     client = SecretClient(vault_url=vault_uri, credential=credential)
@@ -26,18 +29,15 @@ def main():
         fid.write(f'export AZUREOIDC_AUTHCLAIM={secrets["AUTHCLAIM"]}\n')
         fid.write(f'export AZUREOIDC_CLIENTID={client_id}\n')
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
-
-        # TODO: add to vault
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
 
     with open(private_key_file, 'w') as fid:
-        # TODO: this should be base64 in vault
         fid.write(b64decode(secrets['PRIVATEKEY']).decode('utf8'))
 
     with open(public_key_file, 'w') as fid:
-        # TODO: this should be base64 in vault
         fid.write(b64decode(secrets['PUBLICKEY']).decode('utf8'))
 
+    print('Getting secrets from vault ... end')
     return secrets
 
 

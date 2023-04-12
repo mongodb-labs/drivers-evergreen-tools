@@ -13,8 +13,10 @@ if [ -z "$AZUREKMS_CLIENTID" -o \
     exit 1
 fi
 
+echo "Log in to azure ... begin"
 az login --service-principal \
     --username "$AZUREKMS_CLIENTID" \
     --password "$AZUREKMS_SECRET" \
     --tenant "$AZUREKMS_TENANTID" \
     >/dev/null
+echo "Log in to azure ... end"
