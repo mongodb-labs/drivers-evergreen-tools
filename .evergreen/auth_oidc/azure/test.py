@@ -18,6 +18,7 @@ def callback(client_info, server_info):
         raise ValueError(msg)
 
     if response.status_code != 200:
+        print(response.text)
         msg = "Failed to acquire IMDS access token."
         raise ValueError(msg)
     try:

@@ -10,7 +10,7 @@ assert(admin.auth("bob", "pwd123"));
 console.log("Setting up User");
 const authorizationPrefix = process.env['OIDC_AUTH_PREFIX'] || 'test1';
 const authorizationClaim = process.env['OIDC_AUTH_CLAIM'] || 'readWrite';
-const roleName = authorizationClaim + '/' + authorizationPrefix;
+const roleName = authorizationPrefix + '/' + authorizationClaim;
 
 // Add the roles.
 admin.runCommand({createRole: roleName, roles:[{role: 'readWrite', db: 'test'}], privileges: []});
