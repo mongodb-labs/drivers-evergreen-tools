@@ -42,3 +42,9 @@ AZUREKMS_DST="./" \
     "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./setup-azure-vm.sh" \
     "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+# Start mongodb.
+AZUREKMS_SRC="$AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/start-mongodb.sh" \
+AZUREKMS_DST="./" \
+    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+AZUREKMS_CMD="./start-mongodb.sh" \
+    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh

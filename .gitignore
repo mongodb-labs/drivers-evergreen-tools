@@ -5,6 +5,7 @@ evergreen_config_generator/dist
 # The credentials files should not be checked in to version control.
 .evergreen/auth_aws/aws_e2e_setup.json
 .evergreen/auth_aws/creds.json
+.evergreen/auth_oidc/azure/env.sh
 # The oidc config files are created as needed
 .evergreen/orchestration/configs/*/auth-oidc.json
 authoidcvenv

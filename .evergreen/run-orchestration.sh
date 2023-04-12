@@ -29,11 +29,6 @@ DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries
 . $DIR/download-mongodb.sh
 
-# Load the find_python3 function
-. $DIR/find-python3.sh
-
-PYTHON_BINARY=$(find_python3)
-
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
     get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
@@ -88,24 +83,6 @@ fi
 
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
-if [ "$ENABLE_featureFlagFLE2ProtocolVersion2" = "ON" -a "$MONGODB_VERSION" = "latest" ]; then
-  # This is a temporary workaround until featureFlagFLE2ProtocolVersion2 is enabled by default in SERVER-69563. Once latest server builds have SERVER-69563, this if block may be removed.
-  # DRIVERS-2590 tracks removal of this workaround.
-  echo "SERVER-69563: rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... begin"
-  # Only attempt to enable the feature flag if the server is 7.0.0. The 'latest' builds may not be updated to 7.0 yet.
-  ACTUAL_MONGODB_VERSION=$($DRIVERS_TOOLS/mongodb/bin/mongod --version | head -1 | awk '{print $3}')
-  case $ACTUAL_MONGODB_VERSION in
-  v7*)
-   $PYTHON_BINARY $DIR/orchestration/setfle2parameter.py $ORCHESTRATION_FILE > $ORCHESTRATION_FILE.modified
-   mv $ORCHESTRATION_FILE.modified $ORCHESTRATION_FILE
-   ;;
-  *)
-   echo "mongod version $ACTUAL_MONGODB_VERSION is not v7. Not enabling featureFlagFLE2ProtocolVersion2"
-   ;;
-  esac
-  echo "SERVER-69563: rewrite orchestration config to add setParameter featureFlagFLE2ProtocolVersion2=1 ... end"
-fi
-
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
@@ -120,7 +97,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
   exit 1
 fi
 cat tmp.json
-URI=$($PYTHON_BINARY -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$(python -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"

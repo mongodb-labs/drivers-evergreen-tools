@@ -33,10 +33,10 @@ fi
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
-python oidc_write_orchestration_azure.py
+python oidc_write_orchestration.py --azure
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
-$DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc_azure.js
+$DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
 
 # Run the Python Driver Test
 cd $HOME

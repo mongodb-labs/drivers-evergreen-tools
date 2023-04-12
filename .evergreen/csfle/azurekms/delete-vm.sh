@@ -24,3 +24,9 @@ az network public-ip delete \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     -n "$AZUREKMS_VMNAME-PUBLIC-IP"
 echo "Delete public IP $AZUREKMS_VMNAME-PUBLIC-IP ... end"
+
+echo "Delete Network Security Group $AZUREKMS_VMNAME-NSG ... begin"
+az network nsg delete \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    -n "$AZUREKMS_VMNAME-NSG"
+echo "Delete Network Security Group $AZUREKMS_VMNAME-NSG ... end"
