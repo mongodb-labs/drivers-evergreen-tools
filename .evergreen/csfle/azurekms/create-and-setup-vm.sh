@@ -35,7 +35,7 @@ fi
 AZ_VERSION=$(az version -o json | python -c "import sys, json; print(json.load(sys.stdin)['azure-cli'])" | tr -d '\r\n')
 HAS_REQUIRED_AZ=$(python -c "verstr='$AZ_VERSION'; ver=[int(x) for x in verstr.split('.')]; print ('YES' if ver[0] > 2 or (ver[0] == 2 and ver[1] >= 25) else 'NO')" | tr -d '\r\n')
 if [ "$HAS_REQUIRED_AZ" = "NO" ]; then
-    echo "Detected az version $AZ_VERSION but need version >= 2.25.0"
+    echo "Detected az version $AZ_VERSION but need version >= 2.25.0. See https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/csfle/azurekms/README.md for supported distros"
     exit 1
 fi
 
