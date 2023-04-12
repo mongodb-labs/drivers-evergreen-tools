@@ -32,10 +32,11 @@ if ! command -v az &> /dev/null; then
     echo "az not detected. See https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/csfle/azurekms/README.md for supported distros"
     exit 1
 fi
-AZ_VERSION=$(az version -o json | python -c "import sys, json; print(json.load(sys.stdin)['azure-cli'])" | tr -d '\r\n')
-HAS_REQUIRED_AZ=$(python -c "verstr='$AZ_VERSION'; ver=[int(x) for x in verstr.split('.')]; print ('YES' if ver[0] > 2 or (ver[0] == 2 and ver[1] >= 25) else 'NO')" | tr -d '\r\n')
-if [ "$HAS_REQUIRED_AZ" = "NO" ]; then
-    echo "Detected az version $AZ_VERSION but need version >= 2.25.0. See https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/csfle/azurekms/README.md for supported distros"
+EXPECTED_VERSION_NEWER="2.25.0"
+ACTUAL_VERSION="$(az version -o tsv | awk '{print $1}')"
+if [[ "$(printf "$ACTUAL_VERSION\n$EXPECTED_VERSION_NEWER\n" | sort -rV | head -n 1)" != "$ACTUAL_VERSION" ]]; then
+    # az is not new enough.
+    echo "Detected az version $ACTUAL_VERSION but need version >= 2.25.0. See https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/csfle/azurekms/README.md for supported distros"
     exit 1
 fi
 
