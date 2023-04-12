@@ -11,6 +11,7 @@ console.log("Setting up User");
 const authorizationPrefix = process.env['OIDC_AUTH_PREFIX'] || 'test1';
 const authorizationClaim = process.env['OIDC_AUTH_CLAIM'] || 'readWrite';
 const roleName = authorizationPrefix + '/' + authorizationClaim;
+console.log('adding role:', roleName);
 
 // Add the roles.
 admin.runCommand({createRole: roleName, roles:[{role: 'readWrite', db: 'test'}], privileges: []});
