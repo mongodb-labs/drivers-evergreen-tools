@@ -31,11 +31,17 @@ def main():
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
 
+    if os.path.exists(private_key_file):
+        os.remove(private_key_file)
     with open(private_key_file, 'w') as fid:
         fid.write(b64decode(secrets['PRIVATEKEY']).decode('utf8'))
+    os.chmod(private_key_file, 0o400)
 
+    if os.path.exists(public_key_file):
+        os.remove(public_key_file)
     with open(public_key_file, 'w') as fid:
         fid.write(b64decode(secrets['PUBLICKEY']).decode('utf8'))
+    os.chmod(public_key_file, 0o400)
 
     print('Getting secrets from vault ... end')
     return secrets

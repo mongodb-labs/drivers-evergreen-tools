@@ -28,7 +28,7 @@ export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
 export AZUREKMS_SECRET=$AZUREOIDC_SECRET
 export AZUREOIDC_ENVPATH="$BASE_PATH/azure/env.sh"
-export AZUREOKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
+export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 
 # Install az.
 "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/install-az.sh
@@ -41,41 +41,40 @@ export AZUREOKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 python $BASE_PATH/azure/handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
-exit 0
-
 # Create VM.
 . "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
-export AZUREOIDC_VMNAME="$AZUREOIDC_VMNAME"
+export AZUREOIDC_VMNAME="$AZUREKMS_VMNAME"
+export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
 echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
 
 # Assign role.
-"$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
+#"$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
 
 # Install dependencies.
-AZUREOIDC_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
-AZUREOIDC_DST="./" \
+AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
+AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREOIDC_CMD="./setup-azure-vm.sh" \
+AZUREKMS_CMD="./setup-azure-vm.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Write the env variables file
-AZUREOIDC_SRC=$AZUREOIDC_ENVPATH \
-AZUREOIDC_DST="./" \
+AZUREKMS_SRC=$AZUREOIDC_ENVPATH \
+AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 
 # Start mongodb.
-AZUREOIDC_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/start-mongodb.sh" \
-AZUREOIDC_DST="./" \
+AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/start-mongodb.sh" \
+AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREOIDC_CMD="./start-mongodb.sh" \
+AZUREKMS_CMD="./start-mongodb.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
-AZUREOIDC_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/test.py" \
-AZUREOIDC_DST="./" \
+AZUREKMD_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/test.py" \
+AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREOIDC_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-test.sh" \
-AZUREOIDC_DST="./" \
+AZUREKMD_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-test.sh" \
+AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREOIDC_CMD="./run-test.sh" \
+AZUREKMS_CMD="./run-test.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh

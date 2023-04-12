@@ -16,7 +16,7 @@ def azure():
     client_id = os.environ['AZUREOIDC_TOKENCLIENT']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     app_id = os.environ['AZUREOIDC_CLIENTID']
-    auth_name_prefix = os.environ['OIDC_AUTH_PREFIX']
+    auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
 
     print("Bootstrapping OIDC config")
 

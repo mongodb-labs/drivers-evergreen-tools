@@ -15,7 +15,7 @@ export MONGO_ORCHESTRATION_HOME=$HOME
 export NO_IPV6=${NO_IPV6:-""}
 
 if [ ! -d $DRIVERS_TOOLS ]; then
-    git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
+    git clone --branch DRIVERS-2416 https://github.com/blink1073/drivers-evergreen-tools.git $DRIVERS_TOOLS
 fi
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
