@@ -20,7 +20,6 @@ def azure():
 
     print("Bootstrapping OIDC config")
 
-
     # Write the oidc orchestration file.
     provider_info = {
         "authNamePrefix": auth_name_prefix,

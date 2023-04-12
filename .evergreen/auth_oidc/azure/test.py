@@ -2,8 +2,8 @@ from pymongo import MongoClient
 import requests
 import os
 
-app_id = os.environ['AZUREOIDC_APPID']
-client_id = os.environ['AZUREOIDC_CLIENTID']
+app_id = os.environ['AZUREOIDC_CLIENTID']
+client_id = os.environ['AZUREOIDC_TOKENCLIENT']
 
 def callback(client_info, server_info):
     url = "http://169.254.169.254/metadata/identity/oauth2/token"

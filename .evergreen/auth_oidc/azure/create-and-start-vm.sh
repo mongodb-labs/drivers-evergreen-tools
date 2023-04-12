@@ -8,32 +8,27 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ] || \
    [ -z "${AZUREOIDC_TENANTID:-}" ] || \
    [ -z "${AZUREOIDC_SECRET:-}" ] || \
    [ -z "${AZUREOIDC_DRIVERS_TOOLS:-}" ] || \
-   [ -z "${AZUREOIDC_RESOURCEGROUP:-}" ] || \
-   [ -z "${AZUREOIDC_PUBLICKEYPATH:-}" ] || \
-   [ -z "${AZUREOIDC_PRIVATEKEYPATH:-}" ] || \
-   [ -z "${AZUREOIDC_AUTH_CLAIM:-}" ] || \
-   [ -z "${AZUREOIDC_TOKENCLIENT:-}" ]; then
+   [ -z "${AZUREOIDC_KEYVAULT:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREOIDC_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
     echo " AZUREOIDC_CLIENTID"
     echo " AZUREOIDC_TENANTID"
     echo " AZUREOIDC_SECRET"
     echo " AZUREOIDC_DRIVERS_TOOLS"
-    echo " AZUREOIDC_PUBLICKEYPATH"
-    echo " AZUREOIDC_PRIVATEKEYPATH"
-    echo " AZUREOIDC_AUTH_CLAIM"
-    echo " AZUREOIDC_TOKENCLIENT"
+    echo " AZUREOIDC_KEYVAULT"
     exit 1
 fi
 
+# TODO: Get resource group, public key path, private key path from vault
+
 # Translate env variables for KMS scripts.
-export AZUREKMS_CLIENTID=AZUREOIDC_CLIENTID
-export AZUREKMS_VMNAME_PREFIX=AZUREOIDC_VMNAME_PREFIX
-export AZUREKMS_TENANTID=AZUREOIDC_TENANTID
-export AZUREKMS_SECRET=AZUREOIDC_SECRET
-export AZUREKMS_RESOURCE_GROUP=AZUREOIDC_RESOURCEGROUP
-export AZUREKMS_PUBLICKEYPATH=AZUREOIDC_PUBLICKEYPATH
-export AZUREKMS_PRIVATEKEYPATH=AZUREOIDC_PRIVATEKEYPATH
+export AZUREKMS_CLIENTID=$AZUREOIDC_CLIENTID
+export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
+export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
+export AZUREKMS_SECRET=$AZUREOIDC_SECRET
+export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
+export AZUREKMS_PUBLICKEYPATH=$AZUREOIDC_PUBLICKEYPATH
+export AZUREKMS_PRIVATEKEYPATH=$AZUREOIDC_PRIVATEKEYPATH
 
 # Set defaults.
 export AZUREOKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
@@ -55,6 +50,7 @@ AZUREOIDC_CMD="./setup-azure-vm.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Write the env variables file
+# TODO: these will be in the vault
 AZUREOIDC_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/env.sh"
 cat <<EOF > $AZUREOIDC_SRC
    export AZUREOIDC_CLIENTID=${AZUREOIDC_CLIENTID}
