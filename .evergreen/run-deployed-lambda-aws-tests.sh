@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o errexit  # Exit the script with error if any of the commands fail
 
 # Explanation of required environment variables:
 #
@@ -163,6 +164,21 @@ get_lambda_function_arn ()
   export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN
 }
 
+delete_lambda_function ()
+{
+  echo "Deleting Lambda Function..."
+  sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
+}
+
+cleanup ()
+{
+  echo "Cleaning up..."
+  delete_cluster
+  delete_lambda_function
+}
+
+trap cleanup EXIT SIGHUP
+
 cd "${TEST_LAMBDA_DIRECTORY}"
 
 create_cluster
@@ -190,6 +206,4 @@ sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json
 
-sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
-
-delete_cluster
+cleanup
