@@ -90,6 +90,7 @@ create_cluster ()
 # Delete the cluster.
 delete_cluster ()
 {
+  echo "Deleting Atlas Cluster..."
   curl \
     --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
     -X DELETE \
@@ -172,8 +173,8 @@ delete_lambda_function ()
 
 cleanup ()
 {
-  echo "Cleaning up..."
   delete_cluster
+
   delete_lambda_function
 }
 
