@@ -653,31 +653,31 @@ download_and_extract ()
    fi
 
    # Deprecated: this will be removed once drivers have updated to mongosh
-   if [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
-      # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
-      # Some test scripts use the mongo shell for setup.
-      # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
-      echo "Legacy 'mongo' shell not detected."
-      echo "Download legacy shell from 5.0 ... begin"
-      # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
-      MONGODB50_DOWNLOAD_URL=$(
-         get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
-         echo $MONGODB_DOWNLOAD_URL
-      )
+   # if [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+   #    # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
+   #    # Some test scripts use the mongo shell for setup.
+   #    # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
+   #    echo "Legacy 'mongo' shell not detected."
+   #    echo "Download legacy shell from 5.0 ... begin"
+   #    # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
+   #    MONGODB50_DOWNLOAD_URL=$(
+   #       get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
+   #       echo $MONGODB_DOWNLOAD_URL
+   #    )
 
-      SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
-      mkdir $DRIVERS_TOOLS/legacy-shell-download
-      DRIVERS_TOOLS=$DRIVERS_TOOLS/legacy-shell-download
-      download_and_extract_package "$MONGODB50_DOWNLOAD_URL" "$EXTRACT"
-      if [ -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
-         cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
-      elif [ -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
-         cp $DRIVERS_TOOLS/mongodb/bin/mongo.exe $SAVED_DRIVERS_TOOLS/mongodb/bin
-      fi
-      DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
-      rm -rf $DRIVERS_TOOLS/legacy-shell-download
-      echo "Download legacy shell from 5.0 ... end"
-   fi
+   #    SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
+   #    mkdir $DRIVERS_TOOLS/legacy-shell-download
+   #    DRIVERS_TOOLS=$DRIVERS_TOOLS/legacy-shell-download
+   #    download_and_extract_package "$MONGODB50_DOWNLOAD_URL" "$EXTRACT"
+   #    if [ -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
+   #       cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
+   #    elif [ -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+   #       cp $DRIVERS_TOOLS/mongodb/bin/mongo.exe $SAVED_DRIVERS_TOOLS/mongodb/bin
+   #    fi
+   #    DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
+   #    rm -rf $DRIVERS_TOOLS/legacy-shell-download
+   #    echo "Download legacy shell from 5.0 ... end"
+   # fi
 }
 
 # download_and_extract_crypt_shared downloads and extracts a crypt_shared package into the current directory.
