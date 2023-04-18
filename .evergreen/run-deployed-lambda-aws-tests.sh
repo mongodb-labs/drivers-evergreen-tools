@@ -205,5 +205,3 @@ echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json
-
-cleanup
