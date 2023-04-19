@@ -79,23 +79,22 @@ EOF
 create_cluster ()
 {
   echo "Creating new Atlas Cluster..."
-  echo $(curl \
+  curl \
     --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
     -d "${CREATE_CLUSTER_JSON}" \
     -H 'Content-Type: application/json' \
     -X POST \
     "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true"
-  )
 }
 
 # Delete the cluster.
 delete_cluster ()
 {
-  echo $(curl \
+  echo "Deleting Atlas Cluster..."
+  curl \
     --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
     -X DELETE \
     "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}?pretty=true"
-  )
 }
 
 # Check is cluster has a srv address, and assume once it does, it can be used.
@@ -135,11 +134,10 @@ check_cluster ()
 restart_cluster_primary ()
 {
   echo "Testing Atlas primary restart..."
-  echo $(curl \
+  curl \
     --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
     -X POST \
     "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}/restartPrimaries"
-  )
 }
 
 # Deploys a lambda function to the set stack name.
@@ -167,6 +165,21 @@ get_lambda_function_arn ()
   export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN
 }
 
+delete_lambda_function ()
+{
+  echo "Deleting Lambda Function..."
+  sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
+}
+
+cleanup ()
+{
+  delete_cluster
+
+  delete_lambda_function
+}
+
+trap cleanup EXIT SIGHUP
+
 cd "${TEST_LAMBDA_DIRECTORY}"
 
 create_cluster
@@ -193,7 +206,3 @@ echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json
-
-sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
-
-delete_cluster
