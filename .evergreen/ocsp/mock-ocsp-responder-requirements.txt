@@ -1,6 +1,6 @@
 asn1crypto==1.4.0
 click==7.1.2
-flask==1.1.4
+flask==2.3.2
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==2.0.1
