@@ -45,8 +45,7 @@ def main():
                 "setParameter": {
                     "enableTestCommands": 1,
                     "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                    "oidcIdentityProviders": providers,
-                    "featureFlagOIDC": True
+                    "oidcIdentityProviders": providers
                 }
             }
         }]
@@ -72,8 +71,7 @@ def main():
             "setParameter": {
                 "enableTestCommands": 1,
                 "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                "oidcIdentityProviders": providers,
-                "featureFlagOIDC": True
+                "oidcIdentityProviders": providers
             }
         },
         "rsParams": {
