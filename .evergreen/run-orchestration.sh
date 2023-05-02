@@ -36,7 +36,9 @@ else
   # Even though we have the MONGODB_DOWNLOAD_URL, we still call this to get the proper EXTRACT variable
   get_mongodb_download_url_for "$DISTRO"
 fi
-download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
+if [ -z "$MONGODB_SKIP_DOWNLOAD" ]; then
+  download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
+fi
 
 DL_END=$(date +%s)
 MO_START=$(date +%s)
@@ -97,7 +99,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
   exit 1
 fi
 cat tmp.json
-URI=$(python -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$(python3 -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "Cluster URI: $URI"
