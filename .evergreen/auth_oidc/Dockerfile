@@ -23,17 +23,16 @@ ARG AWS_SECRET_ACCESS_KEY=""
 ARG AWS_ACCESS_KEY_ID=""
 ARG AWS_ROLE_ARN=""
 
-# Install drivers-evergreen-tools and write orchestration file.
+# Install drivers-evergreen-tools and binaries, and write orchestration file.
 SHELL ["/bin/bash", "-c"]
 RUN export DRIVERS_TOOLS=/home/root/drivers-evergreen-tools && \
-git clone --branch https://github.com/blink1073/drivers-evergreen-tools.git $DRIVERS_TOOLS && \
+git clone --branch DRIVERS-2415-8 https://github.com/blink1073/drivers-evergreen-tools.git $DRIVERS_TOOLS && \
 # Download mongodb and mongosh.
 export MONGODB_VERSION=latest && \
 cd $DRIVERS_TOOLS/.evergreen && \
 . ./download-mongodb.sh && \
 get_distro && \
 get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION" && \
-get_mongodb_download_url_for "$DISTRO" && \
 download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH" && \
 # Write orchestration file.
 cd ./auth_oidc && \

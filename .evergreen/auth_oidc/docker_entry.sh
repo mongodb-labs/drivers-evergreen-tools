@@ -11,7 +11,7 @@ export PROJECT_ORCHESTRATION_HOME=$DRIVERS_TOOLS/.evergreen/orchestration
 export MONGO_ORCHESTRATION_HOME=$HOME
 export SKIP_LEGACY_SHELL=1
 export SKIP_CRYPT_SHARED=1
-export SKIP_MONGODB_DOWNLOAD=1
+export MONGODB_SKIP_DOWNLOAD=1
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 $DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
