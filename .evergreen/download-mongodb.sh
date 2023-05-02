@@ -52,14 +52,14 @@ get_mongodb_download_url_for ()
    _DISTRO=$1
    _VERSION=$2
 
+   VERSION_MONGOSH="1.8.1"
    # Set VERSION_RAPID to the latest rapid release each quarter.
-   VERSION_RAPID="6.2.1"
-   VERSION_MONGOSH="1.6.2"
+   VERSION_RAPID="6.3.1"
    VERSION_70="7.0.0-rc0"
    VERSION_60_LATEST="v6.0-latest"
    VERSION_60="6.0.5"
-   VERSION_50="5.0.15"
-   VERSION_44="4.4.20"
+   VERSION_50="5.0.17"
+   VERSION_44="4.4.21"
    VERSION_42="4.2.24"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
@@ -666,7 +666,7 @@ download_and_extract ()
    fi
 
    # Deprecated: this will be removed once drivers have updated to mongosh
-   if [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+   if [ -z "${SKIP_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
       # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
