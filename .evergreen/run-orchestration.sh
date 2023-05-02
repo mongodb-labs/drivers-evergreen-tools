@@ -31,6 +31,7 @@ DIR=$(dirname $0)
 
 get_distro
 if [ -z "$MONGODB_SKIP_DOWNLOAD" ]; then
+  DL_START=$(date +%s)
   if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
       get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
   else
@@ -38,6 +39,9 @@ if [ -z "$MONGODB_SKIP_DOWNLOAD" ]; then
     get_mongodb_download_url_for "$DISTRO"
   fi
   download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
+else
+  # support DL_ELAPSED
+  sleep 1
 fi
 
 DL_END=$(date +%s)
@@ -100,9 +104,10 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
 fi
 cat tmp.json
 URI=$(python3 -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
-echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
+echo '\nMONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
-echo "Cluster URI: $URI"
+echo "\nCluster URI: $URI"
+
 # Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
 # server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
 if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
