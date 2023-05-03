@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV DRIVERS_TOOLS /home/root/drivers-evergreen-tools
+ENV HOME /home/root
+ENV DRIVERS_TOOLS $HOME/drivers-evergreen-tools
 
 ARG AWS_SECRET_ACCESS_KEY=""
 ARG AWS_ACCESS_KEY_ID=""
@@ -47,6 +48,6 @@ export AWS_ROLE_ARN=${AWS_ROLE_ARN} && \
 export NO_IPV6=${NO_IPV6} && \
 python oidc_write_orchestration.py
 
-COPY ./.evergreen/auth_oidc/docker_entry.sh /home/root/docker_entry.sh
+COPY ./.evergreen/auth_oidc/docker_entry.sh $HOME/docker_entry.sh
 
 ENTRYPOINT ["/bin/bash", "/home/root/docker_entry.sh"]

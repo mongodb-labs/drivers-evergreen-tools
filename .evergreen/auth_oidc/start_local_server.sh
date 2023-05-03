@@ -11,5 +11,5 @@ if [[ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACC
 fi
 
 cd ../..
-docker build -t oidc-test --build-arg AWS_ROLE_ARN=${AWS_ROLE_ARN} --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --build-arg NO_IPV6=true -f .evergreen/auth_oidc/Dockerfile .
-docker run -it -p 27017:27017 -p 27018:27018 -e HOME=/home/root oidc-test
+docker build -t drivers-oidc --build-arg AWS_ROLE_ARN=${AWS_ROLE_ARN} --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} --build-arg NO_IPV6=true -f .evergreen/auth_oidc/Dockerfile .
+docker run -it -p 27017:27017 -p 27018:27018 drivers-oidc

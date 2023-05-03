@@ -39,3 +39,13 @@ To set up the server auth roles, run `mongosh setup_oidc.js`.
 Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `/tmp/tokens/test_user1` or `/tmp/tokens/test_user2` as desired.
 
 The token in `/tmp/tokens/test_user1_expires` can be used to test expired credentials.
+
+
+## ECR
+
+Set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` variables.
+
+Run `bash ./ecr_push.sh` to build and push the latest.
+
+Run `docker run -p 27017:27017 -p 27018:27018  857654397073.dkr.ecr.us-east-1.amazonaws.com/drivers-oidc:latest` to run
+the image locally.

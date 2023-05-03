@@ -3,6 +3,7 @@
 # Entry point for Dockerfile for launching an oidc-enabled server.
 #
 set -eux
+export HOME=/home/root
 export MONGODB_VERSION=latest
 export TOPOLOGY=replica_set
 export ORCHESTRATION_FILE=auth-oidc.json
