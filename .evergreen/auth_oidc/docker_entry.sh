@@ -14,6 +14,5 @@ export MONGODB_SKIP_DOWNLOAD=1
 export SKIP_CRYPT_SHARED=1
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
-echo "here I am"
 $DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
 tail -f $MONGO_ORCHESTRATION_HOME/server.log
