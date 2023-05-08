@@ -23,7 +23,7 @@ function getAssumeCredentials() {
         ` -u lib/aws_assume_role.py --role_name=${role_name} > creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert.eq(ret, 0, "Failed to assume role on the current machine");
+    assert_eq(ret, 0, "Failed to assume role on the current machine");
 
     const result = readFile("creds.json");
     try {

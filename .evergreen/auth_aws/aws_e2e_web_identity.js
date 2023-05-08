@@ -24,7 +24,7 @@ function unAssignInstanceProfile() {
         return false;
     }
 
-    assert.eq(ret, 0, "Failed to assign an instance profile to the current machine");
+    assert_eq(ret, 0, "Failed to assign an instance profile to the current machine");
     return true;
 }
 
@@ -45,7 +45,7 @@ function writeWebTokenFile() {
         " -u lib/aws_handle_oidc_creds.py token > /dev/null"
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert.eq(ret, 0, "Failed to write the web token");
+    assert_eq(ret, 0, "Failed to write the web token");
     return true;
 }
 
@@ -64,7 +64,7 @@ function getWebIdentityCredentials() {
         ` -u lib/aws_assume_web_role.py > creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert.eq(ret, 0, "Failed to assume role on the current machine");
+    assert_eq(ret, 0, "Failed to assume role on the current machine");
 
     const result = cat("creds.json");
     try {

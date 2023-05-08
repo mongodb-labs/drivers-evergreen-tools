@@ -25,7 +25,7 @@ const smoke = runMongoProgram("mongo",
                               '$external',
                               "--eval",
                               "1");
-assert.eq(smoke, 0, "Could not auth with smoke user");
+assert_eq(smoke, 0, "Could not auth with smoke user");
 
 // Try the auth function
 const testConn = new Mongo();

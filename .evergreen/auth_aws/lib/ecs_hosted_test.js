@@ -28,7 +28,7 @@ const program = "/root/src/.evergreen/run-mongodb-aws-ecs-test.sh";
 
 // Try the command line
 const smoke = runProgram(program, uri);
-assert.eq(smoke, 0, "Driver .evergreen/run-mongodb-aws-ecs-test.sh script failed");
+assert_eq(smoke, 0, "Driver .evergreen/run-mongodb-aws-ecs-test.sh script failed");
 
 // Try the auth function
 const testConn = new Mongo(conn.host);
