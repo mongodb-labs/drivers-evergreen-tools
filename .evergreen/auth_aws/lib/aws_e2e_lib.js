@@ -4,10 +4,21 @@ if (typeof jsTestLog == 'undefined') {
     var jsTestLog = console.error;
 }
 
+
+function readFile(fileName) {
+    if (typeof cat != 'undefined') {
+        return cat(fileName);
+    }
+    const fs = require('fs');
+    return fs.readFileSync(fileName, 'utf8');
+}
+
+
+
 function readSetupJson() {
     let result;
     try {
-        result = cat("aws_e2e_setup.json");
+        result = readFile("aws_e2e_setup.json");
     } catch (e) {
         jsTestLog(
             "Failed to parse read aws_e2e_setup.json. See evergreen.yml for how to generate this file which contains evergreen secrets.");
