@@ -26,6 +26,7 @@ def main():
         "clientId": DEFAULT_CLIENT,
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "foo",
+        "requestScopes": ["fizz", "buzz"],
 
     }
     providers = json.dumps([provider1_info], separators=(',',':'))
@@ -59,6 +60,7 @@ def main():
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "bar",
         "matchPattern": "test_user2",
+        "requestScopes": ["foo", "bar"],
     }
     providers = [provider1_info, provider2_info]
     providers = json.dumps(providers, separators=(',',':'))
