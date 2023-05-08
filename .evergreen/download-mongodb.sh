@@ -621,7 +621,7 @@ download_and_extract_package ()
    EXTRACT=$2
 
    cd $DRIVERS_TOOLS
-   curl --retry 8 -sS $MONGODB_DOWNLOAD_URL --max-time 300 --output mongodb-binaries.tgz
+   curl --retry 3 --retry-all-errors -sS $MONGODB_DOWNLOAD_URL --max-time 300 --output mongodb-binaries.tgz
    $EXTRACT mongodb-binaries.tgz
 
    rm -f mongodb-binaries.tgz
@@ -638,7 +638,7 @@ download_and_extract_mongosh ()
    EXTRACT_MONGOSH=$2
 
    cd $DRIVERS_TOOLS
-   curl --retry 8 -sS $MONGOSH_DOWNLOAD_URL --max-time 300 --output mongosh.tgz
+   curl --retry 3 --retry-all-errors -sS $MONGOSH_DOWNLOAD_URL --max-time 300 --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
@@ -702,7 +702,7 @@ download_and_extract_crypt_shared ()
    __CRYPT_SHARED_LIB_PATH=${3:-CRYPT_SHARED_LIB_PATH}
    mkdir crypt_shared_download
    cd crypt_shared_download
-   curl --retry 8 -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
+   curl --retry 3 --retry-all-errors -sS $MONGO_CRYPT_SHARED_DOWNLOAD_URL --max-time 300 --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
 
    LIBRARY_NAME="mongo_crypt_v1"
