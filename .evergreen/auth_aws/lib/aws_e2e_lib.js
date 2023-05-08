@@ -20,7 +20,7 @@ function startMongoProgram(opts) {
         return waitProgram(pid);
     }
     const childProcess = require('child_process');
-    return childProcess.execSync(opts.args, { env: opts.env });
+    return childProcess.execSync(opts.args.join(' '), { env: opts.env });
 }
 
 
