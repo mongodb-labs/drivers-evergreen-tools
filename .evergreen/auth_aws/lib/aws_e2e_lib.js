@@ -2,6 +2,10 @@
 // Shim for supporting mongo and mongosh.
 if (typeof jsTestLog == 'undefined') {
     var jsTestLog = console.error;
+
+    function _isWindows() {
+        return process.platform == 'win32';
+    }
 }
 
 
