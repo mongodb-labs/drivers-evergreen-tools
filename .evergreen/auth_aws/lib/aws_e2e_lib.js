@@ -14,6 +14,16 @@ function isWindows() {
 }
 
 
+function startMongoProgram(opts) {
+    if (typeof _startMongoProgram != 'undefined') {
+        pid = _startMongoProgram(opts);
+        return waitProgram(pid);
+    }
+    const childProcess = require('child_process');
+    return childProcess.execSync(opts.args, { env: opts.env });
+}
+
+
 
 function readFile(fileName) {
     if (typeof cat != 'undefined') {
@@ -44,8 +54,7 @@ function readSetupJson() {
 }
 
 function runWithEnv(args, env) {
-    const pid = _startMongoProgram({args: args, env: env});
-    return waitProgram(pid);
+    return startMongoProgram({args: args, env: env});
 }
 
 function runShellCmdWithEnv(argStr, env) {
