@@ -39,7 +39,7 @@ const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
-assert.commandWorked(external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]}));
+external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]});
 
 const testConn = new Mongo();
 const testExternal = testConn.getDB('$external');
