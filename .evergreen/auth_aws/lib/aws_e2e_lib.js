@@ -3,10 +3,16 @@
 if (typeof jsTestLog == 'undefined') {
     var jsTestLog = console.error;
 
-    function _isWindows() {
+
+}
+
+function isWindows() {
+    if (typeof _isWindows == 'undefined') {
         return process.platform == 'win32';
     }
+    return _isWindows()
 }
+
 
 
 function readFile(fileName) {
@@ -43,7 +49,7 @@ function runWithEnv(args, env) {
 }
 
 function runShellCmdWithEnv(argStr, env) {
-    if (_isWindows()) {
+    if (isWindows()) {
         return runWithEnv(['cmd.exe', '/c', argStr], env);
     } else {
         return runWithEnv(['/bin/sh', '-c', argStr], env);
@@ -51,7 +57,7 @@ function runShellCmdWithEnv(argStr, env) {
 }
 
 function getPython3Binary() {
-    if (_isWindows()) {
+    if (isWindows()) {
         return "python.exe";
     }
 
