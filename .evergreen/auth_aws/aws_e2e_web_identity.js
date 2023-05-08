@@ -70,7 +70,7 @@ function getWebIdentityCredentials() {
     try {
         return JSON.parse(result);
     } catch (e) {
-        console.error("Failed to parse: " + result);
+        jsTestLog("Failed to parse: " + result);
         throw e;
     }
 }

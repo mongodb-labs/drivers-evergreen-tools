@@ -1,7 +1,7 @@
 
 // Shim for supporting mongo and mongosh.
 if (typeof jsTestLog == 'undefined') {
-    jsTestLog = console.error
+    var jsTestLog = console.error;
 }
 
 function readSetupJson() {
