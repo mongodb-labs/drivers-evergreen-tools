@@ -57,7 +57,7 @@ get_mongodb_download_url_for ()
    VERSION_RAPID="6.3.1"
    VERSION_70="7.0.0-rc0"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.5"
+   VERSION_60="6.0.6"
    VERSION_50="5.0.17"
    VERSION_44="4.4.21"
    VERSION_42="4.2.24"
