@@ -8,6 +8,8 @@ import json
 import sys
 import subprocess
 from pymongo import MongoClient
+from urllib.parse import quote_plus
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -33,8 +35,9 @@ def create_user(user, kwargs):
     db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
     client.close()
 
+    # Verify access.
     client = MongoClient(authMechanism='MONGODB-AWS', **kwargs)
-    client.aws.test.find_one({})
+    client.aws.command('count', 'test')
     client.close()
 
 
@@ -50,7 +53,8 @@ def setup_assume_role():
     creds = json.loads(creds)
 
     # Create the user.
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{creds['SessionToken']}")
+    token = quote_plus(creds['SessionToken'])
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
     create_user(ASSUMED_ROLE, kwargs)
 
 
@@ -119,7 +123,8 @@ def setup_web_identity():
     creds = json.loads(creds)
 
     # Create the user.
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{creds['SessionToken']}")
+    token = quote_plus(creds['SessionToken'])
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
     create_user(ASSUMED_WEB_ROLE, kwargs)
 
 
