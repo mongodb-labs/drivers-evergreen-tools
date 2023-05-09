@@ -144,3 +144,7 @@ def main():
 
     args = parser.parse_args()
     args.func()
+
+
+if __name__ == '__main__':
+    main()
