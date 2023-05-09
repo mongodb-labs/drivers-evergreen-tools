@@ -50,7 +50,7 @@ def setup_assume_role():
     creds = json.loads(creds)
 
     # Create the user.
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:creds['SessionToken']")
     create_user(ASSUMED_ROLE, kwargs)
 
 
@@ -119,7 +119,7 @@ def setup_web_identity():
     creds = json.loads(creds)
 
     # Create the user.
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:creds['SessionToken']")
     create_user(ASSUMED_WEB_ROLE, kwargs)
 
 
