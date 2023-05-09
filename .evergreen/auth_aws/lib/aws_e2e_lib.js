@@ -74,11 +74,7 @@ function runWithEnv(args, env) {
 }
 
 function runShellCmdWithEnv(argStr, env) {
-    if (isWindows()) {
-        return runWithEnv(['cmd.exe', '/c', argStr], env);
-    } else {
-        return runWithEnv(['/bin/sh', '-c', argStr], env);
-    }
+    return runWithEnv([argStr], env);
 }
 
 function getPython3Binary() {
