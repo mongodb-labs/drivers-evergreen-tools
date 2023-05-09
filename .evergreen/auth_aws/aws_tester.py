@@ -64,8 +64,8 @@ def setup_ec2():
 
 
 def setup_ecs():
-    mongo_binaries = os.environ['MONGO_BINARIES']
-    project_dir = os.environ['PROJECT_DIR']
+    mongo_binaries = os.environ['MONGODB_BINARIES']
+    project_dir = os.environ['PROJECT_DIRECTORY']
     base_command = f"{sys.executable} -u  lib/container_tester.py"
     run_prune_command = f"{base_command} -v remote_gc_services --cluster {CONFIG['iam_auth_ecs_cluster']}"
     run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG['iam_auth_ecs_cluster']} --task_definition {CONFIG['iam_auth_ecs_task_definition']} --subnets {CONFIG['iam_auth_ecs_subnet_a']} --subnets {CONFIG['iam_auth_ecs_subnet_b']} --security_group {CONFIG['iam_auth_ecs_security_group']} --files {mongo_binaries}/mongod:/root/mongod ${mongo_binaries}/mongo:/root/mongo lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
