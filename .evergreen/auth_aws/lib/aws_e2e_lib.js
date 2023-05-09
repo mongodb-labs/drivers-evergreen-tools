@@ -21,7 +21,8 @@ function startMongoProgram(opts) {
     }
     const childProcess = require('child_process');
     const cmd = opts.args.join(' ');
-    console.log('running cmd:', cmd)
+    console.log('running cmd:', cmd);
+    opts.env['PATH'] = process.env['PATH'];
     return childProcess.spawnSync(cmd, {
       env: opts.env,
       stdio: [0, 1, 2],
