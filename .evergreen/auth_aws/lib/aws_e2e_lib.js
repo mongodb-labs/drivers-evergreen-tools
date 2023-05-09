@@ -23,7 +23,7 @@ function startMongoProgram(opts) {
     const cmd = opts.args.join(' ');
     console.log('running cmd:', cmd)
     return childProcess.execSync(cmd, {
-      env: opts.env, {
+      env: opts.env,
       stdio: 'inherit',
       shell: true
     });
