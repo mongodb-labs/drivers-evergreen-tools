@@ -10,7 +10,7 @@ env
 
 mkdir -p /data/db || true
 
-/root/mongod --fork --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
+/root/mongod --fork --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
 PID=$!
 sleep 1
 /root/mongosh --verbose ecs_hosted_test.js
