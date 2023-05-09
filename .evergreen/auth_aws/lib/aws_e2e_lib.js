@@ -24,7 +24,7 @@ function startMongoProgram(opts) {
     console.log('running cmd:', cmd)
     return childProcess.spawnSync(cmd, {
       env: opts.env,
-      stdio: 'inherit',
+      stdio: [0, 1, 2],
       shell: true
     }).status;
 }
