@@ -10,9 +10,10 @@ env
 
 mkdir -p /data/db || true
 
-/root/mongod --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
+/root/mongod --fork --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
 PID=$!
-/root/mongosh  --verbose --nodb ecs_hosted_test.js
+sleep 1
+/root/mongosh --verbose ecs_hosted_test.js
 export MONGODB_URI="mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS"
 bash /root/src/.evergreen/run-mongodb-aws-ecs-test.sh
 kill $PID
