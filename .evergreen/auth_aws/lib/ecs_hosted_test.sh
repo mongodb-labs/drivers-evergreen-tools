@@ -1,5 +1,6 @@
 #!/bin/bash
 # A shell script to run in an ECS hosted task
+set -ex
 
 # The environment variable is always set during interactive logins
 # But for non-interactive logs, ~/.bashrc does not appear to be read on Ubuntu but it works on Fedora
@@ -9,8 +10,8 @@ env
 
 mkdir -p /data/db || true
 
-/root/mongo  --verbose --nodb ecs_hosted_test.js
+/root/mongosh  --verbose --nodb ecs_hosted_test.js
+export MONGODB_URI="mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS"
+bash /root/src/.evergreen/run-mongodb-aws-ecs-test.sh
 
-RET_CODE=$?
-echo RETURN CODE: $RET_CODE
-exit $RET_CODE
+

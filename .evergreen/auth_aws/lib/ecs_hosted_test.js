@@ -19,16 +19,9 @@ const external = conn.getDB("$external");
 const admin = conn.getDB("admin");
 
 admin.runCommand({createUser: "admin", pwd: "pwd", roles: ['root']});
-assert(admin.auth("admin", "pwd"));
+admin.auth("admin", "pwd");
 
 external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]});
-
-const uri = "mongodb://127.0.0.1:20000/aws?authMechanism=MONGODB-AWS";
-const program = "/root/src/.evergreen/run-mongodb-aws-ecs-test.sh";
-
-// Try the command line
-const smoke = runProgram(program, uri);
-assert_eq(smoke, 0, "Driver .evergreen/run-mongodb-aws-ecs-test.sh script failed");
 
 // Try the auth function
 const testConn = new Mongo(conn.host);
