@@ -6,7 +6,6 @@ Script for assuming an aws role.
 import argparse
 import uuid
 import logging
-import os
 
 import boto3
 
@@ -14,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 STS_DEFAULT_ROLE_NAME = "arn:aws:iam::579766882180:role/mark.benvenuto"
 
-def _assume_role(role_name, output):
+def _assume_role(role_name):
     sts_client = boto3.client("sts")
 
     response = sts_client.assume_role(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), DurationSeconds=900)
@@ -22,17 +21,12 @@ def _assume_role(role_name, output):
     creds = response["Credentials"]
 
 
-    value = f"""{{
+    print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",
   "SecretAccessKey" : "{creds["SecretAccessKey"]}",
   "SessionToken" : "{creds["SessionToken"]}",
   "Expiration" : "{str(creds["Expiration"])}"
-}}"""
-    print(value)
-    if output:
-        print('writing to', os.getcwd() + output);
-        with open(output, 'w') as fid:
-            fid.write(value)
+}}""")
 
 
 def main() -> None:
@@ -45,8 +39,6 @@ def main() -> None:
 
     parser.add_argument('--role_name', type=str, default=STS_DEFAULT_ROLE_NAME, help="Role to assume")
 
-    parser.add_argument('--output', type=str, default='')
-
     args = parser.parse_args()
 
     if args.debug:
@@ -54,7 +46,7 @@ def main() -> None:
     elif args.verbose:
         logging.basicConfig(level=logging.INFO)
 
-    _assume_role(args.role_name, args.output)
+    _assume_role(args.role_name)
 
 
 if __name__ == "__main__":
