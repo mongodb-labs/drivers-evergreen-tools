@@ -26,7 +26,7 @@ with open(os.path.join(HERE, 'aws_e2e_setup.json')) as fid:
 
 def run(args, env):
     """Run a python command in a subprocess."""
-    return subprocess.run([sys.executable] + args, env=env)
+    return subprocess.run([sys.executable] + args, env=env).returncode
 
 
 def create_user(user, kwargs):

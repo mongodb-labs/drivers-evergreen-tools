@@ -26,12 +26,7 @@ def _has_instance_profile():
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
-            print('returning false here')
             return False
-        print('raising?')
-        raise e
-    except Exception as e:
-        print('what?', type(e))
         raise e
 
     try:
@@ -41,7 +36,6 @@ def _has_instance_profile():
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
-            print('returning false there')
             return False
         raise e
 
@@ -49,15 +43,11 @@ def _has_instance_profile():
 
 def _wait_no_instance_profile():
     retry = 60
-    while retry:
-        if not _has_instance_profile():
-            print('returning here')
-            return
+    while _has_instance_profile() and retry:
         time.sleep(5)
         retry -= 1
 
     if retry == 0:
-        print('raising here')
         raise ValueError("Timeout on waiting for no instance profile")
 
 def _unassign_instance_policy():
@@ -78,12 +68,10 @@ def _unassign_instance_policy():
             print('disassociating')
             ec2_client.disassociate_iam_instance_profile(AssociationId=associations[0]['AssociationId'])
 
-        # Wait for the instance profile to be unassigned by polling the local instance metadata service
+        # Wait for the instance profile to be assigned by polling the local instance metadata service
         _wait_no_instance_profile()
-        print('no more instance profile')
 
     except botocore.exceptions.ClientError as ce:
-        print('what is this?', ce)
         if ce.response["Error"]["Code"] == "RequestLimitExceeded":
             print("WARNING: RequestLimitExceeded, exiting with error code 2")
             sys.exit(2)
@@ -105,9 +93,7 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO)
 
     _unassign_instance_policy()
-    print('and we are done')
 
 
 if __name__ == "__main__":
     main()
-    print('main was called')
