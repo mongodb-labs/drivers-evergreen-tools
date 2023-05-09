@@ -25,10 +25,12 @@ with open(os.path.join(HERE, 'aws_e2e_setup.json')) as fid:
 
 
 def run(args, env):
+    """Run a python command in a subprocess."""
     return subprocess.run([sys.executable] + args, env=env)
 
 
 def create_user(user, kwargs):
+    """Create a user and verify access."""
     print('Creating user', user)
     client = MongoClient(username="bob", password="pwd123")
     db = client['$external']
@@ -41,6 +43,15 @@ def create_user(user, kwargs):
     client.close()
 
 
+def handle_creds(args, env):
+    """Call a python process to handle credentials."""
+    creds = subprocess.check_output([sys.executable] + args, env=env)
+    creds = json.loads(creds)
+    with open('creds.json', 'w') as fid:
+        json.dump(fid, creds)
+    return creds
+
+
 def setup_assume_role():
     # Assume the role to get temp creds.
     env = dict(
@@ -49,8 +60,7 @@ def setup_assume_role():
     )
 
     role_name = CONFIG["iam_auth_assume_role_name"]
-    creds = subprocess.check_output([sys.executable, "lib/aws_assume_role.py", f"--role_name={role_name}"], env=env)
-    creds = json.loads(creds)
+    creds = handle_creds(["lib/aws_assume_role.py", f"--role_name={role_name}"], env)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
@@ -64,6 +74,7 @@ def setup_ec2():
 
 
 def setup_ecs():
+    # Set up commands.
     mongo_binaries = os.environ['MONGODB_BINARIES']
     project_dir = os.environ['PROJECT_DIRECTORY']
     base_command = f"{sys.executable} -u  lib/container_tester.py"
@@ -119,8 +130,7 @@ def setup_web_identity():
         AWS_WEB_IDENTITY_TOKEN_FILE=CONFIG['iam_web_identity_token_file'],
         AWS_ROLE_ARN=CONFIG["iam_auth_assume_web_role_name"]
     )
-    creds = subprocess.check_output([sys.executable, 'lib/aws_assume_web_role.py'], env=env)
-    creds = json.loads(creds)
+    creds = handle_creds(['lib/aws_assume_web_role.py'], env)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
