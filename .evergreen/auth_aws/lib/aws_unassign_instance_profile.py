@@ -80,6 +80,7 @@ def _unassign_instance_policy():
 
         # Wait for the instance profile to be unassigned by polling the local instance metadata service
         _wait_no_instance_profile()
+        print('no more instance profile')
 
     except botocore.exceptions.ClientError as ce:
         print('what is this?', ce)
@@ -104,7 +105,9 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO)
 
     _unassign_instance_policy()
+    print('and we are done')
 
 
 if __name__ == "__main__":
     main()
+    print('main was called')
