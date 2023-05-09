@@ -20,7 +20,7 @@ function getAssumeCredentials() {
     const role_name = config["iam_auth_assume_role_name"];
 
     const python_command = getPython3Binary() +
-        ` -u lib/aws_assume_role.py --role_name=${role_name} > creds.json`;
+        `lib/aws_assume_role.py --role_name=${role_name} --output=creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
     assert_eq(ret, 0, "Failed to assume role on the current machine");
