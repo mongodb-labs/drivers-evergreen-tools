@@ -27,6 +27,10 @@ def _has_instance_profile():
         print(e)
         if e.code == 404:
             return False
+        print('raising?')
+        raise e
+    except Exception as e:
+        print('what?', type(e))
         raise e
 
     try:
