@@ -25,7 +25,7 @@ function getAssumeCredentials() {
     const ret = runShellCmdWithEnv(python_command, env);
     assert_eq(ret, 0, "Failed to assume role on the current machine");
 
-    const result = readFile("lib/creds.json");
+    const result = readFile("creds.json");
     try {
         return JSON.parse(result);
     } catch (e) {

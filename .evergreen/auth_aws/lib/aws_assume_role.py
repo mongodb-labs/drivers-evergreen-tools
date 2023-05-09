@@ -6,6 +6,7 @@ Script for assuming an aws role.
 import argparse
 import uuid
 import logging
+import os
 
 import boto3
 
@@ -29,6 +30,7 @@ def _assume_role(role_name, output):
 }}"""
     print(value)
     if output:
+        print('writing to', os.getcwd() + output);
         with open(output, 'w') as fid:
             fid.write(value)
 
