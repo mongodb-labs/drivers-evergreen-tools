@@ -40,6 +40,7 @@ function assert_eq(val, eq, msg) {
     }
     if (val !== eq) {
         throw new Error(msg);
+    }
 }
 
 
