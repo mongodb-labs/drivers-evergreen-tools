@@ -80,6 +80,8 @@ evergreen_config_generator/dist
 .evergreen/auth_aws/creds.json
 # The oidc config file is created as needed
 .evergreen/orchestration/configs/replica_sets/auth-oidc.json
+.venv
+venv
 authoidcvenv
 authawsvenv
 /uri.txt
