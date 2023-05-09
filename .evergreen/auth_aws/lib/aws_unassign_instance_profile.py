@@ -43,7 +43,9 @@ def _has_instance_profile():
 
 def _wait_no_instance_profile():
     retry = 60
-    while _has_instance_profile() and retry:
+    while retry:
+        if not _has_instance_profile():
+            return
         time.sleep(5)
         retry -= 1
 
@@ -68,7 +70,7 @@ def _unassign_instance_policy():
             print('disassociating')
             ec2_client.disassociate_iam_instance_profile(AssociationId=associations[0]['AssociationId'])
 
-        # Wait for the instance profile to be assigned by polling the local instance metadata service
+        # Wait for the instance profile to be unassigned by polling the local instance metadata service
         _wait_no_instance_profile()
 
     except botocore.exceptions.ClientError as ce:

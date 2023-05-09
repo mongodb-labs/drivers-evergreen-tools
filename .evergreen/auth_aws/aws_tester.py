@@ -111,7 +111,7 @@ def setup_web_identity():
         raise RuntimeError("Request limit exceeded for AWS API");
 
     if ret != 0:
-        raise RuntimeError("Failed to unassign an instance profile from the current machine");
+        raise RuntimeError("Failed to unassign an instance profile from the current machine")
 
     # Handle the OIDC credentials.
     env = dict(
