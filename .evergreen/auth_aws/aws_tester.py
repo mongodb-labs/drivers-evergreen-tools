@@ -26,10 +26,15 @@ def run(args, env):
     return subprocess.run([sys.executable] + args, env=env)
 
 
-def create_user(user):
+def create_user(user, kwargs):
+    print('Creating user', user)
     client = MongoClient(username="bob", password="pwd123")
     db = client['$external']
     db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
+    client.close()
+
+    client = MongoClient(authMechanism='MONGODB-AWS', **kwargs)
+    client.aws.test.find_one({})
     client.close()
 
 
@@ -45,22 +50,13 @@ def setup_assume_role():
     creds = json.loads(creds)
 
     # Create the user.
-    create_user(ASSUMED_ROLE)
-
-    # Authenticate as the user.
-    client = MongoClient(authMechanism='MONGODB-AWS', username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authMechanismProperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
-    client.aws.test.find_one({})
-    client.close()
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authMechanismProperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
+    create_user(ASSUMED_ROLE, kwargs)
 
 
 def setup_ec2():
     # Create the user.
-    create_user(AWS_ACCOUNT_ARN)
-
-    # Authenticate as the user.
-    client = MongoClient(authMechanism='MONGODB-AWS')
-    client.aws.test.find_one({})
-    client.close()
+    create_user(AWS_ACCOUNT_ARN, dict())
 
 
 def setup_ecs():
@@ -77,21 +73,18 @@ def setup_ecs():
                AWS_SECRET_ACCESS_KEY=CONFIG['iam_auth_ecs_secret_access_key'])
 
     # Prune other containers
-    subprocess.run(['/bin/sh', '-c', run_prune_command], env=env)
+    subprocess.check_call(['/bin/sh', '-c', run_prune_command], env=env)
 
     # Run the test in a container
-    subprocess.run(['/bin/sh', '-c', run_test_command], env=env)
+    subprocess.check_call(['/bin/sh', '-c', run_test_command], env=env)
 
 def setup_regular():
     # Create the user.
-    create_user(CONFIG["iam_auth_ecs_account_arn"])
-
-    # Authenticate as the user.
-    username = CONFIG["iam_auth_ecs_account"]
-    password = CONFIG["iam_auth_ecs_secret_access_key"]
-    client = MongoClient(authMechanism='MONGODB-AWS', username=username, password=password)
-    client.aws.test.find_one({})
-    client.close()
+    kwargs = dict(
+        username=CONFIG["iam_auth_ecs_account"],
+        password=CONFIG["iam_auth_ecs_secret_access_key"]
+    )
+    create_user(CONFIG["iam_auth_ecs_account_arn"], kwargs)
 
 
 def setup_web_identity():
@@ -126,12 +119,8 @@ def setup_web_identity():
     creds = json.loads(creds)
 
     # Create the user.
-    create_user(ASSUMED_WEB_ROLE)
-
-    # Authenticate as the user.
-    client = MongoClient(authMechanism='MONGODB-AWS', username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authMechanismProperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
-    client.aws.test.find_one({})
-    client.close()
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authMechanismProperties=dict(AWS_SESSION_TOKEN=creds["SessionToken"]))
+    create_user(ASSUMED_WEB_ROLE, kwargs)
 
 
 def main():
