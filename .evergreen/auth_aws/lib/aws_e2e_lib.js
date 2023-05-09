@@ -26,7 +26,7 @@ function startMongoProgram(opts) {
       env: opts.env,
       stdio: 'inherit',
       shell: true
-    }).pid;
+    }).status;
 }
 
 
