@@ -28,7 +28,6 @@ def run(args, env):
 
 def create_user(user, kwargs):
     print('Creating user', user)
-    print('with kwargs', kwargs)
     client = MongoClient(username="bob", password="pwd123")
     db = client['$external']
     db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
