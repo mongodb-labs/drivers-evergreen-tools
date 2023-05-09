@@ -13,7 +13,7 @@ const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
-external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]});
+assert.commandWorked(external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]}));
 
 // Try the command line
 const smoke = runMongoProgram("mongo",
@@ -25,7 +25,7 @@ const smoke = runMongoProgram("mongo",
                               '$external',
                               "--eval",
                               "1");
-assert_eq(smoke, 0, "Could not auth with smoke user");
+assert.eq(smoke, 0, "Could not auth with smoke user");
 
 // Try the auth function
 const testConn = new Mongo();

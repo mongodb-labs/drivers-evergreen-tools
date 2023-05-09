@@ -6,8 +6,8 @@ load("lib/aws_e2e_lib.js");
 (function() {
    'use strict';
 
-   assert_eq(typeof mongo_binaries != 'undefined', true, "mongo_binaries must be set");
-   assert_eq(typeof project_dir != 'undefined', true, "project_dir must be set");
+   assert.eq(typeof mongo_binaries != 'undefined', true, "mongo_binaries must be set");
+   assert.eq(typeof project_dir != 'undefined', true, "project_dir must be set");
 
    const config = readSetupJson();
 
@@ -36,9 +36,9 @@ load("lib/aws_e2e_lib.js");
 
    // Prune other containers
    let ret = runWithEnv(['/bin/sh', '-c', run_prune_command], env);
-   assert_eq(ret, 0, 'Prune Container failed');
+   assert.eq(ret, 0, 'Prune Container failed');
 
    // Run the test in a container
    ret = runWithEnv(['/bin/sh', '-c', run_test_command], env);
-   assert_eq(ret, 0, 'Container Test failed');
+   assert.eq(ret, 0, 'Container Test failed');
 }());

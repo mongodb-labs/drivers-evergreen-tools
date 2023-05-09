@@ -12,7 +12,8 @@ const external = admin.getMongo().getDB("$external");
 assert(admin.auth("bob", "pwd123"));
 
 const config = readSetupJson();
-external.runCommand({createUser: config["iam_auth_ecs_account_arn"], roles:[{role: 'read', db: "aws"}]});
+assert.commandWorked(
+    external.runCommand({createUser: config["iam_auth_ecs_account_arn"], roles:[{role: 'read', db: "aws"}]}));
 
 const testConn = new Mongo();
 const testExternal = testConn.getDB('$external');

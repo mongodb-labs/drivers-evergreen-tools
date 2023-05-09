@@ -20,12 +20,12 @@ function getAssumeCredentials() {
     const role_name = config["iam_auth_assume_role_name"];
 
     const python_command = getPython3Binary() +
-        `lib/aws_assume_role.py --role_name=${role_name} --output=creds.json`;
+        ` -u lib/aws_assume_role.py --role_name=${role_name} > creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert_eq(ret, 0, "Failed to assume role on the current machine");
+    assert.eq(ret, 0, "Failed to assume role on the current machine");
 
-    const result = readFile("creds.json");
+    const result = cat("creds.json");
     try {
         return JSON.parse(result);
     } catch (e) {
@@ -39,7 +39,7 @@ const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
-external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]});
+assert.commandWorked(external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]}));
 
 const testConn = new Mongo();
 const testExternal = testConn.getDB('$external');

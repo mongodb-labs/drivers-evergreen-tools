@@ -24,7 +24,7 @@ function unAssignInstanceProfile() {
         return false;
     }
 
-    assert_eq(ret, 0, "Failed to assign an instance profile to the current machine");
+    assert.eq(ret, 0, "Failed to assign an instance profile to the current machine");
     return true;
 }
 
@@ -45,7 +45,7 @@ function writeWebTokenFile() {
         " -u lib/aws_handle_oidc_creds.py token > /dev/null"
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert_eq(ret, 0, "Failed to write the web token");
+    assert.eq(ret, 0, "Failed to write the web token");
     return true;
 }
 
@@ -64,7 +64,7 @@ function getWebIdentityCredentials() {
         ` -u lib/aws_assume_web_role.py > creds.json`;
 
     const ret = runShellCmdWithEnv(python_command, env);
-    assert_eq(ret, 0, "Failed to assume role on the current machine");
+    assert.eq(ret, 0, "Failed to assume role on the current machine");
 
     const result = cat("creds.json");
     try {
@@ -81,7 +81,7 @@ const external = admin.getMongo().getDB("$external");
 
 assert(admin.auth("bob", "pwd123"));
 const config = readSetupJson();
-external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]});
+assert.commandWorked(external.runCommand({createUser: ASSUMED_ROLE, roles:[{role: 'read', db: "aws"}]}));
 
 const testConn = new Mongo();
 const testExternal = testConn.getDB('$external');
