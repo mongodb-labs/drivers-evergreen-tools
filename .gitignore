@@ -89,7 +89,7 @@ authawsvenv
 mo-expansion.yml
 tmp.json
 haproxy.conf
-haproxy.pid
+*.pid
 lb-expansion.yml
 .idea/
 .DS_Store
