@@ -26,6 +26,7 @@ def _has_instance_profile():
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
+            print('returning false here')
             return False
         print('raising?')
         raise e
@@ -40,6 +41,7 @@ def _has_instance_profile():
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
+            print('returning false there')
             return False
         raise e
 
@@ -49,11 +51,13 @@ def _wait_no_instance_profile():
     retry = 60
     while retry:
         if not _has_instance_profile():
+            print('returning here')
             return
         time.sleep(5)
         retry -= 1
 
     if retry == 0:
+        print('raising here')
         raise ValueError("Timeout on waiting for no instance profile")
 
 def _unassign_instance_policy():
@@ -78,6 +82,7 @@ def _unassign_instance_policy():
         _wait_no_instance_profile()
 
     except botocore.exceptions.ClientError as ce:
+        print('what is this?', ce)
         if ce.response["Error"]["Code"] == "RequestLimitExceeded":
             print("WARNING: RequestLimitExceeded, exiting with error code 2")
             sys.exit(2)
