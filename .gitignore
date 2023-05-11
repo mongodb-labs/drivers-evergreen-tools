@@ -88,6 +88,8 @@ testazureoidc-expansions.yml
 .evergreen/orchestration/configs/*/auth-oidc.json
 
 authawsvenv
+authoidcvenv
+
 /uri.txt
 /results.json
 /mongodb
