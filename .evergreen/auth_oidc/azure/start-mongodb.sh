@@ -19,7 +19,7 @@ if [ ! -d $DRIVERS_TOOLS ]; then
 fi
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-source ./activate-authoidcvenv.sh
+. ./activate-authoidcvenv.sh
 python oidc_write_orchestration.py --azure
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
