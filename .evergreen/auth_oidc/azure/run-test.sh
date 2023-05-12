@@ -9,7 +9,7 @@ popd
 
 # Run the Python Driver Test
 if [ ! -d mongo-python-driver ]; then
-    git clone --branch PYTHON-3460 https://github.com/blink1073/mongo-python-driver
+    git clone https://github.com/mongodb/mongo-python-driver
 fi
 pushd mongo-python-driver
 python setup.py install --no_ext
