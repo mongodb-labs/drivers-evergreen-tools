@@ -87,6 +87,9 @@ testazureoidc-expansions.yml
 # The oidc config files are created as needed
 .evergreen/orchestration/configs/*/auth-oidc.json
 
+# Virtual envs
+.venv
+venv
 authawsvenv
 authoidcvenv
 
