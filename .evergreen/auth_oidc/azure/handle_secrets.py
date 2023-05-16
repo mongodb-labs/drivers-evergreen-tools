@@ -15,6 +15,7 @@ def main():
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
     print('Getting secrets from vault ... begin')
+    print(list(os.environ))
 
     logger = logging.getLogger('azure.mgmt.resource')
 
