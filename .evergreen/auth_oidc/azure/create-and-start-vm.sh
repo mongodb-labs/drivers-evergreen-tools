@@ -8,6 +8,8 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ] || \
    [ -z "${AZUREOIDC_TENANTID:-}" ] || \
    [ -z "${AZUREOIDC_SECRET:-}" ] || \
    [ -z "${AZUREOIDC_DRIVERS_TOOLS:-}" ] || \
+   [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
+   [ -z "${AZUREOIDC_TEST_CMD:-}" ] || \
    [ -z "${AZUREOIDC_KEYVAULT:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREOIDC_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
@@ -15,6 +17,8 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ] || \
     echo " AZUREOIDC_TENANTID"
     echo " AZUREOIDC_SECRET"
     echo " AZUREOIDC_DRIVERS_TOOLS"
+    echo " AZUREOIDC_DRIVERS_TAR_FILE"
+    echo " AZUREOIDC_TEST_CMD"
     echo " AZUREOIDC_KEYVAULT"
     exit 1
 fi
@@ -46,9 +50,11 @@ fi
 # Login.
 "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
+cd $BASE_PATH
+
 # Handle secrets from vault.
 . ./activate-authoidcvenv.sh
-python $BASE_PATH/azure/handle_secrets.py
+python ./azure/handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
 # Create VM.
@@ -88,3 +94,18 @@ AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./run-test.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+
+# Set up the remote driver checkout.
+DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
+AZUREKMS_SRC=${AZUREOIDC_DRIVERS_TAR_FILE} \
+AZUREKMS_DST="~/" \
+  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
+echo "Copying files ... end"
+echo "Untarring file ... begin"
+AZUREKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
+  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+echo "Untarring file ... end"
+
+# Run the driver test.
+AZUREKMS_CMD="${AZUREOIDC_TEST_CMD}" \
+    $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
