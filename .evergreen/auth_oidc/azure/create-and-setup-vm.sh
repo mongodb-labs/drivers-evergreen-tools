@@ -43,6 +43,7 @@ fi
 
 # Login.
 "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+cat $HOME/.azure/msal_token_cache.json
 
 # Handle secrets from vault.
 cd $BASE_PATH
