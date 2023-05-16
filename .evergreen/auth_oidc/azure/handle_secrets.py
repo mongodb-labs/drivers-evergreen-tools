@@ -31,6 +31,7 @@ def main():
 
     with open(env_file, 'w') as fid:
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
+        fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREOIDC_TOKENCLIENT={secrets["TOKENCLIENT"]}\n')
         fid.write(f'export AZUREOIDC_AUTHCLAIM={secrets["AUTHCLAIM"]}\n')
         fid.write(f'export AZUREOIDC_CLIENTID={client_id}\n')
