@@ -1,3 +1,4 @@
+import logging
 import os
 from base64 import b64decode
 
@@ -14,6 +15,11 @@ def main():
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
     print('Getting secrets from vault ... begin')
+
+    logger = logging.getLogger('azure.mgmt.resource')
+
+    # Set the desired logging level
+    logger.setLevel(logging.DEBUG)
 
     credential = DefaultAzureCredential()
     client = SecretClient(vault_url=vault_uri, credential=credential)
