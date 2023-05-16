@@ -22,7 +22,7 @@ def main():
     # Set the desired logging level
     logger.setLevel(logging.DEBUG)
 
-    credential = DefaultAzureCredential()
+    credential = DefaultAzureCredential(exclude_environment_credential=True)
     client = SecretClient(vault_url=vault_uri, credential=credential)
 
     secrets = dict()
