@@ -15,14 +15,13 @@ def main():
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
     print('Getting secrets from vault ... begin')
-    print(list(os.environ))
 
     logger = logging.getLogger('azure.mgmt.resource')
 
     # Set the desired logging level
     logger.setLevel(logging.DEBUG)
 
-    credential = DefaultAzureCredential(exclude_environment_credential=True)
+    credential = DefaultAzureCredential(exclude_environment_credential=True, exclude_managed_identity_credential=True)
     client = SecretClient(vault_url=vault_uri, credential=credential)
 
     secrets = dict()
