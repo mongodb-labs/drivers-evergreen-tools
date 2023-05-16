@@ -54,6 +54,7 @@ source $AZUREOIDC_ENVPATH
 . "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREOIDC_VMNAME="$AZUREKMS_VMNAME"
 export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
+export AZUREKMS_RESOURCEGROUP="$AZUREOIDC_RESOURCEGROUP"
 
 # Update expansions and env viles.
 echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
