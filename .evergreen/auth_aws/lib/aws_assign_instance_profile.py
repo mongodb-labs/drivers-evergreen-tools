@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # This varies based on hosting EC2 as the account id and role name can vary
-AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*";
+AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:role/evergreen_task_hosts_instance_role_production";
 
 
 def _get_local_instance_id():
