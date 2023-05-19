@@ -17,9 +17,6 @@ import botocore
 LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-# This varies based on hosting EC2 as the account id and role name can vary
-AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:role/evergreen_task_hosts_instance_role_production";
-
 
 def _get_local_instance_id():
     return urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id').read().decode()
@@ -93,8 +90,10 @@ def _handle_config():
 
         os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG['iam_auth_ec2_instance_account'])
         os.environ.setdefault('AWS_SECRET_ACCESS_KEY', CONFIG['iam_auth_ec2_instance_secret_access_key'])
+        return CONFIG['iam_auth_ec2_instance_profile']
     except Exception as e:
         print(e)
+        return ''
 
 
 def main() -> None:
@@ -105,11 +104,12 @@ def main() -> None:
     parser.add_argument('-v', "--verbose", action='store_true', help="Enable verbose logging")
     parser.add_argument('-d', "--debug", action='store_true', help="Enable debug logging")
 
-    parser.add_argument('--instance_profile_arn', type=str, help="Name of instance profile", default=AWS_ACCOUNT_ARN)
+    default_arn = _handle_config()
+
+    parser.add_argument('--instance_profile_arn', type=str, help="Name of instance profile", default=default_arn)
 
     args = parser.parse_args()
 
-    _handle_config()
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
