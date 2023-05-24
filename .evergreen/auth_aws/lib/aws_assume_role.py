@@ -14,11 +14,7 @@ LOGGER = logging.getLogger(__name__)
 STS_DEFAULT_ROLE_NAME = "arn:aws:iam::579766882180:role/mark.benvenuto"
 
 def _assume_role(role_name):
-    if ':' in role_name:
-        region = role_name.split(':')[3]
-        sts_client = boto3.client("sts", region_name=region)
-    else:
-        sts_client = boto3.client("sts")
+    sts_client = boto3.client("sts", region_name="us-east-1")
 
     response = sts_client.assume_role(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), DurationSeconds=900)
 
