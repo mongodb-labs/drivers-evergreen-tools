@@ -12,7 +12,7 @@ git config --global url."git@github.com:".insteadof "https://github.com/"
 AP_START=$(date +%s)
 
 # Set up environment variables for Go
-GO_VERSION=1.18
+GO_VERSION=1.20
 if [ "Windows_NT" = "$OS" ]; then
   export GOPATH="$(cygpath -m "$(pwd)")/.gopath"
   export GOCACHE="$(cygpath -m "$(pwd)")/.cache"
