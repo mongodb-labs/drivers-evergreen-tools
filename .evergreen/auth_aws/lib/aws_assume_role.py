@@ -16,7 +16,7 @@ STS_DEFAULT_ROLE_NAME = "arn:aws:iam::579766882180:role/mark.benvenuto"
 def _assume_role(role_name):
     if ':' in role_name:
         region = role_name.split(':')[3]
-        sts_client = boto3.client("sts", region=region)
+        sts_client = boto3.client("sts", region_name=region)
     else:
         sts_client = boto3.client("sts")
 
