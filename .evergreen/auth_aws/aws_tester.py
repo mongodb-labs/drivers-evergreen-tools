@@ -55,6 +55,8 @@ def setup_assume_role():
 
     role_name = CONFIG["iam_auth_assume_role_name"]
     creds = _assume_role(role_name)
+    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+        json.dump(creds, fid)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
@@ -125,6 +127,8 @@ def setup_web_identity():
     os.environ['AWS_ROLE_ARN'] = CONFIG["iam_auth_assume_web_role_name"]
 
     creds = _assume_role_with_web_identity()
+    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+        json.dump(creds, fid)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
