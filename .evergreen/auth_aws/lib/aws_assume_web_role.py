@@ -24,13 +24,13 @@ def _assume_role_with_web_identity():
 
     creds = response["Credentials"]
 
-
     print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",
   "SecretAccessKey" : "{creds["SecretAccessKey"]}",
   "SessionToken" : "{creds["SessionToken"]}",
   "Expiration" : "{str(creds["Expiration"])}"
 }}""")
+    return creds
 
 
 def main() -> None:
