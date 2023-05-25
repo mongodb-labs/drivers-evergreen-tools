@@ -19,12 +19,13 @@ def _assume_role(role_name):
     response = sts_client.assume_role(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), DurationSeconds=900)
 
     creds = response["Credentials"]
+    creds["Expiration"] = str(creds["Expiration"])
 
     print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",
   "SecretAccessKey" : "{creds["SecretAccessKey"]}",
   "SessionToken" : "{creds["SessionToken"]}",
-  "Expiration" : "{str(creds["Expiration"])}"
+  "Expiration" : "{creds["Expiration"]}"
 }}""")
     return creds
 

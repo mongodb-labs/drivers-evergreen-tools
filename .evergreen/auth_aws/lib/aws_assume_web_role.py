@@ -23,13 +23,15 @@ def _assume_role_with_web_identity():
     response = sts_client.assume_role_with_web_identity(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), WebIdentityToken=token, DurationSeconds=900)
 
     creds = response["Credentials"]
+    creds["Expiration"] = str(creds["Expiration"])
 
     print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",
   "SecretAccessKey" : "{creds["SecretAccessKey"]}",
   "SessionToken" : "{creds["SessionToken"]}",
-  "Expiration" : "{str(creds["Expiration"])}"
+  "Expiration" : "{creds["Expiration"]}"
 }}""")
+
     return creds
 
 
