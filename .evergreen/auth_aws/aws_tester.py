@@ -45,7 +45,8 @@ def create_user(user, kwargs):
 
 def handle_creds(args, env):
     """Call a python process to handle credentials."""
-    creds = subprocess.check_output([sys.executable] + args, env=env)
+    shell = os.name == "nt"
+    creds = subprocess.check_output([sys.executable] + args, env=env, shell=shell)
     creds = json.loads(creds.decode('utf8'))
     with open('creds.json', 'w') as fid:
         json.dump(creds, fid)
