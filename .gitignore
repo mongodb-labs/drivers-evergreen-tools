@@ -75,15 +75,24 @@ __pypackages__/
 evergreen_config_generator/build
 evergreen_config_generator/dist
 *.egg-info
+
 # The credentials files should not be checked in to version control.
 .evergreen/auth_aws/aws_e2e_setup.json
 .evergreen/auth_aws/creds.json
-# The oidc config file is created as needed
-.evergreen/orchestration/configs/replica_sets/auth-oidc.json
+.evergreen/auth_oidc/azure/env.sh
+.evergreen/auth_oidc/azure/keyfile
+.evergreen/auth_oidc/azure/keyfile.pub
+testazureoidc-expansions.yml
+
+# The oidc config files are created as needed
+.evergreen/orchestration/configs/*/auth-oidc.json
+
+# Virtual envs
 .venv
 venv
-authoidcvenv
 authawsvenv
+authoidcvenv
+
 /uri.txt
 /results.json
 /mongodb

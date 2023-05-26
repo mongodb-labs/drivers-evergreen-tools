@@ -38,6 +38,8 @@ activate_authoidcvenv() {
     local packages=(
       "boto3~=1.19.0"
       "pyop~=3.4.0"
+      "azure-identity"
+      "azure-keyvault-secrets"
     )
 
     if [[ "$OSTYPE" == cygwin && "$HOSTTYPE" == x86_64 ]]; then

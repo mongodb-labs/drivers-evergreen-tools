@@ -16,6 +16,7 @@ if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" ] || \
     exit 1
 fi
 
+AZUREKMS_IDENTITY="${AZUREKMS_IDENTITY:-'[system]'}"
 AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # az vm create also creates a "nic" and "public IP" by default.
@@ -35,6 +36,6 @@ az vm create \
     --os-disk-delete-option "Delete" \
     --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
     --nsg "$AZUREKMS_VMNAME-NSG" \
-    --assign-identity "[system]" \
+    --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"

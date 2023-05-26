@@ -3,7 +3,6 @@
 Script for managing OIDC.
 """
 import os
-import boto3
 import json
 import sys
 
@@ -11,6 +10,49 @@ import sys
 HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, HERE)
 from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
+
+
+def azure():
+    client_id = os.environ['AZUREOIDC_TOKENCLIENT']
+    tenant_id = os.environ['AZUREOIDC_TENANTID']
+    app_id = os.environ['AZUREOIDC_CLIENTID']
+    auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
+
+    print("Bootstrapping OIDC config")
+
+    # Write the oidc orchestration file.
+    provider_info = {
+        "authNamePrefix": auth_name_prefix,
+        "issuer": f"https://sts.windows.net/{tenant_id}/",
+        "clientId": client_id,
+        "audience": f"api://{app_id}",
+        "authorizationClaim": "groups",
+
+    }
+    providers = json.dumps([provider_info], separators=(',',':'))
+
+    data = {
+        "id": "oidc-repl0",
+        "auth_key": "secret",
+        "login": "bob",
+        "name": "mongod",
+        "password": "pwd123",
+        "procParams": {
+            "ipv6": "NO_IPV6" not in os.environ,
+            "bind_ip": "0.0.0.0,::1",
+            "logappend": True,
+            "port": 27017,
+            "setParameter": {
+                "enableTestCommands": 1,
+                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "oidcIdentityProviders": providers
+            }
+        }
+    }
+
+    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
+    with open(orch_file, 'w') as fid:
+        json.dump(data, fid, indent=4)
 
 
 def main():
@@ -85,4 +127,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if '--azure' in sys.argv:
+        azure()
+    else:
+        main()
