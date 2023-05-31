@@ -13,6 +13,11 @@ from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
+sys.path.insert(0, os.path.join(HERE, 'lib'))
+from aws_assume_role import _assume_role
+from aws_assume_web_role import _assume_role_with_web_identity
+
+
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*";
 ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
 
@@ -43,24 +48,15 @@ def create_user(user, kwargs):
     client.close()
 
 
-def handle_creds(args, env):
-    """Call a python process to handle credentials."""
-    creds = subprocess.check_output([sys.executable] + args, env=env)
-    creds = json.loads(creds.decode('utf8'))
-    with open('creds.json', 'w') as fid:
-        json.dump(creds, fid)
-    return creds
-
-
 def setup_assume_role():
     # Assume the role to get temp creds.
-    env = dict(
-        AWS_ACCESS_KEY_ID=CONFIG["iam_auth_assume_aws_account"],
-        AWS_SECRET_ACCESS_KEY=CONFIG["iam_auth_assume_aws_secret_access_key"],
-    )
+    os.environ['AWS_ACCESS_KEY_ID'] = CONFIG["iam_auth_assume_aws_account"]
+    os.environ['AWS_SECRET_ACCESS_KEY'] = CONFIG["iam_auth_assume_aws_secret_access_key"]
 
     role_name = CONFIG["iam_auth_assume_role_name"]
-    creds = handle_creds(["lib/aws_assume_role.py", f"--role_name={role_name}"], env)
+    creds = _assume_role(role_name)
+    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+        json.dump(creds, fid)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
@@ -127,11 +123,12 @@ def setup_web_identity():
         raise RuntimeWarning("Failed to write the web token")
 
     # Assume the web role to get temp credentials.
-    env = dict(
-        AWS_WEB_IDENTITY_TOKEN_FILE=CONFIG['iam_web_identity_token_file'],
-        AWS_ROLE_ARN=CONFIG["iam_auth_assume_web_role_name"]
-    )
-    creds = handle_creds(['lib/aws_assume_web_role.py'], env)
+    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = CONFIG['iam_web_identity_token_file']
+    os.environ['AWS_ROLE_ARN'] = CONFIG["iam_auth_assume_web_role_name"]
+
+    creds = _assume_role_with_web_identity()
+    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+        json.dump(creds, fid)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
