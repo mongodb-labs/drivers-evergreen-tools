@@ -9,6 +9,24 @@ load("lib/aws_e2e_lib.js");
 // This varies based on hosting EC2 as the account id and role name can vary
 const AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*";
 
+function assignInstanceProfile() {
+    const python_command = getPython3Binary() +
+        ` -u lib/aws_assign_instance_profile.py`;
+
+    const ret = runShellCmdWithEnv(python_command, env);
+    if (ret == 2) {
+        print("WARNING: Request limit exceeded for AWS API");
+        return false;
+    }
+
+    assert.eq(ret, 0, "Failed to assign an instance profile to the current machine");
+    return true;
+}
+
+if (!assignInstanceProfile()) {
+    return;
+}
+
 const admin = Mongo().getDB("admin");
 const external = admin.getMongo().getDB("$external");
 
