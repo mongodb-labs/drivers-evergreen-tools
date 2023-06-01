@@ -66,7 +66,9 @@ def setup_assume_role():
 
 def setup_ec2():
     # Create the user.
+    env = os.environ.copy()
     _assign_instance_policy()
+    os.environ.update(**env)
     create_user(AWS_ACCOUNT_ARN, dict())
 
 
