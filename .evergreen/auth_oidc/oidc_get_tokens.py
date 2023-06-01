@@ -21,10 +21,16 @@ def main():
         'token_file': os.path.join(token_dir, 'test_user1')
     }
     get_id_token(config)
+    for i in range(2):
+        config['token_file'] = os.path.join(token_dir, f'test_user1_{i+1}')
+        get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_2_uri']
     config['username'] = 'test_user2'
     config['token_file'] = os.path.join(token_dir, 'test_user2')
     get_id_token(config)
+    for i in range(2):
+        config['token_file'] = os.path.join(token_dir, f'test_user2_{i+1}')
+        get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_1_uri']
     config['username'] = 'test_user1'
     config['token_file'] = os.path.join(token_dir, 'test_user1_expires')
