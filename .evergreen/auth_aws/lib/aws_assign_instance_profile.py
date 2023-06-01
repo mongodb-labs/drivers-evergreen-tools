@@ -54,7 +54,22 @@ def _wait_instance_profile():
     if retry == 0:
         raise ValueError("Timeout on waiting for instance profile")
 
-def _assign_instance_policy(iam_instance_arn):
+def _handle_config():
+    try:
+        with open(os.path.join(HERE, '..', 'aws_e2e_setup.json')) as fid:
+            CONFIG = json.load(fid)
+
+        os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG['iam_auth_ec2_instance_account'])
+        os.environ.setdefault('AWS_SECRET_ACCESS_KEY', CONFIG['iam_auth_ec2_instance_secret_access_key'])
+        return CONFIG['iam_auth_ec2_instance_profile']
+    except Exception as e:
+        print(e)
+        return ''
+
+
+DEFAULT_ARN = _handle_config()
+
+def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
 
     if _has_instance_profile():
         print("IMPORTANT: Found machine already has instance profile, skipping the assignment")
@@ -84,19 +99,6 @@ def _assign_instance_policy(iam_instance_arn):
         raise
 
 
-def _handle_config():
-    try:
-        with open(os.path.join(HERE, '..', 'aws_e2e_setup.json')) as fid:
-            CONFIG = json.load(fid)
-
-        os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG['iam_auth_ec2_instance_account'])
-        os.environ.setdefault('AWS_SECRET_ACCESS_KEY', CONFIG['iam_auth_ec2_instance_secret_access_key'])
-        return CONFIG['iam_auth_ec2_instance_profile']
-    except Exception as e:
-        print(e)
-        return ''
-
-
 def main() -> None:
     """Execute Main entry point."""
 
@@ -105,9 +107,7 @@ def main() -> None:
     parser.add_argument('-v', "--verbose", action='store_true', help="Enable verbose logging")
     parser.add_argument('-d', "--debug", action='store_true', help="Enable debug logging")
 
-    default_arn = _handle_config()
-
-    parser.add_argument('--instance_profile_arn', type=str, help="Name of instance profile", default=default_arn)
+    parser.add_argument('--instance_profile_arn', type=str, help="Name of instance profile", default=DEFAULT_ARN)
 
     args = parser.parse_args()
 
