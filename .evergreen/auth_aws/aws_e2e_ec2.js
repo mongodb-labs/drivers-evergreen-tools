@@ -13,7 +13,7 @@ function assignInstanceProfile() {
     const python_command = getPython3Binary() +
         ` -u lib/aws_assign_instance_profile.py`;
 
-    const ret = runShellCmdWithEnv(python_command, env);
+    const ret = runShellCmdWithEnv(python_command, {});
     if (ret == 2) {
         print("WARNING: Request limit exceeded for AWS API");
         return false;
