@@ -58,6 +58,7 @@ get_mongodb_download_url_for ()
    VERSION_70="7.0.0-rc0"
    VERSION_60_LATEST="v6.0-latest"
    VERSION_60="6.0.6"
+   VERSION_60_PERF="6.3.1"
    VERSION_50="5.0.17"
    VERSION_44="4.4.21"
    VERSION_42="4.2.24"
@@ -134,6 +135,7 @@ get_mongodb_download_url_for ()
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_RAPID}.tgz"
              MONGODB_70="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_70}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_60_LATEST}.tgz"
+             MONGODB_60_PERF="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel90-${VERSION_60_PERF}.tgz"
              MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_60}.tgz"
       ;;
       linux-rhel-8.1-ppc64le)
@@ -579,6 +581,7 @@ get_mongodb_download_url_for ()
       rapid) MONGODB_DOWNLOAD_URL=$MONGODB_RAPID ;;
       7.0) MONGODB_DOWNLOAD_URL=$MONGODB_70 ;;
       v6.0-latest) MONGODB_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
+      v6.0-perf) MONGODB_DOWNLOAD_URL=$MONGODB_60_PERF ;;
       6.0) MONGODB_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0) MONGODB_DOWNLOAD_URL=$MONGODB_50 ;;
       4.4) MONGODB_DOWNLOAD_URL=$MONGODB_44 ;;
