@@ -614,6 +614,7 @@ get_mongodb_download_url_for ()
       rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
       7.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_70 ;;
       v6.0-latest) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_LATEST ;;
+      v6.0-perf) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60_PERF ;;
       6.0) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_60 ;;
       5.0 | 4.4 | 4.2 | 4.0 | 3.6 | 3.4 | 3.2 | 3.0 | 2.6 | 2.4)
          # Default to using the latest Major release. Major releases are expected yearly.
