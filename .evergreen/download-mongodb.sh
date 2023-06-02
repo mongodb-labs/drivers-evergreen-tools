@@ -59,7 +59,7 @@ get_mongodb_download_url_for ()
    VERSION_60_LATEST="v6.0-latest"
    VERSION_60="6.0.6"
    # The perf version must always remain pinned to the same patch
-   VERSION_60_PERF="6.3.1"
+   VERSION_60_PERF="6.0.6"
    VERSION_50="5.0.17"
    VERSION_44="4.4.21"
    VERSION_42="4.2.24"
