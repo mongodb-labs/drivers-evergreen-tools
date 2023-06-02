@@ -136,7 +136,7 @@ get_mongodb_download_url_for ()
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_RAPID}.tgz"
              MONGODB_70="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_70}.tgz"
              MONGODB_60_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_60_LATEST}.tgz"
-             MONGODB_60_PERF="http://downloads.10gen.com/linux/mongodb-linux-aarch64-enterprise-rhel90-${VERSION_60_PERF}.tgz"
+             MONGODB_60_PERF="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_60_PERF}.tgz"
              MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90-${VERSION_60}.tgz"
       ;;
       linux-rhel-8.1-ppc64le)
