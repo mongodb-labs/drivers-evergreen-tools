@@ -57,16 +57,16 @@ get_mongodb_download_url_for ()
    VERSION_RAPID="6.3.1"
    # Target the release branches where possible to get patch releases
    # automatically.
-   VERSION_70="v7.0"
+   VERSION_70="v7.0-latest"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="v6.0"
+   VERSION_60="v6.0-latest"
    # The perf version must always remain pinned to the same patch
    VERSION_60_PERF="6.0.6"
-   VERSION_50="v5.0"
-   VERSION_44="v4.4"
-   VERSION_42="v4.2"
-   VERSION_40="v4.0"
-   VERSION_36="v3.6"
+   VERSION_50="v5.0-latest"
+   VERSION_44="v4.4-latest"
+   VERSION_42="v4.2-latest"
+   VERSION_40="v4.0-latest"
+   VERSION_36="v3.6-latest"
 
    EXTRACT="tar zxf"
    EXTRACT_MONGOSH=$EXTRACT
