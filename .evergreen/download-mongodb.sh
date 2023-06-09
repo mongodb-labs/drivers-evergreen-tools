@@ -514,14 +514,11 @@ get_mongodb_download_url_for ()
    echo $MONGODB_DOWNLOAD_URL
 }
 
-# curl_retry runs curl with the --retry-all-errors flag if supported.
+# curl_retry runs curl with up to three retries, retrying any error.
 curl_retry ()
 {
-  RETRY_ALL=""
-  if curl --help curl | grep -q "retry-all-errors" ; then
-    RETRY_ALL="--retry-all-errors"
-  fi
-  curl --retry 3 -sS --max-time 300 $RETRY_ALL "$@"
+  for i in 1 2 3; do curl --fail -sS --max-time 300 "$@" && break || sleep 5;
+  done
 }
 
 # download_and_extract_package downloads a MongoDB server package.
