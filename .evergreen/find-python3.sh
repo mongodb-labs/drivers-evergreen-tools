@@ -55,7 +55,7 @@ is_python3() (
   # Note: Python True (1) and False (0) is treated as fail (1) and success (0)
   # by Bash; therefore `is_python3` returns "true" when `v < 3` is false.
   # Skip prerelease versions of python.
-  "$bin" -c "import sys; exit(sys.version_info[0] < 3 and sys.version_info.releaselevel == 'final')"
+  "$bin" -c "import sys; exit(sys.version_info[0] < 3 or sys.version_info.releaselevel != 'final')"
 ) 1>&2
 
 # is_venv_capable
