@@ -6,10 +6,9 @@ hostRegion: local
 
 # Disable billing to silence a "no billing configured" warning.
 billing:
-  billing:
-    event:
-      client:
-        enabled: false
+  event:
+    client:
+      enabled: false
 showInternalErrors: true
 
 frontend:
