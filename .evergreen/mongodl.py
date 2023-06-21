@@ -669,7 +669,7 @@ def _published_build_url(cache: Cache, version: str, target: str, arch: str,
     if tup is None:
         raise ValueError(
             'No download was found for '
-            'version="{}" target="{}" arch="{}" edition="{}" component="{}" '.format(
+            'version="{}" target="{}" arch="{}" edition="{}" component="{}"'.format(
                 version, target, arch, edition, component))
     data = json.loads(tup.data_json)
     return data['url']
