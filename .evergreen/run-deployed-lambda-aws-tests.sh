@@ -173,9 +173,9 @@ delete_lambda_function ()
 
 cleanup ()
 {
-  delete_cluster || true
+  delete_cluster
 
-  delete_lambda_function || true
+  delete_lambda_function
 }
 
 trap cleanup EXIT SIGHUP
