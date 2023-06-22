@@ -102,8 +102,6 @@ delete_lambda_stack ()
 
 cd "${TEST_LAMBDA_DIRECTORY}"
 
-create_cluster
-
 check_cluster
 
 sam build
