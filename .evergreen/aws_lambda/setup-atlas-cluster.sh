@@ -71,7 +71,7 @@ EOF
 
 # Create an Atlas M10 cluster - this returns immediately so we'll need to poll until
 # the cluster is created.
-echo "Creating new Atlas Cluster...\n"
+echo "Creating new Atlas Cluster..."
 curl \
   --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
   -d "${CREATE_CLUSTER_JSON}" \

@@ -33,7 +33,7 @@ check_cluster ()
   SRV_ADDRESS="null"
   # Don't try longer than 15 minutes.
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 30 ]; do
-    echo "Checking every 30 seconds for cluster to be created...\n"
+    echo "Checking every 30 seconds for cluster to be created..."
     # Poll every 30 seconds to check the cluster creation.
     sleep 30
     SRV_ADDRESS=$(curl \
@@ -47,10 +47,10 @@ check_cluster ()
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 15 minute timeframe or error occured.\n"
+    echo "No cluster could be created in the 15 minute timeframe or error occured."
     exit 1
   else
-    echo "Setting MONGODB_URI in the environment to the new cluster.\n"
+    echo "Setting MONGODB_URI in the environment to the new cluster."
     # else set the mongodb uri
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
     MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
@@ -61,7 +61,7 @@ check_cluster ()
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
 {
-  echo "Testing Atlas primary restart...\n"
+  echo "Testing Atlas primary restart..."
   curl \
     --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
     -X POST \
@@ -71,7 +71,7 @@ restart_cluster_primary ()
 # Deploys a lambda function to the set stack name.
 deploy_lambda_function ()
 {
-  echo "Deploying Lambda function...\n"
+  echo "Deploying Lambda function..."
   sam deploy \
     --stack-name "${FUNCTION_NAME}" \
     --capabilities CAPABILITY_IAM \
@@ -83,20 +83,20 @@ deploy_lambda_function ()
 # Get the ARN for the Lambda function we created and export it.
 get_lambda_function_arn ()
 {
-  echo "Getting Lambda function ARN...\n"
+  echo "Getting Lambda function ARN..."
   LAMBDA_FUNCTION_ARN=$(sam list stack-outputs \
     --stack-name ${FUNCTION_NAME} \
     --region ${AWS_REGION} \
     --output json | jq '.[] | select(.OutputKey == "MongoDBFunction") | .OutputValue' | tr -d '"'
   )
-  echo "Lambda function ARN: $LAMBDA_FUNCTION_ARN \n"
+  echo "Lambda function ARN: $LAMBDA_FUNCTION_ARN"
   export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN
 }
 
 # Delete the lambda cloud formation stack.
 delete_lambda_stack ()
 {
-  echo "Deleting Lambda Stack...\n"
+  echo "Deleting Lambda Stack..."
   sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
 }
 
@@ -115,14 +115,14 @@ get_lambda_function_arn
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
 tail lambda-invoke-standard.json
 
-echo "Sleeping 1 minute to build up some streaming protocol heartbeats...\n"
+echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json
 tail lambda-invoke-frozen.json
 
 restart_cluster_primary
 
-echo "Sleeping 1 minute to build up some streaming protocol heartbeats...\n"
+echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json

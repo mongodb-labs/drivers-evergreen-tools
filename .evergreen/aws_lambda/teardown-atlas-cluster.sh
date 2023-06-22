@@ -21,7 +21,7 @@ ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/v1.0"
 FUNCTION_NAME="${LAMBDA_STACK_NAME}-$(git rev-parse --short HEAD)"
 
 # Delete the cluster.
-echo "Deleting Atlas Cluster...\n"
+echo "Deleting Atlas Cluster..."
 curl \
   --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
   -X DELETE \
