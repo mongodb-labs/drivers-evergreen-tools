@@ -94,10 +94,10 @@ check_cluster ()
   count=0
   SRV_ADDRESS="null"
   # Don't try longer than 15 minutes.
-  while [ $SRV_ADDRESS = "null" ] && [ $count -le 30 ]; do
-    echo "Checking every 30 seconds for cluster to be created..."
-    # Poll every 30 seconds to check the cluster creation.
-    sleep 30
+  while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
+    echo "Checking every 15 seconds for cluster to be created..."
+    # Poll every 15 seconds to check the cluster creation.
+    sleep 15
     SRV_ADDRESS=$(curl \
       --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
       -X GET \
@@ -109,7 +109,7 @@ check_cluster ()
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 15 minute timeframe or error occured."
+    echo "No cluster could be created in the 20 minute timeframe or error occured."
     exit 1
   else
     echo "Setting MONGODB_URI in the environment to the new cluster."
