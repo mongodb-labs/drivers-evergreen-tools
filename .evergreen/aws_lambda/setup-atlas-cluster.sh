@@ -45,7 +45,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
     "readPreference" : "secondary"
   },
   "clusterType" : "REPLICASET",
-  "diskSizeGB" : 10.0,
+  "diskSizeGB" : 5.0,
   "encryptionAtRestProvider" : "NONE",
   "mongoDBMajorVersion" : "${VERSION}",
   "name" : "${FUNCTION_NAME}",
@@ -62,7 +62,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
       }
     },
     "diskIOPS" : 3000,
-    "encryptEBSVolume" : true,
+    "encryptEBSVolume" : false,
     "instanceSizeName" : "M10",
     "regionName" : "US_EAST_1",
     "volumeType" : "STANDARD"
@@ -93,7 +93,7 @@ check_cluster ()
 {
   count=0
   SRV_ADDRESS="null"
-  # Don't try longer than 15 minutes.
+  # Don't try longer than 20 minutes.
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
     echo "Checking every 15 seconds for cluster to be created..."
     # Poll every 15 seconds to check the cluster creation.
