@@ -9,6 +9,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # DRIVERS_ATLAS_LAMBDA_USER: The user for the lambda cluster.
 # DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
+# MONGODB_VERSION: The major version of the cluster to deploy.
 
 # Explanation of generated variables:
 #
@@ -23,6 +24,9 @@ ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/v1.0"
 
 # Add git commit to name of function and cluster.
 FUNCTION_NAME="${LAMBDA_STACK_NAME}-$(git rev-parse --short HEAD)"
+
+# The cluster server version.
+VERSION="${MONGODB_VERSION:-6.0}"
 
 # Set the create cluster configuration.
 CREATE_CLUSTER_JSON=$(cat <<EOF
@@ -43,8 +47,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   "clusterType" : "REPLICASET",
   "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
-  "mongoDBMajorVersion" : "6.0",
-  "mongoDBVersion" : "6.0.4",
+  "mongoDBMajorVersion" : "${VERSION}",
   "name" : "${FUNCTION_NAME}",
   "numShards" : 1,
   "paused" : false,
