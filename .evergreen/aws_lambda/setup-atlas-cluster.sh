@@ -41,8 +41,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   },
   "backupEnabled" : false,
   "biConnector" : {
-    "enabled" : false,
-    "readPreference" : "secondary"
+    "enabled" : false
   },
   "clusterType" : "REPLICASET",
   "diskSizeGB" : 5.0,
@@ -55,14 +54,8 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   "providerBackupEnabled" : false,
   "providerSettings" : {
     "providerName" : "AWS",
-    "autoScaling" : {
-      "compute" : {
-        "maxInstanceSize" : "M20",
-        "minInstanceSize" : "M10"
-      }
-    },
     "diskIOPS" : 3000,
-    "encryptEBSVolume" : false,
+    "encryptEBSVolume" : true,
     "instanceSizeName" : "M10",
     "regionName" : "US_EAST_1",
     "volumeType" : "STANDARD"
