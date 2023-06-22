@@ -3,7 +3,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 
 # Explanation of required environment variables:
 #
-# TEST_LAMBDA_DIRECTORY: The root of the project's Lambda sam project.
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
 # DRIVERS_ATLAS_PRIVATE_API_KEY: The private Atlas key for the drivers org.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.

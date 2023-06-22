@@ -10,7 +10,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 
 # Explanation of generated variables:
 #
-# MONGODB_URI: The URI for the created Atlas cluster during this script.
 # FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.

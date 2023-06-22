@@ -93,6 +93,13 @@ get_lambda_function_arn ()
   export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN
 }
 
+# Delete the lambda cloud formation stack.
+delete_lambda_stack ()
+{
+  echo "Deleting Lambda Stack...\n"
+  sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
+}
+
 cd "${TEST_LAMBDA_DIRECTORY}"
 
 create_cluster
@@ -119,3 +126,5 @@ echo "Sleeping 1 minute to build up some streaming protocol heartbeats...\n"
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
 tail lambda-invoke-outage.json
+
+delete_lambda_stack || true
