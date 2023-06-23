@@ -54,6 +54,12 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   "providerBackupEnabled" : false,
   "providerSettings" : {
     "providerName" : "AWS",
+    "autoScaling" : {
+      "compute" : {
+        "maxInstanceSize" : "M20",
+        "minInstanceSize" : "M10"
+      }
+    },
     "diskIOPS" : 3000,
     "encryptEBSVolume" : true,
     "instanceSizeName" : "M10",
