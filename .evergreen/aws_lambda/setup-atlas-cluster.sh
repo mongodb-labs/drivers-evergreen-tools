@@ -41,10 +41,11 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   },
   "backupEnabled" : false,
   "biConnector" : {
-    "enabled" : false
+    "enabled" : false,
+    "readPreference" : "secondary"
   },
   "clusterType" : "REPLICASET",
-  "diskSizeGB" : 5.0,
+  "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
   "mongoDBMajorVersion" : "${VERSION}",
   "name" : "${FUNCTION_NAME}",
