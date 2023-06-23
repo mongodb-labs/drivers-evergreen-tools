@@ -9,7 +9,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # DRIVERS_ATLAS_LAMBDA_USER: The user for the lambda cluster.
 # DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
-# MONGODB_VERSION: The major version of the cluster to deploy.
+# MONGODB_VERSION: The major version of the cluster to deploy.  Defaults to 6.0.
 
 # Explanation of generated variables:
 #
