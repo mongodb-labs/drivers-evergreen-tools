@@ -18,9 +18,11 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
+# The Atlas API version
+ATLAS_API_VERSION="v1.0"
 # The base Atlas API url. We use the API directly as the CLI does not yet
 # support testing cluster outages.
-ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/v1.0"
+ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/$ATLAS_API_VERSION"
 
 # Add git commit to name of function and cluster.
 FUNCTION_NAME="${LAMBDA_STACK_NAME}-$(git rev-parse --short HEAD)"
@@ -118,17 +120,6 @@ check_cluster ()
     MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
     # Put the MONGODB_URI in an expansions yml
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > atlas-expansion.yml
-    cat > lambda-expansion.yml <<EOF
-MONGODB_URI: "${MONGODB_URI}"
-DRIVERS_TOOLS: "${DRIVERS_TOOLS}"
-DRIVERS_ATLAS_PUBLIC_API_KEY: "${DRIVERS_ATLAS_PUBLIC_API_KEY}"
-DRIVERS_ATLAS_PRIVATE_API_KEY: "${DRIVERS_ATLAS_PRIVATE_API_KEY}"
-DRIVERS_ATLAS_GROUP_ID: "${DRIVERS_ATLAS_GROUP_ID}"
-DRIVERS_ATLAS_LAMBDA_USER: "${DRIVERS_ATLAS_LAMBDA_USER}"
-DRIVERS_ATLAS_LAMBDA_PASSWORD: "{$DRIVERS_ATLAS_LAMBDA_PASSWORD}"
-LAMBDA_STACK_NAME: "${LAMBDA_STACK_NAME}"
-EOF
-    tail lambda-expansion.yml
   fi
 }
 

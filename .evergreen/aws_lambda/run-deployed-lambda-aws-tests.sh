@@ -9,6 +9,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
 # AWS_REGION: The region for the function - generally us-east-1
+# MONGODB_URI: The URI of the Atlas cluster to test against.
 
 # Explanation of generated variables:
 #
