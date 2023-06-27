@@ -90,7 +90,7 @@ create_cluster ()
     "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true"
 }
 
-# Check is cluster has a srv address, and assume once it does, it can be used.
+# Check if cluster has a srv address, and assume once it does, it can be used.
 check_cluster ()
 {
   count=0
