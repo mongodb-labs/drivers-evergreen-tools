@@ -12,6 +12,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   MONGODB_VERSION        Set to a MongoDB version to use for download-mongodb.sh. Defaults to "latest".
 #   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
 #   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
+#   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
 
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
