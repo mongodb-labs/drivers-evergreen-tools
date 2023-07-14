@@ -55,13 +55,13 @@ get_mongodb_download_url_for ()
    VERSION_MONGOSH="1.8.1"
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="6.3.1"
-   VERSION_70="7.0.0-rc3"
+   VERSION_70="7.0.0-rc7"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.6"
+   VERSION_60="6.0.8"
    # The perf version must always remain pinned to the same patch
    VERSION_60_PERF="6.0.6"
-   VERSION_50="5.0.17"
-   VERSION_44="4.4.21"
+   VERSION_50="5.0.19"
+   VERSION_44="4.4.23"
    VERSION_42="4.2.24"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
