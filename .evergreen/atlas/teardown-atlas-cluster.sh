@@ -24,6 +24,7 @@ LAMBDA_STACK_NAME
 # an error.
 for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 # Set up the common variables.
 DIR=$(dirname $0)
