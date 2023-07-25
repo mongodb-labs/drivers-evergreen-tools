@@ -201,13 +201,13 @@ check_lambda_output () {
   fi
 }
 
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > output.txt
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > lambda_output.txt
 check_lambda_output
 tail lambda-invoke-standard.json
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > output.txt
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > lambda_output.txt
 check_lambda_output
 tail lambda-invoke-frozen.json
 
@@ -215,6 +215,6 @@ restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > output.txt
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > lambda_output.txt
 check_lambda_output
 tail lambda-invoke-outage.json
