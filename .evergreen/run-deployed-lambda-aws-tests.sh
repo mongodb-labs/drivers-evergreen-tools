@@ -192,19 +192,29 @@ deploy_lambda_function
 
 get_lambda_function_arn
 
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
-echo "this is a thing"
+
+check_lambda_output () {
+  cat lambda_output.txt
+  if grep -Fxq FunctionError lambda_output.txt
+  then
+      exit 1
+  fi
+}
+
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > output.txt
+check_lambda_output
 tail lambda-invoke-standard.json
-echo "this is another thing"
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > output.txt
+check_lambda_output
 tail lambda-invoke-frozen.json
 
 restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > output.txt
+check_lambda_output
 tail lambda-invoke-outage.json
