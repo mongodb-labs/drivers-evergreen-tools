@@ -19,6 +19,9 @@ inputs:
   require-api-version:
     description: "Whether to start the server with requireApiVersion enabled (defaults to false)"
     required: false
+  skip-legacy-shell:
+    description: "Whether to skip installing the legacy shell for 6.0+ servers"
+    required: false
 outputs:
   cluster-uri:
     description: "URI of the cluster"
@@ -48,6 +51,7 @@ runs:
         SSL: ${{ inputs.ssl }}
         STORAGE_ENGINE: ${{ inputs.storage-engine }}
         REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
+        SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
       shell: sh
     - id: "get-cluster-uri"
       name: "Expose Cluster URI"
