@@ -194,11 +194,10 @@ get_lambda_function_arn
 
 
 check_lambda_output () {
-  echo "here is a cat"
   cat lambda_output.txt
-  echo "come on cat"
-  if grep -Fxq FunctionError lambda_output.txt
+  if grep -q FunctionError lambda_output.txt
   then
+      echo "Exiting due to FunctionError!"
       exit 1
   fi
 }
