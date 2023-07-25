@@ -12,123 +12,25 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
 # AWS_REGION: The region for the function - generally us-east-1
 
-# Explanation of generated variables:
-#
-# MONGODB_URI: The URI for the created Atlas cluster during this script.
-# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
-# CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
-# ATLAS_BASE_URL: Where the Atlas API root resides.
-
-# The base Atlas API url. We use the API directly as the CLI does not yet
-# support testing cluster outages.
-ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/v1.0"
-
-# Add git commit to name of function and cluster.
-FUNCTION_NAME="${LAMBDA_STACK_NAME}-$(git rev-parse --short HEAD)"
-
-# Set the create cluster configuration.
-CREATE_CLUSTER_JSON=$(cat <<EOF
-{
-  "autoScaling" : {
-    "autoIndexingEnabled" : false,
-    "compute" : {
-      "enabled" : true,
-      "scaleDownEnabled" : true
-    },
-    "diskGBEnabled" : true
-  },
-  "backupEnabled" : false,
-  "biConnector" : {
-    "enabled" : false,
-    "readPreference" : "secondary"
-  },
-  "clusterType" : "REPLICASET",
-  "diskSizeGB" : 10.0,
-  "encryptionAtRestProvider" : "NONE",
-  "mongoDBMajorVersion" : "6.0",
-  "mongoDBVersion" : "6.0.4",
-  "name" : "${FUNCTION_NAME}",
-  "numShards" : 1,
-  "paused" : false,
-  "pitEnabled" : false,
-  "providerBackupEnabled" : false,
-  "providerSettings" : {
-    "providerName" : "AWS",
-    "autoScaling" : {
-      "compute" : {
-        "maxInstanceSize" : "M20",
-        "minInstanceSize" : "M10"
-      }
-    },
-    "diskIOPS" : 3000,
-    "encryptEBSVolume" : true,
-    "instanceSizeName" : "M10",
-    "regionName" : "US_EAST_1",
-    "volumeType" : "STANDARD"
-  },
-  "replicationFactor" : 3,
-  "rootCertType" : "ISRGROOTX1",
-  "terminationProtectionEnabled" : false,
-  "versionReleaseSystem" : "LTS"
-}
-EOF
+VARLIST=(
+TEST_LAMBDA_DIRECTORY
+DRIVERS_ATLAS_PUBLIC_API_KEY
+DRIVERS_ATLAS_PRIVATE_API_KEY
+DRIVERS_ATLAS_LAMBDA_USER
+DRIVERS_ATLAS_LAMBDA_PASSWORD
+DRIVERS_ATLAS_GROUP_ID
+LAMBDA_STACK_NAME
+AWS_REGION
 )
 
-# Create an Atlas M10 cluster - this returns immediately so we'll need to poll until
-# the cluster is created.
-create_cluster ()
-{
-  echo "Creating new Atlas Cluster..."
-  curl \
-    --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
-    -d "${CREATE_CLUSTER_JSON}" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true"
-}
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 
-# Delete the cluster.
-delete_cluster ()
-{
-  echo "Deleting Atlas Cluster..."
-  curl \
-    --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
-    -X DELETE \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}?pretty=true"
-}
-
-# Check is cluster has a srv address, and assume once it does, it can be used.
-check_cluster ()
-{
-  count=0
-  SRV_ADDRESS="null"
-  # Don't try longer than 15 minutes.
-  while [ $SRV_ADDRESS = "null" ] && [ $count -le 30 ]; do
-    echo "Checking every 30 seconds for cluster to be created..."
-    # Poll every 30 seconds to check the cluster creation.
-    sleep 30
-    SRV_ADDRESS=$(curl \
-      --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
-      -X GET \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}" \
-      | jq -r '.srvAddress'
-    );
-    count=$(( $count + 1 ))
-    echo $SRV_ADDRESS
-  done
-
-  if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 15 minute timeframe or error occured. Deleting potential cluster."
-    delete_cluster
-    exit 1
-  else
-    echo "Setting MONGODB_URI in the environment to the new cluster"
-    # else set the mongodb uri
-    URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
-    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
-    export MONGODB_URI=$MONGODB_URI
-  fi
-}
+# Set up the common variables
+DIR=$(dirname $0)
+. $DIR/atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
@@ -173,18 +75,12 @@ delete_lambda_function ()
 
 cleanup ()
 {
-  delete_cluster
-
   delete_lambda_function
 }
 
 trap cleanup EXIT SIGHUP
 
 cd "${TEST_LAMBDA_DIRECTORY}"
-
-create_cluster
-
-check_cluster
 
 sam build
 
@@ -203,19 +99,19 @@ check_lambda_output () {
 }
 
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > lambda_output.txt
-check_lambda_output
 tail lambda-invoke-standard.json
+check_lambda_output
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > lambda_output.txt
-check_lambda_output
 tail lambda-invoke-frozen.json
+check_lambda_output
 
 restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > lambda_output.txt
-check_lambda_output
 tail lambda-invoke-outage.json
+check_lambda_output
