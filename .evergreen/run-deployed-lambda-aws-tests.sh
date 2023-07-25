@@ -30,7 +30,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables
-DIR=$(dirname $0)
+DIR=$(readlink -f ..)
 . $DIR/atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.
