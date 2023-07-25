@@ -194,7 +194,9 @@ get_lambda_function_arn
 
 
 check_lambda_output () {
+  echo "here is a cat"
   cat lambda_output.txt
+  echo "come on cat"
   if grep -Fxq FunctionError lambda_output.txt
   then
       exit 1
