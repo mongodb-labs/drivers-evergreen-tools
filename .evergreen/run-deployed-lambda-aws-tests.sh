@@ -193,7 +193,9 @@ deploy_lambda_function
 get_lambda_function_arn
 
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
+echo "this is a thing"
 tail lambda-invoke-standard.json
+echo "this is another thing"
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
