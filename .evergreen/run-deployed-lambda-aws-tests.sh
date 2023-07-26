@@ -91,28 +91,27 @@ get_lambda_function_arn
 
 
 check_lambda_output () {
-  cat lambda_output.txt
-  if grep -q FunctionError lambda_output.txt
+  OUTPUT=$1
+  cat $OUTPUT
+  if grep -q FunctionError $OUTPUT
   then
       echo "Exiting due to FunctionError!"
       exit 1
   fi
+  cat $OUTPUT | jq -r '.LogResult' | base64 --decode
 }
 
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > lambda_output.txt
-tail lambda-invoke-standard.json
-check_lambda_output
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
+check_lambda_output lambda-invoke-standard.json
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > lambda_output.txt
-tail lambda-invoke-frozen.json
-check_lambda_output
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json
+check_lambda_output lambda-invoke-frozen.json
 
 restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > lambda_output.txt
-tail lambda-invoke-outage.json
-check_lambda_output
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
+check_lambda_output lambda-invoke-outage.json
