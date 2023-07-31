@@ -11,6 +11,13 @@ billing:
       enabled: false
 showInternalErrors: true
 
+dls:
+  frontend:
+    catalog:
+      disabled: true
+    expirationRules:
+      disabled: true
+
 frontend:
   bindAddr: "localhost:27017"
   cursor:
