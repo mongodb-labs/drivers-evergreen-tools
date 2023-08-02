@@ -61,10 +61,10 @@ def write_secrets(*vaults):
         # for key, val in pairs.items():
         #     out.write(key + ": " + "\"" + val + "\"" + "\n")
 
-    # with open("secrets-export.sh", "w") as out:
-    #     out.write("#!/usr/bin/env bash" + "\n\n")
-    #     for key, val in pairs.items():
-    #         out.write("export " + key.upper() + "=" + val + "\n")
+    with open("secrets-export.sh", "w") as out:
+        out.write("#!/usr/bin/env bash" + "\n\n")
+        for key, val in pairs.items():
+            out.write("export " + key.upper() + "=" + val + "\n")
 
 
 write_secrets(*sys.argv[1:])
