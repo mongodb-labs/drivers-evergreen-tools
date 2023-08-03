@@ -6,23 +6,32 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # TEST_LAMBDA_DIRECTORY: The root of the project's Lambda sam project.
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
 # DRIVERS_ATLAS_PRIVATE_API_KEY: The private Atlas key for the drivers org.
+# DRIVERS_ATLAS_LAMBDA_USER: The user for the lambda cluster.
+# DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
 # LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
 # AWS_REGION: The region for the function - generally us-east-1
-# MONGODB_URI: The URI of the Atlas cluster to test against.
 
-# Explanation of generated variables:
-#
-# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
-# CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
-# ATLAS_BASE_URL: Where the Atlas API root resides.
+VARLIST=(
+TEST_LAMBDA_DIRECTORY
+DRIVERS_ATLAS_PUBLIC_API_KEY
+DRIVERS_ATLAS_PRIVATE_API_KEY
+DRIVERS_ATLAS_LAMBDA_USER
+DRIVERS_ATLAS_LAMBDA_PASSWORD
+DRIVERS_ATLAS_GROUP_ID
+LAMBDA_STACK_NAME
+AWS_REGION
+)
 
-# The base Atlas API url. We use the API directly as the CLI does not yet
-# support testing cluster outages.
-ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/v1.0"
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
-# Add git commit to name of function and cluster.
-FUNCTION_NAME="${LAMBDA_STACK_NAME}-$(git rev-parse --short HEAD)"
+# Set up the common variables
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+. $DIR/atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
@@ -59,12 +68,18 @@ get_lambda_function_arn ()
   export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN
 }
 
-# Delete the lambda cloud formation stack.
-delete_lambda_stack ()
+delete_lambda_function ()
 {
-  echo "Deleting Lambda Stack..."
+  echo "Deleting Lambda Function..."
   sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
 }
+
+cleanup ()
+{
+  delete_lambda_function
+}
+
+trap cleanup EXIT SIGHUP
 
 cd "${TEST_LAMBDA_DIRECTORY}"
 
@@ -74,19 +89,30 @@ deploy_lambda_function
 
 get_lambda_function_arn
 
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json
-tail lambda-invoke-standard.json
+
+check_lambda_output () {
+  if grep -q FunctionError output.json
+  then
+      echo "Exiting due to FunctionError!"
+      exit 1
+  fi
+  cat output.json | jq -r '.LogResult' | base64 --decode
+}
+
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > output.json
+cat lambda-invoke-standard.json
+check_lambda_output
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json
-tail lambda-invoke-frozen.json
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-frozen.json > output.json
+cat lambda-invoke-frozen.json
+check_lambda_output
 
 restart_cluster_primary
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
-aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json
-tail lambda-invoke-outage.json
-
-delete_lambda_stack || true
+aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-outage.json > output.json
+cat lambda-invoke-outage.json
+check_lambda_output

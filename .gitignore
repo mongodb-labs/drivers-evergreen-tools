@@ -106,3 +106,4 @@ lb-expansion.yml
 .DS_Store
 *.log
 orchestration.config
+atlas-expansion.yml
