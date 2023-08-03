@@ -47,24 +47,22 @@ def get_secrets(*vaults):
 
 def write_secrets(*vaults):
     pairs = {}
-    export = " |\n\tset -o errexit\n"
+    # export = " |\n\tset -o errexit\n"
     secrets = get_secrets(*vaults)
     for secret in secrets:
         for key, val in secret.items():
             pairs[key.upper()] = val
-            export += "\texport " + key.upper() + "=" + val + "\n"
-    pairs["EXPORT_SECRETS"] = export
+            # export += "\texport " + key.upper() + "=" + val + "\n"
+    # pairs["EXPORT_SECRETS"] = export
     # print(pairs["EXPORT_SECRETS"])
 
     with open("secrets-expansion.yml", "w") as yaml_out:
         yaml.dump(pairs, yaml_out, default_flow_style=False, allow_unicode=True, default_style='"')
-        # for key, val in pairs.items():
-        #     out.write(key + ": " + "\"" + val + "\"" + "\n")
 
     with open("secrets-export.sh", "w") as out:
         out.write("#!/usr/bin/env bash" + "\n\n")
         for key, val in pairs.items():
-            out.write("export " + key.upper() + "=" + val + "\n")
+            out.write("export " + key + "=" + "\"" + val + "\"\n")
 
 
 write_secrets(*sys.argv[1:])
