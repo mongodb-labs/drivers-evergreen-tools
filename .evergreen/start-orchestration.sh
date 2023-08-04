@@ -50,17 +50,17 @@ fi
 if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
   OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
-    taskkill /F /T /PID "$OLD_MO_PID"
+    taskkill /F /T /PID "$OLD_MO_PID" || true
   fi
 elif [ -x "$(command -v lsof)" ]; then
   OLD_MO_PID=$(lsof -t -i:8889 || true)
   if [ ! -z "$OLD_MO_PID" ]; then
-    kill -9 "$OLD_MO_PID"
+    kill -9 "$OLD_MO_PID" || true
   fi
 elif [ -x "$(command -v ss)" ]; then
   OLD_MO_PID=$(ss -tlnp 'sport = :8889' | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
-    kill -9 "$OLD_MO_PID"
+    kill -9 "$OLD_MO_PID" || true
   fi
 else
   echo "Unable to identify the OS or find necessary utilities (lsof/ss) to kill the process."
