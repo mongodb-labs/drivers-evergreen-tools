@@ -106,3 +106,5 @@ lb-expansion.yml
 .DS_Store
 *.log
 orchestration.config
+secrets-expansion.yml
+secrets-export.sh
