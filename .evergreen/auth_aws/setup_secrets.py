@@ -12,24 +12,28 @@ sys.path.insert(0, aws_lib)
 DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
 
 
-def get_secrets(*vaults):
+def get_secrets(profile, *vaults):
     """Get the driver secret values."""
     # Handle local credentials.
-    if "AWS_SESSION_TOKEN" not in os.environ:
-        if "AWS_ROLE_ARN" in os.environ:
-            session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
-            client = session.client(service_name='sts', region_name='us-west-2')
-            creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')['Credentials']
-            os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
-            os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
-            os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
+    if len(profile) != 0:
+        session = boto3.Session(profile_name=profile)
+        client = session.client(service_name='secretsmanager', region_name='us-west-2')
+    else:
+        if "AWS_SESSION_TOKEN" not in os.environ:
+            if "AWS_ROLE_ARN" in os.environ:
+                session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+                client = session.client(service_name='sts', region_name='us-west-2')
+                creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')['Credentials']
+                os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
+                os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
+                os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
+            else:
+                raise ValueError('Missing AWS credentials')
 
-        else:
-            raise ValueError('Missing AWS credentials')
+        # Create a session using the given creds
+        session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
+        client = session.client(service_name='secretsmanager', region_name='us-west-2')
 
-    # Create a session using the given creds
-    session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
-    client = session.client(service_name='secretsmanager', region_name='us-west-2')
     secrets = []
     try:
         for vault in vaults:
@@ -45,16 +49,12 @@ def get_secrets(*vaults):
     return [json.loads(s) for s in secrets]
 
 
-def write_secrets(*vaults):
+def write_secrets(profile, *vaults):
     pairs = {}
-    # export = " |\n\tset -o errexit\n"
-    secrets = get_secrets(*vaults)
+    secrets = get_secrets(profile, *vaults)
     for secret in secrets:
         for key, val in secret.items():
             pairs[key.upper()] = val
-            # export += "\texport " + key.upper() + "=" + val + "\n"
-    # pairs["EXPORT_SECRETS"] = export
-    # print(pairs["EXPORT_SECRETS"])
 
     with open("secrets-expansion.yml", "w") as yaml_out:
         yaml.dump(pairs, yaml_out, default_flow_style=False, allow_unicode=True, default_style='"')
@@ -65,4 +65,4 @@ def write_secrets(*vaults):
             out.write("export " + key + "=" + "\"" + val + "\"\n")
 
 
-write_secrets(*sys.argv[1:])
+write_secrets(sys.argv[1], *sys.argv[2:])
