@@ -19,7 +19,8 @@ def get_secrets(vaults, region="us-east-1", profile="default"):
         print("Failed to connect using AWS credentials, trying with environment variables")
         if "AWS_SESSION_TOKEN" not in os.environ:
             if "AWS_ROLE_ARN" in os.environ:
-                session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+                session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                                        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
                 client = session.client(service_name='sts', region_name=region)
                 creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')['Credentials']
                 os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
@@ -29,7 +30,9 @@ def get_secrets(vaults, region="us-east-1", profile="default"):
                 raise ValueError('Missing AWS credentials')
 
         # Create a session using the given creds
-        session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
+        session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                                aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+                                aws_session_token=os.environ['AWS_SESSION_TOKEN'])
         client = session.client(service_name='secretsmanager', region_name=region)
 
     secrets = []
@@ -58,20 +61,23 @@ def write_secrets(vaults, region, profile):
         yaml.dump(pairs, yaml_out, default_flow_style=False, allow_unicode=True, default_style='"')
 
     with open("secrets-export.sh", "w") as out:
-        out.write("#!/usr/bin/env bash" + "\n\n")
+        # These values are secrets, do not print them
+        out.write("#!/usr/bin/env bash\n\nset +x\n")
         for key, val in pairs.items():
             out.write("export " + key + "=" + "\"" + val + "\"\n")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='MongoDB AWS Secrets Vault fetcher. If connecting with the given AWS '
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                     description='MongoDB AWS Secrets Vault fetcher. If connecting with the given AWS '
                                                  'profile fails, will attempt to use local environment variables '
                                                  'instead.')
 
-    parser.add_argument("-p", "--profile", type=str, metavar="profile", help="a local AWS profile to use credentials "
-                                                                             "from. Defaults to \"default\".")
-    parser.add_argument("-r", "--region", type=str, metavar="region",
-                        help="the AWS region containing the given vaults. Defaults to \"us-east-1\".")
+    parser.add_argument("-p", "--profile", type=str, metavar="profile", default="default", help="a local AWS profile "
+                                                                                                "to use credentials "
+                                                                                                "from.")
+    parser.add_argument("-r", "--region", type=str, metavar="region", default="us-east-1",
+                        help="the AWS region containing the given vaults.")
     parser.add_argument("vaults", metavar="V", type=str, nargs="+", help="a vault to fetch secrets from")
 
     args = parser.parse_args()
