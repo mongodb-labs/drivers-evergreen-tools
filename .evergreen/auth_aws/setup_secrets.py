@@ -1,28 +1,26 @@
+#!/usr/bin/env python3
+"""
+Script for fetching AWS Secrets Vault secrets for use in testing.
+"""
+import argparse
 import json
 import os
-import sys
 import yaml
-
 import boto3
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-aws_lib = os.path.join(os.path.dirname(HERE), 'auth_aws', 'lib')
-sys.path.insert(0, aws_lib)
 
-DEFAULT_CLIENT = "0oadp0hpl7q3UIehP297"
-
-
-def get_secrets(profile, *vaults):
+def get_secrets(vaults, region="us-east-1", profile="default"):
     """Get the driver secret values."""
     # Handle local credentials.
-    if len(profile) != 0:
+    try:
         session = boto3.Session(profile_name=profile)
-        client = session.client(service_name='secretsmanager', region_name='us-west-2')
-    else:
+        client = session.client(service_name='secretsmanager', region_name=region)
+    except Exception:
+        print("Failed to connect using AWS credentials, trying with environment variables")
         if "AWS_SESSION_TOKEN" not in os.environ:
             if "AWS_ROLE_ARN" in os.environ:
                 session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
-                client = session.client(service_name='sts', region_name='us-west-2')
+                client = session.client(service_name='sts', region_name=region)
                 creds = client.assume_role(RoleArn=os.environ['AWS_ROLE_ARN'], RoleSessionName='test')['Credentials']
                 os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
                 os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
@@ -32,7 +30,7 @@ def get_secrets(profile, *vaults):
 
         # Create a session using the given creds
         session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'], aws_session_token=os.environ['AWS_SESSION_TOKEN'])
-        client = session.client(service_name='secretsmanager', region_name='us-west-2')
+        client = session.client(service_name='secretsmanager', region_name=region)
 
     secrets = []
     try:
@@ -49,9 +47,9 @@ def get_secrets(profile, *vaults):
     return [json.loads(s) for s in secrets]
 
 
-def write_secrets(profile, *vaults):
+def write_secrets(vaults, region, profile):
     pairs = {}
-    secrets = get_secrets(profile, *vaults)
+    secrets = get_secrets(vaults, region, profile)
     for secret in secrets:
         for key, val in secret.items():
             pairs[key.upper()] = val
@@ -65,4 +63,21 @@ def write_secrets(profile, *vaults):
             out.write("export " + key + "=" + "\"" + val + "\"\n")
 
 
-write_secrets(sys.argv[1], *sys.argv[2:])
+def main():
+    parser = argparse.ArgumentParser(description='MongoDB AWS Secrets Vault fetcher. If connecting with the given AWS '
+                                                 'profile fails, will attempt to use local environment variables '
+                                                 'instead.')
+
+    parser.add_argument("-p", "--profile", type=str, metavar="profile", help="a local AWS profile to use credentials "
+                                                                             "from. Defaults to \"default\".")
+    parser.add_argument("-r", "--region", type=str, metavar="region",
+                        help="the AWS region containing the given vaults. Defaults to \"us-east-1\".")
+    parser.add_argument("vaults", metavar="V", type=str, nargs="+", help="a vault to fetch secrets from")
+
+    args = parser.parse_args()
+
+    write_secrets(args.vaults, args.region, args.profile)
+
+
+if __name__ == '__main__':
+    main()

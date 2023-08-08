@@ -25,13 +25,13 @@ fi
 # Automatically invoked by activate-authoidcvenv.sh.
 activate_authoidcvenv() {
   # shellcheck source=.evergreen/venv-utils.sh
-  . drivers-evergreen-tools/.evergreen/venv-utils.sh || return
+  . ../venv-utils.sh || return
 
   if [[ -d authoidcvenv ]]; then
     venvactivate authoidcvenv || return
   else
     # shellcheck source=.evergreen/find-python3.sh
-    . drivers-evergreen-tools/.evergreen/find-python3.sh || return
+    . ../find-python3.sh || return
 
     venvcreate "$(find_python3)" authoidcvenv || return
 
