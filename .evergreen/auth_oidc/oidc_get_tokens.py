@@ -16,7 +16,7 @@ def main():
         'rsa_key': secrets['oidc_rsa_key'],
         'audience': DEFAULT_CLIENT,
         'client_id': DEFAULT_CLIENT,
-        'client_secret':secrets['oidc_client_secret'],
+        'client_secret': secrets['oidc_client_secret'],
         'username': 'test_user1',
         'token_file': os.path.join(token_dir, 'test_user1')
     }
