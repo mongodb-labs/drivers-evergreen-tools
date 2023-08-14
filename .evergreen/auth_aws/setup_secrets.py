@@ -22,7 +22,6 @@ def get_secrets(vaults, region, profile):
         print("Failed to connect using AWS credentials, trying with environment variables")
         if "AWS_SESSION_TOKEN" not in os.environ:
             if "AWS_ROLE_ARN" in os.environ:
-                print("GETTING ARN")
                 session = boto3.Session(aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
                                         aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
                 client = session.client(service_name='sts', region_name=region)
