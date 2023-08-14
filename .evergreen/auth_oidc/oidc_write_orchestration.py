@@ -44,7 +44,7 @@ def azure():
             "port": 27017,
             "setParameter": {
                 "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC,SCRAM-SHA-1",
                 "oidcIdentityProviders": providers
             }
         }
@@ -87,7 +87,7 @@ def main():
                 "port": 27017,
                 "setParameter": {
                     "enableTestCommands": 1,
-                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC,SCRAM-SHA-1",
                     "oidcIdentityProviders": providers
                 }
             }
@@ -114,7 +114,7 @@ def main():
             "port": 27018,
             "setParameter": {
                 "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC,SCRAM-SHA-1",
                 "oidcIdentityProviders": providers
             }
         },
