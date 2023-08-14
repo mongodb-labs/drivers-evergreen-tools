@@ -9,11 +9,14 @@ import yaml
 import boto3
 
 
-def get_secrets(vaults, region="us-east-1", profile="default"):
+def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
     # Handle local credentials.
     try:
-        session = boto3.Session(profile_name=profile)
+        if profile is not None:
+            session = boto3.Session(profile_name=profile)
+        else:
+            session = boto3.Session()
         client = session.client(service_name='secretsmanager', region_name=region)
     except Exception:
         print("Failed to connect using AWS credentials, trying with environment variables")
@@ -73,9 +76,10 @@ def main():
                                                  'profile fails, will attempt to use local environment variables '
                                                  'instead.')
 
-    parser.add_argument("-p", "--profile", type=str, metavar="profile", default="default", help="a local AWS profile "
-                                                                                                "to use credentials "
-                                                                                                "from.")
+    parser.add_argument("-p", "--profile", type=str, nargs="?", metavar="profile", help="a local AWS profile "
+                                                                                        "to use credentials "
+                                                                                        "from. Defaults to "
+                                                                                        "AWS_PROFILE if not provided.")
     parser.add_argument("-r", "--region", type=str, metavar="region", default="us-east-1",
                         help="the AWS region containing the given vaults.")
     parser.add_argument("vaults", metavar="V", type=str, nargs="+", help="a vault to fetch secrets from")
