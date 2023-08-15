@@ -107,5 +107,4 @@ lb-expansion.yml
 *.log
 orchestration.config
 atlas-expansion.yml
-secrets-expansion.yml
 secrets-export.sh
