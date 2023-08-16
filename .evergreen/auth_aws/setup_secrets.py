@@ -60,10 +60,7 @@ def write_secrets(vaults, region, profile):
         for key, val in secret.items():
             pairs[key.upper()] = val
 
-    with open("secrets-expansion.yml", "w") as yaml_out:
-        yaml.dump(pairs, yaml_out, default_flow_style=False, allow_unicode=True, default_style='"')
-
-    with open("secrets-export.sh", "w") as out:
+    with open("secrets-export.sh", "w", newline="\n") as out:
         # These values are secrets, do not print them
         out.write("#!/usr/bin/env bash\n\nset +x\n")
         for key, val in pairs.items():
