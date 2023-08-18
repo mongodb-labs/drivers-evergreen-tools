@@ -24,7 +24,7 @@ ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*
 # This varies based on hosting EC2 as the account id and role name can vary
 AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*"
 
-
+print("OS VARS HERE: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
 def run(args, env):
     """Run a python command in a subprocess."""
     return subprocess.run([sys.executable] + args, env=env).returncode
