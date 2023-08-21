@@ -30,3 +30,9 @@ az network nsg delete \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     -n "$AZUREKMS_VMNAME-NSG"
 echo "Delete Network Security Group $AZUREKMS_VMNAME-NSG ... end"
+
+echo "Delete Virtual Network $AZUREKMS_VMNAME-VNET ... begin"
+az network vnet delete \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    -n "$AZUREKMS_VMNAME-VNET"
+echo "Delete Virtual Network $AZUREKMS_VMNAME-VNET ... end"

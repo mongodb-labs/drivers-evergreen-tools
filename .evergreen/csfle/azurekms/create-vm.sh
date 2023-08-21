@@ -37,5 +37,6 @@ az vm create \
     --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
     --nsg "$AZUREKMS_VMNAME-NSG" \
     --assign-identity $AZUREKMS_IDENTITY \
+    --vnet-name "$AZUREKMS_VNAME-VNET" \
     >/dev/null
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
