@@ -10,7 +10,6 @@ import subprocess
 from pymongo import MongoClient
 from urllib.parse import quote_plus
 
-
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.insert(0, os.path.join(HERE, 'lib'))
@@ -24,7 +23,13 @@ ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*
 # This varies based on hosting EC2 as the account id and role name can vary
 AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*"
 
-print("OS VARS HERE: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
+if "USE_AWS_SECRETS" not in os.environ:
+    with open(os.path.join(HERE, 'aws_e2e_setup.json')) as fid:
+        CONFIG = json.load(fid)
+else:
+    CONFIG = os.environ
+
+
 def run(args, env):
     """Run a python command in a subprocess."""
     return subprocess.run([sys.executable] + args, env=env).returncode
@@ -46,17 +51,18 @@ def create_user(user, kwargs):
 
 def setup_assume_role():
     # Assume the role to get temp creds.
-    os.environ['AWS_ACCESS_KEY_ID'] = os.environ["iam_auth_assume_aws_account"]
-    os.environ['AWS_SECRET_ACCESS_KEY'] = os.environ["iam_auth_assume_aws_secret_access_key"]
+    os.environ['AWS_ACCESS_KEY_ID'] = CONFIG["iam_auth_assume_aws_account"]
+    os.environ['AWS_SECRET_ACCESS_KEY'] = CONFIG["iam_auth_assume_aws_secret_access_key"]
 
-    role_name = os.environ["iam_auth_assume_role_name"]
+    role_name = CONFIG["iam_auth_assume_role_name"]
     creds = _assume_role(role_name)
     with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"],
+                  authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
     create_user(ASSUMED_ROLE, kwargs)
 
 
@@ -73,14 +79,14 @@ def setup_ecs():
     mongo_binaries = os.environ['MONGODB_BINARIES']
     project_dir = os.environ['PROJECT_DIRECTORY']
     base_command = f"{sys.executable} -u  lib/container_tester.py"
-    run_prune_command = f"{base_command} -v remote_gc_services --cluster {os.environ['iam_auth_ecs_cluster']}"
-    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {os.environ['iam_auth_ecs_cluster']} --task_definition {os.environ['iam_auth_ecs_task_definition']} --subnets {os.environ['iam_auth_ecs_subnet_a']} --subnets {os.environ['iam_auth_ecs_subnet_b']} --security_group {os.environ['iam_auth_ecs_security_group']} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
+    run_prune_command = f"{base_command} -v remote_gc_services --cluster {CONFIG['iam_auth_ecs_cluster']}"
+    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG['iam_auth_ecs_cluster']} --task_definition {CONFIG['iam_auth_ecs_task_definition']} --subnets {CONFIG['iam_auth_ecs_subnet_a']} --subnets {CONFIG['iam_auth_ecs_subnet_b']} --security_group {CONFIG['iam_auth_ecs_security_group']} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
 
     # Pass in the AWS credentials as environment variables
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown
     #  reason
-    env = dict(AWS_ACCESS_KEY_ID=os.environ['iam_auth_ecs_account'],
-               AWS_SECRET_ACCESS_KEY=os.environ['iam_auth_ecs_secret_access_key'])
+    env = dict(AWS_ACCESS_KEY_ID=CONFIG['iam_auth_ecs_account'],
+               AWS_SECRET_ACCESS_KEY=CONFIG['iam_auth_ecs_secret_access_key'])
 
     # Prune other containers
     subprocess.check_call(['/bin/sh', '-c', run_prune_command], env=env)
@@ -88,19 +94,20 @@ def setup_ecs():
     # Run the test in a container
     subprocess.check_call(['/bin/sh', '-c', run_test_command], env=env)
 
+
 def setup_regular():
     # Create the user.
     kwargs = dict(
-        username=os.environ["iam_auth_ecs_account"],
-        password=os.environ["iam_auth_ecs_secret_access_key"]
+        username=CONFIG["iam_auth_ecs_account"],
+        password=CONFIG["iam_auth_ecs_secret_access_key"]
     )
-    create_user(os.environ["iam_auth_ecs_account_arn"], kwargs)
+    create_user(CONFIG["iam_auth_ecs_account_arn"], kwargs)
 
 
 def setup_web_identity():
     # Unassign the instance profile.
-    env = dict(AWS_ACCESS_KEY_ID=os.environ["iam_auth_ec2_instance_account"],
-               AWS_SECRET_ACCESS_KEY=os.environ["iam_auth_ec2_instance_secret_access_key"])
+    env = dict(AWS_ACCESS_KEY_ID=CONFIG["iam_auth_ec2_instance_account"],
+               AWS_SECRET_ACCESS_KEY=CONFIG["iam_auth_ec2_instance_secret_access_key"])
     ret = run(['lib/aws_unassign_instance_profile.py'], env)
     if ret == 2:
         raise RuntimeError("Request limit exceeded for AWS API");
@@ -111,10 +118,10 @@ def setup_web_identity():
 
     # Handle the OIDC credentials.
     env = dict(
-        IDP_ISSUER=os.environ["iam_web_identity_issuer"],
-        IDP_JWKS_URI=os.environ["iam_web_identity_jwks_uri"],
-        IDP_RSA_KEY=os.environ["iam_web_identity_rsa_key"],
-        AWS_WEB_IDENTITY_TOKEN_FILE=os.environ['iam_web_identity_token_file']
+        IDP_ISSUER=CONFIG["iam_web_identity_issuer"],
+        IDP_JWKS_URI=CONFIG["iam_web_identity_jwks_uri"],
+        IDP_RSA_KEY=CONFIG["iam_web_identity_rsa_key"],
+        AWS_WEB_IDENTITY_TOKEN_FILE=CONFIG['iam_web_identity_token_file']
     )
 
     ret = run(['lib/aws_handle_oidc_creds.py', 'token'], env)
@@ -122,8 +129,8 @@ def setup_web_identity():
         raise RuntimeWarning("Failed to write the web token")
 
     # Assume the web role to get temp credentials.
-    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = os.environ['iam_web_identity_token_file']
-    os.environ['AWS_ROLE_ARN'] = os.environ["iam_auth_assume_web_role_name"]
+    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = CONFIG['iam_web_identity_token_file']
+    os.environ['AWS_ROLE_ARN'] = CONFIG["iam_auth_assume_web_role_name"]
 
     creds = _assume_role_with_web_identity()
     with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
@@ -131,7 +138,8 @@ def setup_web_identity():
 
     # Create the user.
     token = quote_plus(creds['SessionToken'])
-    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"], authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
+    kwargs = dict(username=creds["AccessKeyId"], password=creds["SecretAccessKey"],
+                  authmechanismproperties=f"AWS_SESSION_TOKEN:{token}")
     create_user(ASSUMED_WEB_ROLE, kwargs)
 
 
