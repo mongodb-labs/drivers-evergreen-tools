@@ -7,8 +7,9 @@
 #
 # Loads AWS credentials for an authenticated MongoDB server. Exports the final credentials and server URI as environment variables.
 urlencode () {
-  python -c "import sys, urllib.parse as ulp; sys.stdout.write(ulp.quote_plus(sys.argv[1]))" "$1"
-  }
+  $PYTHON_BINARY --version
+  $PYTHON_BINARY -c "import sys, urllib.parse as ulp; sys.stdout.write(ulp.quote_plus(sys.argv[1]))" "$1"
+}
 if [ -n "$ASSUME_ROLE_CREDENTIALS" ]; then
   jsonkey () {
     $PYTHON_BINARY -c  "import json,sys;sys.stdout.write(json.load(sys.stdin)[sys.argv[1]])" "$1" < "${DRIVERS_TOOLS}"/.evergreen/auth_aws/creds.json
