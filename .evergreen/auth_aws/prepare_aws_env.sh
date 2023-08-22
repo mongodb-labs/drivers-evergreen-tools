@@ -25,6 +25,7 @@ if [ -n "$ASSUME_ROLE_CREDENTIALS" ]; then
   export SESSION_TOKEN
 else
   $PYTHON_BINARY -c "import os;print('ENV VARS INSIDE HERE');print(sorted([(k, v[:2]) for k, v in os.environ.items()]))"
+  echo "IAM_AUTH_ECS_ACCOUNT ${IAM_AUTH_ECS_ACCOUNT}"
   USER=$(urlencode "${IAM_AUTH_ECS_ACCOUNT}")
   PASS=$(urlencode "${IAM_AUTH_ECS_SECRET_ACCESS_KEY}")
 fi
