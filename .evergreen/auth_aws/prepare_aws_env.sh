@@ -6,6 +6,7 @@
 #   . ./prepare_aws_env.sh
 #
 # Loads AWS credentials for an authenticated MongoDB server. Exports the final credentials and server URI as environment variables.
+$PYTHON_BINARY -c "import os;print('ENV VARS INSIDE HERE');print(sorted([(k, v[:2]) for k, v in os.environ.items()]))"
 urlencode () {
   $PYTHON_BINARY -c "import sys, urllib.parse as ulp; sys.stdout.write(ulp.quote_plus(sys.argv[1]))" "$1"
 }
