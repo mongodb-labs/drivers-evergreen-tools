@@ -32,7 +32,6 @@ else:
     _USE_AWS_SECRETS = True
     print("Using os.environ")
     CONFIG = os.environ
-    print("OS.ENVIRON HERE: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
 
 
 def get_key(key: str) -> str:
