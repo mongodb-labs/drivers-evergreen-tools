@@ -32,6 +32,7 @@ else:
     _USE_AWS_SECRETS = True
     print("Using os.environ")
     CONFIG = os.environ
+    print("OS.ENVIRON HERE: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
 
 
 def get_key(key: str) -> str:
@@ -80,6 +81,7 @@ def setup_assume_role():
 def setup_ec2():
     # Create the user.
     _assign_instance_policy()
+    print("OS.ENVIRON HERE AGAIN: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
     del os.environ['AWS_ACCESS_KEY_ID']
     del os.environ['AWS_SECRET_ACCESS_KEY']
     create_user(AWS_ACCOUNT_ARN, dict())
