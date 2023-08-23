@@ -81,9 +81,8 @@ def setup_assume_role():
 def setup_ec2():
     # Create the user.
     _assign_instance_policy()
-    print("OS.ENVIRON HERE AGAIN: ", sorted([(k, v[:2]) for k, v in os.environ.items()]))
-    del os.environ['AWS_ACCESS_KEY_ID']
-    del os.environ['AWS_SECRET_ACCESS_KEY']
+    os.environ.pop("AWS_ACCESS_KEY_ID", None)
+    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
     create_user(AWS_ACCOUNT_ARN, dict())
 
 
