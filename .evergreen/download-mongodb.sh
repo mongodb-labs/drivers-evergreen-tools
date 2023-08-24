@@ -739,22 +739,19 @@ download_and_extract ()
          get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
          echo $MONGODB_DOWNLOAD_URL
       )
-      if [ -z "$MONGODB50_DOWNLOAD_URL" ]; then
-         echo "Legacy shell not supported on this platform, skipping."
-      else
-         SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
-         mkdir $DRIVERS_TOOLS/legacy-shell-download
-         DRIVERS_TOOLS=$DRIVERS_TOOLS/legacy-shell-download
-         download_and_extract_package "$MONGODB50_DOWNLOAD_URL" "$EXTRACT"
-         if [ -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
-            cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
-         elif [ -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
-            cp $DRIVERS_TOOLS/mongodb/bin/mongo.exe $SAVED_DRIVERS_TOOLS/mongodb/bin
-         fi
-         DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
-         rm -rf $DRIVERS_TOOLS/legacy-shell-download
-         echo "Download legacy shell from 5.0 ... end"
+
+      SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
+      mkdir $DRIVERS_TOOLS/legacy-shell-download
+      DRIVERS_TOOLS=$DRIVERS_TOOLS/legacy-shell-download
+      download_and_extract_package "$MONGODB50_DOWNLOAD_URL" "$EXTRACT"
+      if [ -e $DRIVERS_TOOLS/mongodb/bin/mongo ]; then
+         cp $DRIVERS_TOOLS/mongodb/bin/mongo $SAVED_DRIVERS_TOOLS/mongodb/bin
+      elif [ -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+         cp $DRIVERS_TOOLS/mongodb/bin/mongo.exe $SAVED_DRIVERS_TOOLS/mongodb/bin
       fi
+      DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
+      rm -rf $DRIVERS_TOOLS/legacy-shell-download
+      echo "Download legacy shell from 5.0 ... end"
    fi
 }
 
