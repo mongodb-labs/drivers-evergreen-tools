@@ -722,7 +722,12 @@ download_and_extract ()
       download_and_extract_mongosh "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
    fi
 
-   # Deprecated: this will be removed once drivers have updated to mongosh
+   # Deprecated: this will be removed once drivers have updated to mongosh.
+   # Ubunutu 22 does not support the legacy shell.
+   case "$DISTRO" in
+      linux-ubuntu-22.04*) SKIP_LEGACY_SHELL=1
+      ;;
+   esac
    if [ -z "${SKIP_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
@@ -731,7 +736,7 @@ download_and_extract ()
       echo "Download legacy shell from 5.0 ... begin"
       # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
       MONGODB50_DOWNLOAD_URL=$(
-         get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null || true
+         get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
          echo $MONGODB_DOWNLOAD_URL
       )
       if [ -z "$MONGODB50_DOWNLOAD_URL" ]; then
