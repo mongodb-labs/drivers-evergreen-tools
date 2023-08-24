@@ -72,8 +72,6 @@ get_mongodb_download_url_for ()
    VERSION_26="2.6.12"
    VERSION_24="2.4.14"
 
-   MONGODB_50=""
-
    EXTRACT="tar zxf"
    EXTRACT_MONGOSH=$EXTRACT
 
@@ -733,7 +731,7 @@ download_and_extract ()
       echo "Download legacy shell from 5.0 ... begin"
       # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
       MONGODB50_DOWNLOAD_URL=$(
-         get_mongodb_download_url_for "$DISTRO" "5.0"
+         get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null | true
          echo $MONGODB_DOWNLOAD_URL
       )
       if [ -z "$MONGODB50_DOWNLOAD_URL" ]; then
