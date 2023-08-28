@@ -31,11 +31,11 @@ elif [ -n "$SESSION_TOKEN_CREDENTIALS" ]; then
 
   AWS_ACCESS_KEY_ID=$(jsonkey AccessKeyId)
   AWS_SECRET_ACCESS_KEY=$(jsonkey SecretAccessKey)
-  SESSION_TOKEN=$(jsonkey SessionToken)
+  AWS_SESSION_TOKEN=$(jsonkey SessionToken)
 
   export AWS_ACCESS_KEY_ID
   export AWS_SECRET_ACCESS_KEY
-  export SESSION_TOKEN
+  export AWS_SESSION_TOKEN
 else
   USER=$(urlencode "${IAM_AUTH_ECS_ACCOUNT}")
   PASS=$(urlencode "${IAM_AUTH_ECS_SECRET_ACCESS_KEY}")
