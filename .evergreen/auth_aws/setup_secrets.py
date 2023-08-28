@@ -5,7 +5,6 @@ Script for fetching AWS Secrets Vault secrets for use in testing.
 import argparse
 import json
 import os
-import yaml
 import boto3
 
 
