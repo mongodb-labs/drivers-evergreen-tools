@@ -41,9 +41,8 @@ else
   PASS=$(urlencode "${IAM_AUTH_ECS_SECRET_ACCESS_KEY}")
 fi
 
-MONGODB_URI="mongodb://$USER:$PASS@localhost"
-
 if [ -z "$SESSION_TOKEN_CREDENTIALS" ]; then
+  MONGODB_URI="mongodb://$USER:$PASS@localhost"
   export USER
   export PASS
   export MONGODB_URI
