@@ -55,7 +55,9 @@ DIR=$(dirname $0)
 
 # Ensure that a Python binary is available for JSON decoding
 . $DIR/../find-python3.sh || exit 1
+echo "Finding Python3 binary..."
 PYTHON_BINARY="$(find_python3 2>/dev/null)" || exit 1
+echo "Finding Python3 binary... done."
 
 echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 

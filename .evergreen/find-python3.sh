@@ -198,8 +198,6 @@ find_python3() (
   local -a bins=()
   local bin=""
 
-  trap "echo 'find_python3 failed!'" EXIT
-
   # The list of Python binaries to test for venv or virtualenv support.
   # The binaries are tested in the order of their position in the array.
   {

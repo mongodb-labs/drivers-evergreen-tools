@@ -34,8 +34,10 @@ activate_ocspvenv() {
     . ../find-python3.sh || return
 
     echo "Creating virtual environment 'ocspvenv'..."
-
-    venvcreate "$(find_python3 2>/dev/null)" ocspvenv || return
+    echo "Finding Python3 binary..."
+    PYTHON="$(find_python3 2>/dev/null)"
+    echo "Finding Python3 binary... done."
+    venvcreate $PYTHON ocspvenv || return
 
     python -m pip install -q -r mock-ocsp-responder-requirements.txt || {
       local -r ret="$?"

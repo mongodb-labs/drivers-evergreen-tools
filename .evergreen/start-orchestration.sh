@@ -25,7 +25,9 @@ det_evergreen_dir="$(dirname "${BASH_SOURCE[0]}")"
 
 cd "$MONGO_ORCHESTRATION_HOME"
 
+echo "Finding Python3 binary..."
 PYTHON="$(find_python3 2>/dev/null)"
+echo "Finding Python3 binary... done."
 
 venvcreate "$PYTHON" venv
 
