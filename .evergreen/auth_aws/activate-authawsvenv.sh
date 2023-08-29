@@ -33,11 +33,12 @@ activate_authawsvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
 
-    echo "Creating virtual environment 'authawsvenv'..."
     echo "Finding Python3 binary..."
-    PYTHON="$(find_python3 2>/dev/null)"
+    PYTHON="$(find_python3 2>/dev/null)" || return
     echo "Finding Python3 binary... done."
-    venvcreate $PYTHON authawsvenv || return
+
+    echo "Creating virtual environment 'authawsvenv'..."
+    venvcreate "${PYTHON:?}" authawsvenv || return
 
     local packages=(
       "boto3~=1.26.0"

@@ -33,11 +33,11 @@ activate_kmstlsvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
 
-    echo "Creating virtual environment 'kmstlsvenv'..."
     echo "Finding Python3 binary..."
-    PYTHON="$(find_python3 2>/dev/null)"
+    PYTHON="$(find_python3 2>/dev/null)" || return
     echo "Finding Python3 binary... done."
-    venvcreate $PYTHON kmstlsvenv || return
+
+    venvcreate "${PYTHON:?}" kmstlsvenv || return
 
     local packages=(
       "boto3~=1.19.0"
@@ -69,7 +69,6 @@ activate_kmstlsvenv() {
         return "$ret"
       }
     fi
-    echo "Creating virtual environment 'kmstlsvenv'... done."
   fi
 }
 

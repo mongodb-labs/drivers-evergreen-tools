@@ -33,11 +33,12 @@ activate_ocspvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
 
-    echo "Creating virtual environment 'ocspvenv'..."
     echo "Finding Python3 binary..."
-    PYTHON="$(find_python3 2>/dev/null)"
+    PYTHON="$(find_python3 2>/dev/null)" || return
     echo "Finding Python3 binary... done."
-    venvcreate $PYTHON ocspvenv || return
+
+    echo "Creating virtual environment 'ocspvenv'..."
+    venvcreate "${PYTHON:?}" ocspvenv || return
 
     python -m pip install -q -r mock-ocsp-responder-requirements.txt || {
       local -r ret="$?"
