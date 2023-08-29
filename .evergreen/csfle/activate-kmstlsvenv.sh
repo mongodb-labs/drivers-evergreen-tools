@@ -37,6 +37,7 @@ activate_kmstlsvenv() {
     PYTHON="$(find_python3 2>/dev/null)" || return
     echo "Finding Python3 binary... done."
 
+    echo "Creating virtual environment 'kmstlsvenv'..."
     venvcreate "${PYTHON:?}" kmstlsvenv || return
 
     local packages=(
@@ -69,6 +70,7 @@ activate_kmstlsvenv() {
         return "$ret"
       }
     fi
+    echo "Creating virtual environment 'kmstlsvenv'... done."
   fi
 }
 
