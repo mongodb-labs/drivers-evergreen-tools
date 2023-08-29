@@ -11,7 +11,6 @@ import boto3
 def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
     # Handle local credentials.
-    # TODO: rectify this with how we run locally.
     profile = profile or os.environ.get("AWS_PROFILE")
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
         raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
