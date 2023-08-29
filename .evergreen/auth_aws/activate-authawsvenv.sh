@@ -33,7 +33,9 @@ activate_authawsvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
 
-    venvcreate "$(find_python3)" authawsvenv || return
+    echo "Creating virtual environment 'authawsvenv'..."
+
+    venvcreate "$(find_python3 2>/dev/null)" authawsvenv || return
 
     local packages=(
       "boto3~=1.26.0"
@@ -41,21 +43,7 @@ activate_authawsvenv() {
       "pymongo[aws]~=4.0"
     )
 
-    if [[ "$OSTYPE" == cygwin && "$HOSTTYPE" == x86_64 ]]; then
-      local -r windows_os_name="$(systeminfo.exe /FO LIST | perl -lne 'print $1 if m/^OS Name:\s+(.*)$/' || true)"
-
-      if [[ "$windows_os_name" =~ 2016 ]]; then
-        # Avoid `RuntimeError: Could not determine home directory.` on
-        # windows-64-2016. See BUILD-16233.
-        python -m pip install -U "setuptools<65.0" || {
-          local -r ret="$?"
-          deactivate || return 1 # Deactivation should never fail!
-          return "$ret"
-        }
-      fi
-    fi
-
-    python -m pip install -U "${packages[@]}" || {
+    python -m pip install -q -U "${packages[@]}" || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"

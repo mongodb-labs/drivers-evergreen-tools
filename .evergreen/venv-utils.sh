@@ -78,7 +78,7 @@ venvcreate() {
 
     venvactivate "$venv_path" || continue
 
-    if ! python -m pip install -U pip; then
+    if ! python -m pip install -q -U pip; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi
@@ -90,7 +90,7 @@ venvcreate() {
     # These packages must be upgraded *after* pip, *separately*, as some old
     # versions of pip do not handle their simultaneous installation properly.
     # See: https://github.com/pypa/pip/issues/4253
-    if ! python -m pip install -U setuptools wheel; then
+    if ! python -m pip install -q -U setuptools wheel; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi
