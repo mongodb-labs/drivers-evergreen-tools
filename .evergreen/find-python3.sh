@@ -239,6 +239,8 @@ find_python3() (
     # Some environments trigger an unbound variable error if "${bins[@]}" is empty when used below.
     if (("${#bins[@]}" == 0)); then
       echo "Could not find any python3 binaries!"
+      echo "If you are suppressing stdout with 'find_python3 2>/dev/null' you may need to"
+      echo "remove it to aid in debugging."
       return 1
     fi
 
@@ -275,6 +277,8 @@ find_python3() (
 
     if [[ -z "$res" ]]; then
       echo "Could not find a python3 binary capable of creating a virtual environment!"
+      echo "If you are suppressing stdout with 'find_python3 2>/dev/null' you may need to"
+      echo "remove it to aid in debugging."
       return 1
     fi
   } 1>&2

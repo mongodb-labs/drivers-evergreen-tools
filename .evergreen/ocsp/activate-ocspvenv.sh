@@ -42,6 +42,7 @@ activate_ocspvenv() {
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"
     }
+    echo "Creating virtual environment 'ocspvenv'... done."
   fi
 }
 

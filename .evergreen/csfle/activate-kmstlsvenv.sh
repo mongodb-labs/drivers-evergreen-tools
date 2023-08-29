@@ -67,6 +67,7 @@ activate_kmstlsvenv() {
         return "$ret"
       }
     fi
+    echo "Creating virtual environment 'kmstlsvenv'... done."
   fi
 }
 
