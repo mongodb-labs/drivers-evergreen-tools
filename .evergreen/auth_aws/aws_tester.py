@@ -24,13 +24,11 @@ ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*
 AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*"
 _USE_AWS_SECRETS = False
 
-if "USE_AWS_SECRETS" not in os.environ:
-    print("Using aws_e2e_setup.json")
+try:
     with open(os.path.join(HERE, 'aws_e2e_setup.json')) as fid:
         CONFIG = json.load(fid)
-else:
+except FileNotFoundError:
     _USE_AWS_SECRETS = True
-    print("Using os.environ")
     CONFIG = os.environ
 
 
