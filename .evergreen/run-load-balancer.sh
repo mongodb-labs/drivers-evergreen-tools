@@ -77,9 +77,11 @@ EOF_HAPROXY_CONFIG
 }
 
 stop() {
-  echo "Stopping HAProxy..."
-  kill -USR1 $(cat $DRIVERS_TOOLS/haproxy.pid)
-  rm $DRIVERS_TOOLS/haproxy.conf $DRIVERS_TOOLS/haproxy.pid
+  if [[ -f "$DRIVERS_TOOLS/haproxy.pid" ]]; then
+    echo "Stopping HAProxy..."
+    kill -USR1 $(cat $DRIVERS_TOOLS/haproxy.pid)
+    rm $DRIVERS_TOOLS/haproxy.conf $DRIVERS_TOOLS/haproxy.pid
+  fi
 }
 
 case "$1" in

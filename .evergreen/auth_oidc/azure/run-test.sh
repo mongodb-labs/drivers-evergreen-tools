@@ -11,6 +11,6 @@ git clone https://github.com/mongodb/mongo-python-driver
 pushd mongo-python-driver
 python setup.py install --no_ext
 popd
-pip install requests
+pip install -q requests
 python azure/test.py
 popd

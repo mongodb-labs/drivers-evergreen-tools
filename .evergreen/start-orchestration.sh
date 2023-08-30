@@ -25,12 +25,16 @@ det_evergreen_dir="$(dirname "${BASH_SOURCE[0]}")"
 
 cd "$MONGO_ORCHESTRATION_HOME"
 
-PYTHON="$(find_python3)"
+echo "Finding Python3 binary..."
+PYTHON="$(find_python3 2>/dev/null)" || return
+echo "Finding Python3 binary... done."
 
-venvcreate "$PYTHON" venv
+echo "Creating virtual environment 'venv'..."
+venvcreate "${PYTHON:?}" venv
+echo "Creating virtual environment 'venv'... done."
 
 # Install from github to get the latest mongo-orchestration.
-python -m pip install --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
+python -m pip install -q --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
 python -m pip list
 cd -
 

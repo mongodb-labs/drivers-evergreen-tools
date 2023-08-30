@@ -33,27 +33,19 @@ activate_ocspvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
 
-    venvcreate "$(find_python3)" ocspvenv || return
+    echo "Finding Python3 binary..."
+    PYTHON="$(find_python3 2>/dev/null)" || return
+    echo "Finding Python3 binary... done."
 
-    if [[ "$OSTYPE" == cygwin && "$HOSTTYPE" == x86_64 ]]; then
-      local -r windows_os_name="$(systeminfo.exe /FO LIST | perl -lne 'print $1 if m/^OS Name:\s+(.*)$/' || true)"
+    echo "Creating virtual environment 'ocspvenv'..."
+    venvcreate "${PYTHON:?}" ocspvenv || return
 
-      if [[ "$windows_os_name" =~ 2016 ]]; then
-        # Avoid `RuntimeError: Could not determine home directory.` on
-        # windows-64-2016. See BUILD-16233.
-        python -m pip install -U "setuptools<65.0" || {
-          local -r ret="$?"
-          deactivate || return 1 # Deactivation should never fail!
-          return "$ret"
-        }
-      fi
-    fi
-
-    python -m pip install -r mock-ocsp-responder-requirements.txt || {
+    python -m pip install -q -r mock-ocsp-responder-requirements.txt || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"
     }
+    echo "Creating virtual environment 'ocspvenv'... done."
   fi
 }
 
