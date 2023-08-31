@@ -25,6 +25,7 @@ DRIVERS_ATLAS_GROUP_ID
 DRIVERS_ATLAS_LAMBDA_USER
 DRIVERS_ATLAS_LAMBDA_PASSWORD
 LAMBDA_STACK_NAME
+TASK_ID
 )
 
 # Ensure that all variables required to run the test are set, otherwise throw
