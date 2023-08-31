@@ -19,4 +19,4 @@ ATLAS_API_VERSION="v1.0"
 ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/$ATLAS_API_VERSION"
 
 # Add git commit to name of function and cluster.
-FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_ID}-$(git rev-parse --short HEAD)"
+FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_ID | base64 | head -c 8}-$(git rev-parse --short HEAD)"
