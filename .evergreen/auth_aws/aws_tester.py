@@ -15,10 +15,10 @@ from urllib.parse import quote_plus
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.insert(0, os.path.join(HERE, 'lib'))
+from util import get_key as _get_key
 from aws_assume_role import _assume_role
 from aws_assume_web_role import _assume_role_with_web_identity
 from aws_assign_instance_profile import _assign_instance_policy
-from util import get_key as _get_key
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
 ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
