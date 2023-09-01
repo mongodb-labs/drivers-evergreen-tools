@@ -15,9 +15,9 @@ from functools import partial
 import boto3
 import botocore
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
-
 from util import get_key as _get_key
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
