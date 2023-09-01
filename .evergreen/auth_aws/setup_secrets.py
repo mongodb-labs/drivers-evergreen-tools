@@ -5,7 +5,10 @@ Script for fetching AWS Secrets Vault secrets for use in testing.
 import argparse
 import json
 import os
+import sys
+
 import boto3
+import botocore.exceptions
 
 
 def get_secrets(vaults, region, profile):
@@ -20,12 +23,14 @@ def get_secrets(vaults, region, profile):
     secrets = []
     try:
         for vault in vaults:
-            secrets.append(client.get_secret_value(
-                SecretId=vault
-            )['SecretString'])
-    except Exception as e:
+            secret = client.get_secret_value(SecretId=vault)['SecretString']
+            secrets.append(secret)
+    except botocore.exceptions.BotoCoreError as e:
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        print(f"\nERROR: {e}\n")
+        sys.exit(1)
+    except Exception as e:
         raise e
 
     # Decrypts secret using the associated KMS key.
