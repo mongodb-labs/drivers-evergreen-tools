@@ -10,16 +10,18 @@ import json
 import os
 import sys
 import time
+from functools import partial
 
 import boto3
 import botocore
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from util import get_key
+from util import get_key as _get_key
 
 LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 def _get_local_instance_id():
     return urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id').read().decode()
@@ -64,16 +66,17 @@ def _handle_config():
     try:
         with open(os.path.join(HERE, '..', 'aws_e2e_setup.json')) as fid:
             CONFIG = json.load(fid)
-            use_secrets = False
+            get_key = partial(_get_key, uppercase=False)
+
     except FileNotFoundError:
         CONFIG = os.environ
-        use_secrets = True
+        get_key = partial(_get_key, uppercase=True)
 
     try:
-        os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG[get_key('iam_auth_ec2_instance_account', use_secrets)])
+        os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG[get_key('iam_auth_ec2_instance_account')])
         os.environ.setdefault('AWS_SECRET_ACCESS_KEY',
-                              CONFIG[get_key('iam_auth_ec2_instance_secret_access_key', use_secrets)])
-        return CONFIG[get_key('iam_auth_ec2_instance_profile', use_secrets)]
+                              CONFIG[get_key('iam_auth_ec2_instance_secret_access_key')])
+        return CONFIG[get_key('iam_auth_ec2_instance_profile')]
     except Exception as e:
         print(e)
         return ''
