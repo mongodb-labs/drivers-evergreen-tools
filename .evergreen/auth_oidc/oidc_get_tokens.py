@@ -7,7 +7,7 @@ from utils import get_secrets, get_id_token, DEFAULT_CLIENT, join
 
 
 def main():
-    token_dir = os.environ['OIDC_TOKEN_DIR']
+    token_dir = os.environ['OIDC_TOKEN_DIR'].replace(os.sep, '/')
     os.makedirs(token_dir, exist_ok=True)
     secrets = get_secrets()
     config = {
