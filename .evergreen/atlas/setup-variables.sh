@@ -10,7 +10,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 # task_id: The `task_id` evergreen expansion associated with the CI run (or a unique identifier with which to create the function name).
-#          Note: This MUST be unique per-CI task.  Otherwise, multiple tasks calling this script may attempt to create lambda functions with the same name.
+#          Note: This MUST be unique per-CI task.  Otherwise, multiple tasks calling this script may attempt to create clusters with the same name.
 
 
 # The Atlas API version
