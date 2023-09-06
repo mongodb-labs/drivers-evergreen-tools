@@ -4,7 +4,7 @@
 #
 set -eux
 if [ -z "$OIDC_TOKEN_DIR" ]; then
-    if [ "Windows_NT" = "$OS" ];
+    if [ "Windows_NT" = "$OS" ]; then
         export OIDC_TOKEN_DIR=C:/Temp/tokens
     else
         export OIDC_TOKEN_DIR=/tmp/tokens
