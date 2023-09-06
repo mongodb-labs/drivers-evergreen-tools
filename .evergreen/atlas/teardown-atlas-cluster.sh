@@ -18,7 +18,7 @@ DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
 DRIVERS_ATLAS_GROUP_ID
 LAMBDA_STACK_NAME
-TASK_ID
+task_id
 )
 
 # Ensure that all variables required to run the test are set, otherwise throw
