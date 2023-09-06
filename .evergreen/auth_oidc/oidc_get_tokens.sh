@@ -13,4 +13,3 @@ fi
 mkdir -p $OIDC_TOKEN_DIR
 . ./activate-authoidcvenv.sh
 python oidc_get_tokens.py
-ls -ltr $OIDC_TOKEN_DIR

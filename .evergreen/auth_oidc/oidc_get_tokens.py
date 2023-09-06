@@ -33,7 +33,7 @@ def main():
         get_id_token(config)
     config['issuer'] = secrets['oidc_issuer_1_uri']
     config['username'] = 'test_user1'
-    config['token_file'] =  join(token_dir, 'test_user1_expires')
+    config['token_file'] = join(token_dir, 'test_user1_expires')
     get_id_token(config, expires=60)
 
     print(f"Wrote tokens to {token_dir}")
