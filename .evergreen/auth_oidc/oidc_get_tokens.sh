@@ -2,7 +2,7 @@
 #
 # Get the set of OIDC tokens in the OIDC_TOKEN_DIR.
 #
-set -eux
+set -ex
 if [ -z "$OIDC_TOKEN_DIR" ]; then
     if [ "Windows_NT" = "$OS" ]; then
         export OIDC_TOKEN_DIR=C:/Temp/tokens
