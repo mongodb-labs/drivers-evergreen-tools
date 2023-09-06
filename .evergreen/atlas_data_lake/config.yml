@@ -29,7 +29,7 @@ execution:
 
 tenants:
   config:
-    inline:
+    inline: &tenantCfg
       ipList: [ "0.0.0.0" ]
       hostnames:
         - localhost
@@ -61,3 +61,8 @@ tenants:
                 dataSources:
                   - storeName: localstore
                     path: test.driverdata.json
+
+tenant:
+  config:
+    server:
+      inline: *tenantCfg
