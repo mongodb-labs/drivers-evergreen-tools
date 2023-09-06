@@ -105,6 +105,7 @@ def get_id_token(config=None, expires=None):
     token = response["id_token"]
     if config['token_file']:
         with open(config['token_file'], 'w') as fid:
+            print(f"Writing token file: {config['token_file']}")
             fid.write(token)
     return token
 

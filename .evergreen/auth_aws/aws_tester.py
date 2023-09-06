@@ -14,7 +14,11 @@ from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-sys.path.insert(0, os.path.join(HERE, 'lib'))
+def join(*parts):
+    return os.path.join(*parts).replace(os.sep, '/')
+
+
+sys.path.insert(0, join(HERE, 'lib'))
 from util import get_key as _get_key
 from aws_assume_role import _assume_role
 from aws_assume_web_role import _assume_role_with_web_identity
@@ -28,7 +32,7 @@ AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_i
 _USE_AWS_SECRETS = False
 
 try:
-    with open(os.path.join(HERE, 'aws_e2e_setup.json')) as fid:
+    with open(join(HERE, 'aws_e2e_setup.json')) as fid:
         CONFIG = json.load(fid)
         get_key = partial(_get_key, uppercase=False)
 except FileNotFoundError:
@@ -62,7 +66,7 @@ def setup_assume_role():
 
     role_name = CONFIG[get_key("iam_auth_assume_role_name")]
     creds = _assume_role(role_name)
-    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+    with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
     # Create the user.
@@ -139,7 +143,7 @@ def setup_web_identity():
     os.environ['AWS_ROLE_ARN'] = CONFIG[get_key("iam_auth_assume_web_role_name")]
 
     creds = _assume_role_with_web_identity()
-    with open(os.path.join(HERE, 'creds.json'), 'w') as fid:
+    with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
     # Create the user.
