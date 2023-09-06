@@ -7,4 +7,6 @@ export OIDC_TOKEN_DIR=${OIDC_TOKEN_DIR:-/tmp/tokens}
 mkdir -p $OIDC_TOKEN_DIR
 . ./activate-authoidcvenv.sh
 python oidc_get_tokens.py
-ls $OIDC_TOKEN_DIR
+echo "before"
+ls -ltr $OIDC_TOKEN_DIR
+echo "after"
