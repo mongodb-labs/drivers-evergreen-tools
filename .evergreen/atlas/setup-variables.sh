@@ -19,14 +19,11 @@ ATLAS_API_VERSION="v1.0"
 # support testing cluster outages.
 ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/$ATLAS_API_VERSION"
 
-echo "logs ***********************"
-echo $task_id
-temp=$($task_id | base64)
-echo $temp
-echo "logs ***********************"
-
 # create a unique per CI task tag for the function.
-TASK_NAME=$(echo $task_id | base64 | head -c 8)
+# task_id has the structure $projectID_$variantName_$taskName_$commitHash_$createTime, which is unique per task per ci run per project.
+# task_id is NOT unique across restarts of the same task though, so we include execution to ensure that it is unique for every restart too.
+# the generated string is hashed to ensure the prefix is unique for every id
+TASK_ID=$(echo "${task_id}-${execution}" | md5)
 
 # Add git commit to name of function and cluster.
-FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_NAME}-$(git rev-parse --short HEAD)"
+FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_ID}"
