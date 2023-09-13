@@ -19,6 +19,12 @@ ATLAS_API_VERSION="v1.0"
 # support testing cluster outages.
 ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/$ATLAS_API_VERSION"
 
+echo "logs ***********************"
+echo $task_id
+temp=$($task_id | base64)
+echo $temp
+echo "logs ***********************"
+
 # create a unique per CI task tag for the function.
 TASK_NAME=$(echo $task_id | base64 | head -c 8)
 
