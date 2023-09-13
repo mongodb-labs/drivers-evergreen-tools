@@ -27,3 +27,6 @@ TASK_ID=$(echo "${task_id}-${execution}" | base64)
 
 # Add git commit to name of function and cluster.
 FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_ID}"
+
+echo $FUNCTION_NAME | wc -c 
+echo $FUNCTION_NAME
