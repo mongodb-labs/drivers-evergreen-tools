@@ -23,7 +23,7 @@ ATLAS_BASE_URL="https://cloud.mongodb.com/api/atlas/$ATLAS_API_VERSION"
 # task_id has the structure $projectID_$variantName_$taskName_$commitHash_$createTime, which is unique per task per ci run per project.
 # task_id is NOT unique across restarts of the same task though, so we include execution to ensure that it is unique for every restart too.
 # the generated string is hashed to ensure the prefix is unique for every id
-TASK_ID=$(echo "${task_id}-${execution}" | base64 | tr -d '[:space:]')
+TASK_ID=$(echo "${task_id}-${execution}" | tr '_' '-')
 
 # Add git commit to name of function and cluster.
 FUNCTION_NAME="${LAMBDA_STACK_NAME}-${TASK_ID}"
