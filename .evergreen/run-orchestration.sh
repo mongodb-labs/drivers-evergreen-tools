@@ -89,7 +89,7 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 # https://docs.docker.com/config/daemon/ipv6/
 if [ -n $DOCKER_RUNNING ]; then
   cp $ORCHESTRATION_FILE /root/config.json
-  export ORCHESTRATION_FILE=$ORCHESTRATION_FILE
+  export ORCHESTRATION_FILE=/root/config.json
   sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
 fi
 
