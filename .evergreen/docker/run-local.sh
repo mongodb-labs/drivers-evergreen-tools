@@ -40,4 +40,4 @@ fi
 
 VOL="-v `pwd`:/root/drivers-evergreen-tools"
 
-docker run --rm $ENV $PORT $VOL -it $NAME $ENTRYPOINT
+docker run --rm $ENV $PORT $VOL -t $NAME $ENTRYPOINT
