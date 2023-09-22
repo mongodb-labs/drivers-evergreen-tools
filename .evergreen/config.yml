@@ -955,6 +955,7 @@ buildvariants:
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
+     - name: "test-docker"
 
 - matrix_name: "tests-nossl"
   matrix_spec: {"os-nossl": "*", auth: "*", ssl: "nossl" }
