@@ -363,6 +363,14 @@ functions:
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
             sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
+  "run docker test"
+    - command: shell.exec
+      params:
+        script: |
+          ${PREPARE_SHELL}
+          cd $DRIVERS_TOOLS/.evergreen docker
+          bash run-local.sh /root/run-test-entrypoint.sh
+
   "cleanup":
     - command: shell.exec
       params:
@@ -722,6 +730,10 @@ tasks:
       commands:
         - func: "run serverless tests"
 
+    - name: "test-docker"
+      commands:
+        - func: "run docker test"
+
 # }}}
 
 
@@ -1073,4 +1085,3 @@ buildvariants:
       # Debian 7.1 does not support MongoDB 2.4
       # SUSE12 x86_64 is only supported by MongoDB 3.2+
       # vim: set et sw=2 ts=2 :
-
