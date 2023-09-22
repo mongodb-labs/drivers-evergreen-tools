@@ -368,7 +368,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          cd $DRIVERS_TOOLS/.evergreen docker
+          cd $DRIVERS_TOOLS/.evergreen/docker
           bash run-local.sh /root/run-test-entrypoint.sh
 
   "cleanup":

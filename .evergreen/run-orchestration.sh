@@ -88,6 +88,8 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 # Docker does not enable ipv6 by default.
 # https://docs.docker.com/config/daemon/ipv6/
 if [ -n $DOCKER_RUNNING ]; then
+  cp $ORCHESTRATION_FILE /root/config.json
+  export ORCHESTRATION_FILE=$ORCHESTRATION_FILE
   sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
 fi
 
