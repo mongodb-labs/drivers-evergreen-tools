@@ -678,14 +678,18 @@ download_and_extract_package ()
    EXTRACT=$2
 
    cd $DRIVERS_TOOLS
+   echo "Installing server binaries..."
    curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+
    $EXTRACT mongodb-binaries.tgz
+   echo "Installing server binaries... done."
 
    rm -f mongodb-binaries.tgz
+   rm -rf mongodb
    mv mongodb* mongodb
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
-   ./mongodb/bin/mongod --version
+   echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
 
@@ -695,15 +699,17 @@ download_and_extract_mongosh ()
    EXTRACT_MONGOSH=$2
 
    cd $DRIVERS_TOOLS
+   echo "Installing MongoDB shell..."
    curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
+   rm -rf mongosh
    mv mongosh-* mongosh
    mv mongosh/bin/* mongodb/bin
    chmod -R +x mongodb/bin
-   echo "MongoDB shell installed. Version:"
-   ./mongodb/bin/mongosh --version
+   echo "Installing MongoDB shell... done."
+   echo "MongoDB shell version: $(./mongodb/bin/mongosh --version)"
    cd -
 }
 
@@ -762,6 +768,7 @@ download_and_extract_crypt_shared ()
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
    EXTRACT=$2
    __CRYPT_SHARED_LIB_PATH=${3:-CRYPT_SHARED_LIB_PATH}
+   rm -rf crypt_shared_download
    mkdir crypt_shared_download
    cd crypt_shared_download
    curl_retry $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
