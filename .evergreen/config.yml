@@ -363,7 +363,7 @@ functions:
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
             sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
-  "run docker test"
+  "run docker test":
     - command: shell.exec
       params:
         script: |
