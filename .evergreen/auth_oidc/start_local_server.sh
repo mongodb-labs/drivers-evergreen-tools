@@ -5,16 +5,30 @@
 # prequisites and usage.
 #
 set -eux
-if [[ -z "${AWS_ROLE_ARN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
-    echo "Missing AWS credentials"
-    exit 1
-fi
 
 DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
-echo "Drivers tools: $DRIVERS_TOOLS"
+ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
+USE_TTY=""
+VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
+
+if [ -z "$AWS_PROFILE" ]; then
+    if [[ -z "${AWS_SESSION_TOKEN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+        echo "Please set AWS_PROFILE or set AWS credentials environment variables"
+       exit 1
+    fi
+    ENV="-e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+    ENV="$ENV -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+else
+    ENV="-e AWS_PROFILE=$AWS_PROFILE"
+    VOL="$VOL -v $HOME/.aws:/root/.aws"
+fi
+
 rm -rf $DRIVERS_TOOLS/.evergreen/auth_oidc/authoidcvenv
-rm -rf $DRIVERS_TOOLS/mongodb
-rm -rf $DRIVERS_TOOLS/legacy-shell-download
-rm -rf $DRIVERS_TOOLS/mongosh
+test -t 1 && USE_TTY="-t"
+
+echo "Drivers tools: $DRIVERS_TOOLS"
+pushd ../docker
+docker build -t drivers-evergreen-tools ./ubuntu20.04
+popd
 docker build -t oidc-test .
-docker run -it -v ${DRIVERS_TOOLS}:/home/root/drivers-evergreen-tools -p 27017:27017 -p 27018:27018 -e HOME=/home/root -e AWS_ROLE_ARN=${AWS_ROLE_ARN} -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e NO_IPV6=true oidc-test
+docker run --rm -i $USE_TTY $VOL $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT

@@ -369,7 +369,20 @@ functions:
         script: |
           ${PREPARE_SHELL}
           cd $DRIVERS_TOOLS/.evergreen/docker
-          bash run-local.sh /root/run-test-entrypoint.sh
+          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
+
+  "run oidc test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: shell.exec
+      params:
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        script: |
+          ${PREPARE_SHELL}
+          cd $DRIVERS_TOOLS/.evergreen/auth_oidc
+          export ENTRYPOINT=/root/docker_entry_base.sh
+          bash start_local_server.sh
 
   "cleanup":
     - command: shell.exec
@@ -731,8 +744,14 @@ tasks:
         - func: "run serverless tests"
 
     - name: "test-docker"
+      tags: ["latest"]
       commands:
         - func: "run docker test"
+
+    - name: "test-oidc"
+      tags: ["latest"]
+      command:
+        - func: "run oidc test"
 
 # }}}
 
@@ -956,6 +975,7 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
      - name: "test-docker"
+     - name: "test-oidc"
 
 - matrix_name: "tests-nossl"
   matrix_spec: {"os-nossl": "*", auth: "*", ssl: "nossl" }

@@ -5,9 +5,11 @@
 set -eu
 
 NAME=drivers-evergreen-tools
-ENTRYPOINT=${1:-/root/run-local-entrypoint.sh}
+ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
+IMAGE=${TARGET_IMAGE:-ubuntu20.04}
+PLATFORM=${DOCKER_PLATFORM:-}
 
-docker build -t $NAME .
+docker build $PLATFORM -t $NAME $IMAGE
 pushd ../..
 
 AUTH=${AUTH:-noauth}
@@ -40,4 +42,4 @@ fi
 
 VOL="-v `pwd`:/root/drivers-evergreen-tools"
 
-docker run --rm $ENV $PORT $VOL -t $NAME $ENTRYPOINT
+docker run $PLATFORM --rm $ENV $PORT $VOL -t $NAME $ENTRYPOINT

@@ -24,5 +24,5 @@ ENV MONGO_ORCHESTRATION_HOME=/root
 ENV SKIP_LEGACY_SHELL=1
 ENV DOCKER_RUNNING=true
 
-COPY ./run-local-entrypoint.sh /root/run-local-entrypoint.sh
-COPY ./run-test-entrypoint.sh /root/run-test-entrypoint.sh
+COPY ./local-entrypoint.sh /root/local-entrypoint.sh
+COPY ./test-entrypoint.sh /root/test-entrypoint.sh
