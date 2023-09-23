@@ -39,7 +39,7 @@ if [ "$TOPOLOGY" == "server" ]; then
 else
     PORT="-p 27017:2017 -p 27018:2018 -p 27019:2019"
 fi
-
+test -t 1 && USE_TTY="-t"
 VOL="-v `pwd`:/root/drivers-evergreen-tools"
 
-docker run $PLATFORM --rm $ENV $PORT $VOL -t $NAME $ENTRYPOINT
+docker run $PLATFORM --rm $ENV $PORT $VOL -i $USE_TTY $NAME $ENTRYPOINT
