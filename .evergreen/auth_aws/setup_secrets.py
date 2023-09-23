@@ -24,7 +24,7 @@ def get_secrets(vaults, region, profile):
         client = session.client(service_name='sts', region_name=region)
         try:
             # This will only fail locally.
-            resp = client.assume_role(RoleName=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()))
+            resp = client.assume_role(RoleArn=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()))
         except Exception as e:
             print(e)
             raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
