@@ -8,6 +8,7 @@ NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
 PLATFORM=${DOCKER_PLATFORM:-}
+# e.g. --platform linux/amd64
 
 docker build $PLATFORM -t $NAME $IMAGE
 pushd ../..

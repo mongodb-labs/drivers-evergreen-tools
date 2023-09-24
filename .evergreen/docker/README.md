@@ -1,6 +1,6 @@
 # Drivers Evergreen Tools Dockerfile
 
-This ``Dockerfile`` and scripts serves dual purposes.
+The ``Dockerfile`` and scripts in the subdirector(ies) serve dual purposes.
 
 - Run a local server in docker container.
 - Extend and run a driver test in a docker container.
@@ -21,6 +21,9 @@ Note that any of the environment variables used by `run-orchestration`
 will be passed through to the container.
 The appropriate port(s) will be exposed, allowing you to run local test against
 the running docker container.
+
+The default image can be overridden with `IMAGE``, and the entrypoint with `ENTRYPOINT`.
+To use a specific architecture, use `PLATFORM`, e.g. `--platform linux/amd64`.
 
 ## Driver Testing in Docker
 
