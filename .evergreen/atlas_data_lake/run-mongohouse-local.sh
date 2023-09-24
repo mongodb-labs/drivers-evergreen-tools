@@ -8,4 +8,6 @@ set -eu
 
 DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
 DOCKER=$(command -v docker || command -v podman)
-$DOCKER run -e DRIVERS_TOOLS=$DRIVERS_TOOLS -it 904697982180.dkr.ecr.us-east-1.amazonaws.com/atlas-query-engine-test -p 27017:27017 --config ./testdata/config/external/drivers/config.yaml
+USE_TTY=""
+test -t 1 && USE_TTY="-t"
+$DOCKER run -e DRIVERS_TOOLS=$DRIVERS_TOOLS -p 27017:27017 -i $USE_TTY 904697982180.dkr.ecr.us-east-1.amazonaws.com/atlas-query-engine-test --config ./testdata/config/external/drivers/config.yaml
