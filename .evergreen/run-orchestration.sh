@@ -31,14 +31,12 @@ DIR=$(dirname $0)
 . $DIR/download-mongodb.sh
 
 # Find python3 if we are running in bash.
+export PYTHON=""
 if [ -n "$BASH" ]; then
   . $DIR/find-python3.sh
   echo "Finding Python3 binary..."
-  export PYTHON
   PYTHON="$(find_python3 2>/dev/null)"
   echo "Finding Python3 binary... done."
-else
-  export PYTHON=""
 fi
 
 get_distro

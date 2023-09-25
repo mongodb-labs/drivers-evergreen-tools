@@ -29,6 +29,8 @@ if [ -z "$PYTHON" ];then
   echo "Finding Python3 binary..."
   PYTHON="$(find_python3 2>/dev/null)" || return
   echo "Finding Python3 binary... done."
+else
+  echo "Using Python3 binary: $PYTHON"
 fi
 
 echo "Creating virtual environment 'venv'..."

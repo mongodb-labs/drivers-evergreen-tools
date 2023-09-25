@@ -17,6 +17,13 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   net-tools \
  && rm -rf /var/lib/apt/lists/*
 
+ARG USER_ID
+ARG GROUP_ID
+
+RUN addgroup --gid $GROUP_ID user
+RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID user
+USER user
+
 ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
 ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/drivers-evergreen-tools/mongodb/bin
