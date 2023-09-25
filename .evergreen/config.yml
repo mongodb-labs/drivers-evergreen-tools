@@ -366,6 +366,7 @@ functions:
   "run docker test":
     - command: shell.exec
       params:
+        shell: "bash"
         script: |
           ${PREPARE_SHELL}
           cd $DRIVERS_TOOLS/.evergreen/docker
@@ -377,6 +378,7 @@ functions:
         role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       params:
+        shell: "bash"
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         script: |
           ${PREPARE_SHELL}
