@@ -27,9 +27,10 @@ ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 
 DL_START=$(date +%s)
 DIR=$(dirname $0)
-# Functions to fetch MongoDB binaries and find python 3
+# Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
 
+# Find python3 if we are running in bash.
 if [ -n "$BASH" ]; then
   . $DIR/find-python3.sh
   echo "Finding Python3 binary..."
