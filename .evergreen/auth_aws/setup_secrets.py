@@ -32,15 +32,12 @@ def get_secrets(vaults, region, profile):
             raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
 
         creds = resp['Credentials']
-        os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
-        os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
-        os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
 
     if creds:
-        kwargs = dict(aws_access_key_id=creds['AccessKeyId'],
-                      aws_secret_access_key=creds['SecretAccessKey']
+        kwargs.update(aws_access_key_id=creds['AccessKeyId'],
+                      aws_secret_access_key=creds['SecretAccessKey'],
                       aws_session_token=creds['SessionToken'])
-    client = session.client(service_name='secretsmanager', region_name=region, *kwargs)
+    client = session.client(service_name='secretsmanager', **kwargs)
 
     secrets = []
     try:
