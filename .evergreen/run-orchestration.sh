@@ -29,7 +29,15 @@ DL_START=$(date +%s)
 DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries and find python 3
 . $DIR/download-mongodb.sh
-. $DIR/find-python3.sh
+
+if [ -n "$BASH" ]; then
+  . $DIR/find-python3.sh
+  echo "Finding Python3 binary..."
+  export PYTHON="$(find_python3 2>/dev/null)" || return
+  echo "Finding Python3 binary... done."
+else
+  export PYTHON=""
+fi
 
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -95,10 +103,6 @@ fi
 
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
-echo "Finding Python3 binary..."
-export PYTHON="$(find_python3 2>/dev/null)" || return
-echo "Finding Python3 binary... done."
-
 # Start mongo-orchestration
 bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
@@ -111,7 +115,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
 fi
 cat tmp.json
 
-URI=$($PYTHON -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$(${PYTHON:-python} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 echo "\nCluster URI: $URI\n"
