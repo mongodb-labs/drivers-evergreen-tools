@@ -12,13 +12,27 @@ import boto3
 import botocore.exceptions
 
 
+AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
+
+
 def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
     # Handle local credentials.
     profile = profile or os.environ.get("AWS_PROFILE")
     session = boto3.Session(profile_name=profile)
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
-        raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
+        client = session.client(service_name='sts', region_name=region)
+        try:
+            # This will only fail locally.
+            resp = client.assume_role(RoleArn=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()))
+        except Exception as e:
+            print(e)
+            raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
+
+        creds = resp['Credentials']
+        os.environ['AWS_ACCESS_KEY_ID'] = creds['AccessKeyId']
+        os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
+        os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
 
     client = session.client(service_name='secretsmanager', region_name=region)
 
