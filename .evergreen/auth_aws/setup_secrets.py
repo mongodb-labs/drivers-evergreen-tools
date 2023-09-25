@@ -20,11 +20,13 @@ def get_secrets(vaults, region, profile):
     # Handle local credentials.
     profile = profile or os.environ.get("AWS_PROFILE")
     session = boto3.Session(profile_name=profile)
+    creds = None
+    kwargs = dict(region=region)
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
-        client = session.client(service_name='sts', region_name=region)
+        client = session.client(service_name='sts', **kwargs)
         try:
             # This will only fail locally.
-            resp = client.assume_role(RoleArn=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()))
+            resp = client.assume_role(RoleArn=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()), **kwargs)
         except Exception as e:
             print(e)
             raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
@@ -34,7 +36,11 @@ def get_secrets(vaults, region, profile):
         os.environ['AWS_SECRET_ACCESS_KEY'] = creds['SecretAccessKey']
         os.environ['AWS_SESSION_TOKEN'] = creds['SessionToken']
 
-    client = session.client(service_name='secretsmanager', region_name=region)
+    if creds:
+        kwargs = dict(aws_access_key_id=creds['AccessKeyId'],
+                      aws_secret_access_key=creds['SecretAccessKey']
+                      aws_session_token=creds['SessionToken'])
+    client = session.client(service_name='secretsmanager', region_name=region, *kwargs)
 
     secrets = []
     try:
