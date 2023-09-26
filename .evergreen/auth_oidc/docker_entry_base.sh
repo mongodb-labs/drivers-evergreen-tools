@@ -5,7 +5,7 @@
 set -eu
 export ORCHESTRATION_FILE=auth-oidc.json
 
-rm $DRIVERS_TOOLS/results.json
+rm -f $DRIVERS_TOOLS/results.json
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 python oidc_write_orchestration.py
