@@ -10,6 +10,7 @@ DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
 VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
+AWS_PROFILE=${AWS_PROFILE:-""}
 
 if [ -z "$AWS_PROFILE" ]; then
     if [[ -z "${AWS_SESSION_TOKEN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
