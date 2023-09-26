@@ -27,7 +27,7 @@ cd "$MONGO_ORCHESTRATION_HOME"
 
 if [ -z "$PYTHON" ];then
   echo "Finding Python3 binary..."
-  PYTHON="$(find_python3 2>/dev/null)" || return
+  PYTHON="$(find_python3 2>/dev/null)"
   echo "Finding Python3 binary... done."
 else
   echo "Using Python3 binary: $PYTHON"
