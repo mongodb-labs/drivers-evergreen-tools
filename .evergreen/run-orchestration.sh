@@ -135,6 +135,9 @@ if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
   cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
 EOT
+cat <<EOT >> mo-expansion.sh
+exportCRYPT_SHARED_LIB_PATH="$CRYPT_SHARED_LIB_PATH"
+EOT
   fi
 fi
 

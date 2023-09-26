@@ -372,7 +372,7 @@ functions:
           ${PREPARE_SHELL}
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/docker
-          ENTRYPOINT=/root/base-entrypoint.sh bash run-local.sh
+          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test

@@ -98,6 +98,7 @@ authoidcvenv
 /mongodb
 /mongosh
 mo-expansion.yml
+mo-expansion.sh
 tmp.json
 haproxy.conf
 *.pid

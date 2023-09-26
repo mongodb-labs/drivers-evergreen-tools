@@ -15,6 +15,6 @@ python oidc_write_orchestration.py
 
 bash /root/base-entrypoint.sh
 
-/root/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
+$MONGODB_BINARIES/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
 
 echo "Server started!"
