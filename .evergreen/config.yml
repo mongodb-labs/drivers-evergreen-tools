@@ -378,9 +378,13 @@ functions:
           make test
 
   "run oidc test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
@@ -390,7 +394,7 @@ functions:
           bash start_local_server.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
-          echo '{"results": [{ "status": "PASS", "test_file": "MyTest#1", "start": 860701.361040201, "end": 860701.361116371, "elapsed": 0.000076170, "log_raw": "This test did this and that"  } ]}' > test-results.json
+          make test
 
   "cleanup":
     - command: shell.exec
@@ -758,7 +762,7 @@ tasks:
 
     - name: "test-oidc"
       tags: ["latest"]
-      command:
+      commands:
         - func: "run oidc test"
 
 # }}}
