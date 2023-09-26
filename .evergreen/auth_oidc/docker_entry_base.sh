@@ -13,15 +13,8 @@ rm -rf authoidcvenv
 . ./activate-authoidcvenv.sh
 python oidc_write_orchestration.py
 
-bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
-/root/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
+bash /root/base-entrypoint.sh
 
-# Change permissions of files we have created.
-cd $DRIVERS_TOOLS
-files="results.json uri.txt .evergreen/mongo_crypt_v1.so"
-for fname in $files; do
-    chown --reference=action.yml $fname
-    chmod --reference=action.yml $fname
-fi
+/root/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
 
 echo "Server started!"
