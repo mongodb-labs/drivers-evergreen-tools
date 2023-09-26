@@ -126,11 +126,17 @@ if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
     echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
   else
     echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+    if [ -n "$MONGODB_BINARY_ROOT" ]; then
+        pushd  "$MONGODB_BINARY_ROOT"
+    fi
     download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
     echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
     if [ -z $CRYPT_SHARED_LIB_PATH ]; then
       echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
       exit 1
+    fi
+    if [ -n "$MONGODB_BINARY_ROOT" ]; then
+        popd
     fi
   cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
