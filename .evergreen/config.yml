@@ -372,7 +372,7 @@ functions:
           cd $DRIVERS_TOOLS/.evergreen/docker
           ENTRYPOINT=/root/base-entrypoint.sh bash run-local.sh
           # Generate a test results file
-          cd $DRIVERS_TOOLS
+          cd ${PROJECT_DIRECTORY}
           make test
 
   "run oidc test":
@@ -389,7 +389,7 @@ functions:
           export ENTRYPOINT=/root/docker_entry_base.sh
           bash start_local_server.sh
           # Generate a test results file
-          cd $DRIVERS_TOOLS
+          cd ${PROJECT_DIRECTORY}
           make test
 
   "cleanup":
