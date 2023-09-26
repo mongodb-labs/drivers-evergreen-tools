@@ -677,8 +677,8 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   if [ -n "$MONGODB_BINARIES" ]; then
-      cd $(dirname $(dirname $MONGODB_BINARIES))
+   if [ -n "$MONGODB_BINARY_ROOT" ]; then
+      cd $MONGODB_BINARY_ROOT
    else
       cd $DRIVERS_TOOLS
    fi
@@ -701,8 +701,8 @@ download_and_extract_mongosh ()
    MONGOSH_DOWNLOAD_URL=$1
    EXTRACT_MONGOSH=$2
 
-   if [ -n "$MONGODB_BINARIES" ]; then
-      cd $(dirname $(dirname $MONGODB_BINARIES))
+   if [ -n "$MONGODB_BINARY_ROOT" ]; then
+      cd $MONGODB_BINARY_ROOT
    else
       cd $DRIVERS_TOOLS
    fi

@@ -23,6 +23,7 @@ ARG GROUP_ID
 ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
 ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/mongodb/bin
+ENV MONGODB_BINARY_ROOT=/root
 ENV MONGO_ORCHESTRATION_HOME=/root
 ENV SKIP_LEGACY_SHELL=1
 ENV DOCKER_RUNNING=true
