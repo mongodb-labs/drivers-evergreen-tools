@@ -18,9 +18,10 @@ bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 
 # Change permissions of files we have created.
 cd $DRIVERS_TOOLS
-chown --reference=action.yml results.json
-chmod --reference=action.yml results.json
-chown --reference=action.yml uri.txt
-chmod --reference=action.yml uri.txt
+files="results.json uri.txt .evergreen/mongo_crypt_v1.so"
+for fname in $files; do
+    chown --reference=action.yml $fname
+    chmod --reference=action.yml $fname
+fi
 
 echo "Server started!"
