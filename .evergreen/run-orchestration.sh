@@ -132,9 +132,6 @@ if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
       echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
       exit 1
     fi
-    if [ -n "$MONGODB_BINARY_ROOT" ]; then
-        popd
-    fi
   cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
 EOT
