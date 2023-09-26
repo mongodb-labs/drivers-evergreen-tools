@@ -677,7 +677,11 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   cd $DRIVERS_TOOLS
+   if [ -n "$MONGODB_BINARIES" ]; then
+      cd $(dirname $(dirname $MONGODB_BINARIES))
+   else
+      cd $DRIVERS_TOOLS
+   fi
    echo "Installing server binaries..."
    curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
 
@@ -685,7 +689,6 @@ download_and_extract_package ()
    echo "Installing server binaries... done."
 
    rm -f mongodb-binaries.tgz
-   rm -rf mongodb
    mv mongodb* mongodb
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
@@ -698,13 +701,16 @@ download_and_extract_mongosh ()
    MONGOSH_DOWNLOAD_URL=$1
    EXTRACT_MONGOSH=$2
 
-   cd $DRIVERS_TOOLS
+   if [ -n "$MONGODB_BINARIES" ]; then
+      cd $(dirname $(dirname $MONGODB_BINARIES))
+   else
+      cd $DRIVERS_TOOLS
+   fi
    echo "Installing MongoDB shell..."
    curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
-   rm -rf mongosh
    mv mongosh-* mongosh
    mv mongosh/bin/* mongodb/bin
    chmod -R +x mongodb/bin
@@ -734,6 +740,7 @@ download_and_extract ()
       linux-ubuntu-22.04*) SKIP_LEGACY_SHELL=1
       ;;
    esac
+
    if [ -z "${SKIP_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.

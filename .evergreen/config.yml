@@ -370,7 +370,8 @@ functions:
         script: |
           ${PREPARE_SHELL}
           cd $DRIVERS_TOOLS/.evergreen/docker
-          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
+          ENTRYPOINT=/root/base-entrypoint.sh bash run-local.sh
+          echo '{"results": [{ "status": "SUCCESS", "test_file": "Run", "log_raw": "docker server test succeeded!"  } ]}' >|${PROJECT_DIRECTORY}/test-results.json
 
   "run oidc test":
     - command: ec2.assume_role
@@ -385,6 +386,7 @@ functions:
           cd $DRIVERS_TOOLS/.evergreen/auth_oidc
           export ENTRYPOINT=/root/docker_entry_base.sh
           bash start_local_server.sh
+          echo '{"results": [{ "status": "SUCCESS", "test_file": "Run", "log_raw": "oidc server test succeeded!"  } ]}' >|${PROJECT_DIRECTORY}/test-results.json
 
   "cleanup":
     - command: shell.exec

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -eu
 
-cd $DRIVERS_TOOLS/.evergreen
-bash run-orchestration.sh
+bash /root/base-entrypoint.sh
 tail -f $MONGO_ORCHESTRATION_HOME/server.log
