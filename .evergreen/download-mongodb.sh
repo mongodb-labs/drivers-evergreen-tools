@@ -713,6 +713,7 @@ download_and_extract_mongosh ()
    rm -f mongosh.tgz
    mv mongosh-* mongosh
    mv mongosh/bin/* mongodb/bin
+   rm -rf mongosh
    chmod -R +x mongodb/bin
    echo "Installing MongoDB shell... done."
    echo "MongoDB shell version: $(./mongodb/bin/mongosh --version)"
