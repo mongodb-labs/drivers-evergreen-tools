@@ -30,3 +30,4 @@ ENV DOCKER_RUNNING=true
 
 COPY ./local-entrypoint.sh /root/local-entrypoint.sh
 COPY ./base-entrypoint.sh /root/base-entrypoint.sh
+COPY ./test-entrypoint.sh /root/test-entrypoint.sh
