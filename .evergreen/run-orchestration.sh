@@ -118,7 +118,7 @@ cat tmp.json
 URI=$(${PYTHON:-python} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
-printf "\nCluster URI: $URI\n"
+printf "\nCluster URI: %s\n" "$URI"
 # Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
 # server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
 if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
