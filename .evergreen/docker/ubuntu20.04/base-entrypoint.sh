@@ -7,10 +7,8 @@ bash run-orchestration.sh
 
 # Change permissions of files we have created.
 cd $DRIVERS_TOOLS
-files="results.json uri.txt .evergreen/mongo_crypt_v1.so .evergreen/mo-expansion.yml"
-for fname in $files; do
-    chown --reference=action.yml $fname
-    chmod --reference=action.yml $fname
-done
+files=(results.json uri.txt .evergreen/mongo_crypt_v1.so .evergreen/mo-expansion.yml)
+chown --reference=action.yml "$files[@]"
+chmod --reference=action.yml "$files[@]"
 
 echo "Server started!"
