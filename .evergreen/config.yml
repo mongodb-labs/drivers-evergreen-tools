@@ -390,8 +390,7 @@ functions:
           ${PREPARE_SHELL}
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-          export ENTRYPOINT=/root/docker_entry_base.sh
-          bash start_local_server.sh
+          ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
