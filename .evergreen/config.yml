@@ -806,8 +806,8 @@ axes:
         display_name: "Windows 64"
         run_on: windows-64-vsMulti-small
 
-  # OSes that support versions of MongoDB>=4.4 with SSL.
-  - id: os-requires-44
+  # OSes that support versions of MongoDB>=5.0 with SSL.
+  - id: os-requires-50
     display_name: OS
     values:
 
@@ -959,9 +959,9 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
 
-- matrix_name: "tests-os-requires-44"
-  matrix_spec: {"os-requires-44": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-44} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-50"
+  matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-50} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
@@ -975,23 +975,20 @@ buildvariants:
      - name: "test-5.0-replica_set"
      - name: "test-5.0-sharded_cluster"
      - name: "test-5.0-standalone"
-     - name: "test-4.4-replica_set"
-     - name: "test-4.4-sharded_cluster"
-     - name: "test-4.4-standalone"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-requires-44": "ubuntu-20.04", storage-engine: "*" }
-  display_name: "${os-requires-44} ${storage-engine}"
+  matrix_spec: {"os-requires-50": "ubuntu-20.04", storage-engine: "*" }
+  display_name: "${os-requires-50} ${storage-engine}"
   rules:
     - if:
-        os-requires-44: "*"
+        os-requires-50: "*"
         storage-engine: ["mmapv1"]
       then:
         add_tasks:
           - "test-4.4-standalone"
     - if:
-        os-requires-44: "*"
+        os-requires-50: "*"
         storage-engine: ["inmemory"]
       then:
         add_tasks:
@@ -1000,7 +997,7 @@ buildvariants:
           - "test-6.0-standalone"
           - "test-5.0-standalone"
     - if:
-        os-requires-44: "*"
+        os-requires-50: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
@@ -1008,9 +1005,9 @@ buildvariants:
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-requires-44:
+    os-requires-50:
       - "ubuntu-20.04"
-  display_name: "Serverless ${os-requires-44}"
+  display_name: "Serverless ${os-requires-50}"
   tasks:
     - "serverless_task_group"
 
