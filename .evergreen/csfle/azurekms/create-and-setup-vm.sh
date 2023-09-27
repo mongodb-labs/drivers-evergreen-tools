@@ -7,9 +7,12 @@ AZUREKMS_DRIVERS_TOOLS=${AZUREKMS_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
 
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
     echo "${AZUREKMS_PUBLICKEY}" > /tmp/testazurekms_publickey
+    OLD_IFS=$IFS
     cat <<EOT > /tmp/testazurekms_privatekey
 ${AZUREKMS_PRIVATEKEY}
+IFS=
 EOT
+    IFS=$OLD_IFS
     cat /tmp/testazurekms_privatekey
     # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
     chmod 600 /tmp/testazurekms_privatekey
