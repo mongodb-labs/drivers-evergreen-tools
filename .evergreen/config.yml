@@ -794,7 +794,7 @@ axes:
     display_name: OS
     values:
 
-      - id: rhel87-small
+      - id: rhel8
         display_name: "RHEL 8"
         run_on: rhel87-small
 
@@ -959,9 +959,9 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
 
-- matrix_name: "tests-os-fully-featured"
-  matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
-  display_name: "${os-fully-featured} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-50"
+  matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-50} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
@@ -978,7 +978,7 @@ buildvariants:
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-fully-featured": "ubuntu-20.04", storage-engine: "*" }
+  matrix_spec: {"os-fully-featured": "rhel8", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
     - if:
