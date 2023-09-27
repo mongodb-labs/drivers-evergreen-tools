@@ -733,6 +733,10 @@ axes:
         display_name: "latest"
         variables:
            VERSION: "latest"
+      - id: "7.0"
+        display_name: "7.0"
+        variables:
+           VERSION: "7.0"
       - id: "6.0"
         display_name: "6.0"
         variables:
@@ -763,9 +767,9 @@ axes:
     display_name: OS
     values:
 
-      - id: ubuntu-1804
-        display_name: "Ubuntu 18.04"
-        run_on: ubuntu1804-small
+      - id: rhel87-small
+        display_name: "RHEL 8"
+        run_on: rhel87-small
 
   # OSes that support versions of MongoDB without SSL.
   - id: os-nossl
@@ -787,37 +791,30 @@ axes:
   - id: os-requires-36
     display_name: OS
     values:
-      - id: debian81-test
-        display_name: "Debian 8.1"
-        run_on: debian81-test
+      - id: rhe87-small
+        display_name: "RHEL 8"
+        run_on: rhel87-small
 
-      - id: rhel70-small
-        display_name: "RHEL 7.0"
-        run_on: rhel70-small
-
-  # OSes that support versions of MongoDB>=4.2 with SSL.
-  - id: os-requires-42
+  # OSes that support versions of MongoDB>=4.4 with SSL.
+  - id: os-requires-44
     display_name: OS
     values:
-      - id: debian92-test
-        display_name: "Debian 9.2"
-        run_on: debian92-test
 
-      - id: ubuntu-18.04
-        display_name: "Ubuntu 18.04 (Requires 4.2)"
-        run_on: ubuntu1804-test
+      - id: ubuntu-20.04
+        display_name: "Ubuntu 20.04 (Requires 4.4)"
+        run_on: ubuntu2004-test
 
-      - id: ubuntu1804-arm64-small
+      - id: ubuntu2004-arm64-small
         display_name: "Ubuntu 18.04 (ARM64)"
-        run_on: ubuntu1804-arm64-small
+        run_on: ubuntu2004-arm64-small
 
-      - id: rhel81-power8
-        display_name: "RHEL 8.1 (POWER8)"
-        run_on: rhel81-power8
+      - id: rhel87-power8
+        display_name: "RHEL 8 (POWER8)"
+        run_on: rhel87-power8
 
-      - id: ubuntu1804-zseries-small
-        display_name: "Ubuntu 18.04 (zSeries)"
-        run_on: ubuntu1804-zseries-small
+      - id: ubuntu2004-zseries-small
+        display_name: "Ubuntu 20.04 (zSeries)"
+        run_on: ubuntu2004-zseries-small
 
   - id: topology
     display_name: Topology
@@ -952,6 +949,9 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-7.0-replica_set"
+     - name: "test-7.0-sharded_cluster"
+     - name: "test-7.0-standalone"
      - name: "test-6.0-replica_set"
      - name: "test-6.0-sharded_cluster"
      - name: "test-6.0-standalone"
@@ -971,31 +971,29 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
 
-- matrix_name: "tests-os-requires-36"
-  matrix_spec: {"os-requires-36": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-36} ${auth} ${ssl}"
+- matrix_name: "tests-os-requires-44"
+  matrix_spec: {"os-requires-44": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-44} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
+     - name: "test-7.0-replica_set"
+     - name: "test-7.0-sharded_cluster"
+     - name: "test-7.0-standalone"
+     - name: "test-6.0-replica_set"
+     - name: "test-6.0-sharded_cluster"
+     - name: "test-6.0-standalone"
+     - name: "test-5.0-replica_set"
+     - name: "test-5.0-sharded_cluster"
+     - name: "test-5.0-standalone"
+     - name: "test-4.4-replica_set"
+     - name: "test-4.4-sharded_cluster"
+     - name: "test-4.4-standalone"
 
-- matrix_name: "tests-os-requires-42"
-  matrix_spec: {"os-requires-42": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-42} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-4.2-replica_set"
-     - name: "test-4.2-sharded_cluster"
-     - name: "test-4.2-standalone"
-
-# Storage Engine Tests on Ubuntu 18.04
+# Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-fully-featured": "ubuntu-1804", storage-engine: "*" }
+  matrix_spec: {"os-fully-featured": "ubuntu-2004", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
     - if:
@@ -1003,7 +1001,7 @@ buildvariants:
         storage-engine: ["mmapv1"]
       then:
         add_tasks:
-          - "test-3.6-standalone"
+          - "test-4.4-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: ["inmemory"]
@@ -1011,13 +1009,13 @@ buildvariants:
         add_tasks:
           - "test-latest-standalone"
           - "test-6.0-standalone"
-          - "test-3.6-standalone"
+          - "test-5.0-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
-          - "test-3.6-standalone"
+          - "test-5.0-standalone"
 
 - matrix_name: "tests-windows"
   matrix_spec: {os-windows: "*", auth: "*", ssl: "*" }
@@ -1027,6 +1025,9 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-7.0-replica_set"
+     - name: "test-7.0-sharded_cluster"
+     - name: "test-7.0-standalone"
      - name: "test-6.0-replica_set"
      - name: "test-6.0-sharded_cluster"
      - name: "test-6.0-standalone"
@@ -1048,9 +1049,9 @@ buildvariants:
 
 - matrix_name: "serverless"
   matrix_spec:
-    os-requires-42:
-      - "ubuntu-18.04"
-  display_name: "Serverless ${os-requires-42}"
+    os-requires-44:
+      - "ubuntu-20.04"
+  display_name: "Serverless ${os-requires-44}"
   tasks:
     - "serverless_task_group"
 
@@ -1073,4 +1074,3 @@ buildvariants:
       # Debian 7.1 does not support MongoDB 2.4
       # SUSE12 x86_64 is only supported by MongoDB 3.2+
       # vim: set et sw=2 ts=2 :
-
