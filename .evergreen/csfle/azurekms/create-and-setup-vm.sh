@@ -10,6 +10,7 @@ if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
     cat <<EOT > /tmp/testazurekms_privatekey
 ${AZUREKMS_PRIVATEKEY}
 EOT
+    cat /tmp/testazurekms_privatekey
     # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
     chmod 600 /tmp/testazurekms_privatekey
     export AZUREKMS_PUBLICKEYPATH="/tmp/testazurekms_publickey"
