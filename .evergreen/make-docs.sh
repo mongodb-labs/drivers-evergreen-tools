@@ -5,7 +5,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 mkdir -p doc/html || true
 
 
-cat <<EOT > doc/html/index.html > doc/html/intro.html
+cat <<EOT > doc/html/index.html doc/html/intro.html
 <html>
 <body>
 <ul>
