@@ -959,9 +959,9 @@ buildvariants:
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
 
-- matrix_name: "tests-os-requires-50"
-  matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
-  display_name: "${os-requires-50} ${auth} ${ssl}"
+- matrix_name: "tests-os-fully-featured"
+  matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
+  display_name: "${os-fully-featured} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
@@ -978,30 +978,29 @@ buildvariants:
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-requires-50": "ubuntu-20.04", storage-engine: "*" }
-  display_name: "${os-requires-50} ${storage-engine}"
+  matrix_spec: {"os-fully-featured": "ubuntu-20.04", storage-engine: "*" }
+  display_name: "${os-fully-featured} ${storage-engine}"
   rules:
     - if:
-        os-requires-50: "*"
+        os-fully-featured: "*"
         storage-engine: ["mmapv1"]
       then:
         add_tasks:
-          - "test-4.4-standalone"
+          - "test-3.6-standalone"
     - if:
-        os-requires-50: "*"
+        os-fully-featured: "*"
         storage-engine: ["inmemory"]
       then:
         add_tasks:
           - "test-latest-standalone"
           - "test-7.0-standalone"
-          - "test-6.0-standalone"
-          - "test-5.0-standalone"
+          - "test-3.6-standalone"
     - if:
-        os-requires-50: "*"
+        os-fully-featured: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
-          - "test-5.0-standalone"
+          - "test-3.6-standalone"
 
 - matrix_name: "serverless"
   matrix_spec:
