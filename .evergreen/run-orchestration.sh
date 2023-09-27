@@ -30,8 +30,10 @@ DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
 
-# Find python3 if we are running in bash.
-export PYTHON=""
+# Find python3 if we are running in bash, otherwise prefer a
+# python3 binary over python, since some modern build hosts
+# only have the python3 binary.
+export PYTHON=$(command -v python3 || command -v python)
 if [ -n "$BASH" ]; then
   . $DIR/find-python3.sh
   echo "Finding Python3 binary..."
@@ -115,7 +117,7 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
 fi
 cat tmp.json
 
-URI=$(${PYTHON:-python} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+URI=$(${PYTHON} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 printf "\nCluster URI: %s\n" "$URI"
