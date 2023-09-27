@@ -518,6 +518,33 @@ tasks:
 
 # Standard test tasks {{{
 
+    - name: "test-7.0-standalone"
+      tags: ["7.0", "standalone"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "7.0"
+            TOPOLOGY: "server"
+        - func: "run tests"
+
+    - name: "test-7.0-replica_set"
+      tags: ["7.0", "replica_set"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "7.0"
+            TOPOLOGY: "replica_set"
+        - func: "run tests"
+
+    - name: "test-7.0-sharded_cluster"
+      tags: ["7.0", "sharded_cluster"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "7.0"
+            TOPOLOGY: "sharded_cluster"
+        - func: "run tests"
+
     - name: "test-6.0-standalone"
       tags: ["6.0", "standalone"]
       commands:
@@ -771,37 +798,25 @@ axes:
         display_name: "RHEL 8"
         run_on: rhel87-small
 
-  # OSes that support versions of MongoDB without SSL.
-  - id: os-nossl
-    display_name: OS
-    values:
+      - id: macos-1100
+        display_name: "macOS 11.00"
+        run_on: macos-1100
 
-      - id: macos-1014
-        display_name: "macOS 10.14"
-        run_on: macos-1014
-
-  - id: os-windows
-    display_name: OS
-    values:
       - id: windows-64-vsMulti-small
         display_name: "Windows 64"
         run_on: windows-64-vsMulti-small
-
-  # OSes that support versions of MongoDB>=3.6 with SSL.
-  - id: os-requires-36
-    display_name: OS
-    values:
-      - id: rhe87-small
-        display_name: "RHEL 8"
-        run_on: rhel87-small
 
   # OSes that support versions of MongoDB>=4.4 with SSL.
   - id: os-requires-44
     display_name: OS
     values:
 
+      - id: debian10
+        display_name: "Debian 10.0"
+        run_on: debian10-small
+
       - id: ubuntu-20.04
-        display_name: "Ubuntu 20.04 (Requires 4.4)"
+        display_name: "Ubuntu 20.04"
         run_on: ubuntu2004-test
 
       - id: ubuntu2004-arm64-small
@@ -810,11 +825,11 @@ axes:
 
       - id: rhel87-power8
         display_name: "RHEL 8 (POWER8)"
-        run_on: rhel87-power8
+        run_on: rhel81-power8-small
 
-      - id: ubuntu2004-zseries-small
-        display_name: "Ubuntu 20.04 (zSeries)"
-        run_on: ubuntu2004-zseries-small
+      - id: rhel83-zseries-small
+        display_name: "RHEL8 (zSeries)"
+        run_on: rhel83-zseries-small
 
   - id: topology
     display_name: Topology
@@ -909,7 +924,7 @@ buildvariants:
 - name: releng-release-archive-creator
   display_name: "** Release Archive Creator"
   run_on:
-    - ubuntu1404-build
+    - ubuntu2004-large
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
@@ -917,33 +932,6 @@ buildvariants:
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
   display_name: "${os-fully-featured} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-     - name: "test-6.0-replica_set"
-     - name: "test-6.0-sharded_cluster"
-     - name: "test-6.0-standalone"
-     - name: "test-5.0-replica_set"
-     - name: "test-5.0-sharded_cluster"
-     - name: "test-5.0-standalone"
-     - name: "test-4.4-replica_set"
-     - name: "test-4.4-sharded_cluster"
-     - name: "test-4.4-standalone"
-     - name: "test-4.2-replica_set"
-     - name: "test-4.2-sharded_cluster"
-     - name: "test-4.2-standalone"
-     - name: "test-4.0-replica_set"
-     - name: "test-4.0-sharded_cluster"
-     - name: "test-4.0-standalone"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
-
-- matrix_name: "tests-nossl"
-  matrix_spec: {"os-nossl": "*", auth: "*", ssl: "nossl" }
-  display_name: "${os-nossl} ${auth} ${ssl}"
   tasks:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
@@ -993,59 +981,30 @@ buildvariants:
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
-  matrix_spec: {"os-fully-featured": "ubuntu-2004", storage-engine: "*" }
-  display_name: "${os-fully-featured} ${storage-engine}"
+  matrix_spec: {"os-requires-44": "ubuntu-20.04", storage-engine: "*" }
+  display_name: "${os-requires-44} ${storage-engine}"
   rules:
     - if:
-        os-fully-featured: "*"
+        os-requires-44: "*"
         storage-engine: ["mmapv1"]
       then:
         add_tasks:
           - "test-4.4-standalone"
     - if:
-        os-fully-featured: "*"
+        os-requires-44: "*"
         storage-engine: ["inmemory"]
       then:
         add_tasks:
           - "test-latest-standalone"
+          - "test-7.0-standalone"
           - "test-6.0-standalone"
           - "test-5.0-standalone"
     - if:
-        os-fully-featured: "*"
+        os-requires-44: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
           - "test-5.0-standalone"
-
-- matrix_name: "tests-windows"
-  matrix_spec: {os-windows: "*", auth: "*", ssl: "*" }
-  display_name: "${os-windows} ${auth} ${ssl}"
-  tasks:
-     - name: "test-latest-replica_set"
-     - name: "test-latest-sharded_cluster"
-     - name: "test-latest-standalone"
-     - name: "test-latest-load_balancer"
-     - name: "test-7.0-replica_set"
-     - name: "test-7.0-sharded_cluster"
-     - name: "test-7.0-standalone"
-     - name: "test-6.0-replica_set"
-     - name: "test-6.0-sharded_cluster"
-     - name: "test-6.0-standalone"
-     - name: "test-5.0-replica_set"
-     - name: "test-5.0-sharded_cluster"
-     - name: "test-5.0-standalone"
-     - name: "test-4.4-replica_set"
-     - name: "test-4.4-sharded_cluster"
-     - name: "test-4.4-standalone"
-     - name: "test-4.2-replica_set"
-     - name: "test-4.2-sharded_cluster"
-     - name: "test-4.2-standalone"
-     - name: "test-4.0-replica_set"
-     - name: "test-4.0-sharded_cluster"
-     - name: "test-4.0-standalone"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
 
 - matrix_name: "serverless"
   matrix_spec:
@@ -1061,7 +1020,8 @@ buildvariants:
       # Ubuntu16.04 ppc64le is only supported by MongoDB 3.4+
       # Ubuntu16.04 aarch64 is only supported by MongoDB 3.4+
       # Ubuntu16.04 s390x is only supported by MongoDB 3.4+
-      # Ubuntu16.04 (x86) only supports MongoDB 3.2+
+      # Ubuntu20.04 only supports MongoDB 4.4+
+      # Debian 10.0 only supports MongoDB 4.2+
       # Debian 8.1 only supports MongoDB 3.4+
       # SUSE12 s390x is only supported by MongoDB 3.4+
       # No enterprise build for Archlinux, SSL not available
