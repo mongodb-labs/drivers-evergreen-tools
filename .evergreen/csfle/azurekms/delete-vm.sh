@@ -15,7 +15,7 @@ fi
 echo "Deleting the role from the Virtual Machine $AZUREKMS_VMNAME ... begin"
 PRINCIPAL_ID=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query identity.principalId -o tsv)
 az role assignment delete \
-    --assignee "$PRINCIPAL_ID" \
+    --assignee-object-id "$PRINCIPAL_ID" \
     --role "Key Vault Crypto User" \
     -y \
     >/dev/null

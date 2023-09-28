@@ -52,7 +52,7 @@ fi
 # Create VM.
 . "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
-# Store items needed for later tasks.
+# Store items needed for teardown.
 cat <<EOT > testazurekms-expansions.yml
 AZUREKMS_VMNAME: $AZUREKMS_VMNAME
 AZUREKMS_RESOURCEGROUP: $AZUREKMS_RESOURCEGROUP
