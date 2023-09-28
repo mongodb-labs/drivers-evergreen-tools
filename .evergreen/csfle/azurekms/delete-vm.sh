@@ -18,7 +18,7 @@ if [ -n "${AZUREKMS_SCOPE:-}" ]; then
     az role assignment delete \
         --assignee "$PRINCIPAL_ID" \
         --role "Key Vault Crypto User" \
-        --scope "$AZUREKMS_SCOPE"
+        --scope "$AZUREKMS_SCOPE" \
         -y \
         >/dev/null
     echo "Deleting the role from the Virtual Machine $AZUREKMS_VMNAME ... end"
