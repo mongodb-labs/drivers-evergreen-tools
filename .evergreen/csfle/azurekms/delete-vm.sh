@@ -12,6 +12,15 @@ if [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
     exit 1
 fi
 
+echo "Deleting the role from the Virtual Machine $AZUREKMS_VMNAME ... begin"
+PRINCIPAL_ID=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query identity.principalId -o tsv)
+az role assignment delete \
+    --assignee "$PRINCIPAL_ID" \
+    --role "Key Vault Crypto User" \
+    -y \
+    >/dev/null
+echo "Deleting the role from the Virtual Machine $AZUREKMS_VMNAME ... end"
+
 echo "Deleting Virtual Machine $AZUREKMS_VMNAME ... begin"
 az vm delete \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
