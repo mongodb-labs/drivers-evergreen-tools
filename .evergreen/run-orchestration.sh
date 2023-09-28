@@ -33,7 +33,8 @@ DIR=$(dirname $0)
 # Find python3 if we are running in bash, otherwise prefer a
 # python3 binary over python, since some modern build hosts
 # only have the python3 binary.
-export PYTHON=$(command -v python3 || command -v python)
+export PYTHON
+PYTHON=$(command -v python3 || command -v python)
 if [ -n "$BASH" ]; then
   . $DIR/find-python3.sh
   echo "Finding Python3 binary..."
