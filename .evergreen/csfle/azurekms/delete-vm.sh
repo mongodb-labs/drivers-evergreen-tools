@@ -12,7 +12,7 @@ if [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
     exit 1
 fi
 
-if [ -n "${$AZUREKMS_SCOPE}" ]; then
+if [ -n "${AZUREKMS_SCOPE}" ]; then
     echo "Deleting the role from the Virtual Machine $AZUREKMS_VMNAME ... begin"
     PRINCIPAL_ID=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query identity.principalId -o tsv)
     az role assignment delete \
