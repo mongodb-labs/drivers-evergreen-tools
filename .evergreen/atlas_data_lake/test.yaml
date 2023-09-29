@@ -1,0 +1,69 @@
+environment: local
+# hostProvider is the cloud provider in which this machine is running.
+hostProvider: local
+
+hostRegion: local
+
+# Disable billing to silence a "no billing configured" warning.
+billing:
+  event:
+    client:
+      enabled: false
+showInternalErrors: true
+
+dls:
+  frontend:
+    catalog:
+      disabled: true
+    expirationRules:
+      disabled: true
+
+frontend:
+  bindAddr: "0.0.0.0:27017"
+  cursor:
+    metadata:
+      memory: true
+
+execution:
+  mqlrunPath: ${MONGOHOUSE_MQLRUN}
+  mongohousedPath: /app
+
+tenants:
+  config:
+    inline: &tenantCfg
+      ipList: [ "0.0.0.0" ]
+      hostnames:
+        - localhost
+      security:
+        users:
+          - name: mhuser # password: "pencil"
+            credentials:
+              scramSHA1:
+                iterations: 10000
+                salt: "CVmjg1IDp3KfHfiXNZhmbQ=="
+                storedKey: "9cIonYrtLI/+OmZ96wiQkduwXeI="
+                serverKey: "kCfqkc7sgQaihzXHqbxZxz3O3H4="
+              scramSHA256:
+                iterations: 15000
+                salt: "6i+wBCHE21EaI8IF9+tvPkCoYWY+IyedLaVXGQ=="
+                storedKey: "hnn0iJZ6ZNO9X34oyxtZUKLAMScwpCdch3vGPuDXOvM="
+                serverKey: "3Qg6ptTiTvPwhGSZi0NpAkmsW8P5C/J46Is1t7xaIho="
+            roles:
+              - role: readWriteAnyDatabase
+      storage:
+        stores:
+          - name: localstore
+            provider: local
+            path: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake"
+        databases:
+          - name: test
+            collections:
+              - name: driverdata
+                dataSources:
+                  - storeName: localstore
+                    path: test.driverdata.json
+
+tenant:
+  config:
+    server:
+      inline: *tenantCfg
