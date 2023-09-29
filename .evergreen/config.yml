@@ -363,6 +363,38 @@ functions:
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
             sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
+  "run docker test":
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set -ex
+          cd $DRIVERS_TOOLS/.evergreen/docker
+          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
+  "run oidc test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: shell.exec
+      type: test
+      params:
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set -ex
+          cd $DRIVERS_TOOLS/.evergreen/auth_oidc
+          ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
   "cleanup":
     - command: shell.exec
       params:
@@ -749,6 +781,16 @@ tasks:
       commands:
         - func: "run serverless tests"
 
+    - name: "test-docker"
+      tags: ["latest"]
+      commands:
+        - func: "run docker test"
+
+    - name: "test-oidc"
+      tags: ["latest"]
+      commands:
+        - func: "run oidc test"
+
 # }}}
 
 
@@ -958,6 +1000,8 @@ buildvariants:
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
+     - name: "test-docker"
+     - name: "test-oidc"
 
 - matrix_name: "tests-os-requires-50"
   matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
