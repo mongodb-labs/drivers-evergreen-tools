@@ -32,7 +32,8 @@ def get_secrets(vaults, region, profile):
         kwargs.update(aws_access_key_id=creds['AccessKeyId'],
                     aws_secret_access_key=creds['SecretAccessKey'],
                     aws_session_token=creds['SessionToken'])
-
+    else:
+        session = boto3.Session(profile_name=profile)
     client = session.client(service_name='secretsmanager', **kwargs)
 
     secrets = []
