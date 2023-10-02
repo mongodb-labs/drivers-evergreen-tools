@@ -30,9 +30,10 @@ DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
 
-. $DIR/find-python3.sh
+# To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
+# explicitly invoke Bash as a subshell here when running `find_python3`.
 echo "Finding Python3 binary..."
-PYTHON="$(find_python3 2>/dev/null)"
+PYTHON="$(bash -c ". $DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
 
 get_distro
