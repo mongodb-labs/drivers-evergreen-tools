@@ -782,12 +782,12 @@ tasks:
         - func: "run serverless tests"
 
     - name: "test-docker"
-      tags: ["latest"]
+      tags: ["latest", "docker"]
       commands:
         - func: "run docker test"
 
     - name: "test-oidc"
-      tags: ["latest"]
+      tags: ["latest", "docker"]
       commands:
         - func: "run oidc test"
 
@@ -970,6 +970,13 @@ buildvariants:
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
+# Tests relating to docker images
+- name: tests-docker-related
+  display_name: Docker Related
+  run_on:
+    - ubuntu2004-large
+  tasks:
+    - ".docker"  # Run all tasks with the "docker" tag
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
@@ -1000,8 +1007,6 @@ buildvariants:
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
-     - name: "test-docker"
-     - name: "test-oidc"
 
 - matrix_name: "tests-os-requires-50"
   matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
