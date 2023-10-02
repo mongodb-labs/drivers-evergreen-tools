@@ -30,17 +30,11 @@ DIR=$(dirname $0)
 # Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
 
-# Find python3 if we are running in bash, otherwise prefer a
-# python3 binary over python, since some modern build hosts
-# only have the python3 binary.
-export PYTHON
-PYTHON=$(command -v python3 || command -v python)
-if [ -n "$BASH" ]; then
-  . $DIR/find-python3.sh
-  echo "Finding Python3 binary..."
-  PYTHON="$(find_python3 2>/dev/null)"
-  echo "Finding Python3 binary... done."
-fi
+# To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
+# explicitly invoke Bash as a subshell here when running `find_python3`.
+echo "Finding Python3 binary..."
+PYTHON="$(bash -c ". $DIR/find-python3.sh && find_python3 2>/dev/null")"
+echo "Finding Python3 binary... done."
 
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -107,7 +101,7 @@ fi
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
-bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
+PYTHON="${PYTHON:?}" bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
 if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
   echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/out.log:
