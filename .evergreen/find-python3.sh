@@ -53,7 +53,7 @@ is_python3() (
 
   if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] == 12)"); then
     echo "Detected Python 3.12. Skipping due to failures to start mock KMS server. Refer: DRIVERS-2743"
-    exit 1
+    return 1
   fi
 
   # Evaluate result of this function.
