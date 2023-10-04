@@ -51,6 +51,11 @@ is_python3() (
   # For diagnostic purposes.
   echo " - $bin: $version_output"
 
+  if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] == 12)"); then
+    echo "Detected Python 3.12. Skipping due to failures to start mock KMS server. Refer: DRIVERS-2743"
+    exit 1
+  fi
+
   # Evaluate result of this function.
   # Note: Python True (1) and False (0) is treated as fail (1) and success (0)
   # by Bash; therefore `is_python3` returns "true" when `v < 3` is false.
