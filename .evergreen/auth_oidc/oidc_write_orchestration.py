@@ -29,14 +29,14 @@ def azure():
         "clientId": client_id,
         "audience": f"api://{app_id}",
         "authorizationClaim": "groups",
-
+        
     },{
         "authNamePrefix": auth_name_prefix2,
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id2}",
         "authorizationClaim": "groups",
-
+        "matchPattern": auth_name_prefix2,
     }]
     providers = json.dumps(provider_info, separators=(',',':'))
 
