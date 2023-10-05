@@ -16,30 +16,19 @@ def azure():
     client_id = os.environ['AZUREOIDC_TOKENCLIENT']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     app_id = os.environ['AZUREOIDC_CLIENTID']
-    app_id2 = os.environ['AZUREOIDC_CLIENTID2']
     auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
-    auth_name_prefix2 = os.environ['AZUREOIDC_AUTHPREFIX2']
 
     print("Bootstrapping OIDC config")
 
     # Write the oidc orchestration file.
-    provider_info = [{
+    provider_info = {
         "authNamePrefix": auth_name_prefix,
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id}",
-        "authorizationClaim": "groups",
-        "matchPattern": auth_name_prefix,
-        
-    },{
-        "authNamePrefix": auth_name_prefix2,
-        "issuer": f"https://sts.windows.net/{tenant_id}/",
-        "clientId": client_id,
-        "audience": f"api://{app_id2}",
-        "authorizationClaim": "groups",
-        "matchPattern": auth_name_prefix2,
-    }]
-    providers = json.dumps(provider_info, separators=(',',':'))
+        "authorizationClaim": "groups"
+    }
+    providers = json.dumps([provider_info], separators=(',',':'))
 
     data = {
         "id": "oidc-repl0",
