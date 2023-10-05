@@ -39,7 +39,6 @@ def callback(client_info, server_info):
             msg = "Azure IMDS response must contain %s, but was %s."
             msg = msg % (key, body)
             raise ValueError(msg)
-    print(data['access_token'])
     return dict(access_token=data['access_token'])
 
 
