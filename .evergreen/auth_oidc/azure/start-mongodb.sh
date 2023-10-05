@@ -12,6 +12,7 @@ export ORCHESTRATION_FILE=auth-oidc.json
 export DRIVERS_TOOLS=$HOME/drivers-evergreen-tools
 export PROJECT_ORCHESTRATION_HOME=$DRIVERS_TOOLS/.evergreen/orchestration
 export MONGO_ORCHESTRATION_HOME=$HOME
+export SKIP_LEGACY_SHELL=true
 export NO_IPV6=${NO_IPV6:-""}
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
