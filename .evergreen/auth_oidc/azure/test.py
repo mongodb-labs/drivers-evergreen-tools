@@ -41,8 +41,18 @@ def callback(client_info, server_info):
 
 
 props = dict(request_token_callback=callback)
-print('Testing MONGODB-OIDC on azure')
+print('Testing MONGODB-OIDC on azure...')
+print('Testing resource 1...')
+c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
+c.test.test.insert_one({})
+c.close()
+print('Testing resource 1... done.')
+
+print('Testing resource 2...')
+app_id = os.environ['AZUREOIDC_CLIENTID2']
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
 c.test.test.find_one({})
 c.close()
+print('Testing resource 2... done.')
+print('Testing MONGODB-OIDC on azure... done.')
 print('Self test complete!')
