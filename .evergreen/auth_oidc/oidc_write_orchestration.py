@@ -29,6 +29,7 @@ def azure():
         "clientId": client_id,
         "audience": f"api://{app_id}",
         "authorizationClaim": "groups",
+        "matchPattern": auth_name_prefix,
         
     },{
         "authNamePrefix": auth_name_prefix2,
