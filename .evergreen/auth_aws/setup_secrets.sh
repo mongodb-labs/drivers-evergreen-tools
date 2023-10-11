@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # setup_secrets
+# See https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets
+# for details on usage.
 set -eu
 
 HERE=$(dirname $0)
