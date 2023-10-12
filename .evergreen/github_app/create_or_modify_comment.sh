@@ -15,5 +15,5 @@ nvm use lts/hydrogen
 npm install
 bash $DRIVERS_TOOLS/.evergreen/auth_aws/setup_secrets.sh drivers/comment-bot
 source secrets-export.sh
-node create_or_modify_comment.js "$@"
+node create_or_modify_comment.mjs "$@"
 popd
