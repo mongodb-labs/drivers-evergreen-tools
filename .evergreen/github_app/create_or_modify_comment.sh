@@ -18,6 +18,6 @@ nvm use lts/hydrogen
 
 # Install and run the app.
 npm install
-ls node_modules
+cat package.json
 node create_or_modify_comment.mjs "$@"
 popd
