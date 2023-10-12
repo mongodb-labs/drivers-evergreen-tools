@@ -1,9 +1,9 @@
 /**
  * Create or modify a GitHub comment using the mongodb-drivers-comment-bot.
  */
-import "child_process"
-import "fs";
-import "process";
+import * as child_process from "child_process"
+import * as fs from "fs";
+import * as process from "process";
 import { program } from 'commander';
 import { App } from "octokit";
 
@@ -26,7 +26,7 @@ program
 const options = program.opts();
 const sourcePath = options.sourcePath;
 const bodyMatch = options.bodyMatch;
-const bodyText = fs.readFileSync(options.bodyPath, { encoding: 'utf8' });
+const bodyText = fs.readFileSync(options.commentPath, { encoding: 'utf8' });
 
 // Inspect git checkout for information.
 const output = child_process.execSync(' git remote get-url --push origin', { cwd: sourcePath, encoding: 'utf8' });
