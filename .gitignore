@@ -106,6 +106,7 @@ lb-expansion.yml
 .idea/
 .DS_Store
 *.log
+.nvm
 orchestration.config
 atlas-expansion.yml
 secrets-export.sh
