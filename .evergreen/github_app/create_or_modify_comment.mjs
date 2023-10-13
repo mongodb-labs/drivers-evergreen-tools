@@ -6,8 +6,8 @@ import * as process from "process";
 import { program } from 'commander';
 import { App } from "octokit";
 
-const appId = process.env['GITHUB_APP_ID'];
-const privateKey = process.env['GITHUB_SECRET_KEY'].replace(/\\n/g, '\n');
+const appId = process.env.GITHUB_APP_ID;
+const privateKey = process.env.GITHUB_SECRET_KEY.replace(/\\n/g, '\n');
 if (appId == '' || privateKey == '') {
     console.error("Missing GitHub App auth information");
     process.exit(1)
