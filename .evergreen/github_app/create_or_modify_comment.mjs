@@ -46,7 +46,6 @@ const headers =  {
 };
 
 // Find the matching pull request.
-let issueNumber = -1;
 let resp = await octokit.request("GET /repos/{owner}/{repo}/pulls?state=open&per_page=100", {
     owner,
     repo,
@@ -59,33 +58,16 @@ if (issue == null) {
 }
 const { number: issueNumber } = issue
 
-
 // Find a matching comment if it exists, and update it.
-var found = false
 resp = await octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
     owner,
     repo,
     issue_number: issueNumber,
     headers
 });
-resp.data.forEach(async (comment) => {
-    if (comment.body.includes(bodyMatch)) {
-        if (found) {
-            return
-        }
-        found = true;
-        await octokit.request("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {
-            owner,
-            repo,
-            body: bodyText,
-            comment_id: comment.id,
-            headers
-        });
-    }
-})
-
-// Otherwise create a new comment.
-if (!found) {
+const comment = resp.data.find(comment => comment.body.includes(bodyMatch));
+if (!comment) {
+    // create comment.
     await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
         owner,
         repo,
@@ -93,4 +75,14 @@ if (!found) {
         body: bodyText,
         headers
     });
+} else {
+    // update comment.
+    await octokit.request("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {
+        owner,
+        repo,
+        body: bodyText,
+        comment_id: comment.id,
+        headers
+    });
+
 }
