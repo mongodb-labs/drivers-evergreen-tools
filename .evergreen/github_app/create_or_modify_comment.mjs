@@ -1,7 +1,6 @@
 /**
  * Create or modify a GitHub comment using the mongodb-drivers-comment-bot.
  */
-import * as child_process from "child_process"
 import * as fs from "fs";
 import * as process from "process";
 import { program } from 'commander';
@@ -18,21 +17,19 @@ if (appId == '' || privateKey == '') {
 program
   .version('1.0.0', '-v, --version')
   .usage('[OPTIONS]...')
-  .requiredOption('-s, --source-path <path>', 'The source path of the repo.')
+  .requiredOption('-o, --repo-owner <owner>', 'The owner of the repo (e.g. mongodb).')
+  .requiredOption('-n, --repo-name <name>', 'The name of the repo (e.g. mongo-go-driver).')
   .requiredOption('-m, --body-match <string>', 'The comment body to match')
   .requiredOption('-c, --comment-path <path>', 'The path to the comment body file')
   .requiredOption('-h, --head-sha <sha>', 'The sha of the head commit')
   .parse(process.argv);
 
 const options = program.opts();
-const sourcePath = options.sourcePath;
+const owner = options.repoOwner;
+const repo = options.repoName;
 const bodyMatch = options.bodyMatch;
 const bodyText = fs.readFileSync(options.commentPath, { encoding: 'utf8' });
 const targetSha = options.headSha;
-
-// Inspect git checkout for information.
-const output = child_process.execSync(' git remote get-url --push origin', { cwd: sourcePath, encoding: 'utf8' });
-const [owner, repo] = output.trim().split('github.com')[1].slice(1).replace('.git', '').split('/');
 
 // Set up the app.
 const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
