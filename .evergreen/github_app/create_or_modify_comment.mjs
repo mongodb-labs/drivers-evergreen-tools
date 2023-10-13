@@ -52,15 +52,13 @@ let resp = await octokit.request("GET /repos/{owner}/{repo}/pulls?state=open&per
     repo,
     headers
 });
-for (const pull of resp['data']) {
-    if (pull['head']['sha'] == targetSha) {
-        issueNumber = pull['number'];
-    }
-}
-if (issueNumber == -1) {
+const issue = resp.data.find(pr => pr.head.sha === targetSha);
+if (issue == null) {
     console.error(`ERROR: Could not find matching pull request for sha ${targetSha}`)
     process.exit(1)
 }
+const { number: issueNumber } = issue
+
 
 // Find a matching comment if it exists, and update it.
 var found = false
