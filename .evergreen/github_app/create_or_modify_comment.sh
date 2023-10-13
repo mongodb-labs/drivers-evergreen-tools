@@ -10,7 +10,7 @@ source secrets-export.sh
 
 # Install node and activate it.
 bash $DIR/../install-node.sh
-. $DIR/../init-node-and-npm-env.sh
+source $DIR/../init-node-and-npm-env.sh
 
 # Install and run the app.
 npm install
