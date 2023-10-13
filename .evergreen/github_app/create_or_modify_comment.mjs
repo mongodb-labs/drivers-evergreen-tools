@@ -25,11 +25,13 @@ program
   .parse(process.argv);
 
 const options = program.opts();
-const owner = options.repoOwner;
-const repo = options.repoName;
-const bodyMatch = options.bodyMatch;
-const bodyText = fs.readFileSync(options.commentPath, { encoding: 'utf8' });
-const targetSha = options.headSha;
+const { 
+  repoOwner: owner,
+  bodyMatch,
+  commentPath,
+  headSha: targetSha
+ } = options;
+const bodyText = fs.readFileSync(commentPath, { encoding: 'utf8' });
 
 // Set up the app.
 const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
