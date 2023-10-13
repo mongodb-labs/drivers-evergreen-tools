@@ -109,6 +109,4 @@ fi
 echo "npm location: $(which npm)"
 echo "npm version: $(npm -v)"
 
-npm install "${NPM_OPTIONS}"
-
-npm ls
+popd
