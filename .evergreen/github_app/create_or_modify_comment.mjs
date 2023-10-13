@@ -27,6 +27,7 @@ program
 const options = program.opts();
 const { 
   repoOwner: owner,
+  repoName: repo,
   bodyMatch,
   commentPath,
   headSha: targetSha
