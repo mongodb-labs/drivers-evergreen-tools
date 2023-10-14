@@ -78,7 +78,7 @@ fi
 
 MONGODB_URI=${MONGODB_URI:-"mongodb://localhost"}
 MONGODB_URI="${MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
-if [[ -n ${SESSION_TOKEN} ]]; then
+if [[ -n ${SESSION_TOKEN:-} ]]; then
     MONGODB_URI="${MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:${SESSION_TOKEN}"
 fi
 
