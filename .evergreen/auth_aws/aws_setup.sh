@@ -9,8 +9,8 @@
 # Assumes you have already set up secrets.
 set -eux
 
-HERE=$(dirname $0)
-pushd $HERE
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+pushd $SCRIPT_DIR
 
 # Ensure that secrets have already been set up.
 if [ ! -f "secrets-export.sh" ]; then 
