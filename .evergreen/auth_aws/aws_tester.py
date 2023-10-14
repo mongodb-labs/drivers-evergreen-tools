@@ -131,7 +131,7 @@ def setup_web_identity():
         print('ret was', ret)
         raise RuntimeError("Failed to unassign an instance profile from the current machine")
 
-    token_file = os.environ.get('AWS_WEB_IDENTITY_TOKEN_FILE', CONFIG[get_key('iam_web_identity_token_file')]))
+    token_file = os.environ.get('AWS_WEB_IDENTITY_TOKEN_FILE', CONFIG[get_key('iam_web_identity_token_file')])
 
     # Handle the OIDC credentials.
     env = dict(
