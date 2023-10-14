@@ -54,7 +54,7 @@ def create_user(user, kwargs):
     try:
         db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
     except OperationFailure as e:
-        if "already exists" not in e.errmsg:
+        if "already exists" not in e.details['errmsg']:
             raise
     client.close()
 
