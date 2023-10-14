@@ -7,6 +7,7 @@
 #
 # Handles AWS credential setup and exports relevant environment variables.
 # Assumes you have already set up secrets.
+set -eux
 
 HERE=$(dirname $0)
 pushd $HERE
