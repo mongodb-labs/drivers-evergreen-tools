@@ -3,17 +3,16 @@
 # aws_setup.sh
 #
 # Usage:
-#   . ./aws_setup.sh
+#   . ./aws_setup.sh <test-name>
 #
 # Handles AWS credential setup and exports relevant environment variables.
 
-DIR=$(dirname $0)
+DIR="$(dirname "${BASH_SOURCE[0]}")"
 pushd $DIR
 
 # Get the secrets from the vault.
 . ./setup_secrets.sh
 source secrets-export.sh
-
 
 # Convenience functions.
 urlencode () {
@@ -72,9 +71,9 @@ case $1 in
 esac
 
 if [ -n "$USER" ]; then
-  MONGODB_URI="mongodb://$USER:$PASS@localhost"
-  export USER
-  export PASS
+    MONGODB_URI="mongodb://$USER:$PASS@localhost"
+    export USER
+    export PASS
 fi
 
 MONGODB_URI=${MONGODB_URI:-"mongodb://localhost"}
