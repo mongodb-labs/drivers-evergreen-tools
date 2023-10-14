@@ -9,7 +9,8 @@ import sys
 import subprocess
 from functools import partial
 
-from pymongo import MongoClient, OperationFailure
+from pymongo import MongoClient
+from pymongo.errors import OperationFailure
 from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
