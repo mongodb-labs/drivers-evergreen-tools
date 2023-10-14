@@ -9,7 +9,7 @@
 # Assumes you have already set up secrets.
 
 HERE=$(dirname $0)
-pushd $DIR
+pushd $HERE
 
 # Ensure that secrets have already been set up.
 if [ ! -f "secrets-export.sh" ]; then 
