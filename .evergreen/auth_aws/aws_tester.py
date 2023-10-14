@@ -9,7 +9,7 @@ import sys
 import subprocess
 from functools import partial
 
-from pymongo import MongoClient
+from pymongo import MongoClient, OperationFailure
 from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -50,7 +50,11 @@ def create_user(user, kwargs):
     print('Creating user', user)
     client = MongoClient(username="bob", password="pwd123")
     db = client['$external']
-    db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
+    try:
+        db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
+    except OperationFailure as e:
+        if "already exists" not in e.errmsg:
+            raise
     client.close()
 
     # Verify access.
