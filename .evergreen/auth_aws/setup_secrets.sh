@@ -8,6 +8,6 @@ pushd $HERE
 popd
 set -x
 echo "Getting secrets:" "$@"
-which python
+echo "hello $(which python)"
 python $HERE/setup_secrets.py "$@"
 echo "Got secrets"
