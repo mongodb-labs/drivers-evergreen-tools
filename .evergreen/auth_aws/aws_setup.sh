@@ -7,7 +7,7 @@
 #
 # Handles AWS credential setup and exports relevant environment variables.
 
-DIR="$(dirname "${BASH_SOURCE[0]}")"
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $DIR
 
 # Get the secrets from the vault.

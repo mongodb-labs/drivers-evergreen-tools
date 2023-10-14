@@ -2,7 +2,7 @@
 # setup_secrets
 set -eu
 
-HERE=DIR="$(dirname "${BASH_SOURCE[0]}")"
+HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 pushd $HERE
 . ./activate-authawsvenv.sh
