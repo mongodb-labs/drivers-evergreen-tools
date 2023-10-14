@@ -10,8 +10,10 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $DIR
 
-# Get the secrets from the vault.
-. ./setup_secrets.sh drivers/aws_auth
+# Handle the secrets file.
+if [ ! -f ./secrets-export.sh ]; then
+    bash ./setup_secrets.sh drivers/aws_auth
+fi
 source secrets-export.sh
 
 # Handle the test setup if not using env variables.

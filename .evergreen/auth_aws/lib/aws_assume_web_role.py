@@ -12,7 +12,7 @@ import boto3
 
 LOGGER = logging.getLogger(__name__)
 
-def _assume_role_with_web_identity():
+def _assume_role_with_web_identity(quiet=False):
     sts_client = boto3.client("sts")
 
     token_file = os.environ['AWS_WEB_IDENTITY_TOKEN_FILE']
@@ -24,6 +24,8 @@ def _assume_role_with_web_identity():
 
     creds = response["Credentials"]
     creds["Expiration"] = str(creds["Expiration"])
+    if quiet:
+        return creds
 
     print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",

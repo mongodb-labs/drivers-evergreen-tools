@@ -142,7 +142,7 @@ def setup_web_identity():
     os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = CONFIG[get_key('iam_web_identity_token_file')]
     os.environ['AWS_ROLE_ARN'] = CONFIG[get_key("iam_auth_assume_web_role_name")]
 
-    creds = _assume_role_with_web_identity()
+    creds = _assume_role_with_web_identity(True)
     with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
