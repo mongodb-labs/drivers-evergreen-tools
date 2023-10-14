@@ -13,6 +13,8 @@ pushd $DIR
 # Handle the secrets file.
 if [ ! -f ./secrets-export.sh ]; then
     . ./setup_secrets.sh drivers/aws_auth
+else
+    . ./activate-authawsvenv.sh
 fi
 source secrets-export.sh
 
