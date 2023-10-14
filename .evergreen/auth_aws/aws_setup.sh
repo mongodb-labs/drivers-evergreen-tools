@@ -6,16 +6,18 @@
 #   . ./aws_setup.sh <test-name>
 #
 # Handles AWS credential setup and exports relevant environment variables.
+# Assumes you have already set up secrets.
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+HERE=$(dirname $0)
 pushd $DIR
 
-# Handle the secrets file.
-if [ ! -f ./secrets-export.sh ]; then
-    . ./setup_secrets.sh drivers/aws_auth
-else
-    . ./activate-authawsvenv.sh
+# Ensure that secrets have already been set up.
+if [ ! -f "secrets-export.sh" ]; then 
+    echo "ERROR: please run './setup_secrets.sh drivers/aws_auth' in this folder"
 fi
+
+# Activate the venv and source the secrets file.
+. ./activate-authawsvenv.sh
 source secrets-export.sh
 
 # Handle the test setup if not using env variables.
