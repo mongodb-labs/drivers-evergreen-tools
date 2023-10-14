@@ -11,7 +11,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 pushd $DIR
 
 # Get the secrets from the vault.
-. ./setup_secrets.sh
+. ./setup_secrets.sh drivers/aws_auth
 source secrets-export.sh
 
 # Convenience functions.
