@@ -65,7 +65,7 @@ def setup_assume_role():
     os.environ['AWS_SECRET_ACCESS_KEY'] = CONFIG[get_key("iam_auth_assume_aws_secret_access_key")]
 
     role_name = CONFIG[get_key("iam_auth_assume_role_name")]
-    creds = _assume_role(role_name)
+    creds = _assume_role(role_name, quiet=True)
     with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
