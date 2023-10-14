@@ -10,6 +10,7 @@ bash $DIR/../auth_aws/setup_secrets.sh drivers/comment-bot
 source secrets-export.sh
 
 # Install node and activate it.
+set -x
 bash $DIR/../install-node.sh
 source $DIR/../init-node-and-npm-env.sh
 
