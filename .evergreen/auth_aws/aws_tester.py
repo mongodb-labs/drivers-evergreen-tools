@@ -131,12 +131,14 @@ def setup_web_identity():
         print('ret was', ret)
         raise RuntimeError("Failed to unassign an instance profile from the current machine")
 
+    token_file = os.environ.get('AWS_WEB_IDENTITY_TOKEN_FILE', CONFIG[get_key('iam_web_identity_token_file')]))
+
     # Handle the OIDC credentials.
     env = dict(
         IDP_ISSUER=CONFIG[get_key("iam_web_identity_issuer")],
         IDP_JWKS_URI=CONFIG[get_key("iam_web_identity_jwks_uri")],
         IDP_RSA_KEY=CONFIG[get_key("iam_web_identity_rsa_key")],
-        AWS_WEB_IDENTITY_TOKEN_FILE=CONFIG[get_key('iam_web_identity_token_file')]
+        AWS_WEB_IDENTITY_TOKEN_FILE=token_file
     )
 
     ret = run(['lib/aws_handle_oidc_creds.py', 'token'], env)
@@ -144,7 +146,7 @@ def setup_web_identity():
         raise RuntimeWarning("Failed to write the web token")
 
     # Assume the web role to get temp credentials.
-    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = CONFIG[get_key('iam_web_identity_token_file')]
+    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = token_file
     os.environ['AWS_ROLE_ARN'] = CONFIG[get_key("iam_auth_assume_web_role_name")]
 
     creds = _assume_role_with_web_identity(True)

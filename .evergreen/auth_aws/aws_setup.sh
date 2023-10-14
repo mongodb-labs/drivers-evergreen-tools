@@ -21,6 +21,10 @@ fi
 . ./activate-authawsvenv.sh
 source secrets-export.sh
 
+if [ "$1" == "web-identity" ]; then
+    export AWS_WEB_IDENTITY_TOKEN_FILE="$SCRIPT_DIR/token_file.txt"
+fi
+
 # Handle the test setup if not using env variables.
 case $1 in
     session-creds | env-creds)
@@ -69,7 +73,6 @@ case $1 in
 
     web-identity)
         export AWS_ROLE_ARN=$IAM_AUTH_ASSUME_WEB_ROLE_NAME
-        export AWS_WEB_IDENTITY_TOKEN_FILE=$IAM_WEB_IDENTITY_TOKEN_FILE
         ;;
 
     regular)
