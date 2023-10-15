@@ -43,9 +43,7 @@ except FileNotFoundError:
 
 def run(args, env):
     """Run a python command in a subprocess."""
-    newenv = os.environ.copy()
-    newenv.update(env)
-    return subprocess.run([sys.executable] + args, env=newenv).returncode
+    return subprocess.run([sys.executable] + args, env=env).returncode
 
 
 def create_user(user, kwargs):
