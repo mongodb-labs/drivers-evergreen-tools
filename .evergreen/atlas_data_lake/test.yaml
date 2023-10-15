@@ -54,7 +54,7 @@ tenants:
         stores:
           - name: localstore
             provider: local
-            path: "${DRIVERS_TOOLS}/.evergreen/atlas_data_lake"
+            path: /src
         databases:
           - name: test
             collections:
