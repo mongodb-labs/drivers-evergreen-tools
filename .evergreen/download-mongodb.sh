@@ -56,13 +56,13 @@ get_mongodb_download_url_for ()
    VERSION_MONGOSH="1.8.1"
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="6.3.1"
-   VERSION_70="7.0.1"
+   VERSION_70="7.0.2"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.9"
+   VERSION_60="6.0.10"
    # The perf version must always remain pinned to the same patch
    VERSION_60_PERF="6.0.6"
-   VERSION_50="5.0.20"
-   VERSION_44="4.4.23"
+   VERSION_50="5.0.21"
+   VERSION_44="4.4.25"
    VERSION_42="4.2.24"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
@@ -677,15 +677,22 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   cd $DRIVERS_TOOLS
+   if [ -n "$MONGODB_BINARY_ROOT" ]; then
+      cd $MONGODB_BINARY_ROOT
+   else
+      cd $DRIVERS_TOOLS
+   fi
+   echo "Installing server binaries..."
    curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+
    $EXTRACT mongodb-binaries.tgz
+   echo "Installing server binaries... done."
 
    rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
-   ./mongodb/bin/mongod --version
+   echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
 
@@ -694,16 +701,22 @@ download_and_extract_mongosh ()
    MONGOSH_DOWNLOAD_URL=$1
    EXTRACT_MONGOSH=$2
 
-   cd $DRIVERS_TOOLS
+   if [ -n "$MONGODB_BINARY_ROOT" ]; then
+      cd $MONGODB_BINARY_ROOT
+   else
+      cd $DRIVERS_TOOLS
+   fi
+   echo "Installing MongoDB shell..."
    curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
    mv mongosh-* mongosh
    mv mongosh/bin/* mongodb/bin
+   rm -rf mongosh
    chmod -R +x mongodb/bin
-   echo "MongoDB shell installed. Version:"
-   ./mongodb/bin/mongosh --version
+   echo "Installing MongoDB shell... done."
+   echo "MongoDB shell version: $(./mongodb/bin/mongosh --version)"
    cd -
 }
 
@@ -728,6 +741,7 @@ download_and_extract ()
       linux-ubuntu-22.04*) SKIP_LEGACY_SHELL=1
       ;;
    esac
+
    if [ -z "${SKIP_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
@@ -762,6 +776,7 @@ download_and_extract_crypt_shared ()
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$1
    EXTRACT=$2
    __CRYPT_SHARED_LIB_PATH=${3:-CRYPT_SHARED_LIB_PATH}
+   rm -rf crypt_shared_download
    mkdir crypt_shared_download
    cd crypt_shared_download
    curl_retry $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz

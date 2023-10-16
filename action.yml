@@ -52,7 +52,7 @@ runs:
         STORAGE_ENGINE: ${{ inputs.storage-engine }}
         REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
         SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
-      shell: sh
+      shell: bash
     - id: "get-cluster-uri"
       name: "Expose Cluster URI"
       run: echo "cluster-uri=$(cat ${{ github.action_path }}/uri.txt)" >> $GITHUB_OUTPUT

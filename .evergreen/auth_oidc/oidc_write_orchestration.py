@@ -53,7 +53,7 @@ def azure():
     orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
         json.dump(data, fid, indent=4)
-
+    print(f"Wrote OIDC config to {orch_file}")
 
 def main():
     print("Bootstrapping OIDC config")
@@ -126,6 +126,7 @@ def main():
     orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'replica_sets', 'auth-oidc.json'))
     with open(orch_file, 'w') as fid:
         json.dump(data, fid, indent=4)
+    print(f"Wrote OIDC config to {orch_file}")
 
 
 if __name__ == '__main__':

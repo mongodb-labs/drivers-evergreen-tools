@@ -27,8 +27,14 @@ ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 
 DL_START=$(date +%s)
 DIR=$(dirname $0)
-# Functions to fetch MongoDB binaries
+# Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
+
+# To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
+# explicitly invoke Bash as a subshell here when running `find_python3`.
+echo "Finding Python3 binary..."
+PYTHON="$(bash -c ". $DIR/find-python3.sh && find_python3 2>/dev/null")"
+echo "Finding Python3 binary... done."
 
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -84,12 +90,19 @@ fi
 
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
+# Docker does not enable ipv6 by default.
+# https://docs.docker.com/config/daemon/ipv6/
+if [ -n "$DOCKER_RUNNING" ]; then
+  cp $ORCHESTRATION_FILE /root/config.json
+  export ORCHESTRATION_FILE=/root/config.json
+  sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
+fi
+
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
-bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
+PYTHON="${PYTHON:?}" bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
-pwd
 if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
   echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/out.log:
   cat $MONGO_ORCHESTRATION_HOME/out.log
@@ -98,10 +111,11 @@ if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_UR
   exit 1
 fi
 cat tmp.json
-URI=$(python -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+
+URI=$(${PYTHON:?} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
 echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
-echo "Cluster URI: $URI"
+printf "\nCluster URI: %s\n" "$URI"
 # Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
 # server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
 if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
@@ -117,6 +131,9 @@ if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
     fi
   cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
+EOT
+cat <<EOT >> mo-expansion.sh
+export CRYPT_SHARED_LIB_PATH="$CRYPT_SHARED_LIB_PATH"
 EOT
   fi
 fi

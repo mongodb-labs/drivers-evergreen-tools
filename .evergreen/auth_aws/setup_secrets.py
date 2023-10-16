@@ -11,6 +11,7 @@ import uuid
 import boto3
 import botocore.exceptions
 
+AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
 
 AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
 

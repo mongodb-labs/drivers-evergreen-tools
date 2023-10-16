@@ -3,26 +3,33 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" ] || \
-   [ -z "${AZUREKMS_CLIENTID:-}" ] || \
-   [ -z "${AZUREKMS_TENANTID:-}" ] || \
-   [ -z "${AZUREKMS_SECRET:-}" ] || \
-   [ -z "${AZUREKMS_DRIVERS_TOOLS:-}" ] || \
-   [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
-   [ -z "${AZUREKMS_PUBLICKEYPATH:-}" ] || \
-   [ -z "${AZUREKMS_PRIVATEKEYPATH:-}" ] || \
-   [ -z "${AZUREKMS_SCOPE:-}" ]; then
-    echo "Please set the following required environment variables"
-    echo " AZUREKMS_VMNAME_PREFIX to an identifier string no spaces (e.g. CDRIVER)"
-    echo " AZUREKMS_CLIENTID"
-    echo " AZUREKMS_TENANTID"
-    echo " AZUREKMS_SECRET"
-    echo " AZUREKMS_DRIVERS_TOOLS"
-    echo " AZUREKMS_PUBLICKEYPATH"
-    echo " AZUREKMS_PRIVATEKEYPATH"
-    echo " AZUREKMS_SCOPE"
-    exit 1
+AZUREKMS_DRIVERS_TOOLS=${AZUREKMS_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
+
+if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
+    echo "${AZUREKMS_PUBLICKEY}" > /tmp/testazurekms_publickey
+    printf -- "${AZUREKMS_PRIVATEKEY}" > /tmp/testazurekms_privatekey
+    # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
+    chmod 600 /tmp/testazurekms_privatekey
+    export AZUREKMS_PUBLICKEYPATH="/tmp/testazurekms_publickey"
+    export AZUREKMS_PRIVATEKEYPATH="/tmp/testazurekms_privatekey"
 fi
+
+VARLIST=(
+AZUREKMS_VMNAME_PREFIX
+AZUREKMS_CLIENTID
+AZUREKMS_TENANTID
+AZUREKMS_SECRET
+AZUREKMS_RESOURCEGROUP
+AZUREKMS_PUBLICKEYPATH
+AZUREKMS_PRIVATEKEYPATH
+AZUREKMS_SCOPE
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 # Set defaults.
 export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
@@ -45,7 +52,12 @@ fi
 # Create VM.
 . "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
-echo "AZUREKMS_VMNAME: $AZUREKMS_VMNAME" > testazurekms-expansions.yml
+# Store items needed for teardown.
+cat <<EOT > testazurekms-expansions.yml
+AZUREKMS_VMNAME: $AZUREKMS_VMNAME
+AZUREKMS_RESOURCEGROUP: $AZUREKMS_RESOURCEGROUP
+AZUREKMS_SCOPE: $AZUREKMS_SCOPE
+EOT
 # Assign role.
 "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies.
