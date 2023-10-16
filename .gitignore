@@ -29,6 +29,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+node-artifacts
 
 # Installer logs
 pip-log.txt
@@ -106,6 +107,7 @@ lb-expansion.yml
 .idea/
 .DS_Store
 *.log
+.nvm
 orchestration.config
 atlas-expansion.yml
 secrets-export.sh
