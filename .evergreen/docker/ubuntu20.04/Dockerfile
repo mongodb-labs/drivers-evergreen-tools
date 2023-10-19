@@ -25,7 +25,6 @@ ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestr
 ENV MONGODB_BINARIES=/root/mongodb/bin
 ENV MONGODB_BINARY_ROOT=/root
 ENV MONGO_ORCHESTRATION_HOME=/root
-ENV SKIP_LEGACY_SHELL=1
 ENV DOCKER_RUNNING=true
 
 COPY ./local-entrypoint.sh /root/local-entrypoint.sh
