@@ -95,7 +95,17 @@ def setup_ecs():
     project_dir = os.environ['PROJECT_DIRECTORY']
     base_command = f"{sys.executable} -u  lib/container_tester.py"
     run_prune_command = f"{base_command} -v remote_gc_services --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]}"
-    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {CONFIG[get_key('iam_auth_ecs_task_definition')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
+
+    # Get the appropriate task definition based on the version of Ubuntu.
+    with open('/etc/release_lsb') as fid:
+        text = fid.read()
+    if 'jammy' in text:
+        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_jammy')]
+    elif 'focal' in text:
+        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_focal')]
+    else:
+        raise ValueError('Unsupported ubuntu release')
+    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {task_definition} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
 
     # Pass in the AWS credentials as environment variables
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown
