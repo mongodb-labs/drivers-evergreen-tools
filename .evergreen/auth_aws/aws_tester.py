@@ -97,7 +97,7 @@ def setup_ecs():
     run_prune_command = f"{base_command} -v remote_gc_services --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]}"
 
     # Get the appropriate task definition based on the version of Ubuntu.
-    with open('/etc/release_lsb') as fid:
+    with open('/etc/lsb-release') as fid:
         text = fid.read()
     if 'jammy' in text:
         task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_jammy')]
