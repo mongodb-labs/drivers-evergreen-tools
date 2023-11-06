@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This script launches a docker-based for mongohoused for testing.
+# This script launches a docker-based mongohoused for testing.
 #
 # There is no corresponding 'shutdown' script; this project relies
 # on Evergreen to terminate processes and clean up when tasks end.

@@ -13,8 +13,6 @@ import botocore.exceptions
 
 AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
 
-AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
-
 
 def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
