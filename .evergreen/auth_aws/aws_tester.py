@@ -100,11 +100,11 @@ def setup_ecs():
     with open('/etc/lsb-release') as fid:
         text = fid.read()
     if 'jammy' in text:
-        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_jammy')]
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_jammy'), None)
         if task_definition is None:
             raise ValueError('Please set "iam_auth_ecs_task_definition_jammy" variable')
     elif 'focal' in text:
-        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_focal')]
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_focal'), None)
         # Fall back to previous task definition for backward compat.
         if task_definition is None:
             task_definition = CONFIG[get_key('iam_auth_ecs_task_definition')]
