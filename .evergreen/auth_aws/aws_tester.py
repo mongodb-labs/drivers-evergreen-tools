@@ -100,9 +100,14 @@ def setup_ecs():
     with open('/etc/lsb-release') as fid:
         text = fid.read()
     if 'jammy' in text:
-        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_jammy')]
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_jammy'), None)
+        if task_definition is None:
+            raise ValueError('Please set "iam_auth_ecs_task_definition_jammy" variable')
     elif 'focal' in text:
-        task_definition = CONFIG[get_key('iam_auth_ecs_task_definition_focal')]
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_focal'), None)
+        # Fall back to previous task definition for backward compat.
+        if task_definition is None:
+            task_definition = CONFIG[get_key('iam_auth_ecs_task_definition')]
     else:
         raise ValueError('Unsupported ubuntu release')
     run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {task_definition} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
