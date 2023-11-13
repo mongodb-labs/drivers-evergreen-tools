@@ -9,5 +9,5 @@ set -eux
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 
-VAULT_NAME = ${1:-serverless}
+VAULT_NAME="${1:-serverless}"
 bash ../auth_aws/setup_secrets.sh drivers/$VAULT_NAME
