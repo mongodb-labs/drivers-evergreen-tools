@@ -8,4 +8,4 @@ set -eux
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
-bash ../aws_auth/setup_secrets.sh drivers/serverless
+bash ../auth_aws/setup_secrets.sh drivers/serverless
