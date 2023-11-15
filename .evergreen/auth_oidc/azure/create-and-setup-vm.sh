@@ -3,6 +3,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
+
 if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ] || \
    [ -z "${AZUREOIDC_CLIENTID:-}" ] || \
    [ -z "${AZUREOIDC_TENANTID:-}" ] || \
@@ -57,8 +59,8 @@ export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
 
 # Update expansions and env viles.
 echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
-echo "AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> $AZUREOIDC_ENVPATH
-echo "AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS}" >> $AZUREOIDC_ENVPATH
+echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> $AZUREOIDC_ENVPATH
+echo "export AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS}" >> $AZUREOIDC_ENVPATH
 
 # Install dependencies.
 AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
@@ -72,11 +74,23 @@ AZUREKMS_SRC=$AZUREOIDC_ENVPATH \
 AZUREKMS_DST="./" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 
+# Push Drivers Evergreen Tools onto the VM
+TARFILE=/tmp/drivers-evergreen-tools.tgz
+pushd $AZUREOIDC_DRIVERS_TOOLS
+git archive --format=tar.gz -o $TARFILE --prefix=drivers-evergreen-tools/ HEAD
+TARFILE_BASE=$(basename ${TARFILE})
+AZUREKMS_SRC=${TARFILE} \
+    AZUREKMS_DST="~/" \
+    $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
+echo "Copying files ... end"
+echo "Untarring file ... begin"
+AZUREKMS_CMD="tar xf ${TARFILE_BASE}" \
+  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+echo "Untarring file ... end"
+popd
+
 # Start mongodb.
-AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/start-mongodb.sh" \
-AZUREKMS_DST="./" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREKMS_CMD="./start-mongodb.sh" \
+AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/start-mongodb.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
