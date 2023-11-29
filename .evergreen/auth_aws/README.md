@@ -31,6 +31,9 @@ python aws_tester.py <variant>
 # Run your driver-specific tests here.
 ```
 
+It is recommended that these actions be broken into scripts that can be run locally as well as in CI.  The instructions
+for setting up local secrets handling are in the wiki page.
+
 ## ECS Test Process
 
 The ECS test variant requires a slightly different approach, since we need to run the code in a container.
