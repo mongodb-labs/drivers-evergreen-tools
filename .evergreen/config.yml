@@ -395,17 +395,17 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "oidc-auth-test-azure":
+  "run oidc azure test":
     - command: shell.exec
-      type: test
       params:
-        working_dir: "src"
-        script: |
+        shell: bash
+        script: |-
+          set -o errexit
           ${PREPARE_SHELL}
-          set -ex
-          export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers_tools.tgz
+          cd src
+          export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/mongo-python-driver.tgz
           git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
-          export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
+          export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergreen/run-mongodb-oidc-test.sh"
           bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 
   "cleanup":
@@ -803,6 +803,11 @@ tasks:
       tags: ["latest", "docker"]
       commands:
         - func: "run oidc test"
+
+    - name: "oidc-auth-test-azure"
+      tags: ["latest", "azure"]
+      commands:
+        - func: "run oidc azure test"
 
 # }}}
 
