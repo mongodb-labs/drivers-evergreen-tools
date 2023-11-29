@@ -395,6 +395,19 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "oidc-auth-test-azure":
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set -ex
+          export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers_tools.tgz
+          git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
+          export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
+          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
+
   "cleanup":
     - command: shell.exec
       params:
@@ -960,6 +973,30 @@ task_groups:
     tasks:
       - ".serverless"
 
+  - name: testazureoidc_task_group
+    setup_group:
+    - func: fetch source
+    - func: prepare resources
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
+    teardown_group:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          ${PREPARE_SHELL}
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    tasks:
+    - oidc-auth-test-azure
+
 buildvariants:
 
 # Test packaging and other release related routines
@@ -977,6 +1014,13 @@ buildvariants:
     - ubuntu2004-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
+
+- name: testazureoidc-variant
+  display_name: "Azure OIDC"
+  run_on: ubuntu2004-small
+  tasks:
+    - name: testazureoidc_task_group
+      batchtime: 20160 # Use a batchtime of 14 days as suggested by the CSFLE test README
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
