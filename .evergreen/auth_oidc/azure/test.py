@@ -41,7 +41,7 @@ def callback(client_id, client_info, server_info):
             raise ValueError(msg)
     return dict(access_token=data['access_token'])
 
-props = dict(request_token_callback=partial(callback(os.environ['AZUREOIDC_TOKENCLIENT'])))
+props = dict(request_token_callback=partial(callback, os.environ['AZUREOIDC_TOKENCLIENT']))
 print('Testing MONGODB-OIDC on azure...')
 print('Testing resource 1...')
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
@@ -50,7 +50,7 @@ c.close()
 print('Testing resource 1... done.')
 
 print('Testing resource 2...')
-props = dict(request_token_callback=partial(callback(os.environ['AZUREOIDC_TOKENCLIENT2'])))
+props = dict(request_token_callback=partial(callback, os.environ['AZUREOIDC_TOKENCLIENT2']))
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
 c.test.test.find_one({})
 c.close()
