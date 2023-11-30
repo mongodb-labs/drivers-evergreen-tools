@@ -6,7 +6,7 @@ set -o nounset
 # Check for inputs.
 if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
    [ -z "${AZUREOIDC_TEST_CMD:-}" ] || \
-   [ -z "${AZUREOIDC_DRIVERS_TOOLS:-}" ] then;
+   [ -z "${AZUREOIDC_DRIVERS_TOOLS:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREOIDC_DRIVERS_TAR_FILE"
     echo " AZUREOIDC_TEST_CMD"
