@@ -991,7 +991,7 @@ task_groups:
           # ensure HEAD points to current commit
           cd src
           git add .
-          git commit -a "commit local changes"
+          git commit -m "commit local changes"
           export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
           $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
     teardown_group:
