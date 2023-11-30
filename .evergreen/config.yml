@@ -1018,18 +1018,17 @@ buildvariants:
 
 # Tests relating to docker images
 - name: tests-docker-related
-  display_name: Docker Related
+  display_name: Docker
   run_on:
     - ubuntu2004-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
 - name: testazureoidc-variant
-  display_name: "Azure OIDC"
+  display_name: OIDC
   run_on: ubuntu2004-small
   tasks:
-    - name: testazureoidc_task_group
-      batchtime: 20160 # Use a batchtime of 14 days as suggested by the CSFLE test README
+    - ".oidc"   # Run all tasks with the "oidc" tag
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
