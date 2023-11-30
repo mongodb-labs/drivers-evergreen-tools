@@ -12,10 +12,6 @@ fi
 
 # Set defaults.
 AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
-
-echo "$AZUREOIDC_DRIVERS_TOOLS"
-cat "$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/test.py"
-exit 1
 BASE_PATH="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc"
 export AZUREKMS_PUBLICKEYPATH="$BASE_PATH/azure/keyfile.pub"
 export AZUREKMS_PRIVATEKEYPATH="$BASE_PATH/azure/keyfile"
