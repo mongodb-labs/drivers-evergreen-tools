@@ -989,6 +989,7 @@ task_groups:
           set -o errexit
           ${PREPARE_SHELL}
           # ensure HEAD points to current commit
+          cd src
           git add .
           git commit -a "commit local changes"
           export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
