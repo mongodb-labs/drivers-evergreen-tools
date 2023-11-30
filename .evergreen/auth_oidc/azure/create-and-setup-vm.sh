@@ -47,8 +47,6 @@ fi
 
 # Get the rest of the secrets from the Azure vault.
 python ./azure/handle_secrets.py
-echo "hello! $AZUREOIDC_ENVPATH"
-exit 1
 source $AZUREOIDC_ENVPATH
 
 # Create VM.

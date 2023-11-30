@@ -804,11 +804,6 @@ tasks:
       commands:
         - func: "run oidc test"
 
-    - name: "test-oidc-azure"
-      tags: ["latest", "oidc"]
-      commands:
-        - func: "run oidc azure test"
-
 # }}}
 
 
@@ -979,6 +974,7 @@ task_groups:
       - ".serverless"
 
   - name: testazureoidc_task_group
+    tags: ["latest", "oidc"]
     setup_group:
     - func: fetch source
     - func: prepare resources
