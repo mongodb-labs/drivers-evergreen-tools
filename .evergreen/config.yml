@@ -800,6 +800,7 @@ tasks:
         - func: "run docker test"
 
     - name: "test-oidc"
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
 
