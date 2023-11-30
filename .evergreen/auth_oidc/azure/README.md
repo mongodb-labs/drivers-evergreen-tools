@@ -5,6 +5,7 @@ pushing the code to the VM, running the OIDC tests for the driver,
 and then tearing down the VM and its resources.
 
 There are a set of scripts that facilitate these operations.
+They build on top of the scripts used in `csfle/azurekms`.
 First, ensure you are running either locally or on an Evergreen host
 that has the Azure CLI 2.25+ installed.  At time of writing, distros with `az` installed include:
 
@@ -16,8 +17,11 @@ that has the Azure CLI 2.25+ installed.  At time of writing, distros with `az` i
 Locally, it can be installed as `brew install az`.
 
 See https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets for more background
-on how the secrets are managed for these tests.
-Additionally, there are secrets stored in the "OIDC-Key-Vault" in our Drivers Azure Subscription <TODO, link to the wiki>.
+on how the secrets are managed for these tests.  These secrets are used to log in to Azure, and the 
+rest of the secrets are fetched from the "OIDC-Key-Vault" in our Drivers Azure Subscription (https://portal.azure.com/#home).
+
+See the Azure machine flows section of the OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-ServiceAccounts/ManagedIdentities/MachineFlows) for more information
+about the Azure integration.
 
 To ensure proper setup and teardown, we use a task group in Evergreen config.  The setup portion 
 should run the equivalent of the following, substituting your driver name:
