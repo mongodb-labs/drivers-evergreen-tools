@@ -2,6 +2,7 @@
 set -o errexit
 set -o pipefail
 # Do not error on unset variables. run-orchestration.sh accesses unset variables.
+export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
 
 echo "Install jq ... begin"
