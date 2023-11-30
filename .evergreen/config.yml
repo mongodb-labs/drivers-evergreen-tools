@@ -990,8 +990,9 @@ task_groups:
           ${PREPARE_SHELL}
           # ensure HEAD points to current commit
           cd src
+          git checkout oidc-test-branch
           git add .
-          git commit -m "commit local changes"
+          git commit -m "add files"
           export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
           $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
     teardown_group:
