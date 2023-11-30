@@ -38,4 +38,7 @@ az vm create \
     --nsg "$AZUREKMS_VMNAME-NSG" \
     --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
+
+SHUTDOWN_TIME=$(TZ="-1" date +"%H%M")  # force shut down in one hour.
+az vm auto-shutdown -g $AZUREKMS_RESOURCEGROUP -n $AZUREKMS_VMNAME --time $SHUTDOWN_TIME
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
