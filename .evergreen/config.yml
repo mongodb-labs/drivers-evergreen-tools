@@ -800,12 +800,12 @@ tasks:
         - func: "run docker test"
 
     - name: "test-oidc"
-      tags: ["latest", "docker"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
 
-    - name: "oidc-auth-test-azure"
-      tags: ["latest", "azure"]
+    - name: "test-oidc-azure"
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc azure test"
 
@@ -988,6 +988,9 @@ task_groups:
         script: |-
           set -o errexit
           ${PREPARE_SHELL}
+          # ensure HEAD points to current commit
+          git add .
+          git commit -a "commit local changes"
           export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
           $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
     teardown_group:
@@ -1000,7 +1003,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     tasks:
-    - oidc-auth-test-azure
+    - test-oidc-azure
 
 buildvariants:
 
