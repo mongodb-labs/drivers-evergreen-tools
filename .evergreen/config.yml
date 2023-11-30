@@ -395,7 +395,7 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "test-oidc-azure":
+  "run oidc azure test":
     - command: shell.exec
       params:
         shell: bash
@@ -803,6 +803,10 @@ tasks:
       tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
+
+    - name: "test-oidc-azure"
+      commands:
+        - func: "run oidc azure test"
 
 # }}}
 
