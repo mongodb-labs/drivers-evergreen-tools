@@ -990,7 +990,7 @@ task_groups:
           ${PREPARE_SHELL}
           # ensure HEAD points to current commit
           cd src
-          git checkout oidc-test-branch
+          git checkout -b oidc-test-branch
           git add .
           git commit -m "add files"
           export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
