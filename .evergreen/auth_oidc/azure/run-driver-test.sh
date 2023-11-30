@@ -3,24 +3,24 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
+
 # Check for inputs.
 if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
    [ -z "${AZUREOIDC_TEST_CMD:-}" ] || \
-   [ -z "${AZUREOIDC_DRIVERS_TOOLS:-}" ]; then
+   [ -z "${DRIVERS_TOOLS:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREOIDC_DRIVERS_TAR_FILE"
     echo " AZUREOIDC_TEST_CMD"
-    echo " AZUREOIDC_DRIVERS_TOOLS"
+    echo " DRIVERS_TOOLS"
     exit 1
 fi
 
 # Read in the env variables.
-DRIVERS_TOOLS=$AZUREOIDC_DRIVERS_TOOLS
 AZURE_DIR=$DRIVERS_TOOLS/.evergreen/auth_oidc/azure
 source $AZURE_DIR/env.sh
 
 # Set up variables.
-DRIVERS_TOOLS=$AZUREOIDC_DRIVERS_TOOLS
 export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
 export AZUREKMS_VMNAME=$AZUREOIDC_VMNAME
 export AZUREKMS_PRIVATEKEYPATH=$AZURE_DIR/keyfile
