@@ -800,7 +800,6 @@ tasks:
         - func: "run docker test"
 
     - name: "test-oidc"
-      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
 
@@ -1028,7 +1027,8 @@ buildvariants:
   display_name: OIDC
   run_on: ubuntu2004-small
   tasks:
-    - ".oidc"   # Run all tasks with the "oidc" tag
+    - "test-oidc"  
+    - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
