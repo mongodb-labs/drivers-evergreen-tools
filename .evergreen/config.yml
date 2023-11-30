@@ -402,7 +402,7 @@ functions:
         script: |-
           set -o errexit
           ${PREPARE_SHELL}
-          cd src
+          cd $DRIVERS_TOOLS
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
