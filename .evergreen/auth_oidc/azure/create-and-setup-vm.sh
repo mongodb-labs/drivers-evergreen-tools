@@ -91,11 +91,5 @@ AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/start-mongodb
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
-AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/test.py" \
-AZUREKMS_DST="./" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-test.sh" \
-AZUREKMS_DST="./" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREKMS_CMD="./run-test.sh" \
+AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/run-test.sh" \
     "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
