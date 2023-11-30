@@ -1017,14 +1017,14 @@ buildvariants:
     - ".releng" # Run all tasks with the "releng" tag
 
 # Tests relating to docker images
-- name: tests-docker-related
+- name: tests-docker
   display_name: Docker
   run_on:
     - ubuntu2004-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
-- name: testazureoidc-variant
+- name: tests-oidc
   display_name: OIDC
   run_on: ubuntu2004-small
   tasks:

@@ -42,6 +42,23 @@ export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergr
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 ```
 
+In your tests, you can use the environment variables in `env.sh` to define the `TOKEN_AUDIENCE` and `TOKEN_CLIENT_ID` 
+auth mechanism properties, e.g.
+
+```python
+TOKEN_AUDIENCE="api://" + os.environ["AZUREOIDC_CLIENTID"]
+TOKEN_CLIENT_ID=os.environ["AZUREOIDC_TOKENCLIENT"]  # For first user
+TOKEN_CLIENT_ID=os.environ["AZUREOIDC_TOKENCLIENT2"]  # For second user
+```
+
+Note: If you are creating a uri, you will have to escape `TOKEN_AUDIENCE` value, e.g.
+
+```bash
+MONGODB_URI="${MONGODB_URI}/?authMechanism=MONGODB-OIDC"
+MONGODB_URI="${MONGODB_URI}&authMechanismProperties=PROVIDER_NAME:azure"
+MONGODB_URI="${MONGODB_URI},TOKEN_AUDIENCE:api%3A%2F%2F${AZUREOIDC_CLIENTID}"
+```
+
 Finally, we tear down the vm:
 
 ```bash
