@@ -36,7 +36,9 @@ This script can be run locally or in CI.  The script also runs a self-test on th
 Next, compile/build and bundle our driver and test code, and run the test:
 
 ```bash
-# This variable points to the tarball that we will push to the VM and unpack.
+# Prep the source tarball - first make sure the patch changes are committed before using `git archive`.
+git add .
+git commit -m "add files"
 export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/mongo-python-driver.tgz
 git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
 # Define the command to run on the VM.
