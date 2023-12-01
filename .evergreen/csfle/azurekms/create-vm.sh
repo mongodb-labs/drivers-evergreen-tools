@@ -39,6 +39,10 @@ az vm create \
     --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
 
-SHUTDOWN_TIME=$(TZ="-2" date +"%H%M")  # force shut down in one hour.
+if [ $(uname -s) = "Darwin" ]; then
+    SHUTDOWN_TIME=$(date -u -v2H +"%H%M")
+else
+    SHUTDOWN_TIME=$(date -u -d "$(date) + 1 hours" +"%H%M")
+fi
 az vm auto-shutdown -g $AZUREKMS_RESOURCEGROUP -n $AZUREKMS_VMNAME --time $SHUTDOWN_TIME
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
