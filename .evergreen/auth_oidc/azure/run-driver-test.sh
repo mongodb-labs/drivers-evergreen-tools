@@ -3,22 +3,20 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
+AZURE_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+pushd $AZURE_DIR
 
 # Check for inputs.
 if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
-   [ -z "${AZUREOIDC_TEST_CMD:-}" ] || \
-   [ -z "${DRIVERS_TOOLS:-}" ]; then
+   [ -z "${AZUREOIDC_TEST_CMD:-}" ]; then
     echo "Please set the following required environment variables"
     echo " AZUREOIDC_DRIVERS_TAR_FILE"
     echo " AZUREOIDC_TEST_CMD"
-    echo " DRIVERS_TOOLS"
     exit 1
 fi
 
 # Read in the env variables.
-AZURE_DIR=$DRIVERS_TOOLS/.evergreen/auth_oidc/azure
-source $AZURE_DIR/env.sh
+source ./env.sh
 
 # Set up variables.
 export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
@@ -29,13 +27,13 @@ export AZUREKMS_PRIVATEKEYPATH=$AZURE_DIR/keyfile
 DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
 AZUREKMS_SRC=${AZUREOIDC_DRIVERS_TAR_FILE} \
 AZUREKMS_DST="~/" \
-  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
+  $AZURE_DIR/../../csfle/azurekms/copy-file.sh
 echo "Copying files ... end"
 echo "Untarring file ... begin"
 AZUREKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
-  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+  $AZURE_DIR/../../csfle/azurekms/run-command.sh
 echo "Untarring file ... end"
 
 # Run the driver test.
 AZUREKMS_CMD="${AZUREOIDC_TEST_CMD}" \
-    $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+    $AZURE_DIR/../../csfle/azurekms/run-command.sh
