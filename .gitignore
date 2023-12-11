@@ -97,6 +97,7 @@ authoidcvenv
 /uri.txt
 /results.json
 /mongodb
+/.evergreen/docker/ubuntu20.04/mongodb
 /mongosh
 mo-expansion.yml
 mo-expansion.sh
