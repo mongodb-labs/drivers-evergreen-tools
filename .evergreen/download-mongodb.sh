@@ -764,15 +764,16 @@ download_and_extract ()
    # Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
    # server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
    if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
-   if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
-      echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
-   else
-      echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
-      download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
-      echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
-      if [ -z $CRYPT_SHARED_LIB_PATH ]; then
-         echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
-         exit 1
+      if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
+         echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
+      else
+         echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+         download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
+         echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
+         if [ -z $CRYPT_SHARED_LIB_PATH ]; then
+            echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
+            exit 1
+         fi
       fi
    fi
 }
