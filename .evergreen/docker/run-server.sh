@@ -41,7 +41,7 @@ ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
 # Expose the required ports.
 if [ "$TOPOLOGY" == "server" ]; then
     ARGS+=" -p 27017:27017"
-else if [ -n "$LOAD_BALANCER" ]
+elif [ -n "$LOAD_BALANCER" ]
     ARGS+=" -p 27017:27017 -p 27018:27018 -p 27019:27019 -p 27050:27050 -p 27051:27051"
 else
     ARGS+=" -p 27017:27017 -p 27018:27018 -p 27019:27019"
