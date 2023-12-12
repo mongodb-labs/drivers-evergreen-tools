@@ -391,6 +391,10 @@ functions:
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/auth_oidc
           ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
+          # Get tokens
+          bash oidc_get_tokens.sh
+          test -f /tmp/tokens/test_user1
+          test -f /tmp/tokens/test_user2
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test

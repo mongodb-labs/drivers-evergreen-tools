@@ -69,9 +69,9 @@ You can then run mongo orchestration with `TOPOLOGY=replicaset` and `ORCHESTRATI
 
 To set up the server auth roles, run `mongosh setup_oidc.js`.
 
-Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `/tmp/tokens/test_user1` or `/tmp/tokens/test_user2` as desired.
+Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `$OIDC_TOKEN_DIR/test_user1` or `$OIDC_TOKEN_DIR/test_user2` as desired.
 
-The token in `/tmp/tokens/test_user1_expires` can be used to test expired credentials.
+The token in `$OIDC_TOKEN_DIR/test_user1_expires` can be used to test expired credentials.
 
 ## Azure Testing
 
