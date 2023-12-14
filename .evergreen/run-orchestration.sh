@@ -13,6 +13,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
 #   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
 #   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
+#   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
@@ -24,7 +25,7 @@ DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
-INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELLL:-}
+INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
 DIR=$(dirname $0)
