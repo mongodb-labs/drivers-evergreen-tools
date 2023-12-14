@@ -399,6 +399,19 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run oidc azure test":
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          cd $DRIVERS_TOOLS
+          export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
+          git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
+          export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
+          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
+
   "cleanup":
     - command: shell.exec
       params:
@@ -791,9 +804,13 @@ tasks:
         - func: "run docker test"
 
     - name: "test-oidc"
-      tags: ["latest", "docker"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
+
+    - name: "test-oidc-azure"
+      commands:
+        - func: "run oidc azure test"
 
 # }}}
 
@@ -964,6 +981,35 @@ task_groups:
     tasks:
       - ".serverless"
 
+  - name: testazureoidc_task_group
+    tags: ["latest", "oidc"]
+    setup_group:
+    - func: fetch source
+    - func: prepare resources
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          # ensure HEAD points to current commit
+          cd $DRIVERS_TOOLS
+          git add .
+          git commit -m "add files"
+          export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
+    teardown_group:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          ${PREPARE_SHELL}
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    tasks:
+    - test-oidc-azure
+
 buildvariants:
 
 # Test packaging and other release related routines
@@ -975,12 +1021,19 @@ buildvariants:
     - ".releng" # Run all tasks with the "releng" tag
 
 # Tests relating to docker images
-- name: tests-docker-related
-  display_name: Docker Related
+- name: tests-docker
+  display_name: Docker
   run_on:
     - ubuntu2004-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
+
+- name: tests-oidc
+  display_name: OIDC
+  run_on: ubuntu2004-small
+  tasks:
+    - "test-oidc"  
+    - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
