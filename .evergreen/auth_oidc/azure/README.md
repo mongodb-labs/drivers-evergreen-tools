@@ -72,6 +72,9 @@ MONGODB_URI="${MONGODB_URI}&authMechanismProperties=PROVIDER_NAME:azure"
 MONGODB_URI="${MONGODB_URI},TOKEN_AUDIENCE:api%3A%2F%2F${AZUREOIDC_CLIENTID}"
 ```
 
+Note: since we will be testing with two different clients, the `TOKEN_CLIENT_ID` will need to be provided
+as an argument to `MongoClient` in the prose tests.
+
 Finally, we tear down the vm:
 
 ```bash
