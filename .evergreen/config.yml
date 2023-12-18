@@ -372,7 +372,7 @@ functions:
           ${PREPARE_SHELL}
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/docker
-          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
+          ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -418,6 +418,15 @@ functions:
         script: |
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
+
+  "cleanup docker":
+    - command: shell.exec
+      params:
+        script: |
+          # Kill all containers
+          docker rm $(docker ps -a -q)&> /dev/null || true
+          # Remove all images
+          docker rmi -f $(docker images -a -q) &> /dev/null || true
 
   "fix absolute paths":
     - command: shell.exec
@@ -802,11 +811,13 @@ tasks:
       tags: ["latest", "docker"]
       commands:
         - func: "run docker test"
+        - func: "cleanup docker"
 
     - name: "test-oidc"
       tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
+        - func: "cleanup docker"
 
     - name: "test-oidc-azure"
       commands:
