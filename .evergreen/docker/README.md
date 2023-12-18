@@ -40,6 +40,11 @@ MONGODB_DOWNLOAD_URL
 ORCHESTRATION_FILE
 ```
 
+Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration/configs/servers) and the default `ORCHESTRATION_FILE` is `basic.json`. For example, to run a replica using the [auth](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/configs/replica_sets/auth.json) orchestration:
+
+```bash
+TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh 
+```
 ## Driver Testing using this Docker container
 
 First, start this container with the appropriate environment variables, running as:
