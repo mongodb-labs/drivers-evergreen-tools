@@ -402,6 +402,15 @@ functions:
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
 
+  "cleanup docker":
+    - command: shell.exec
+      params:
+        script: |
+          # Kill all containers
+          docker rm $(docker ps -a -q)&> /dev/null || true
+          # Remove all images
+          docker rmi -f $(docker images -a -q) &> /dev/null || true
+
   "fix absolute paths":
     - command: shell.exec
       params:
@@ -785,11 +794,13 @@ tasks:
       tags: ["latest", "docker"]
       commands:
         - func: "run docker test"
+        - func: "cleanup docker"
 
     - name: "test-oidc"
       tags: ["latest", "docker"]
       commands:
         - func: "run oidc test"
+        - func: "cleanup docker"
 
 # }}}
 

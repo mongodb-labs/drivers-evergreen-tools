@@ -4,6 +4,7 @@
 #
 set -eu
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
@@ -11,7 +12,10 @@ PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
 
 docker build $PLATFORM -t $NAME $IMAGE
-cd ../..
+cd $SCRIPT_DIR/../..
+
+# Remove existing mongodb files
+rm -rf $SCRIPT_DIR/$IMAGE/mongodb
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}

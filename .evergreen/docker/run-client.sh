@@ -16,7 +16,7 @@ TOPOLOGY=${TOPOLOGY:-replica_set}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE:-basic.json}
 SKIP_CRYPT_SHARED_LIB=${SKIP_CRYPT_SHARED_LIB:-false}
 AUTH=${AUTH:-""}
-SSL=${SSL:=""}
+SSL=${SSL:-""}
 
 # Internal variables.
 ROOT_DRIVERS_TOOLS=/root/drivers-evergeen-tools
@@ -30,7 +30,7 @@ ARGS+=" -e MONGODB_BINARIES=$MONGODB_BINARIES"
 ARGS+=" -e CRYPT_SHARED_LIB_PATH=$MONGODB_BINARIES/mongosh_crypt_v1.so"
 ARGS+=" -e ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 ARGS+=" -e SKIP_CRYPT_SHARED_LIB=$SKIP_CRYPT_SHARED_LIB"
-ARGS+=" -e DRIVERS_TOOLS="
+ARGS+=" -e DRIVERS_TOOLS=$ROOT_DRIVERS_TOOLS"
 
 # Ensure host.docker.internal is available on MacOS.
 if [ "$(uname -s)" = "Darwin" ]; then
