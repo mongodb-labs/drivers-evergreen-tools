@@ -43,7 +43,7 @@ def azure():
             "port": 27017,
             "setParameter": {
                 "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "authenticationMechanisms": "SCRAM-SHA-1,SCRAM-SHA-256,MONGODB-OIDC",
                 "oidcIdentityProviders": providers
             }
         }
