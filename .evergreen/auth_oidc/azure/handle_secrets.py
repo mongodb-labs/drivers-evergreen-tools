@@ -40,8 +40,8 @@ def main():
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
         fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
-        fid.write(f'export AZUREKMS_USERNAME="{secrets["USERNAME"]}"\n')
-        fid.write(f'export AZUREKMS_AUDIENCE="{secrets["AUDIENCE"]}"\n')
+        fid.write(f'export AZUREOIDC_USERNAME="{secrets["USERNAME"]}"\n')
+        fid.write(f'export AZUREOIDC_AUDIENCE="{secrets["AUDIENCE"]}"\n')
 
     if os.path.exists(private_key_file):
         os.remove(private_key_file)
