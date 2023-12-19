@@ -26,7 +26,7 @@ def main():
 
     secrets = dict()
     for secret in ['RESOURCEGROUP', 'PUBLICKEY', 'PRIVATEKEY', 'TOKENCLIENT', 'AUTHCLAIM', 'AUTHPREFIX', 'IDENTITY',
-                   'TOKENCLIENT2', 'IDENTITY2']:
+                   'TOKENCLIENT2', 'IDENTITY2', 'USERNAME', 'AUDIENCE']:
         retrieved = client.get_secret(secret)
         secrets[secret] = retrieved.value
 
