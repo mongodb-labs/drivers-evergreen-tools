@@ -5,6 +5,7 @@
 "use strict";
 
 const adminUser = process.env['AZUREOIDC_USERNAME'] || 'bob';
+console.log("Setting up Admin User", adminUser);
 const admin = Mongo().getDB("admin");
 assert(admin.auth(adminUser, "pwd123"));
 
