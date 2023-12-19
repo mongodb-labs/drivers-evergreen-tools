@@ -33,7 +33,7 @@ def azure():
     data = {
         "id": "oidc-repl0",
         "auth_key": "secret",
-        "login": "bob",
+        "login": client_id,
         "name": "mongod",
         "password": "pwd123",
         "procParams": {
