@@ -11,5 +11,9 @@ pushd $SCRIPT_DIR
 popd
 set -x
 echo "Getting secrets:" "$@"
-python $SCRIPT_DIR/setup_secrets.py "$@"
+if [ "Windows_NT" = "$OS" ]; then
+    $SCRIPT_DIR/authawsvenv/Scripts/python.exe  $SCRIPT_DIR/setup_secrets.py "$@"
+else
+    python $SCRIPT_DIR/setup_secrets.py "$@"
+fi
 echo "Got secrets"
