@@ -65,9 +65,9 @@ def main():
             break
         except ConnectionRefusedError as e:
             if e.errno == errno.ECONNREFUSED:
-                time.sleep(1)
+                time.sleep(i)
                 i += 1
-                print(e, "...retry attempt {i} of 10")
+                print(e, f"...retry attempt {i} of 10")
             else:
                 raise
     print(f"Connecting to kmip client on {HOSTNAME}:{PORT}...done.")
