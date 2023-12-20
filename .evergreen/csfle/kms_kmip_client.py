@@ -6,6 +6,7 @@ This is a utility, and not meant for CI testing.
 
 import errno
 import os
+import sys
 import time 
 
 import kmip.pie.client
@@ -70,6 +71,10 @@ def main():
                 print(e, f"...retry attempt {i} of 10")
             else:
                 raise
+    if i == 11:
+        print("Could not connect to server")
+        sys.exit(1)
+
     print(f"Connecting to kmip client on {HOSTNAME}:{PORT}...done.")
 
     try:
