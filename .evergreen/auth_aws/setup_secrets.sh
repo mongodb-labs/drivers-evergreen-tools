@@ -10,7 +10,7 @@ pushd $SCRIPT_DIR
 
 . ./activate-authawsvenv.sh
 set -x
-echo "Getting AWS secrets:" "$@"
+echo "Getting secrets:" "$@"
 python ./setup_secrets.py "$@"
 mv secrets-export.sh $CURRENT
 popd

@@ -20,7 +20,10 @@ if [ ! -f "./secrets-export.sh" ]; then
     AUTH_AWS="$SCRIPT_DIR/../auth_aws"
     set -x
     echo "Getting oidc secrets"
-    python $AUTH_AWS/setup_secrets.py drivers/oidc
+    pushd $AUTH_AWS
+    python ./setup_secrets.py drivers/oidc
+    mv secrets-export.sh $SCRIPT_DIR
+    popd
     echo "Got secrets"
 fi
 
