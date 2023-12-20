@@ -4,16 +4,14 @@
 # for details on usage.
 set -eu
 
+CURRENT=$(pwd)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 
 . ./activate-authawsvenv.sh
-popd
 set -x
 echo "Getting secrets:" "$@"
-if [ "Windows_NT" = "$OS" ]; then
-    $SCRIPT_DIR/authawsvenv/Scripts/python.exe  $SCRIPT_DIR/setup_secrets.py "$@"
-else
-    python $SCRIPT_DIR/setup_secrets.py "$@"
-fi
+python ./setup_secrets.py "$@"
+mv secrets-export.sh $CURRENT
+popd
 echo "Got secrets"
