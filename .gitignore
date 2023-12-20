@@ -93,6 +93,7 @@ testazureoidc-expansions.yml
 venv
 authawsvenv
 authoidcvenv
+kmstlsvenv
 
 /uri.txt
 /results.json

@@ -44,7 +44,7 @@ def main():
         logging_level=logging.DEBUG,
     )
     with server:
-        print(f"Starting KMS KMIP server on port {args.port}")
+        print(f"\nStarting KMS KMIP server on port {args.port}")
         server.serve()
 
 
