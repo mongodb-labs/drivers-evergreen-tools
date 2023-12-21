@@ -5,7 +5,7 @@ set -eu
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 
-. ./stop_server.sh
+. ./stop_servers.sh
 . ./activate-kmstlsvenv.sh
 
 # The -u options forces the stdout and stderr streams to be unbuffered.
