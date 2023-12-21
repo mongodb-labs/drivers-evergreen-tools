@@ -4,7 +4,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 if [ -f "kmip_pids.pid" ]; then
-  < kmip_pids.pid xargs kill -9
+  < kmip_pids.pid xargs kill -9 || true
   rm kmip_pids.pid
 fi
 popd

@@ -47,13 +47,17 @@ def validate(client):
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     drivers_evergreen_tools = os.path.join(dir_path, "..", "..")
+    cert = os.environ.get('CSFLE_TLS_CLIENT_CERT_FILE', 
+        os.path.join(drivers_evergreen_tools,
+                     ".evergreen", "x509gen", "client.pem"))
+    ca = os.environ.get('CSFLE_TLS_CA_FILE', 
+        os.path.join(drivers_evergreen_tools,
+                     ".evergreen", "x509gen", "ca.pem"))
     client = kmip.pie.client.ProxyKmipClient(
         hostname=HOSTNAME,
         port=PORT,
-        cert=os.path.join(drivers_evergreen_tools,
-                          ".evergreen", "x509gen", "client.pem"),
-        ca=os.path.join(drivers_evergreen_tools,
-                        ".evergreen", "x509gen", "ca.pem"),
+        cert=cert,
+        ca=ca,
         config_file=os.path.join(
             drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.conf")
     )

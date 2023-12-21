@@ -22,6 +22,14 @@ $DRIVERS_TOOLS/.evergreen/csfle/start_servers.sh
 
 The generated `secrets-export.sh` file can be sourced from your `cwd` to get the required credentials for testing.
 
+The following servers will be started:
+
+- Mock KMIP server on port 5698
+- KMS HTTP server with an expired cert on port 8000
+- KMS HTTP server with an "wrong host" cert on port 8001
+- KMS HTTP server with a correct cert on port 8002
+- Mock Azure IMDS server on port 8080
+
 When finished, stop the servers by running:
 
 ```bash
