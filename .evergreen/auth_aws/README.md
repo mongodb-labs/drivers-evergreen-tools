@@ -23,7 +23,7 @@ on how the secrets are managed.
 ```bash
 cd $DRIVERS_TOOLS/.evergreen/auth_aws
 # Create a python virtual environment.
-cd ./activate-authawsvenv.sh
+./activate-authawsvenv.sh
 # Source the environment variables.
 . aws_setup.sh <variant>
 # Configure the environment and the server.
