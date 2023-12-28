@@ -24,10 +24,8 @@ on how the secrets are managed.
 cd $DRIVERS_TOOLS/.evergreen/auth_aws
 # Create a python virtual environment.
 ./activate-authawsvenv.sh
-# Source the environment variables.
+# Source the environment variables. Configure the environment and the server.
 . aws_setup.sh <variant>
-# Configure the environment and the server.
-python aws_tester.py <variant>
 # Run your driver-specific tests here.
 ```
 
