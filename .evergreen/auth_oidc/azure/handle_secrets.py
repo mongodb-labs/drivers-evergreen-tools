@@ -26,7 +26,7 @@ def main():
 
     secrets = dict()
     for secret in ['RESOURCEGROUP', 'PUBLICKEY', 'PRIVATEKEY', 'TOKENCLIENT', 'AUTHCLAIM', 'AUTHPREFIX', 'IDENTITY',
-                   'TOKENCLIENT2', 'IDENTITY2']:
+                   'TOKENCLIENT2', 'IDENTITY2', 'USERNAME', 'AUDIENCE']:
         retrieved = client.get_secret(secret)
         secrets[secret] = retrieved.value
 
@@ -39,7 +39,9 @@ def main():
         fid.write(f'export AZUREOIDC_CLIENTID={client_id}\n')
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
-        fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]} {secrets["IDENTITY2"]}"\n')
+        fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
+        fid.write(f'export AZUREOIDC_USERNAME="{secrets["USERNAME"]}"\n')
+        fid.write(f'export AZUREOIDC_AUDIENCE="{secrets["AUDIENCE"]}"\n')
 
     if os.path.exists(private_key_file):
         os.remove(private_key_file)
