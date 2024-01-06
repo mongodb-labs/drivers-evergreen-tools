@@ -51,7 +51,7 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
-DIR=$(dirname $0)
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Ensure that a Python binary is available for JSON decoding
 . $DIR/../find-python3.sh || exit 1

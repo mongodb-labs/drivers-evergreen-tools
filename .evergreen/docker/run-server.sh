@@ -4,7 +4,8 @@
 #
 set -eu
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $DIR))
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
@@ -12,10 +13,10 @@ PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
 
 docker build $PLATFORM -t $NAME $IMAGE
-cd $SCRIPT_DIR/../..
+pushd $DRIVER_TOOLS
 
 # Remove existing mongodb files
-rm -rf $SCRIPT_DIR/$IMAGE/mongodb
+rm -rf $DIR/$IMAGE/mongodb
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}
@@ -59,3 +60,5 @@ ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
 
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
+
+popd

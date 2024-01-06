@@ -2,7 +2,8 @@
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
-DRIVERS_TOOLS=$(cd "$(dirname "$0")" && pwd)/..
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $DIR))
 MONGODB_URI=${MONGODB_URI:-}
 
 start() {

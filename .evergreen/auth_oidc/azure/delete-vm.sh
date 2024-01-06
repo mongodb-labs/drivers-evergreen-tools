@@ -4,7 +4,7 @@ set -o pipefail
 set -o nounset
 
 # Read in the env variables.
-DIR=$(dirname $0)
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $DIR/env.sh
 
 export AZUREKMS_VMNAME=$AZUREOIDC_VMNAME

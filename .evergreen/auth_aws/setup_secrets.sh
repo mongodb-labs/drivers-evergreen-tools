@@ -5,8 +5,8 @@
 set -eu
 
 CURRENT=$(pwd)
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-pushd $SCRIPT_DIR
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+pushd $DIR
 
 . ./activate-authawsvenv.sh
 set -x

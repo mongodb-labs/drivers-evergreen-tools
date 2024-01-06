@@ -1,7 +1,7 @@
 #!/bin/sh
 set -o errexit  # Exit the script with error if any of the commands fail
 
-DIR=$(dirname $0)
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Functions to fetch MongoDB binaries
 . $DIR/download-mongodb.sh
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')

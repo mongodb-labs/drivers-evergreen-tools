@@ -30,7 +30,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables
-DIR="$(dirname $(dirname "${BASH_SOURCE[0]}"))"
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 . $DIR/atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.

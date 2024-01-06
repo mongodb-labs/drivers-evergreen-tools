@@ -6,7 +6,8 @@
 #
 set -eux
 
-DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $DIR))
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
 VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"

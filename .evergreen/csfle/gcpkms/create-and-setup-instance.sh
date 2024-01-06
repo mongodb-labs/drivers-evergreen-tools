@@ -1,10 +1,13 @@
 # Create and setup a GCE instance.
 # On success, creates testgcpkms-expansions.yml expansions 
 set -o errexit # Exit on first command error.
-if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_DRIVERS_TOOLS" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
+
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $(dirname $DIR)))
+
+if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_KEYFILE to the JSON file for the service account"
-    echo " GCPKMS_DRIVERS_TOOLS to the path of the drivers-evergreen-tools directory"
     echo " GCPKMS_SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
     exit 1
 fi
@@ -19,14 +22,14 @@ export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 
 # download-gcloud.sh sets GCPKMS_GCLOUD.
 echo "download-gcloud.sh ... begin"
-. $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
+. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
 echo "download-gcloud.sh ... end"
 
 $GCPKMS_GCLOUD auth activate-service-account --key-file $GCPKMS_KEYFILE
 
 # create-instance.sh sets INSTANCENAME.
 echo "create-instance.sh ... begin"
-. $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/create-instance.sh
+. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/create-instance.sh
 echo "create-instance.sh ... end"
 
 # Echo expansions required for delete-instance.sh. If the remaining setup fails, delete-instance.sh can still clean up resources.
@@ -61,6 +64,5 @@ $GCPKMS_GCLOUD compute os-login ssh-keys update --key-file ~/.ssh/google_compute
 echo "Adding expiration time to SSH key ... end"
 
 echo "setup-instance.sh ... begin"
-. $GCPKMS_DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
+. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
 echo "setup-instance.sh ... end"
-

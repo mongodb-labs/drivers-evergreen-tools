@@ -3,7 +3,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-AZUREKMS_DRIVERS_TOOLS=${AZUREKMS_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $(dirname $DIR)))
 
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
     echo "${AZUREKMS_PUBLICKEY}" > /tmp/testazurekms_publickey
@@ -48,9 +49,9 @@ if [[ "$(printf "$ACTUAL_VERSION\n$EXPECTED_VERSION_NEWER\n" | sort -rV | head -
 fi
 
 # Login.
-"$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 # Create VM.
-. "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
+. "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
 # Store items needed for teardown.
 cat <<EOT > testazurekms-expansions.yml
@@ -59,16 +60,16 @@ AZUREKMS_RESOURCEGROUP: $AZUREKMS_RESOURCEGROUP
 AZUREKMS_SCOPE: $AZUREKMS_SCOPE
 EOT
 # Assign role.
-"$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
+"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies.
-AZUREKMS_SRC="$AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
+AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
 AZUREKMS_DST="./" \
-    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./setup-azure-vm.sh" \
-    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 # Start mongodb.
-AZUREKMS_SRC="$AZUREKMS_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/start-mongodb.sh" \
+AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/start-mongodb.sh" \
 AZUREKMS_DST="./" \
-    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./start-mongodb.sh" \
-    "$AZUREKMS_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh

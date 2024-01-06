@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
-DIR="$(dirname "${BASH_SOURCE[0]}")"
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $DIR
 
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-18}

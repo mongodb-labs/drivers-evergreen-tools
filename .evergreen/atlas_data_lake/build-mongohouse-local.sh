@@ -5,6 +5,8 @@
 set -o errexit  # Exit the script with error if any of the commands fail
 
 ORIG_DIR="$(pwd)"
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $(dirname $DIR)))
 
 # Configure git to use the git protocol
 git config --global url."git@github.com:".insteadof "https://github.com/"

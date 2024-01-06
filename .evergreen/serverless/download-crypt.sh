@@ -2,7 +2,7 @@
 
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
-DIR=$(dirname $0)
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # Functions to fetch MongoDB binaries
 . $DIR/../download-mongodb.sh
 

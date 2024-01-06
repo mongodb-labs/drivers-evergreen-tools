@@ -22,9 +22,6 @@
 #
 # This script expects the following environment variables:
 #
-# DRIVERS_TOOLS (required) - absolute path to the checked out
-# driver-evergreen-tools repository
-#
 # MONGODB_VERSION - version of MongoDB to download and use. For Atlas
 # Proxy, must be "3.4" or "latest".  Defaults to "3.4".
 
@@ -39,7 +36,8 @@ ORIG_DIR="$(pwd)"
 #--------------------------------------------------------------------------#
 
 DL_START=$(date +%s)
-DIR=$(dirname $0)
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVER_TOOLS=$(dirname $(dirname $DIR))
 
 # Load download helper functions
 . $DIR/download-mongodb.sh

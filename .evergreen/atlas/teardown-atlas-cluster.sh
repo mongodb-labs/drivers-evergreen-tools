@@ -29,7 +29,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables.
-DIR="$(dirname "${BASH_SOURCE[0]}")"
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 . $DIR/setup-variables.sh
 
 # Delete the cluster.

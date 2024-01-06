@@ -4,7 +4,8 @@
 #
 set -eux
 
-DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
+DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DRIVERS_TOOLS=$(dirname $(dirname $DIR))
 REPO="904697982180.dkr.ecr.us-east-1.amazonaws.com/atlas-query-engine-test"
 pushd $DRIVERS_TOOLS/.evergreen/auth_aws
 bash setup_secrets.sh drivers/adl
