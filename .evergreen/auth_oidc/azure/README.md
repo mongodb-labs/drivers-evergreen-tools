@@ -55,25 +55,13 @@ export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergr
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 ```
 
-In your tests, you can use the environment variables in `env.sh` to define the `TOKEN_AUDIENCE` and `TOKEN_CLIENT_ID` 
-auth mechanism properties, e.g.
+In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_AUDIENCE` 
+auth mechanism property, e.g.
 
 ```python
-TOKEN_AUDIENCE="api://" + os.environ["AZUREOIDC_CLIENTID"]
-TOKEN_CLIENT_ID=os.environ["AZUREOIDC_TOKENCLIENT"]  # For first user
-TOKEN_CLIENT_ID=os.environ["AZUREOIDC_TOKENCLIENT2"]  # For second user
+username=os.environ["AZUREOIDC_USERNAME"]
+TOKEN_AUDIENCE=os.environ["AZUREOIDC_AUDIENCE"]
 ```
-
-Note: If you are creating a uri, you will have to escape `TOKEN_AUDIENCE` value, e.g.
-
-```bash
-MONGODB_URI="${MONGODB_URI}/?authMechanism=MONGODB-OIDC"
-MONGODB_URI="${MONGODB_URI}&authMechanismProperties=PROVIDER_NAME:azure"
-MONGODB_URI="${MONGODB_URI},TOKEN_AUDIENCE:api%3A%2F%2F${AZUREOIDC_CLIENTID}"
-```
-
-Note: since we will be testing with two different clients, the `TOKEN_CLIENT_ID` will need to be provided
-as an argument to `MongoClient` in the prose tests.
 
 Finally, we tear down the vm:
 
@@ -87,9 +75,9 @@ Below is an explanantion of the environment variables stored in the Azure key va
 
 - AZUREOIDC_AUTHPREFIX - The auth prefix used for DB user and role names.
 - AZUREOIDC_AUTHCLAIM - The object ID of the Azure Group, used in the DB role name.
-- AZUREOIDC_CLIENTID - The client ID of the Azure App registration, used for the `TOKEN_AUDIENCE` auth mechanism property.
-- AZUREOIDC_TOKENCLIENT - The client ID of the first Azure Managed Identity, used for the `TOKEN_CLIENT_ID` auth mechanism property.
-- AZUREOIDC_TOKENCLIENT2 - The client ID of the second Azure Managed Identity, used for the `TOKEN_CLIENT_ID` auth mechanism property.
+- AZUREOIDC_USERNAME - The Object (principal) ID of the Azure Manager Identity, used for the `username`.
+- AZUREOIDC_AUDIENCE - The escaped Application ID URI to use in the `TOKEN_AUDIENCE` auth mechanism property.
+- AZUREOIDC_CLIENTID - The client ID of the Azure App registration, used to generate the unescaped Application ID URI.
 - AZUREOIDC_TENANTID - The tenant ID of the Azure App registration, used to derive the `issuer` URI.
-- AZUREKMS_IDENTITY - A space separated string with the two Resource IDs of the managed identities (`/subscriptions/... /subscriptions/...`).  Used to assign the identities to the VM.
+- AZUREKMS_IDENTITY - A space separated string with the Resource ID of the managed identity (`/subscriptions/...`).  Used to assign the identity to the VM.
 - AZUREOIDC_RESOURCEGROUP - The name of the Azure Resource Group, used when accessing the VM through the CLI.

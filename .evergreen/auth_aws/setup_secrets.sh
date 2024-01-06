@@ -4,12 +4,14 @@
 # for details on usage.
 set -eu
 
-HERE=$(dirname $0)
+CURRENT=$(pwd)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+pushd $SCRIPT_DIR
 
-pushd $HERE
 . ./activate-authawsvenv.sh
-popd
 set -x
 echo "Getting secrets:" "$@"
-python $HERE/setup_secrets.py "$@"
+python ./setup_secrets.py "$@"
+mv secrets-export.sh $CURRENT
+popd
 echo "Got secrets"
