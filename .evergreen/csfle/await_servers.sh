@@ -5,7 +5,20 @@ set -eu
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 
-. ./activate-kmstlsvenv.sh
+# Wait until the pids file has been created.
+echo "Waiting for servers to start..."
+sleep 1
+for i in $(seq 10); do
+    if [ -f ./kmip_pids.sh ]; then
+        break
+    fi
+    sleep $i * 5
+done
+if [ ! -f ./kmip_pids.sh ]; then
+    echo "Timed out waiting pids file."
+    exit 1
+fi
+echo "Waiting for servers to start...done"
 
  # Ensure servers are running.
 await_server() {
@@ -32,6 +45,7 @@ await_server "KMIP" 5698
 
 # Ensure the kms server is working properly.
 source ./secrets-export.sh
+. ./activate-kmstlsvenv.sh
 python -u kms_kmip_client.py
 
 echo "Finished awaiting servers"
