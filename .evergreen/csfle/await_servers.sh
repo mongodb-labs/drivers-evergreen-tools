@@ -7,17 +7,13 @@ pushd $SCRIPT_DIR
 
 # Wait until the pids file has been created.
 echo "Waiting for servers to start..."
-sleep 1
-for i in $(seq 10); do
-    if [ -f ./kmip_pids.sh ]; then
+while :
+do
+    sleep 2
+    if [ -f ./kmip_pids.pid ]; then
         break
     fi
-    sleep 5
 done
-if [ ! -f ./kmip_pids.sh ]; then
-    echo "Timed out waiting pids file."
-    exit 1
-fi
 echo "Waiting for servers to start...done"
 
  # Ensure servers are running.
@@ -30,7 +26,7 @@ await_server() {
             return 0
         else
             echo "Could not connect, sleeping."
-            sleep $i
+            sleep 2
         fi
     done
     echo "Could not detect '$1' server on port $2"
