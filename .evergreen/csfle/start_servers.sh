@@ -53,4 +53,4 @@ await_server "KMS" 8001
 await_server "KMS" 8002
 await_server "Azure" 8080
 
-echo "Finished awaiting servers"
+#echo "Finished awaiting servers"
