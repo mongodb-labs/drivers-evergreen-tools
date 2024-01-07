@@ -64,7 +64,7 @@ def main():
 
     print(f"Connecting to kmip client on {HOSTNAME}:{PORT}...")
     i = 0
-    while i < 11:
+    while i < 10:
         try:
             client.open()
             break
