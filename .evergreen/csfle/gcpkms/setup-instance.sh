@@ -1,7 +1,7 @@
 # Setup a GCE instance.
 set -o errexit # Exit on first command error.
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../../handle-paths.sh
 
 if [-z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then

@@ -6,7 +6,7 @@
 #
 set -eux
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""

@@ -3,7 +3,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../../handle-paths.sh
 
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then

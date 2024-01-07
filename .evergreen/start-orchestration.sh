@@ -18,7 +18,7 @@ MONGO_ORCHESTRATION_HOME="$1"
 
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
-DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/handle-paths.sh
 
 declare det_evergreen_dir

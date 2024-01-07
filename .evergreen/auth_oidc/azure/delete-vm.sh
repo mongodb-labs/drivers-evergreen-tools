@@ -4,7 +4,7 @@ set -o pipefail
 set -o nounset
 
 # Read in the env variables.
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../../handle-paths.sh
 source $DIR/env.sh
 

@@ -28,7 +28,7 @@ ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/handle-paths.sh
 
 # Functions to fetch MongoDB binaries.

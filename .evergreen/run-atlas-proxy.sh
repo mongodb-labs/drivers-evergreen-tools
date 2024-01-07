@@ -36,7 +36,7 @@ ORIG_DIR="$(pwd)"
 #--------------------------------------------------------------------------#
 
 DL_START=$(date +%s)
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/handle-paths.sh
 
 # Load download helper functions

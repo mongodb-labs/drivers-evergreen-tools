@@ -2,7 +2,7 @@
 # On success, creates testgcpkms-expansions.yml expansions 
 set -o errexit # Exit on first command error.
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../../handle-paths.sh
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then

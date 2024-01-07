@@ -9,7 +9,7 @@
 # Assumes you have already set up secrets.
 set -eux
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
 pushd $DIR
 

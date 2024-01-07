@@ -7,7 +7,7 @@
 ## access to `npm`, `node`, or need to install something globally from
 ## npm.
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$DIR/node-artifacts"
 if [[ "$OS" == "Windows_NT" ]]; then

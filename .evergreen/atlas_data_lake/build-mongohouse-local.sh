@@ -5,7 +5,7 @@
 set -o errexit  # Exit the script with error if any of the commands fail
 
 ORIG_DIR="$(pwd)"
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
 
 # Configure git to use the git protocol

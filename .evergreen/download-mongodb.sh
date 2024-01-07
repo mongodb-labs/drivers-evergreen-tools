@@ -680,7 +680,7 @@ download_and_extract_package ()
    if [ -n "$MONGODB_BINARY_ROOT" ]; then
       cd $MONGODB_BINARY_ROOT
    else
-      DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+      DIR=$(dirname ${BASH_SOURCE:-$0})
       . $DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
@@ -706,7 +706,7 @@ download_and_extract_mongosh ()
    if [ -n "$MONGODB_BINARY_ROOT" ]; then
       cd $MONGODB_BINARY_ROOT
    else
-      DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+      DIR=$(dirname ${BASH_SOURCE:-$0})
       . $DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
@@ -739,7 +739,7 @@ download_and_extract ()
       download_and_extract_mongosh "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
    fi
 
-   DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+   DIR=$(dirname ${BASH_SOURCE:-$0})
    . $DIR/handle-paths.sh
 
    if [ ! -z "${INSTALL_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then

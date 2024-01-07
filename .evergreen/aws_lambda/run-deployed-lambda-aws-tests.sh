@@ -30,7 +30,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
 . $DIR/atlas/setup-variables.sh
 

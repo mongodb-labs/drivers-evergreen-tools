@@ -1,18 +1,20 @@
 #!/bin/sh
 #
-# This script will handle the correct cross-platform paths for a script
-# directory and DRIVERS_TOOLS.  It is meant to be called as
-# ". $DIR/../handle-paths.sh", if called from one of the top level
-# folders in this directory.  It handles "DIR" and finds the correct
-# "DRIVERS_TOOLS".
+# This script will handle the correct cross-platform absolute
+# paths for a script directory and DRIVERS_TOOLS.  
+# It is meant to be invoked as follows:
 #
-# This script expects the following environment variables:
-#
-# DIR - the absolute directory of the source script, found using
-#   "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# DIR=$(dirname ${BASH_SOURCE:-$0})
+# . $DIR/../handle-path.sh
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
+if [ -z "$DIR" ]; then 
+  echo "Please set $DIR first"
+  exit 1
+fi
+
+DIR="$( cd -- "$DIR" &> /dev/null && pwd )"
 if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
   DIR=$(cygdrive -m $DIR)
 fi

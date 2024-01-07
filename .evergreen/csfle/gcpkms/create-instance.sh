@@ -21,7 +21,7 @@ if [ -z "$GCPKMS_GCLOUD" -o \
 fi
 GCPKMS_INSTANCENAME="instancename-$RANDOM"
 
-DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../../handle-paths.sh
 
 # Create GCE instance.
