@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # start the kmip server in the background.
-set -eu
+set -eux
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
