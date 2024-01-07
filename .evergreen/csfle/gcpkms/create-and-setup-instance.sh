@@ -3,7 +3,7 @@
 set -o errexit # Exit on first command error.
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DRIVERS_TOOLS=$(dirname $(dirname $(dirname $DIR)))
+. $DIR/../../handle-paths.sh
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"

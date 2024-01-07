@@ -37,7 +37,7 @@ ORIG_DIR="$(pwd)"
 
 DL_START=$(date +%s)
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DRIVER_TOOLS=$(dirname $(dirname $DIR))
+. $DIR/handle-paths.sh
 
 # Load download helper functions
 . $DIR/download-mongodb.sh

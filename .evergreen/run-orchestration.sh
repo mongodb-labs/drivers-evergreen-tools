@@ -29,6 +29,8 @@ INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. $DIR/handle-paths.sh
+
 # Functions to fetch MongoDB binaries.
 . $DIR/download-mongodb.sh
 

@@ -11,7 +11,7 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ]; then
 fi
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DRIVERS_TOOLS=$(dirname $(dirname $(dirname $DIR)))
+. $DIR/../../handle-paths.sh
 
 # Set defaults.
 BASE_PATH="$DRIVERS_TOOLS/.evergreen/auth_oidc"

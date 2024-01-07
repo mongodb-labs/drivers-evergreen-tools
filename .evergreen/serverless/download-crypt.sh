@@ -3,6 +3,8 @@
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. $DIR/../handle-paths.sh
+
 # Functions to fetch MongoDB binaries
 . $DIR/../download-mongodb.sh
 

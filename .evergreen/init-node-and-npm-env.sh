@@ -8,6 +8,7 @@
 ## npm.
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. $DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$DIR/node-artifacts"
 if [[ "$OS" == "Windows_NT" ]]; then
   NODE_ARTIFACTS_PATH=$(cygpath --unix "$NODE_ARTIFACTS_PATH")

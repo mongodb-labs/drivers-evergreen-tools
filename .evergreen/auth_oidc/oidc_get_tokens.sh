@@ -4,6 +4,7 @@
 #
 set -ex
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. $DIR/../handle-paths.sh
 pushd $DIR
 
 if [ -z "$OIDC_TOKEN_DIR" ]; then

@@ -3,7 +3,7 @@
 set -o errexit  # Exit the script with error if any of the commands fail
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DRIVERS_TOOLS=$(dirname $(dirname $DIR))
+. $DIR/handle-paths.sh
 MONGODB_URI=${MONGODB_URI:-}
 
 start() {

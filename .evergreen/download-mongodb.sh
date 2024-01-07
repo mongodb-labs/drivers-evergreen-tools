@@ -681,7 +681,7 @@ download_and_extract_package ()
       cd $MONGODB_BINARY_ROOT
    else
       DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-      DRIVERS_TOOLS=$(dirname $(dirname $DIR))
+      . $DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
    echo "Installing server binaries..."
@@ -707,7 +707,7 @@ download_and_extract_mongosh ()
       cd $MONGODB_BINARY_ROOT
    else
       DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-      DRIVERS_TOOLS=$(dirname $(dirname $DIR))
+      . $DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
    echo "Installing MongoDB shell..."
@@ -740,7 +740,7 @@ download_and_extract ()
    fi
 
    DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-   DRIVERS_TOOLS=$(dirname $(dirname $DIR))
+   . $DIR/handle-paths.sh
 
    if [ ! -z "${INSTALL_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.

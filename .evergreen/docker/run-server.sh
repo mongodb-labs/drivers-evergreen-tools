@@ -5,7 +5,7 @@
 set -eu
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DRIVERS_TOOLS=$(dirname $(dirname $DIR))
+. $DIR/../handle-paths.sh
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}

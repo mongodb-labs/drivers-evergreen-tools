@@ -52,6 +52,7 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
 fi
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. $DIR/../handle-paths.sh
 
 # Ensure that a Python binary is available for JSON decoding
 . $DIR/../find-python3.sh || exit 1
