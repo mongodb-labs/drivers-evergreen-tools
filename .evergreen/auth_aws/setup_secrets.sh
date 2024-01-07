@@ -13,6 +13,6 @@ pushd $DIR
 set -x
 echo "Getting secrets:" "$@"
 python ./setup_secrets.py "$@"
-mv secrets-export.sh $CURRENT
+mv -f secrets-export.sh $CURRENT
 popd
 echo "Got secrets"

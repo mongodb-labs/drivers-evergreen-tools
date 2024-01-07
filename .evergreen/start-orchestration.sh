@@ -22,7 +22,7 @@ DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/handle-paths.sh
 
 declare det_evergreen_dir
-det_evergreen_dir=$DIR/.evergreen
+det_evergreen_dir=$DIR
 . "$det_evergreen_dir/find-python3.sh"
 . "$det_evergreen_dir/venv-utils.sh"
 
