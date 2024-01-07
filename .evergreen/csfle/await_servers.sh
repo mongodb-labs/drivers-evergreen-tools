@@ -7,10 +7,7 @@ pushd $SCRIPT_DIR
 
 . ./activate-kmstlsvenv.sh
 
-# Wait for KMIP server to be available.
-python -u kms_kmip_client.py
-
- # Ensure other mock servers are running before starting tests.
+ # Ensure servers are running.
 await_server() {
     echo "Waiting on $1 server on port $2"
     for i in $(seq 10); do
@@ -26,9 +23,14 @@ await_server() {
     echo "Could not detect '$1' server on port $2"
 }
 # * List servers to await here ...
-await_server "KMS" 8000
-await_server "KMS" 8001
-await_server "KMS" 8002
+await_server "HTTP" 8000
+await_server "HTTP" 8001
+await_server "HTTP" 8002
 await_server "Azure" 8080
+await_server "KMIP" 5698
+
+# Ensure the kms server is working properly.
+source ./secrets-export.sh
+python -u kms_kmip_client.py
 
 echo "Finished awaiting servers"

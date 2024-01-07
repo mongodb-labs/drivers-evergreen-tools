@@ -8,10 +8,10 @@ pushd $SCRIPT_DIR
 
 CSFLE_TLS_CA_FILE=${CSFLE_TLS_CA_FILE:-"$SCRIPT_DIR/x509gen/ca.pem"}
 CSFLE_TLS_CERT_FILE=${CSFLE_TLS_CERT_FILE:-"$SCRIPT_DIR/x509gen/server.pem"}
-CSFLE_TLS_CLIENT_CERT_FILE=${CSFLE_TLS_CERT_FILE:-"$SCRIPT_DIR/x509gen/client.pem"}
+CSFLE_TLS_CLIENT_CERT_FILE=${CSFLE_TLS_CLIENT_CERT_FILE:-"$SCRIPT_DIR/x509gen/client.pem"}
 
-if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
-    CSFLE_TLS_CA_FILE=$(cygpath -m $CSFLE_TLS_CA_FILE
+if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
+    CSFLE_TLS_CA_FILE=$(cygpath -m $CSFLE_TLS_CA_FILE)
     CSFLE_TLS_CERT_FILE=$(cygpath -m $CSFLE_TLS_CERT_FILE)
     CSFLE_TLS_CLIENT_CERT_FILE=$(cygpath -m $CSFLE_TLS_CLIENT_CERT_FILE)
 fi
