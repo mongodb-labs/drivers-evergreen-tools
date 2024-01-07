@@ -32,7 +32,7 @@ done
 # Set up the common variables
 DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
-. $DIR/atlas/setup-variables.sh
+. $DIR/../atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
