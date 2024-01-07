@@ -8,7 +8,6 @@ pushd $SCRIPT_DIR
 . ./activate-kmstlsvenv.sh
 
 # Wait for KMIP server to be available.
-export SSL_CERT_FILE=$(python -c "import certifi; print(certifi.where())")
 python -u kms_kmip_client.py
 
  # Ensure other mock servers are running before starting tests.
