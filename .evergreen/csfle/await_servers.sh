@@ -21,6 +21,7 @@ await_server() {
         fi
     done
     echo "Could not detect '$1' server on port $2"
+    exit 1
 }
 # * List servers to await here ...
 await_server "HTTP" 8000

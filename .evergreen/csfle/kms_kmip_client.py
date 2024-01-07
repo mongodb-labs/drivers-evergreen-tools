@@ -75,7 +75,7 @@ def main():
                 print(e, f"...retry attempt {i} of 10")
             else:
                 raise
-    if i == 11:
+    if i == 10:
         print("Could not connect to server")
         sys.exit(1)
 
