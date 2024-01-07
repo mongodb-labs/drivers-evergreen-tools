@@ -12,7 +12,7 @@ for i in $(seq 10); do
     if [ -f ./kmip_pids.sh ]; then
         break
     fi
-    sleep $i * 5
+    sleep 5
 done
 if [ ! -f ./kmip_pids.sh ]; then
     echo "Timed out waiting pids file."
