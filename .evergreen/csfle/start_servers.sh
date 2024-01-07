@@ -5,8 +5,17 @@ set -eux
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 pushd $SCRIPT_DIR
 
-CSFLE_TLS_CA_FILE=${CSFLE_TLS_CA_FILE:-"../x509gen/ca.pem"}
-CSFLE_TLS_CERT_FILE=${CSFLE_TLS_CERT_FILE:-"../x509gen/server.pem"}
+if [ ! -f ./secrets-export.sh ]; then
+    echo "Please run the setup_secrets.sh script"
+    exit 1
+fi
+
+source ./secrets-export.sh
+
+if [ -z "$CSFLE_TLS_CA_FILE" ]; then
+    echo "Please run the setup_secrets.sh script"
+    exit 1
+fi
 
 . ./stop_servers.sh
 . ./activate-kmstlsvenv.sh
