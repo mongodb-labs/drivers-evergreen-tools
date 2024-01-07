@@ -16,7 +16,7 @@ fi
 
 DIR="$( cd -- "$DIR" &> /dev/null && pwd )"
 if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
-  DIR=$(cygdrive -m $DIR)
+  DIR=$(cygpath -m $DIR)
 fi
 
 # Find the DRIVERS_TOOLS by walking up the folder tree until there
