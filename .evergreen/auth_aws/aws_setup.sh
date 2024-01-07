@@ -74,7 +74,7 @@ case $1 in
 
     web-identity)
         export AWS_ROLE_ARN=$IAM_AUTH_ASSUME_WEB_ROLE_NAME
-        export AWS_WEB_IDENTITY_TOKEN_FILE="$SCRIPT_DIR/$AWS_WEB_IDENTITY_TOKEN_FILE"
+        export AWS_WEB_IDENTITY_TOKEN_FILE="$DIR/$AWS_WEB_IDENTITY_TOKEN_FILE"
         ;;
 
     regular)
