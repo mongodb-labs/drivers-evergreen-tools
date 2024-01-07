@@ -24,5 +24,6 @@ with open('secrets-export.sh', 'ab') as fid:
                 'AWS_SESSION_TOKEN', 'CSFLE_TLS_CA_FILE', 'CSFLE_TLS_CERT_FILE',
                 'CSFLE_TLS_CLIENT_CERT_FILE']:
         fid.write(f'\nexport {key}="{os.environ[key]}"'.encode('utf8'))
+    fid.write('\n')
 
 print("Getting CSFLE temp creds...done")
