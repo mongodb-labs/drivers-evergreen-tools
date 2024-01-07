@@ -7,7 +7,9 @@ set -eu
 DIR=$(dirname ${BASH_SOURCE:-$0})
 . $DIR/../handle-paths.sh
 
+pushd $DIR
 . ./activate-authawsvenv.sh
+popd
 set -x
 echo "Getting secrets:" "$@"
 python $DIR/setup_secrets.py "$@"
