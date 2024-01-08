@@ -28,7 +28,7 @@ fi
 # is a .evergreen folder in the same directory.
 if [ -z "${DRIVERS_TOOLS:-}" ]; then
   DRIVERS_TOOLS=$(dirname $SCRIPT_DIR)
-  while 1
+  while true
   do
     if [ -d "$DRIVERS_TOOLS/.evergreen" ]; then 
       break 
