@@ -6,6 +6,9 @@
 #
 # DIR=$(dirname ${BASH_SOURCE:-$0})
 # . $DIR/../handle-path.sh
+#
+# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
+# for more background.
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
