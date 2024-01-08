@@ -9,7 +9,8 @@
 # Assumes you have already set up secrets.
 set -eux
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
 # Ensure that secrets have already been set up.
