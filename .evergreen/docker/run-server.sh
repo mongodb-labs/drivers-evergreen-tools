@@ -13,7 +13,7 @@ PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
 
 docker build $PLATFORM -t $NAME $IMAGE
-pushd $DRIVER_TOOLS
+pushd $DRIVERS_TOOLS
 
 # Remove existing mongodb files
 rm -rf $DIR/$IMAGE/mongodb
