@@ -2,8 +2,8 @@
 # On success, creates testgcpkms-expansions.yml expansions 
 set -o errexit # Exit on first command error.
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"

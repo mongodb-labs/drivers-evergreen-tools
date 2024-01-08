@@ -10,8 +10,8 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ]; then
     exit 1
 fi
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
 
 # Set defaults.
 BASE_PATH="$DRIVERS_TOOLS/.evergreen/auth_oidc"

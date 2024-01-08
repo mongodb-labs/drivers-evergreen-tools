@@ -18,11 +18,11 @@ MONGO_ORCHESTRATION_HOME="$1"
 
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 declare det_evergreen_dir
-det_evergreen_dir=$DIR
+det_evergreen_dir=$SCRIPT_DIR
 . "$det_evergreen_dir/find-python3.sh"
 . "$det_evergreen_dir/venv-utils.sh"
 

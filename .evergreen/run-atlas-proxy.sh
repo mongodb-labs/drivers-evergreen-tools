@@ -36,11 +36,11 @@ ORIG_DIR="$(pwd)"
 #--------------------------------------------------------------------------#
 
 DL_START=$(date +%s)
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 # Load download helper functions
-. $DIR/download-mongodb.sh
+. $SCRIPT_DIR/download-mongodb.sh
 
 # set $DISTRO
 get_distro

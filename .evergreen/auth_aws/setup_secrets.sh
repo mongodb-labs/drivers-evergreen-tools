@@ -4,13 +4,13 @@
 # for details on usage.
 set -eu
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 
-pushd $DIR
+pushd $SCRIPT_DIR
 . ./activate-authawsvenv.sh
 popd
 set -x
 echo "Getting secrets:" "$@"
-python $DIR/setup_secrets.py "$@"
+python $SCRIPT_DIR/setup_secrets.py "$@"
 echo "Got secrets"

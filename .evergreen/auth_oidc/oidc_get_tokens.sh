@@ -3,9 +3,8 @@
 # Get the set of OIDC tokens in the OIDC_TOKEN_DIR.
 #
 set -ex
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../handle-paths.sh
-pushd $DIR
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 
 if [ -z "$OIDC_TOKEN_DIR" ]; then
     export OIDC_TOKEN_DIR=/tmp/tokens
@@ -15,19 +14,17 @@ if [ "Windows_NT" = "$OS" ]; then
 fi
 mkdir -p $OIDC_TOKEN_DIR
 
+pushd $SCRIPT_DIR
 . ./activate-authoidcvenv.sh
+popd
 
 if [ ! -f "./secrets-export.sh" ]; then
-    AUTH_AWS="$DIR/../auth_aws"
     set -x
     echo "Getting oidc secrets"
-    pushd $AUTH_AWS
-    python ./setup_secrets.py drivers/oidc
-    mv secrets-export.sh $DIR
+    python $SCRIPT_DIR/../auth_aws/setup_secrets.py drivers/oidc
     popd
     echo "Got secrets"
 fi
 
 source ./secrets-export.sh
-python oidc_get_tokens.py
-popd
+python $SCRIPT_DIR/oidc_get_tokens.py

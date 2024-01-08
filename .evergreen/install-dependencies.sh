@@ -1,11 +1,11 @@
 #!/bin/sh
 set -o errexit  # Exit the script with error if any of the commands fail
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 # Functions to fetch MongoDB binaries
-. $DIR/download-mongodb.sh
+. $SCRIPT_DIR/download-mongodb.sh
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 get_distro

@@ -3,8 +3,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
 
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
     echo "${AZUREKMS_PUBLICKEY}" > /tmp/testazurekms_publickey

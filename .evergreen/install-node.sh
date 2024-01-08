@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/handle-paths.sh
-pushd $DIR
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
+pushd $SCRIPT_DIR
 
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-18}
 # npm version can be defined in the environment for cases where we need to install

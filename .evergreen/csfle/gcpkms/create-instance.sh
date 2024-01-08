@@ -21,8 +21,8 @@ if [ -z "$GCPKMS_GCLOUD" -o \
 fi
 GCPKMS_INSTANCENAME="instancename-$RANDOM"
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
 
 # Create GCE instance.
 echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... begin"

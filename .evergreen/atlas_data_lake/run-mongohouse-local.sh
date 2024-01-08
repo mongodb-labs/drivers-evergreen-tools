@@ -11,6 +11,6 @@ if [ "Windows_NT" = "$OS" ]; then
 else
   export MONGOHOUSE_MQLRUN=`pwd`/artifacts/mqlrun
 fi;
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../handle-paths.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 ./artifacts/mongohoused --config ${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/config.yml

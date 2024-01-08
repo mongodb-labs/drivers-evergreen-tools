@@ -9,9 +9,9 @@
 # Assumes you have already set up secrets.
 set -eux
 
-DIR=$(dirname ${BASH_SOURCE:-$0})
-. $DIR/../handle-paths.sh
-pushd $DIR
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+pushd $SCRIPT_DIR
 
 # Ensure that secrets have already been set up.
 if [ ! -f "secrets-export.sh" ]; then 
@@ -74,7 +74,7 @@ case $1 in
 
     web-identity)
         export AWS_ROLE_ARN=$IAM_AUTH_ASSUME_WEB_ROLE_NAME
-        export AWS_WEB_IDENTITY_TOKEN_FILE="$DIR/$AWS_WEB_IDENTITY_TOKEN_FILE"
+        export AWS_WEB_IDENTITY_TOKEN_FILE="$SCRIPT_DIR/$AWS_WEB_IDENTITY_TOKEN_FILE"
         ;;
 
     regular)
