@@ -23,6 +23,8 @@ with open('secrets-export.sh', 'ab') as fid:
     for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_DEFAULT_REGION', 
                 'AWS_SESSION_TOKEN', 'CSFLE_TLS_CA_FILE', 'CSFLE_TLS_CERT_FILE',
                 'CSFLE_TLS_CLIENT_CERT_FILE']:
+        if key not in os.environ:
+            continue
         fid.write(f'\nexport {key}="{os.environ[key]}"'.encode('utf8'))
     fid.write('\n'.encode('utf8'))
 
