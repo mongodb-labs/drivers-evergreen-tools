@@ -22,7 +22,6 @@ if [ ! -f "./secrets-export.sh" ]; then
     set -x
     echo "Getting oidc secrets"
     python $SCRIPT_DIR/../auth_aws/setup_secrets.py drivers/oidc
-    popd
     echo "Got secrets"
 fi
 
