@@ -14,7 +14,12 @@ if [ -z "$DIR" ]; then
   exit 1
 fi
 
-DIR="$( cd -- "$DIR" &> /dev/null && pwd )"
+if command -v realpath &> /dev/null
+then
+    DIR=$(realpath $DIR)
+else 
+  DIR="$( cd -- "$DIR" &> /dev/null && pwd )"
+fi
 if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
   DIR=$(cygpath -m $DIR)
 fi
