@@ -4,11 +4,12 @@ set -eu
 
 CURRENT=$(pwd)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+PARENT_DIR=$(dirname $SCRIPT_DIR)
 pushd $SCRIPT_DIR
 
-CSFLE_TLS_CA_FILE=${CSFLE_TLS_CA_FILE:-"$SCRIPT_DIR/x509gen/ca.pem"}
-CSFLE_TLS_CERT_FILE=${CSFLE_TLS_CERT_FILE:-"$SCRIPT_DIR/x509gen/server.pem"}
-CSFLE_TLS_CLIENT_CERT_FILE=${CSFLE_TLS_CLIENT_CERT_FILE:-"$SCRIPT_DIR/x509gen/client.pem"}
+export CSFLE_TLS_CA_FILE=${CSFLE_TLS_CA_FILE:-"$PARENT_DIR/x509gen/ca.pem"}
+export CSFLE_TLS_CERT_FILE=${CSFLE_TLS_CERT_FILE:-"$PARENT_DIR/x509gen/server.pem"}
+export CSFLE_TLS_CLIENT_CERT_FILE=${CSFLE_TLS_CLIENT_CERT_FILE:-"$PARENT_DIR/x509gen/client.pem"}
 
 if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
     CSFLE_TLS_CA_FILE=$(cygpath -m $CSFLE_TLS_CA_FILE)

@@ -12,7 +12,7 @@ fi
 
 source ./secrets-export.sh
 
-if [ -z "$CSFLE_TLS_CA_FILE" ]; then
+if [ -z "${CSFLE_TLS_CA_FILE-}" ]; then
     echo "Please run the setup_secrets.sh script"
     exit 1
 fi
@@ -22,6 +22,7 @@ fi
 
 # The -u options forces the stdout and stderr streams to be unbuffered.
 # TMPDIR is required to avoid "AF_UNIX path too long" errors.
+set -x
 TMPDIR=$(mktemp -u) python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 &
 echo "$!" > kmip_pids.pid
 sleep 1
