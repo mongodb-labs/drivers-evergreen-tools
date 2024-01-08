@@ -30,7 +30,7 @@ INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 DL_START=$(date +%s)
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
 # Functions to fetch MongoDB binaries.
