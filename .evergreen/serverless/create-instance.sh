@@ -51,10 +51,11 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
-DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 
 # Ensure that a Python binary is available for JSON decoding
-. $DIR/../find-python3.sh || exit 1
+. $SCRIPT_DIR/../find-python3.sh || exit 1
 echo "Finding Python3 binary..."
 PYTHON_BINARY="$(find_python3 2>/dev/null)" || exit 1
 echo "Finding Python3 binary... done."
@@ -92,7 +93,7 @@ echo ""
 SECONDS=0
 
 while [ true ]; do
-    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`
+    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $SCRIPT_DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
     SERVERLESS_MONGODB_VERSION=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoDBVersion'])" | tr -d '\r\n'`
 
@@ -122,7 +123,7 @@ EOF
 
         if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
           # Download binaries and crypt_shared
-          MONGODB_VERSION=rapid sh $DIR/download-crypt.sh
+          MONGODB_VERSION=rapid sh $SCRIPT_DIR/download-crypt.sh
         fi
 
         exit 0

@@ -10,9 +10,11 @@ if [ -z "${AZUREOIDC_VMNAME_PREFIX:-}" ]; then
     exit 1
 fi
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
+
 # Set defaults.
-AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS:-$DRIVERS_TOOLS}
-BASE_PATH="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/auth_oidc"
+BASE_PATH="$DRIVERS_TOOLS/.evergreen/auth_oidc"
 export AZUREKMS_PUBLICKEYPATH="$BASE_PATH/azure/keyfile.pub"
 export AZUREKMS_PRIVATEKEYPATH="$BASE_PATH/azure/keyfile"
 export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
@@ -43,37 +45,37 @@ if [[ "$(printf "$ACTUAL_VERSION\n$EXPECTED_VERSION_NEWER\n" | sort -rV | head -
 fi
 
 # Login.
-"$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
 python ./azure/handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
 # Create VM.
-. "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
+. "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREOIDC_VMNAME="$AZUREKMS_VMNAME"
 export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
 
 # Update expansions and env viles.
 echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
 echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> $AZUREOIDC_ENVPATH
-echo "export AZUREOIDC_DRIVERS_TOOLS=${AZUREOIDC_DRIVERS_TOOLS}" >> $AZUREOIDC_ENVPATH
+echo "export DRIVERS_TOOLS=${DRIVERS_TOOLS}" >> $AZUREOIDC_ENVPATH
 
 # Install dependencies.
-AZUREKMS_SRC="$AZUREOIDC_DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
+AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
 AZUREKMS_DST="./" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./setup-azure-vm.sh" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Write the env variables file
 AZUREKMS_SRC=$AZUREOIDC_ENVPATH \
 AZUREKMS_DST="./" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 
 # Push Drivers Evergreen Tools onto the VM
 TARFILE=/tmp/drivers-evergreen-tools.tgz
-pushd $AZUREOIDC_DRIVERS_TOOLS
+pushd $DRIVERS_TOOLS
 git archive --format=tar.gz -o $TARFILE --prefix=drivers-evergreen-tools/ HEAD
 TARFILE_BASE=$(basename ${TARFILE})
 AZUREKMS_SRC=${TARFILE} \
@@ -88,8 +90,8 @@ popd
 
 # Start mongodb.
 AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/start-mongodb.sh" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
 AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/run-test.sh" \
-    "$AZUREOIDC_DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh

@@ -2,9 +2,11 @@
 
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
-DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+
 # Functions to fetch MongoDB binaries
-. $DIR/../download-mongodb.sh
+. $SCRIPT_DIR/../download-mongodb.sh
 
 get_distro
 get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"

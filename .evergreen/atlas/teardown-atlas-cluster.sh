@@ -29,8 +29,9 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables.
-DIR="$(dirname "${BASH_SOURCE[0]}")"
-. $DIR/setup-variables.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+. $SCRIPT_DIR/setup-variables.sh
 
 # Delete the cluster.
 echo "Deleting Atlas Cluster..."
