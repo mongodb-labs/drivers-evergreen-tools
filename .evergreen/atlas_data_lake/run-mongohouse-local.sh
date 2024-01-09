@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script launches a pre-built local mongohoused for testing.
 #

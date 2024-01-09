@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Delete the GCE instance after a period of time.
 # Refer: https://cloud.google.com/community/tutorials/create-a-self-deleting-virtual-machine

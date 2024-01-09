@@ -123,7 +123,7 @@ EOF
 
         if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
           # Download binaries and crypt_shared
-          MONGODB_VERSION=rapid sh $SCRIPT_DIR/download-crypt.sh
+          MONGODB_VERSION=rapid bash $SCRIPT_DIR/download-crypt.sh
         fi
 
         exit 0

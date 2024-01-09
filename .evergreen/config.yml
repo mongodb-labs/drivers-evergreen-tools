@@ -156,7 +156,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "exec script" :
     - command: shell.exec
@@ -165,7 +165,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
     - command: shell.exec
@@ -311,6 +311,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
+          # Purposely use sh here to ensure backwards compatibility.
           MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} LOAD_BALANCER=${LOAD_BALANCER} REQUIRE_API_VERSION=${REQUIRE_API_VERSION} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
@@ -322,6 +323,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
+          # Purposely use sh here to ensure backwards compatibility.
           sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
 
   "start load balancer":
@@ -361,7 +363,7 @@ functions:
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
-            sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run docker test":
     - command: shell.exec
@@ -473,7 +475,7 @@ functions:
           ${PREPARE_SHELL}
           file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
           # Don't use ${file} syntax here because evergreen treats it as an empty expansion.
-          [ -f "$file" ] && sh $file || echo "$file not available, skipping"
+          [ -f "$file" ] && bash $file || echo "$file not available, skipping"
 
 pre:
   - func: "fetch source"
