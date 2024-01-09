@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Clean up CSFLE kmip servers
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 if [ -f "kmip_pids.pid" ]; then
   < kmip_pids.pid xargs kill -9 || true

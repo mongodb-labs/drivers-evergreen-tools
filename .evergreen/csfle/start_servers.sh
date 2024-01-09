@@ -2,7 +2,8 @@
 # start the kmip server in the background.
 set -eux
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
 if [ ! -f ./secrets-export.sh ]; then

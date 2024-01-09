@@ -2,7 +2,8 @@
 # wait for the kmip servers to start.
 set -eu
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
 # Wait until the pids file has been created.
