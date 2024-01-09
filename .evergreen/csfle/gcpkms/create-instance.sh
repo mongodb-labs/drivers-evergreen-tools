@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Create a GCE instance.
 set -o errexit # Exit on first command error.
 if [ -z "$GCPKMS_GCLOUD" -o \

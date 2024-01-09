@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
 # Supported/used environment variables:
@@ -42,4 +42,3 @@ case "$OS" in
       make -o test-libmongoc test TEST_ARGS="--no-fork -d -F test-results.json"
       ;;
 esac
-
