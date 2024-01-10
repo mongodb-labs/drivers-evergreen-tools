@@ -116,5 +116,4 @@ atlas-expansion.yml
 secrets-export.sh
 token_file.txt
 pykmip.log.*
-pykmip.db
 nohup.out

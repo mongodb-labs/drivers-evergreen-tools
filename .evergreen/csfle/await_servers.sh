@@ -40,9 +40,4 @@ await_server "HTTP" 8002
 await_server "Azure" 8080
 await_server "KMIP" 5698
 
-# Ensure the kms server is working properly.
-source ./secrets-export.sh
-. ./activate-kmstlsvenv.sh
-python -u kms_kmip_client.py
-
 echo "Finished awaiting servers"

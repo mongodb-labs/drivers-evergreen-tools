@@ -4,16 +4,11 @@ Ensures a SecretData is registered with the unique identifier "1" on the KMS KMI
 This is a utility, and not meant for CI testing.
 """
 
-import errno
-import os
-import sys
-import time 
-
 import kmip.pie.client
 import kmip.pie.objects
 import kmip.pie.exceptions
 import kmip.core.enums
-
+import os
 
 HOSTNAME = "localhost"
 PORT = 5698
@@ -34,65 +29,34 @@ def regen(client):
     return uid
 
 
-def validate(client):
-    print("Validating KMIP client...")
-    secretdata = client.get(UID)
-    assert type(secretdata) is kmip.pie.objects.SecretData
-    assert len(secretdata.value) == 96
-    assert secretdata.value == SECRETDATABYTES
-    print(f"OK. Found SecretData with UID {UID}. Nothing to do.")
-    print("Validating KMIP client...done")
-
-
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     drivers_evergreen_tools = os.path.join(dir_path, "..", "..")
-    cert = os.environ.get('CSFLE_TLS_CLIENT_CERT_FILE', 
-        os.path.join(drivers_evergreen_tools,
-                     ".evergreen", "x509gen", "client.pem"))
-    ca = os.environ.get('CSFLE_TLS_CA_FILE', 
-        os.path.join(drivers_evergreen_tools,
-                     ".evergreen", "x509gen", "ca.pem"))
     client = kmip.pie.client.ProxyKmipClient(
         hostname=HOSTNAME,
         port=PORT,
-        cert=cert,
-        ca=ca,
+        cert=os.path.join(drivers_evergreen_tools,
+                          ".evergreen", "x509gen", "client.pem"),
+        ca=os.path.join(drivers_evergreen_tools,
+                        ".evergreen", "x509gen", "ca.pem"),
         config_file=os.path.join(
             drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.conf")
     )
-
-    print(f"Connecting to kmip client on {HOSTNAME}:{PORT}...")
-    i = 0
-    while i < 10:
+    with client:
         try:
-            client.open()
-            break
-        except ConnectionRefusedError as e:
-            if e.errno == errno.ECONNREFUSED:
-                time.sleep(i)
-                i += 1
-                print(e, f"...retry attempt {i} of 10")
+            secretdata = client.get(UID)
+            assert type(secretdata) is kmip.pie.objects.SecretData
+            assert len(secretdata.value) == 96
+            assert secretdata.value == SECRETDATABYTES
+            print(f"OK. Found SecretData with UID {UID}. Nothing to do.")
+            return
+        except kmip.pie.exceptions.KmipOperationFailure as err:
+            if err.reason == kmip.core.enums.ResultReason.ITEM_NOT_FOUND:
+                print(f"ERROR. SecretData object not found with UID: {UID}.")
+                print("Attempting to regenerate.")
+                regen(client)
             else:
-                raise
-    if i == 10:
-        print("Could not connect to server")
-        sys.exit(1)
-
-    print(f"Connecting to kmip client on {HOSTNAME}:{PORT}...done.")
-
-    try:
-        validate(client)
-    except kmip.pie.exceptions.KmipOperationFailure as err:
-        if err.reason == kmip.core.enums.ResultReason.ITEM_NOT_FOUND:
-            print(f"ERROR. SecretData object not found with UID: {UID}.")
-            print("Attempting to regenerate.")
-            regen(client)
-            validate(client)
-        else:
-            raise err
-    finally:
-        client.close()
+                raise err
 
 
 if __name__ == "__main__":
