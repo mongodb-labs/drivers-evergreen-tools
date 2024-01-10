@@ -29,22 +29,20 @@ echo "$!" > kmip_pids.pid
 echo "Starting KMIP Server...done."
 sleep 1
 
-server_cmd="python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem"
-
 echo "Starting HTTP Server 1..."
-nohup "$server_cmd --port 8000" &
+nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem --port 8000 &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 1...done."
 sleep 1
 
 echo "Starting HTTP Server 2..."
-nohup "$server_cmd --port 8001" &
+nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem --port 8001 &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 2...done."
 sleep 1
 
 echo "Starting HTTP Server 3..."
-nohup "$server_cmd --port 8002 --require_client_cert" &
+nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem --port 8002 --require_client_cert &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 3...done."
 sleep 1
@@ -54,6 +52,8 @@ nohup python bottle.py fake_azure:imds &
 echo "$!" >> kmip_pids.pid
 echo "Starting Fake Azure IMDS...done."
 sleep 1
+
+bash ./await_servers.sh
 
 # Set up the kms server with initial SecretData.
 set=0
