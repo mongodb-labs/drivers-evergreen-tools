@@ -44,8 +44,8 @@ to each local development and testing.
 local docker container running `mongo-orchestration` with OIDC enabled.
 To run locally, docker and python must be installed locally (both can be
 installed using brew).
-To run the file locally, the following environment variables are required:
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_ROLE_ARN`.
+To run the file locally, set up your local environment according to the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets)
+and make sure you have `AWS_PROFILE` set.
 
 Running `./start_local_server.sh` will use docker to launch the server
 with the correct configuration, and expose the server on local ports 27017
