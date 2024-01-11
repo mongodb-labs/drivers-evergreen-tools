@@ -36,7 +36,7 @@ def main():
             drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.db")
     database_seed_path = os.path.join(
             drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.db.bak")
-    shutil.move(database_seed_path, database_path)
+    shutil.copy(database_seed_path, database_path)
 
     server = KmipServer(
         hostname=HOSTNAME,
