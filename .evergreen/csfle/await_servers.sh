@@ -42,6 +42,8 @@ await_server "KMIP" 5698
 
 # Set up the kms server with initial SecretData.
 . ./activate-kmstlsvenv.sh
+source ./secrets-export.sh
+
 set=0
 echo "Setting up KMS Server..."
 for _ in $(seq 1 1 10); do
