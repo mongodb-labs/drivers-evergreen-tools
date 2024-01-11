@@ -7,6 +7,7 @@ from kmip.services.server import KmipServer
 import os
 import logging
 import argparse
+import shutil
 
 HOSTNAME = "localhost"
 PORT = 5698
@@ -30,6 +31,13 @@ def main():
                         default=default_cert_file, help="TLS Server PEM file")
     args = parser.parse_args()
 
+    # Ensure we start with a fresh seed database.
+    database_path = os.path.join(
+            drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.db")
+    database_seed_path = os.path.join(
+            drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.db.bak")
+    shutil.move(database_seed_path, database_path)
+
     server = KmipServer(
         hostname=HOSTNAME,
         port=args.port,
@@ -39,8 +47,7 @@ def main():
         auth_suite="TLS1.2",
         log_path=os.path.join(drivers_evergreen_tools,
                               ".evergreen", "csfle", "pykmip.log"),
-        database_path=os.path.join(
-            drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.db"),
+        database_path=database_path,
         logging_level=logging.DEBUG,
     )
     with server:

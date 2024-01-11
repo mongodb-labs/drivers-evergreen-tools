@@ -117,3 +117,4 @@ secrets-export.sh
 token_file.txt
 pykmip.log.*
 nohup.out
+pykmip.db
