@@ -20,7 +20,7 @@ def main():
         drivers_evergreen_tools, ".evergreen", "x509gen", "ca.pem")
     default_cert_file = os.path.join(
         drivers_evergreen_tools, ".evergreen", "x509gen", "server.pem")
-
+    
     parser = argparse.ArgumentParser(
         description='MongoDB Mock KMIP KMS Endpoint.')
     parser.add_argument('-p', '--port', type=int,
