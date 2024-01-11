@@ -30,25 +30,25 @@ echo "Starting KMIP Server...done."
 sleep 1
 
 echo "Starting HTTP Server 1..."
-nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem --port 8000 &
+python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/expired.pem --port 8000 &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 1...done."
 sleep 1
 
 echo "Starting HTTP Server 2..."
-nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/wrong-host.pem --port 8001 &
+python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/wrong-host.pem --port 8001 &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 2...done."
 sleep 1
 
 echo "Starting HTTP Server 3..."
-nohup python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/server.pem --port 8002 --require_client_cert &
+python -u kms_http_server.py --ca_file ../x509gen/ca.pem --cert_file ../x509gen/server.pem --port 8002 --require_client_cert > nohup.out 2>&1 &
 echo "$!" >> kmip_pids.pid
 echo "Starting HTTP Server 3...done."
 sleep 1
 
 echo "Starting Fake Azure IMDS..."
-nohup python bottle.py fake_azure:imds &
+python bottle.py fake_azure:imds &
 echo "$!" >> kmip_pids.pid
 echo "Starting Fake Azure IMDS...done."
 sleep 1
