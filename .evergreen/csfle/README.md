@@ -8,7 +8,7 @@ for more information on those specific scenarios.
 ## Prerequisities
 
 The system you are running on must have Python 3 and have access to the
-`drivers/csfle` AWS [Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+`drivers/csfle` [AWS Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
 For legacy usage, see below.
 
 ## Usage
@@ -34,6 +34,37 @@ When finished, stop the servers by running:
 
 ```bash
 $DRIVERS_TOOLS/.evergreen/csfle/stop_servers.sh
+```
+
+It is recommended that you start the servers in the background, and then use the `await_servers.sh` script.
+A full Evergreen config example would look like:
+
+```yaml
+start-csfle-servers:
+- command: subprocess.exec
+    params:
+    working_dir: src
+    binary: bash
+    background: true
+    include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN", "DRIVERS_TOOLS"]
+    args:
+        - ./scripts/setup-encryption.sh
+- command: subprocess.exec
+    params:
+    working_dir: src
+    binary: bash
+    include_expansions_in_env: ["DRIVERS_TOOLS"]
+    args:
+        - ${DRIVERS_TOOLS}/.evergreen/csfle/await_servers.sh
+```
+
+Where `./scripts/setup-encryption.sh` would be:
+
+```bash
+#!/usr/bin/env bash
+# Whatever other setup needed here, like setting CSFLE_TLS_CA_FILE
+bash $DRIVERS_TOOLS/.evergreen/csfle/setup_secrets.sh
+bash $DRIVERS_TOOLS/.evergreen/csfle/start_servers.sh
 ```
 
 ## Legacy Usage
