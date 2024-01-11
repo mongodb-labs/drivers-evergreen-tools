@@ -3,7 +3,7 @@
 Ensures a SecretData is registered with the unique identifier "1" on the KMS KMIP test server.
 This is a utility, and not meant for CI testing.
 """
-import argparse
+
 import kmip.pie.client
 import kmip.pie.objects
 import kmip.pie.exceptions
@@ -32,26 +32,13 @@ def regen(client):
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     drivers_evergreen_tools = os.path.join(dir_path, "..", "..")
-    default_ca_file = os.path.join(
-        drivers_evergreen_tools, ".evergreen", "x509gen", "ca.pem")
-    default_cert_file = os.path.join(
-        drivers_evergreen_tools, ".evergreen", "x509gen", "server.pem")
-
-    parser = argparse.ArgumentParser(
-        description='MongoDB Mock KMIP KMS Endpoint.')
-    parser.add_argument('-p', '--port', type=int,
-                        default=PORT, help="Port to listen on")
-    parser.add_argument('--ca_file', type=str,
-                        default=default_ca_file, help="TLS CA PEM file")
-    parser.add_argument('--cert_file', type=str,
-                        default=default_cert_file, help="TLS Server PEM file") 
-    args = parser.parse_args()
-
     client = kmip.pie.client.ProxyKmipClient(
         hostname=HOSTNAME,
-        port=args.port,
-        cert=args.cert_file,
-        ca=args.ca_file,
+        port=PORT,
+        cert=os.path.join(drivers_evergreen_tools,
+                          ".evergreen", "x509gen", "client.pem"),
+        ca=os.path.join(drivers_evergreen_tools,
+                        ".evergreen", "x509gen", "ca.pem"),
         config_file=os.path.join(
             drivers_evergreen_tools, ".evergreen", "csfle", "pykmip.conf")
     )

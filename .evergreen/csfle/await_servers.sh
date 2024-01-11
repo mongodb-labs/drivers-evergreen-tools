@@ -40,23 +40,4 @@ await_server "HTTP" 8002
 await_server "Azure" 8080
 await_server "KMIP" 5698
 
-# Set up the kms server with initial SecretData.
-. ./activate-kmstlsvenv.sh
-source ./secrets-export.sh
-
-set=0
-echo "Setting up KMS Server..."
-for _ in $(seq 1 1 10); do
-   sleep 1
-   if python -u kms_kmip_client.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE; then
-      echo "Setting up KMS Server...done."
-      set=1
-      break
-   fi
-done
-if [ $set != 1 ]; then 
-    echo 'Failed to start KMIP server!'
-    exit 1
-fi
-
 echo "Finished awaiting servers"
