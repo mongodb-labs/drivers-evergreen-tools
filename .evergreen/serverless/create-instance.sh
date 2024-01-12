@@ -88,7 +88,7 @@ curl \
     "providerName": "SERVERLESS",
     "backingProviderName": "AWS",
     "instanceSizeName" : "SERVERLESS_V2",
-    "regionName" : "US_EAST_2"
+    "regionName" : "US_EAST_1"
   }
 }
 EOF
