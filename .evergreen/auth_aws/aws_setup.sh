@@ -29,7 +29,9 @@ fi
 # Handle the test setup if not using env variables.
 case $1 in
     session-creds | env-creds)
-        echo "Skipping aws_tester.py"
+        echo "Running aws_tester.py with assume-role"
+        # Set up credentials with assume-role to create user in MongoDB and write AWS credentials.
+        python aws_tester.py "assume-role"
         ;;
     *)
         python aws_tester.py "$1"
