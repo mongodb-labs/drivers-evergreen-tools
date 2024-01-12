@@ -4,8 +4,10 @@
 (function() {
 "use strict";
 
+const adminUser = process.env['AZUREOIDC_USERNAME'] || 'bob';
+console.log("Setting up Admin User", adminUser);
 const admin = Mongo().getDB("admin");
-assert(admin.auth("bob", "pwd123"));
+assert(admin.auth(adminUser, "pwd123"));
 
 console.log("Setting up User");
 const authorizationPrefix = process.env['AZUREOIDC_AUTHPREFIX'] || 'test1';

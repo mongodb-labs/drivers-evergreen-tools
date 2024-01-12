@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -o igncr    # Ignore CR in this script
 set -o errexit  # Exit the script with error if any of the commands fail
 
@@ -45,4 +45,3 @@ INSTALL_DIR="C:/install-dir"
 "$CMAKE" -G "$CC" "-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}" "-DBSON_ROOT_DIR=${INSTALL_DIR}" $CONFIGURE_FLAGS
 "$BUILD" /m ALL_BUILD.vcxproj
 "$BUILD" /m INSTALL.vcxproj
-

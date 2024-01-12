@@ -156,7 +156,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "exec script" :
     - command: shell.exec
@@ -165,7 +165,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && sh ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
     - command: shell.exec
@@ -311,6 +311,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
+          # Purposely use sh here to ensure backwards compatibility.
           MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} LOAD_BALANCER=${LOAD_BALANCER} REQUIRE_API_VERSION=${REQUIRE_API_VERSION} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
@@ -322,6 +323,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
+          # Purposely use sh here to ensure backwards compatibility.
           sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
 
   "start load balancer":
@@ -361,7 +363,7 @@ functions:
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           SERVERLESS_ATLAS_PASSWORD="${SERVERLESS_ATLAS_PASSWORD}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
-            sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run docker test":
     - command: shell.exec
@@ -372,7 +374,7 @@ functions:
           ${PREPARE_SHELL}
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/docker
-          ENTRYPOINT=/root/test-entrypoint.sh bash run-local.sh
+          ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -391,9 +393,26 @@ functions:
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/auth_oidc
           ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
+          # Get tokens
+          bash oidc_get_tokens.sh
+          test -f /tmp/tokens/test_user1
+          test -f /tmp/tokens/test_user2
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
+
+  "run oidc azure test":
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          cd $DRIVERS_TOOLS
+          export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
+          git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
+          export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
+          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 
   "cleanup":
     - command: shell.exec
@@ -401,6 +420,15 @@ functions:
         script: |
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
+
+  "cleanup docker":
+    - command: shell.exec
+      params:
+        script: |
+          # Kill all containers
+          docker rm $(docker ps -a -q)&> /dev/null || true
+          # Remove all images
+          docker rmi -f $(docker images -a -q) &> /dev/null || true
 
   "fix absolute paths":
     - command: shell.exec
@@ -447,7 +475,7 @@ functions:
           ${PREPARE_SHELL}
           file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
           # Don't use ${file} syntax here because evergreen treats it as an empty expansion.
-          [ -f "$file" ] && sh $file || echo "$file not available, skipping"
+          [ -f "$file" ] && bash $file || echo "$file not available, skipping"
 
 pre:
   - func: "fetch source"
@@ -785,11 +813,17 @@ tasks:
       tags: ["latest", "docker"]
       commands:
         - func: "run docker test"
+        - func: "cleanup docker"
 
     - name: "test-oidc"
-      tags: ["latest", "docker"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
+        - func: "cleanup docker"
+
+    - name: "test-oidc-azure"
+      commands:
+        - func: "run oidc azure test"
 
 # }}}
 
@@ -960,6 +994,35 @@ task_groups:
     tasks:
       - ".serverless"
 
+  - name: testazureoidc_task_group
+    tags: ["latest", "oidc"]
+    setup_group:
+    - func: fetch source
+    - func: prepare resources
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          # ensure HEAD points to current commit
+          cd $DRIVERS_TOOLS
+          git add .
+          git commit -m "add files"
+          export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
+    teardown_group:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          ${PREPARE_SHELL}
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    tasks:
+    - test-oidc-azure
+
 buildvariants:
 
 # Test packaging and other release related routines
@@ -971,12 +1034,19 @@ buildvariants:
     - ".releng" # Run all tasks with the "releng" tag
 
 # Tests relating to docker images
-- name: tests-docker-related
-  display_name: Docker Related
+- name: tests-docker
+  display_name: Docker
   run_on:
     - ubuntu2004-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
+
+- name: tests-oidc
+  display_name: OIDC
+  run_on: ubuntu2004-small
+  tasks:
+    - "test-oidc"  
+    - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }

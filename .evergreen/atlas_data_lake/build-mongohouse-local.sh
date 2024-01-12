@@ -1,10 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script builds a local mongohoused for testing.
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
 ORIG_DIR="$(pwd)"
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 
 # Configure git to use the git protocol
 git config --global url."git@github.com:".insteadof "https://github.com/"

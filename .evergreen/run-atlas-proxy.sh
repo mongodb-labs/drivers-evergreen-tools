@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script uses the Atlas proxy project's own evergreen launch script
 # to build and launch an Atlas proxy for testing.  It works directly from
@@ -22,9 +22,6 @@
 #
 # This script expects the following environment variables:
 #
-# DRIVERS_TOOLS (required) - absolute path to the checked out
-# driver-evergreen-tools repository
-#
 # MONGODB_VERSION - version of MongoDB to download and use. For Atlas
 # Proxy, must be "3.4" or "latest".  Defaults to "3.4".
 
@@ -39,10 +36,11 @@ ORIG_DIR="$(pwd)"
 #--------------------------------------------------------------------------#
 
 DL_START=$(date +%s)
-DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 # Load download helper functions
-. $DIR/download-mongodb.sh
+. $SCRIPT_DIR/download-mongodb.sh
 
 # set $DISTRO
 get_distro

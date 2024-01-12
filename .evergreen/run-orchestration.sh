@@ -13,6 +13,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
 #   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
 #   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
+#   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
@@ -24,16 +25,21 @@ DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
+INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
-DIR=$(dirname $0)
+# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
+# Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+. $SCRIPT_DIR/handle-paths.sh
+
 # Functions to fetch MongoDB binaries.
-. $DIR/download-mongodb.sh
+. $SCRIPT_DIR/download-mongodb.sh
 
 # To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
 # explicitly invoke Bash as a subshell here when running `find_python3`.
 echo "Finding Python3 binary..."
-PYTHON="$(bash -c ". $DIR/find-python3.sh && find_python3 2>/dev/null")"
+PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
 
 get_distro
@@ -44,6 +50,17 @@ else
   get_mongodb_download_url_for "$DISTRO"
 fi
 download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
+
+# Write the crypt shared path to the expansion file if given.
+if [ -n $CRYPT_SHARED_LIB_PATH ]; then
+    cat <<EOT >> mo-expansion.yml
+CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
+EOT
+
+  cat <<EOT >> mo-expansion.sh
+export CRYPT_SHARED_LIB_PATH="$CRYPT_SHARED_LIB_PATH"
+EOT
+fi
 
 DL_END=$(date +%s)
 MO_START=$(date +%s)
@@ -92,16 +109,18 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 
 # Docker does not enable ipv6 by default.
 # https://docs.docker.com/config/daemon/ipv6/
+# We also need to use 0.0.0.0 instead of 127.0.0.1
 if [ -n "$DOCKER_RUNNING" ]; then
   cp $ORCHESTRATION_FILE /root/config.json
   export ORCHESTRATION_FILE=/root/config.json
   sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
+  sed -i "s/\"127\.0\.0\.1\,/\"0.0.0.0\,/g" $ORCHESTRATION_FILE
 fi
 
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
 
 # Start mongo-orchestration
-PYTHON="${PYTHON:?}" bash $DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
+PYTHON="${PYTHON:?}" bash $SCRIPT_DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
 
 if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
   echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/out.log:
@@ -113,30 +132,9 @@ fi
 cat tmp.json
 
 URI=$(${PYTHON:?} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
-echo 'MONGODB_URI: "'$URI'"' > mo-expansion.yml
+echo 'MONGODB_URI: "'$URI'"' >> mo-expansion.yml
 echo $URI > $DRIVERS_TOOLS/uri.txt
 printf "\nCluster URI: %s\n" "$URI"
-# Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
-# server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
-if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
-  if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
-    echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
-  else
-    echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
-    download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
-    echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
-    if [ -z $CRYPT_SHARED_LIB_PATH ]; then
-      echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
-      exit 1
-    fi
-  cat <<EOT >> mo-expansion.yml
-CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
-EOT
-cat <<EOT >> mo-expansion.sh
-export CRYPT_SHARED_LIB_PATH="$CRYPT_SHARED_LIB_PATH"
-EOT
-  fi
-fi
 
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)

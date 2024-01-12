@@ -18,8 +18,11 @@ MONGO_ORCHESTRATION_HOME="$1"
 
 echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
+
 declare det_evergreen_dir
-det_evergreen_dir="$(dirname "${BASH_SOURCE[0]}")"
+det_evergreen_dir=$SCRIPT_DIR
 . "$det_evergreen_dir/find-python3.sh"
 . "$det_evergreen_dir/venv-utils.sh"
 
@@ -45,7 +48,7 @@ cd -
 
 # Create default config file if it doesn't exist
 if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then
-  MONGODB_BINARIES=${MONGODB_BINARIES:-$(dirname "$(dirname "$0")")/mongodb/bin}
+  MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
   echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 fi
 

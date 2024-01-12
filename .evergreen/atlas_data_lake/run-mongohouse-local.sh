@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script launches a pre-built local mongohoused for testing.
 #
@@ -11,4 +11,6 @@ if [ "Windows_NT" = "$OS" ]; then
 else
   export MONGOHOUSE_MQLRUN=`pwd`/artifacts/mqlrun
 fi;
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 ./artifacts/mongohoused --config ${DRIVERS_TOOLS}/.evergreen/atlas_data_lake/config.yml

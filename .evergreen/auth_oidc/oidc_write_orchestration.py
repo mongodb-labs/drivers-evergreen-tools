@@ -13,7 +13,7 @@ from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
 
 
 def azure():
-    client_id = os.environ['AZUREOIDC_TOKENCLIENT']
+    client_id = os.environ['AZUREOIDC_USERNAME']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     app_id = os.environ['AZUREOIDC_CLIENTID']
     auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
@@ -26,15 +26,14 @@ def azure():
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id}",
-        "authorizationClaim": "groups",
-
+        "authorizationClaim": "groups"
     }
     providers = json.dumps([provider_info], separators=(',',':'))
 
     data = {
         "id": "oidc-repl0",
         "auth_key": "secret",
-        "login": "bob",
+        "login": client_id,
         "name": "mongod",
         "password": "pwd123",
         "procParams": {
@@ -44,7 +43,7 @@ def azure():
             "port": 27017,
             "setParameter": {
                 "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "authenticationMechanisms": "SCRAM-SHA-1,SCRAM-SHA-256,MONGODB-OIDC",
                 "oidcIdentityProviders": providers
             }
         }
