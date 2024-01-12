@@ -6,7 +6,8 @@
 # Writes a secrets-export.sh file to this folder.
 set -eux
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
 VAULT_NAME="${1:-serverless}"

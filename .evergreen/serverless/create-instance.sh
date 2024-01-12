@@ -22,11 +22,12 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_URI            SRV connection string for newly created instance
 #   SERVERLESS_INSTANCE_NAME  Name of newly created instance (required for "get" and "delete" scripts)
 
-DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 
 # Ensure that secrets have already been set up.
-if [ -f "$DIR/secrets-export.sh" ]; then 
-  source "$DIR/secrets-export.sh"
+if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then 
+  source "$SCRIPT_DIR/secrets-export.sh"
 fi
 
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
@@ -57,9 +58,6 @@ fi
 if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
-
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/../handle-paths.sh
 
 # Ensure that a Python binary is available for JSON decoding
 . $SCRIPT_DIR/../find-python3.sh || exit 1
