@@ -59,6 +59,8 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
+SERVERLESS_REGION="${SERVERLESS_REGION:-US_EAST_2}"
+
 # Ensure that a Python binary is available for JSON decoding
 . $SCRIPT_DIR/../find-python3.sh || exit 1
 echo "Finding Python3 binary..."
@@ -88,7 +90,7 @@ curl \
     "providerName": "SERVERLESS",
     "backingProviderName": "AWS",
     "instanceSizeName" : "SERVERLESS_V2",
-    "regionName" : "US_EAST_1"
+    "regionName" : "$SERVERLESS_REGION"
   }
 }
 EOF
