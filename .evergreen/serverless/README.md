@@ -20,7 +20,19 @@ If targeting the dev version of Serverless, use:
 $DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh serverless-next
 ```
 
-The full task group might look like:
+Next, start the cluster with:
+
+```bash
+bash ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
+```
+
+Make sure you shut down the instance with:
+
+```bash
+bash ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
+```
+
+A full Evergreen task group might look like:
 
 ```yaml
   - name: serverless_task_group

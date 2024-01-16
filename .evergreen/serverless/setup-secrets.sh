@@ -12,3 +12,4 @@ pushd $SCRIPT_DIR
 
 VAULT_NAME="${1:-serverless}"
 bash ../auth_aws/setup_secrets.sh drivers/$VAULT_NAME
+popd
