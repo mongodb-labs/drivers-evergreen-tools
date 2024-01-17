@@ -4,7 +4,7 @@ set -eu
 
 CURRENT=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/handle-paths.sh
+. $SCRIPT_DIR/../handle-paths.sh
 PARENT_DIR=$(dirname $SCRIPT_DIR)
 pushd $SCRIPT_DIR
 
