@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script uses the Atlas proxy project's own evergreen launch script
 # to build and launch an Atlas proxy for testing.  It works directly from

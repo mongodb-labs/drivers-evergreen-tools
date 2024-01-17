@@ -23,11 +23,9 @@ on how the secrets are managed.
 ```bash
 cd $DRIVERS_TOOLS/.evergreen/auth_aws
 # Create a python virtual environment.
-cd ./activate-authawsvenv.sh
-# Source the environment variables.
+. ./activate-authawsvenv.sh
+# Source the environment variables. Configure the environment and the server.
 . aws_setup.sh <variant>
-# Configure the environment and the server.
-python aws_tester.py <variant>
 # Run your driver-specific tests here.
 ```
 
@@ -52,7 +50,7 @@ cp ${PROJECT_DIRECTORY}/.evergreen/run-mongodb-aws-ecs-test.sh $ECS_SRC_DIR/.eve
 # Driver-specific - compile/build code if needed.
 # Driver-specific - move artifacts needed for test to $ECS_SRC_DIR
 # Run the test
-PROJECT_DIRECTORY="$ECS_SRC_DIR" $AUTH_AWS_DIR/aws_setup.sh ecs
+PROJECT_DIRECTORY="$ECS_SRC_DIR" MONGODB_BINARIES="/path/to/mongodb/bin" $AUTH_AWS_DIR/aws_setup.sh ecs
 ```
 
 ## Deprecated Scripts

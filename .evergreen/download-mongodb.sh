@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #For future use the feed to get full list of distros : http://downloads.mongodb.org/full.json
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
