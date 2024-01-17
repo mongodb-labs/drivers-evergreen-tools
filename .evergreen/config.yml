@@ -1004,6 +1004,7 @@ task_groups:
         shell: bash
         script: |-
           set -o errexit
+          set -x
           ${PREPARE_SHELL}
           # ensure HEAD points to current commit
           cd $DRIVERS_TOOLS
@@ -1017,6 +1018,7 @@ task_groups:
         shell: bash
         script: |-
           ${PREPARE_SHELL}
+          set -x
           $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
