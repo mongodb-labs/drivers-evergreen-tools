@@ -1023,7 +1023,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     tasks:
-    - test-oidc-azure
+      - test-oidc-azure
 
 buildvariants:
 
