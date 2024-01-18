@@ -1013,7 +1013,7 @@ task_groups:
             git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
-    teardown_task:
+    teardown_group:
       - command: shell.exec
         params:
           shell: bash
