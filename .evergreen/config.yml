@@ -995,7 +995,6 @@ task_groups:
       - ".serverless"
 
   - name: testazureoidc_task_group
-    tags: ["latest", "oidc"]
     setup_group:
       - func: fetch source
       - func: prepare resources
