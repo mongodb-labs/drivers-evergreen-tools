@@ -1001,7 +1001,7 @@ task_groups:
       - command: shell.exec
         params:
           shell: bash
-          script: |-
+          script: |
             set -o errexit
             set -x
             ${PREPARE_SHELL}
@@ -1015,7 +1015,7 @@ task_groups:
       - command: shell.exec
         params:
           shell: bash
-          script: |-
+          script: |
             ${PREPARE_SHELL}
             set -x
             $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
