@@ -36,8 +36,11 @@ When finished, stop the servers by running:
 $DRIVERS_TOOLS/.evergreen/csfle/stop_servers.sh
 ```
 
-It is recommended that you start the servers in the background, and then use the `await_servers.sh` script.
-A full Evergreen config example would look like:
+If you are starting your CSFLE servers in a separate task, it is recommended that you setup secrets
+and start the servers in the background, and then have a separate step that uses `await_servers.sh`
+in the foreground to wait for the servers to be ready.  This will ensure the servers are not torn down
+between tasks.  If you are starting the servers in a step within the same task as your tests, you
+can just start the servers directly in a foreground step.
 
 ```yaml
 start-csfle-servers:
@@ -69,7 +72,7 @@ bash $DRIVERS_TOOLS/.evergreen/csfle/start_servers.sh
 
 ## Legacy Usage
 
-The legacy usage involved putting the required secrets in EVG Project config, and using several steps:
+The legacy usage involved putting the required secrets in EVG Project config, and used several steps:
 
 - Start the kmip server and http servers individually in the background.
 - Run the client in a loop until it was able to connect.
