@@ -10,6 +10,14 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_API_PUBLIC_KEY   Required. Public key for Atlas API request.
 #   SERVERLESS_API_PRIVATE_KEY  Required. Private key for Atlas API request.
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+
+# Ensure that secrets have already been set up.
+if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then 
+  source "$SCRIPT_DIR/secrets-export.sh"
+fi
+
 if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     echo "Instance name must be provided via SERVERLESS_INSTANCE_NAME environment variable"
     exit 1
