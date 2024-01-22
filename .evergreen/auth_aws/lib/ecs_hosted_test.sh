@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # A shell script to run in an ECS hosted task
 set -ex
 

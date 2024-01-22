@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #For future use the feed to get full list of distros : http://downloads.mongodb.org/full.json
 
@@ -56,13 +56,13 @@ get_mongodb_download_url_for ()
    VERSION_MONGOSH="1.8.1"
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="6.3.1"
-   VERSION_70="7.0.2"
+   VERSION_70="7.0.4"
    VERSION_60_LATEST="v6.0-latest"
-   VERSION_60="6.0.10"
+   VERSION_60="6.0.12"
    # The perf version must always remain pinned to the same patch
    VERSION_60_PERF="6.0.6"
-   VERSION_50="5.0.21"
-   VERSION_44="4.4.25"
+   VERSION_50="5.0.23"
+   VERSION_44="4.4.26"
    VERSION_42="4.2.24"
    VERSION_40="4.0.28"
    VERSION_36="3.6.23"
@@ -680,6 +680,8 @@ download_and_extract_package ()
    if [ -n "$MONGODB_BINARY_ROOT" ]; then
       cd $MONGODB_BINARY_ROOT
    else
+      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+      . $SCRIPT_DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
    echo "Installing server binaries..."
@@ -704,6 +706,8 @@ download_and_extract_mongosh ()
    if [ -n "$MONGODB_BINARY_ROOT" ]; then
       cd $MONGODB_BINARY_ROOT
    else
+      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+      . $SCRIPT_DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
    echo "Installing MongoDB shell..."
@@ -735,14 +739,10 @@ download_and_extract ()
       download_and_extract_mongosh "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
    fi
 
-   # Deprecated: this will be removed once drivers have updated to mongosh.
-   # Ubunutu 22 does not support the legacy shell.
-   case "$DISTRO" in
-      linux-ubuntu-22.04*) SKIP_LEGACY_SHELL=1
-      ;;
-   esac
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
 
-   if [ -z "${SKIP_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+   if [ ! -z "${INSTALL_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
       # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
@@ -766,6 +766,22 @@ download_and_extract ()
       DRIVERS_TOOLS=$SAVED_DRIVERS_TOOLS
       rm -rf $DRIVERS_TOOLS/legacy-shell-download
       echo "Download legacy shell from 5.0 ... end"
+   fi
+
+   # Define SKIP_CRYPT_SHARED=1 to skip downloading crypt_shared. This is useful for platforms that have a
+   # server release but don't ship a corresponding crypt_shared release, like Amazon 2018.
+   if [ -z "${SKIP_CRYPT_SHARED:-}" ]; then
+      if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
+         echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
+      else
+         echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+         download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
+         echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
+         if [ -z $CRYPT_SHARED_LIB_PATH ]; then
+            echo "CRYPT_SHARED_LIB_PATH must be assigned, but wasn't" 1>&2 # write to stderr"
+            exit 1
+         fi
+      fi
    fi
 }
 

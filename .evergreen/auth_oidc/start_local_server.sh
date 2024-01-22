@@ -6,14 +6,15 @@
 #
 set -eux
 
-DRIVERS_TOOLS=${DRIVERS_TOOLS:-$(readlink -f ../..)}
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
 VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 AWS_PROFILE=${AWS_PROFILE:-""}
 
 if [ -z "$AWS_PROFILE" ]; then
-    if [[ -z "${AWS_SESSION_TOKEN}" ||  -z "${AWS_ACCESS_KEY_ID}" || -z "${AWS_SECRET_ACCESS_KEY}" ]]; then
+    if [[ -z "${AWS_SESSION_TOKEN:-}" ||  -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
         echo "Please set AWS_PROFILE or set AWS credentials environment variables" 1>&2
        exit 1
     fi

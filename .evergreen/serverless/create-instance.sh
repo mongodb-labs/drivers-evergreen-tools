@@ -22,6 +22,14 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_URI            SRV connection string for newly created instance
 #   SERVERLESS_INSTANCE_NAME  Name of newly created instance (required for "get" and "delete" scripts)
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+
+# Ensure that secrets have already been set up.
+if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then 
+  source "$SCRIPT_DIR/secrets-export.sh"
+fi
+
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
     echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
     exit 1
@@ -51,10 +59,10 @@ if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
-DIR=$(dirname $0)
+SERVERLESS_REGION="${SERVERLESS_REGION:-US_EAST_2}"
 
 # Ensure that a Python binary is available for JSON decoding
-. $DIR/../find-python3.sh || exit 1
+. $SCRIPT_DIR/../find-python3.sh || exit 1
 echo "Finding Python3 binary..."
 PYTHON_BINARY="$(find_python3 2>/dev/null)" || exit 1
 echo "Finding Python3 binary... done."
@@ -82,7 +90,7 @@ curl \
     "providerName": "SERVERLESS",
     "backingProviderName": "AWS",
     "instanceSizeName" : "SERVERLESS_V2",
-    "regionName" : "US_EAST_2"
+    "regionName" : "$SERVERLESS_REGION"
   }
 }
 EOF
@@ -92,7 +100,7 @@ echo ""
 SECONDS=0
 
 while [ true ]; do
-    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $DIR/get-instance.sh`
+    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $SCRIPT_DIR/get-instance.sh`
     STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
     SERVERLESS_MONGODB_VERSION=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoDBVersion'])" | tr -d '\r\n'`
 
@@ -122,7 +130,7 @@ EOF
 
         if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
           # Download binaries and crypt_shared
-          MONGODB_VERSION=rapid sh $DIR/download-crypt.sh
+          MONGODB_VERSION=rapid bash $SCRIPT_DIR/download-crypt.sh
         fi
 
         exit 0

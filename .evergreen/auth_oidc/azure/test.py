@@ -8,11 +8,13 @@ from pymongo.auth import _AUTH_MAP, _authenticate_oidc
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
 app_id = os.environ['AZUREOIDC_CLIENTID']
+object_id = os.environ['AZUREOIDC_USERNAME']
 
 def callback(client_info, server_info):
     url = "http://169.254.169.254/metadata/identity/oauth2/token"
     url += "?api-version=2018-02-01"
     url += f"&resource=api://{app_id}"
+    url += f"&object_id={object_id}"
     headers = { "Metadata": "true", "Accept": "application/json" }
     request = Request(url, headers=headers)
     try:
@@ -39,10 +41,10 @@ def callback(client_info, server_info):
             raise ValueError(msg)
     return dict(access_token=data['access_token'])
 
-
 props = dict(request_token_callback=callback)
-print('Testing MONGODB-OIDC on azure')
+print('Testing MONGODB-OIDC on azure...')
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
-c.test.test.find_one({})
+c.test.test.insert_one({})
 c.close()
+print('Testing MONGODB-OIDC on azure... done.')
 print('Self test complete!')

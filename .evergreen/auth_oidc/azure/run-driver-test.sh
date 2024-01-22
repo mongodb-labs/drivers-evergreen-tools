@@ -3,6 +3,10 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
+pushd $SCRIPT_DIR
+
 # Check for inputs.
 if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
    [ -z "${AZUREOIDC_TEST_CMD:-}" ]; then
@@ -13,26 +17,24 @@ if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
 fi
 
 # Read in the env variables.
-DIR=$(dirname $0)
-source $DIR/env.sh
+source ./env.sh
 
 # Set up variables.
-DRIVERS_TOOLS=$AZUREOIDC_DRIVERS_TOOLS
 export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
 export AZUREKMS_VMNAME=$AZUREOIDC_VMNAME
-export AZUREKMS_PRIVATEKEYPATH=$DIR/keyfile
+export AZUREKMS_PRIVATEKEYPATH=$SCRIPT_DIR/keyfile
 
 # Set up the remote driver checkout.
 DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
 AZUREKMS_SRC=${AZUREOIDC_DRIVERS_TAR_FILE} \
 AZUREKMS_DST="~/" \
-  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
+  $SCRIPT_DIR/../../csfle/azurekms/copy-file.sh
 echo "Copying files ... end"
 echo "Untarring file ... begin"
 AZUREKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
-  $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+  $SCRIPT_DIR/../../csfle/azurekms/run-command.sh
 echo "Untarring file ... end"
 
 # Run the driver test.
 AZUREKMS_CMD="${AZUREOIDC_TEST_CMD}" \
-    $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
+    $SCRIPT_DIR/../../csfle/azurekms/run-command.sh

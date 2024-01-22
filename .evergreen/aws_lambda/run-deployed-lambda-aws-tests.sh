@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
 # Explanation of required environment variables:
@@ -30,8 +30,9 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the common variables
-DIR="$(dirname $(dirname "${BASH_SOURCE[0]}"))"
-. $DIR/atlas/setup-variables.sh
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+. $SCRIPT_DIR/../atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.
 restart_cluster_primary ()

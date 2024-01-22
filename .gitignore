@@ -93,10 +93,13 @@ testazureoidc-expansions.yml
 venv
 authawsvenv
 authoidcvenv
+kmstlsvenv
 
 /uri.txt
 /results.json
 /mongodb
+mongodb-binaries.tgz
+/.evergreen/docker/ubuntu20.04/mongodb
 /mongosh
 mo-expansion.yml
 mo-expansion.sh
@@ -111,3 +114,4 @@ lb-expansion.yml
 orchestration.config
 atlas-expansion.yml
 secrets-export.sh
+token_file.txt

@@ -10,6 +10,7 @@ import subprocess
 from functools import partial
 
 from pymongo import MongoClient
+from pymongo.errors import OperationFailure
 from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -50,7 +51,11 @@ def create_user(user, kwargs):
     print('Creating user', user)
     client = MongoClient(username="bob", password="pwd123")
     db = client['$external']
-    db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
+    try:
+        db.command(dict(createUser=user, roles=[{"role": "read", "db": "aws"}]))
+    except OperationFailure as e:
+        if "already exists" not in e.details['errmsg']:
+            raise
     client.close()
 
     # Verify access.
@@ -65,7 +70,7 @@ def setup_assume_role():
     os.environ['AWS_SECRET_ACCESS_KEY'] = CONFIG[get_key("iam_auth_assume_aws_secret_access_key")]
 
     role_name = CONFIG[get_key("iam_auth_assume_role_name")]
-    creds = _assume_role(role_name)
+    creds = _assume_role(role_name, quiet=True)
     with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 
@@ -90,7 +95,22 @@ def setup_ecs():
     project_dir = os.environ['PROJECT_DIRECTORY']
     base_command = f"{sys.executable} -u  lib/container_tester.py"
     run_prune_command = f"{base_command} -v remote_gc_services --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]}"
-    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {CONFIG[get_key('iam_auth_ecs_task_definition')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
+
+    # Get the appropriate task definition based on the version of Ubuntu.
+    with open('/etc/lsb-release') as fid:
+        text = fid.read()
+    if 'jammy' in text:
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_jammy'), None)
+        if task_definition is None:
+            raise ValueError('Please set "iam_auth_ecs_task_definition_jammy" variable')
+    elif 'focal' in text:
+        task_definition = CONFIG.get(get_key('iam_auth_ecs_task_definition_focal'), None)
+        # Fall back to previous task definition for backward compat.
+        if task_definition is None:
+            task_definition = CONFIG[get_key('iam_auth_ecs_task_definition')]
+    else:
+        raise ValueError('Unsupported ubuntu release')
+    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {task_definition} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
 
     # Pass in the AWS credentials as environment variables
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown
@@ -126,12 +146,14 @@ def setup_web_identity():
         print('ret was', ret)
         raise RuntimeError("Failed to unassign an instance profile from the current machine")
 
+    token_file = os.environ.get('AWS_WEB_IDENTITY_TOKEN_FILE', CONFIG[get_key('iam_web_identity_token_file')])
+
     # Handle the OIDC credentials.
     env = dict(
         IDP_ISSUER=CONFIG[get_key("iam_web_identity_issuer")],
         IDP_JWKS_URI=CONFIG[get_key("iam_web_identity_jwks_uri")],
         IDP_RSA_KEY=CONFIG[get_key("iam_web_identity_rsa_key")],
-        AWS_WEB_IDENTITY_TOKEN_FILE=CONFIG[get_key('iam_web_identity_token_file')]
+        AWS_WEB_IDENTITY_TOKEN_FILE=token_file
     )
 
     ret = run(['lib/aws_handle_oidc_creds.py', 'token'], env)
@@ -139,10 +161,10 @@ def setup_web_identity():
         raise RuntimeWarning("Failed to write the web token")
 
     # Assume the web role to get temp credentials.
-    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = CONFIG[get_key('iam_web_identity_token_file')]
+    os.environ['AWS_WEB_IDENTITY_TOKEN_FILE'] = token_file
     os.environ['AWS_ROLE_ARN'] = CONFIG[get_key("iam_auth_assume_web_role_name")]
 
-    creds = _assume_role_with_web_identity()
+    creds = _assume_role_with_web_identity(True)
     with open(join(HERE, 'creds.json'), 'w') as fid:
         json.dump(creds, fid)
 

@@ -13,21 +13,21 @@ LOGGER = logging.getLogger(__name__)
 
 STS_DEFAULT_ROLE_NAME = "arn:aws:iam::579766882180:role/mark.benvenuto"
 
-def _assume_role(role_name):
+def _assume_role(role_name, quiet=False):
     sts_client = boto3.client("sts", region_name="us-east-1")
 
     response = sts_client.assume_role(RoleArn=role_name, RoleSessionName=str(uuid.uuid4()), DurationSeconds=900)
 
     creds = response["Credentials"]
     creds["Expiration"] = str(creds["Expiration"])
-
+    if quiet:
+        return creds
     print(f"""{{
   "AccessKeyId" : "{creds["AccessKeyId"]}",
   "SecretAccessKey" : "{creds["SecretAccessKey"]}",
   "SessionToken" : "{creds["SessionToken"]}",
   "Expiration" : "{creds["Expiration"]}"
 }}""")
-    return creds
 
 
 def main() -> None:

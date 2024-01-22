@@ -20,7 +20,10 @@ inputs:
     description: "Whether to start the server with requireApiVersion enabled (defaults to false)"
     required: false
   skip-legacy-shell:
-    description: "Whether to skip installing the legacy shell for 6.0+ servers"
+    description: "Whether to skip installing the legacy shell for 6.0+ servers (deprecated)"
+    required: false
+  install-legacy-shell:
+    description: "Whether to install the legacy shell for 6.0+ servers"
     required: false
 outputs:
   cluster-uri:
@@ -52,6 +55,7 @@ runs:
         STORAGE_ENGINE: ${{ inputs.storage-engine }}
         REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
         SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
+        INSTALL_LEGACY_SHELL: ${{ inputs.install-legacy-shell }}
       shell: bash
     - id: "get-cluster-uri"
       name: "Expose Cluster URI"

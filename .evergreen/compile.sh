@@ -1,15 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
 
-DIR=$(dirname $0)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 BUILDTOOL=${BUILDTOOL:-autotools}
 
 case "$OS" in
    cygwin*)
-      sh $DIR/compile-windows.sh
+      bash $SCRIPT_DIR/compile-windows.sh
    ;;
 
    *)
@@ -18,12 +19,11 @@ case "$OS" in
       # this would be a good place to call the different scripts
       case "$BUILDTOOL" in
          cmake)
-            sh $DIR/compile-unix-cmake.sh
+            bash $SCRIPT_DIR/compile-unix-cmake.sh
          ;;
          autotools)
-            sh $DIR/compile-unix.sh
+            bash $SCRIPT_DIR/compile-unix.sh
          ;;
       esac
    ;;
 esac
-
