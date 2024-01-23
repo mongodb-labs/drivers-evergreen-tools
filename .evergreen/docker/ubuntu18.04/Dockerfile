@@ -2,27 +2,27 @@ FROM ubuntu:18.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   apt-get -qq update && apt-get -qqy install --no-install-recommends \
-  git \
-  ca-certificates \
-  curl \
-  wget \
-  sudo \
-  gnupg \
-  python \
-  lsof \
-  software-properties-common \
-  # python3 deps
-  build-essential \
-  zlib1g-dev \
-  libncurses5-dev \
-  libgdbm-dev \
-  libnss3-dev \
-  libssl-dev \
-  libsqlite3-dev \
-  libreadline-dev \
-  libffi-dev wget \
-  libbz2-dev \
- && rm -rf /var/lib/apt/lists/*
+    git \
+    ca-certificates \
+    curl \
+    wget \
+    sudo \
+    gnupg \
+    python \
+    lsof \
+    software-properties-common \
+    # python3 deps
+    build-essential \
+    zlib1g-dev \
+    libncurses5-dev \
+    libgdbm-dev \
+    libnss3-dev \
+    libssl-dev \
+    libsqlite3-dev \
+    libreadline-dev \
+    libffi-dev wget \
+    libbz2-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # Install mongodb server to get deps
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -30,7 +30,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && curl -fsSL https://pgp.mongodb.com/server-4.4.asc | gpg -o /usr/share/keyrings/mongodb-server-4.4.gpg --dearmor \
   && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-4.4.gpg ] https://repo.mongodb.com/apt/ubuntu bionic/mongodb-enterprise/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-enterprise-4.4.list \
   && apt-get update \
-  && apt-get install -y mongodb-enterprise
+  && apt-get install -qqy mongodb-enterprise \
+  && rm -rf /var/lib/apt/lists/*
 
 # Install python 3.8 from source
 RUN wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz \
@@ -38,7 +39,8 @@ RUN wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz \
   && cd Python-3.8.10 \
   && ./configure --enable-optimizations \
   && make -j 8 \
-  && make install
+  && make install \
+  && rm -rf Python-3.8.10
 
 ARG USER_ID
 ARG GROUP_ID
