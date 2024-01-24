@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# wait for the kmip servers to start.
+# wait for the KMS servers to start.
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
