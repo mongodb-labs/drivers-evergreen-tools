@@ -25,7 +25,7 @@ fi
 # TMPDIR is required to avoid "AF_UNIX path too long" errors.
 echo "Starting KMIP Server..."
 TMPDIR="$(dirname "$DRIVERS_TOOLS")" python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 &
-echo "$!" > kmip_pids.pid
+echo "$!" > kms_pids.pid
 echo "Starting KMIP Server...done."
 sleep 1
 
