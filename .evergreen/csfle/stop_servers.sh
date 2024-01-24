@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Clean up CSFLE kmip servers
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
