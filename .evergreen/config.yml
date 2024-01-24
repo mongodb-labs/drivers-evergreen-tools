@@ -374,7 +374,7 @@ functions:
           ${PREPARE_SHELL}
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/docker
-          ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
+          TARGET_IMAGE=${TARGET_IMAGE} ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -813,6 +813,9 @@ tasks:
       tags: ["latest", "docker"]
       commands:
         - func: "run docker test"
+        - func: "run docker test"
+          vars:
+            TARGET_IMAGE: ubuntu18.04
         - func: "cleanup docker"
 
     - name: "test-oidc"

@@ -45,6 +45,13 @@ Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/
 ```bash
 TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh 
 ```
+
+If you want to test server versions older than 4.4, you can use the 18.04 image, e.g.:
+
+```bash
+TOPOLOGY=sharded_cluster MONGODB_VERSION=4.2 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
+```
+
 ## Driver Testing using this Docker container
 
 First, start this container with the appropriate environment variables, running as:
