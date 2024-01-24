@@ -1,6 +1,4 @@
-
-
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 """
 Set up encryption secrets.
 """
