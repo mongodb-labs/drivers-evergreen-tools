@@ -39,9 +39,9 @@ await_server() {
     exit 1
 }
 # * List servers to await here ...
-await_server "HTTP" 8000
-await_server "HTTP" 8001
-await_server "HTTP" 8002
+await_server "HTTP" 9000
+await_server "HTTP" 9001
+await_server "HTTP" 9002
 await_server "Azure" 8080
 await_server "KMIP" 5698
 
