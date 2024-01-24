@@ -8,13 +8,18 @@ pushd $SCRIPT_DIR
 
 # Wait until the pids file has been created.
 echo "Waiting for servers to start..."
-while :
-do
-    sleep 2
-    if [ -f ./kmip_pids.pid ]; then
-        break
-    fi
-done
+await_pidfile() {
+    for i in $(seq 10); do
+        if [ -f ./kmip_pids.pid ]; then
+            return 0
+        fi
+        echo "PID file not detected ... sleeping"
+        sleep 2
+    done
+    echo "Could not detect PID file"
+    exit 1
+}
+await_pidfile
 echo "Waiting for servers to start...done"
 
  # Ensure servers are running.
