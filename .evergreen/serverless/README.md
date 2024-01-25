@@ -17,7 +17,7 @@ bash $DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh
 If targeting the dev version of Serverless, use:
 
 ```bash
-$DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh serverless-next
+$DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh serverless_next
 ```
 
 Next, start the cluster with:
