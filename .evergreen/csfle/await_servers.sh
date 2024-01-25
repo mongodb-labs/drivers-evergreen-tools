@@ -9,7 +9,7 @@ pushd $SCRIPT_DIR
 # Wait until the pids file has been created.
 echo "Waiting for servers to start..."
 await_pidfile() {
-    for i in $(seq 10); do
+    for i in $(seq 300); do
         if [ -f ./kmip_pids.pid ]; then
             return 0
         fi
