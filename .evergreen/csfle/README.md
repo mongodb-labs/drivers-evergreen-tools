@@ -36,11 +36,11 @@ When finished, stop the servers by running:
 $DRIVERS_TOOLS/.evergreen/csfle/stop_servers.sh
 ```
 
-If you are starting your CSFLE servers in a separate Evergreen task, it is recommended that you setup secrets
-and start the servers in the background, and then have a separate step that uses `await_servers.sh`
+If you are starting your CSFLE servers in a separate Evergreen function, it is recommended that you setup secrets
+and start the servers in the background, and then have a separate function that uses `await_servers.sh`
 in the foreground to wait for the servers to be ready.  This will ensure the servers are not torn down
-between tasks (or the task may stall and not finish because there are processes still running).  
-If you are starting the servers in a step within the same task as your tests, you
+between functions (or the function may stall and not finish because there are processes still running).  
+If you are starting the servers in a step within the same function as your tests, you
 can just start the servers directly in a foreground step.
 
 ```yaml
