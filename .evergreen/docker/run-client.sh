@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run a driver test in a docker container that targets the 
+# Run a driver test in a docker container that targets the
 # the server running in docker.
 #
 set -eu

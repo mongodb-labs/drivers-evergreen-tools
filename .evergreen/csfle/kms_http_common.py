@@ -46,11 +46,13 @@ class Stats:
         self.fault_calls = 0
 
     def __repr__(self):
-        return json.dumps({
-            'decrypts': self.decrypt_calls,
-            'encrypts': self.encrypt_calls,
-            'faults': self.fault_calls,
-        })
+        return json.dumps(
+            {
+                "decrypts": self.decrypt_calls,
+                "encrypts": self.encrypt_calls,
+                "faults": self.fault_calls,
+            }
+        )
 
 
 class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
@@ -71,12 +73,11 @@ class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
         else:
             self.send_response(http.HTTPStatus.NOT_FOUND)
             self.end_headers()
-            self.wfile.write("Unknown URL".encode())
+            self.wfile.write(b"Unknown URL")
 
     @abstractmethod
     def do_POST(self):
         """Serve a POST request."""
-        pass
 
     def _send_reply(self, data, status=http.HTTPStatus.OK):
         print("Sending Response: " + data.decode())
@@ -112,7 +113,7 @@ class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
     def _do_stats(self):
         self._send_header()
 
-        self.wfile.write(str(stats).encode('utf-8'))
+        self.wfile.write(str(stats).encode("utf-8"))
 
     def _do_disable_faults(self):
         global disable_faults
@@ -125,9 +126,16 @@ class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
         self._send_header()
 
 
-def run(port, cert_file, ca_file, handler_class, server_class=http.server.HTTPServer, cert_required=False):
+def run(
+    port,
+    cert_file,
+    ca_file,
+    handler_class,
+    server_class=http.server.HTTPServer,
+    cert_required=False,
+):
     """Run web server."""
-    server_address = ('', port)
+    server_address = ("", port)
 
     httpd = server_class(server_address, handler_class)
 
@@ -135,10 +143,9 @@ def run(port, cert_file, ca_file, handler_class, server_class=http.server.HTTPSe
     if cert_required:
         cert_reqs = ssl.CERT_REQUIRED
 
-    httpd.socket = ssl.wrap_socket(httpd.socket,
-                                   certfile=cert_file,
-                                   ca_certs=ca_file, server_side=True,
-                                   cert_reqs=cert_reqs)
+    httpd.socket = ssl.wrap_socket(
+        httpd.socket, certfile=cert_file, ca_certs=ca_file, server_side=True, cert_reqs=cert_reqs
+    )
 
     print("Mock KMS Web Server Listening on port " + str(server_address[1]))
 

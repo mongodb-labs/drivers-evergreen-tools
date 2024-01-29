@@ -2,21 +2,20 @@
 """
 Script for managing OIDC.
 """
-import os
 import json
+import os
 import sys
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, HERE)
-from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
+from utils import DEFAULT_CLIENT, MOCK_ENDPOINT, get_secrets
 
 
 def azure():
-    client_id = os.environ['AZUREOIDC_USERNAME']
-    tenant_id = os.environ['AZUREOIDC_TENANTID']
-    app_id = os.environ['AZUREOIDC_CLIENTID']
-    auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
+    client_id = os.environ["AZUREOIDC_USERNAME"]
+    tenant_id = os.environ["AZUREOIDC_TENANTID"]
+    app_id = os.environ["AZUREOIDC_CLIENTID"]
+    auth_name_prefix = os.environ["AZUREOIDC_AUTHPREFIX"]
 
     print("Bootstrapping OIDC config")
 
@@ -26,9 +25,9 @@ def azure():
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id}",
-        "authorizationClaim": "groups"
+        "authorizationClaim": "groups",
     }
-    providers = json.dumps([provider_info], separators=(',',':'))
+    providers = json.dumps([provider_info], separators=(",", ":"))
 
     data = {
         "id": "oidc-repl0",
@@ -44,15 +43,18 @@ def azure():
             "setParameter": {
                 "enableTestCommands": 1,
                 "authenticationMechanisms": "SCRAM-SHA-1,SCRAM-SHA-256,MONGODB-OIDC",
-                "oidcIdentityProviders": providers
-            }
-        }
+                "oidcIdentityProviders": providers,
+            },
+        },
     }
 
-    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'servers', 'auth-oidc.json'))
-    with open(orch_file, 'w') as fid:
+    orch_file = os.path.abspath(
+        os.path.join(HERE, "..", "orchestration", "configs", "servers", "auth-oidc.json")
+    )
+    with open(orch_file, "w") as fid:
         json.dump(data, fid, indent=4)
     print(f"Wrote OIDC config to {orch_file}")
+
 
 def main():
     print("Bootstrapping OIDC config")
@@ -63,14 +65,13 @@ def main():
     # Write the oidc orchestration file.
     provider1_info = {
         "authNamePrefix": "test1",
-        "issuer": secrets['oidc_issuer_1_uri'],
+        "issuer": secrets["oidc_issuer_1_uri"],
         "clientId": DEFAULT_CLIENT,
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "foo",
         "requestScopes": ["fizz", "buzz"],
-
     }
-    providers = json.dumps([provider1_info], separators=(',',':'))
+    providers = json.dumps([provider1_info], separators=(",", ":"))
 
     data = {
         "id": "oidc-repl0",
@@ -78,25 +79,27 @@ def main():
         "login": "bob",
         "name": "mongod",
         "password": "pwd123",
-        "members": [{
-            "procParams": {
-                "ipv6": "NO_IPV6" not in os.environ,
-                "bind_ip": "0.0.0.0,::1",
-                "logappend": True,
-                "port": 27017,
-                "setParameter": {
-                    "enableTestCommands": 1,
-                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                    "oidcIdentityProviders": providers
+        "members": [
+            {
+                "procParams": {
+                    "ipv6": "NO_IPV6" not in os.environ,
+                    "bind_ip": "0.0.0.0,::1",
+                    "logappend": True,
+                    "port": 27017,
+                    "setParameter": {
+                        "enableTestCommands": 1,
+                        "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                        "oidcIdentityProviders": providers,
+                    },
                 }
             }
-        }]
+        ],
     }
 
-    provider1_info['matchPattern'] = "test_user1"
+    provider1_info["matchPattern"] = "test_user1"
     provider2_info = {
         "authNamePrefix": "test2",
-        "issuer": secrets['oidc_issuer_2_uri'],
+        "issuer": secrets["oidc_issuer_2_uri"],
         "clientId": DEFAULT_CLIENT,
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "bar",
@@ -104,32 +107,34 @@ def main():
         "requestScopes": ["foo", "bar"],
     }
     providers = [provider1_info, provider2_info]
-    providers = json.dumps(providers, separators=(',',':'))
-    data['members'].append({
-        "procParams": {
-            "ipv6": "NO_IPV6" not in os.environ,
-            "bind_ip": "0.0.0.0,::1",
-            "logappend": True,
-            "port": 27018,
-            "setParameter": {
-                "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
-                "oidcIdentityProviders": providers
-            }
-        },
-        "rsParams": {
-            "priority": 0
+    providers = json.dumps(providers, separators=(",", ":"))
+    data["members"].append(
+        {
+            "procParams": {
+                "ipv6": "NO_IPV6" not in os.environ,
+                "bind_ip": "0.0.0.0,::1",
+                "logappend": True,
+                "port": 27018,
+                "setParameter": {
+                    "enableTestCommands": 1,
+                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                    "oidcIdentityProviders": providers,
+                },
+            },
+            "rsParams": {"priority": 0},
         }
-    })
+    )
 
-    orch_file = os.path.abspath(os.path.join(HERE, '..', 'orchestration', 'configs', 'replica_sets', 'auth-oidc.json'))
-    with open(orch_file, 'w') as fid:
+    orch_file = os.path.abspath(
+        os.path.join(HERE, "..", "orchestration", "configs", "replica_sets", "auth-oidc.json")
+    )
+    with open(orch_file, "w") as fid:
         json.dump(data, fid, indent=4)
     print(f"Wrote OIDC config to {orch_file}")
 
 
-if __name__ == '__main__':
-    if '--azure' in sys.argv:
+if __name__ == "__main__":
+    if "--azure" in sys.argv:
         azure()
     else:
         main()

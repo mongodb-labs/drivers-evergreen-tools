@@ -1,26 +1,28 @@
-from pymongo import MongoClient
-import os
 import json
-from urllib.request import urlopen, Request
+import os
+from urllib.request import Request, urlopen
+
+from pymongo import MongoClient
 from pymongo.auth import _AUTH_MAP, _authenticate_oidc
 
 # Force MONGODB-OIDC to be enabled.
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
-app_id = os.environ['AZUREOIDC_CLIENTID']
-object_id = os.environ['AZUREOIDC_USERNAME']
+app_id = os.environ["AZUREOIDC_CLIENTID"]
+object_id = os.environ["AZUREOIDC_USERNAME"]
+
 
 def callback(client_info, server_info):
     url = "http://169.254.169.254/metadata/identity/oauth2/token"
     url += "?api-version=2018-02-01"
     url += f"&resource=api://{app_id}"
     url += f"&object_id={object_id}"
-    headers = { "Metadata": "true", "Accept": "application/json" }
+    headers = {"Metadata": "true", "Accept": "application/json"}
     request = Request(url, headers=headers)
     try:
-        with urlopen(request, timeout=server_info['timeout_seconds']) as response:
+        with urlopen(request, timeout=server_info["timeout_seconds"]) as response:
             status = response.status
-            body = response.read().decode('utf8')
+            body = response.read().decode("utf8")
     except Exception as e:
         msg = "Failed to acquire IMDS access token: %s" % e
         raise ValueError(msg)
@@ -39,12 +41,15 @@ def callback(client_info, server_info):
             msg = "Azure IMDS response must contain %s, but was %s."
             msg = msg % (key, body)
             raise ValueError(msg)
-    return dict(access_token=data['access_token'])
+    return dict(access_token=data["access_token"])
+
 
 props = dict(request_token_callback=callback)
-print('Testing MONGODB-OIDC on azure...')
-c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
+print("Testing MONGODB-OIDC on azure...")
+c = MongoClient(
+    "mongodb://localhost:27017/?authMechanism=MONGODB-OIDC", authMechanismProperties=props
+)
 c.test.test.insert_one({})
 c.close()
-print('Testing MONGODB-OIDC on azure... done.')
-print('Self test complete!')
+print("Testing MONGODB-OIDC on azure... done.")
+print("Self test complete!")

@@ -2,14 +2,14 @@
 
 This folder contains scripts for use with In-Use Encryption.
 
-See the [Azure KMS](./azurekms/README.md) and [GCP KMS](./gcpkms/README.md)
-for more information on those specific scenarios.
+See the [Azure KMS](./azurekms/README.md) and [GCP KMS](./gcpkms/README.md) for more information on those specific
+scenarios.
 
 ## Prerequisities
 
-The system you are running on must have Python 3 and have access to the
-`drivers/csfle` [AWS Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
-For legacy usage, see below.
+The system you are running on must have Python 3 and have access to the `drivers/csfle`
+[AWS Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets). For
+legacy usage, see below.
 
 ## Usage
 
@@ -36,12 +36,11 @@ When finished, stop the servers by running:
 $DRIVERS_TOOLS/.evergreen/csfle/stop_servers.sh
 ```
 
-If you are starting your CSFLE servers in a separate Evergreen function, it is recommended that you setup secrets
-and start the servers in the background, and then have a separate function that uses `await_servers.sh`
-in the foreground to wait for the servers to be ready.  This will ensure the servers are not torn down
-between functions (or the function may stall and not finish because there are processes still running).  
-If you are starting the servers in a step within the same function as your tests, you
-can just start the servers directly in a foreground step.
+If you are starting your CSFLE servers in a separate Evergreen function, it is recommended that you setup secrets and
+start the servers in the background, and then have a separate function that uses `await_servers.sh` in the foreground to
+wait for the servers to be ready. This will ensure the servers are not torn down between functions (or the function may
+stall and not finish because there are processes still running). If you are starting the servers in a step within the
+same function as your tests, you can just start the servers directly in a foreground step.
 
 ```yaml
 start-csfle-servers:

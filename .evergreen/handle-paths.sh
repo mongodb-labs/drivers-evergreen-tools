@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This script will handle the correct cross-platform absolute
-# paths for a script directory and DRIVERS_TOOLS.  
+# paths for a script directory and DRIVERS_TOOLS.
 # It is meant to be invoked as follows:
 #
 # SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -9,7 +9,7 @@
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
-if [ -z "$SCRIPT_DIR" ]; then 
+if [ -z "$SCRIPT_DIR" ]; then
   echo "Please set $SCRIPT_DIR first"
   exit 1
 fi
@@ -17,7 +17,7 @@ fi
 if command -v realpath &> /dev/null
 then
     SCRIPT_DIR=$(realpath $SCRIPT_DIR)
-else 
+else
   SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" &> /dev/null && pwd )"
 fi
 if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
@@ -30,8 +30,8 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
   DRIVERS_TOOLS=$(dirname $SCRIPT_DIR)
   while true
   do
-    if [ -d "$DRIVERS_TOOLS/.evergreen" ]; then 
-      break 
+    if [ -d "$DRIVERS_TOOLS/.evergreen" ]; then
+      break
     fi
     DRIVERS_TOOLS=$(dirname $DRIVERS_TOOLS)
   done

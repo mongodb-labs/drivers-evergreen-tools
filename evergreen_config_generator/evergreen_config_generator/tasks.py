@@ -32,19 +32,19 @@ class Task(ConfigObject):
         self.tags = set()
         self.options = OD()
         self.depends_on = None
-        self.commands = kwargs.pop('commands', None) or []
+        self.commands = kwargs.pop("commands", None) or []
         assert isinstance(self.commands, (abc.Sequence, NoneType))
-        tags = kwargs.pop('tags', None)
+        tags = kwargs.pop("tags", None)
         if tags:
             self.add_tags(*tags)
-        depends_on = kwargs.pop('depends_on', None)
+        depends_on = kwargs.pop("depends_on", None)
         if depends_on:
             self.add_dependency(depends_on)
 
-        if 'exec_timeout_secs' in kwargs:
-            self.options['exec_timeout_secs'] = kwargs.pop('exec_timeout_secs')
+        if "exec_timeout_secs" in kwargs:
+            self.options["exec_timeout_secs"] = kwargs.pop("exec_timeout_secs")
 
-    name_prefix = 'test'
+    name_prefix = "test"
 
     def add_tags(self, *args):
         self.tags.update(args)
@@ -54,7 +54,7 @@ class Task(ConfigObject):
 
     def add_dependency(self, dependency):
         if not isinstance(dependency, abc.Mapping):
-            dependency = OD([('name', dependency)])
+            dependency = OD([("name", dependency)])
 
         if self.depends_on is None:
             self.depends_on = dependency
@@ -67,7 +67,7 @@ class Task(ConfigObject):
         value = getattr(self, axis_name)
         # E.g., if self.auth is False, return 'noauth'.
         if value is False:
-            return 'no' + axis_name
+            return "no" + axis_name
 
         if value is True:
             return axis_name
@@ -77,20 +77,20 @@ class Task(ConfigObject):
     def on_off(self, *args, **kwargs):
         assert not (args and kwargs)
         if args:
-            axis_name, = args
-            return 'on' if getattr(self, axis_name) else 'off'
+            (axis_name,) = args
+            return "on" if getattr(self, axis_name) else "off"
 
-        (axis_name, value), = kwargs.items()
-        return 'on' if getattr(self, axis_name) == value else 'off'
+        ((axis_name, value),) = kwargs.items()
+        return "on" if getattr(self, axis_name) == value else "off"
 
     def to_dict(self):
         task = super(Task, self).to_dict()
         if self.tags:
-            task['tags'] = self.tags
+            task["tags"] = self.tags
         task.update(self.options)
         if self.depends_on:
-            task['depends_on'] = self.depends_on
-        task['commands'] = self.commands
+            task["depends_on"] = self.depends_on
+        task["commands"] = self.commands
         return task
 
 
