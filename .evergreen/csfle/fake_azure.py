@@ -83,6 +83,9 @@ def handle_asserts(fn: _HandlerFuncT) -> _HandlerFuncT:
 def test_params() -> 'dict[str, str]':
     return parse_qs(request.headers.get('X-MongoDB-HTTP-TestParams', ''))
 
+@imds.route('/')
+def main():
+    pass
 
 @imds.get('/metadata/identity/oauth2/token')
 @handle_asserts
