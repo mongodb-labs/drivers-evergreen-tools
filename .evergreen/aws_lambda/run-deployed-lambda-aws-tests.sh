@@ -88,7 +88,7 @@ trap cleanup EXIT SIGHUP
 
 cd "${TEST_LAMBDA_DIRECTORY}"
 
-sam build ${SAM_BUILD_ARGS}
+sam build ${SAM_BUILD_ARGS:-}
 
 deploy_lambda_function
 
