@@ -10,13 +10,12 @@ For all testing variants except for ECS, the general test flow is:
 - Set up the required secrets for the the test variant:
 
 ```bash
-cd $DRIVERS_TOOLS/.evergreen/auth_aws
-# Fetch the secrets from the vault and write to a local `secrets-export.sh` file.
-bash setup_secrets.sh drivers/aws_auth
+# Fetch the secrets from the vault and write to a `secrets-export.sh` file in this directory.
+bash $DRIVERS_TOOLS/.evergreen/auth_aws/setup-secrets.sh
 ```
 
-See https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets for more background
-on how the secrets are managed.
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+from the `drivers/auth_aws` vault using the `setup-secrets.sh` script in this directory.
 
 - Run the setup for the test variant and then run your specific tests.
 

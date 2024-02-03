@@ -1,0 +1,62 @@
+# Secrets Handling
+
+This folder has a script that can be used to access the drivers [AWS Vaults](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+
+Many of the sibling folders like `csfle` have their own `setup-secrets.sh` script that should be used
+to ensure the proper secrets are written to that folder for local usage.  
+
+NOTE: Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo,
+since some of the scripts (including `csfle`) will copy the `secrets-export.sh` to your repo.
+
+The `setup-secrets.sh` script in this folder can be used for other vaults such as `drivers/enterprise_auth` or
+`drivers/atlas_connect`.
+
+## Evergreen Secrets Handling
+
+If using a Linux host on Evergreen, the shorthand version of the script can be used to get the credentials, e.g.
+
+```yaml
+- command: subprocess.exec
+    params:
+    working_dir: src
+    binary: bash
+    args: |
+        ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+```
+
+or
+
+```yaml
+- command: subprocess.exec
+    params:
+    working_dir: src
+    binary: bash
+    args: |
+        ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
+```
+
+If using other hosts, the following form should be used:
+
+```yaml
+- command: ec2.assume_role
+    params:
+    role_arn: ${aws_test_secrets_role}
+- command: subprocess.exec
+    params:
+    working_dir: src
+    binary: bash
+    include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+    args: |
+        ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+```
+
+## Local Credential Access
+
+Define `AWS_PROFILE` to according to the Wiki instructions for "Setting up Local AWS Credentials".
+If your credentials have expired, run the following to refresh:
+
+```bash
+aws sso login --profile $AWS_PROFILE
+```
+
+Now you can call any of the `setup-secrets.sh` scripts locally.

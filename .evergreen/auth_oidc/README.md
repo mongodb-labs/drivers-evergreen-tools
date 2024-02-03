@@ -3,8 +3,8 @@
 ## Testing with the Decidicated Atlas Clusters
 
 We have two dedicated Atlas clusters that are configured with OIDC, one with a single Identity Provider (Idp),
-and one with multiple IdPs configured.  The credentials and variables are stored in the
-`drivers/oidc` AWS [Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+and one with multiple IdPs configured. 
+
 
 These include:
 
@@ -22,13 +22,14 @@ OIDC_ISSUER_2_URI       # The issuer URI for mock IdP 2
 
 ### Prerequisites
 
-See the 
 The `oidc_get_tokens.sh` script will automatically fetch the credentials from the `drivers/oidc` vault.
+See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the vault.
+Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo.
 
 ### Usage
 
-Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporary, including
-`test_user1` and `test_user1_expires`.  The temp file location is exported as `OIDC_TOKEN_DIR`
+Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporary director, including
+`test_user1` and `test_user1_expires`.  The temp file location is exported as `OIDC_TOKEN_DIR`.
 
 ```bash
 source ./oidc_get_tokens.sh
@@ -44,8 +45,6 @@ to each local development and testing.
 local docker container running `mongo-orchestration` with OIDC enabled.
 To run locally, docker and python must be installed locally (both can be
 installed using brew).
-To run the file locally, set up your local environment according to the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets)
-and make sure you have `AWS_PROFILE` set.
 
 Running `./start_local_server.sh` will use docker to launch the server
 with the correct configuration, and expose the server on local ports 27017

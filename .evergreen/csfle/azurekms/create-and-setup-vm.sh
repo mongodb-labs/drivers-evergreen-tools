@@ -6,6 +6,11 @@ set -o nounset
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
+if [ -f secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source ./secrets-export.sh
+fi
+
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
     echo "${AZUREKMS_PUBLICKEY}" > /tmp/testazurekms_publickey
     printf -- "${AZUREKMS_PRIVATEKEY}" > /tmp/testazurekms_privatekey
@@ -59,6 +64,11 @@ AZUREKMS_VMNAME: $AZUREKMS_VMNAME
 AZUREKMS_RESOURCEGROUP: $AZUREKMS_RESOURCEGROUP
 AZUREKMS_SCOPE: $AZUREKMS_SCOPE
 EOT
+if [ -f secrets-export.sh ]; then
+    echo "export AZUREKMS_VMNAME=\"$AZUREKMS_VMNAME\"" >> secrets-export.sh
+    echo "export AZUREKMS_RESOURCEGROUP=\"$AZUREKMS_RESOURCEGROUP\"" >> secrets-export.sh
+    echo "export AZUREKMS_SCOPE=\"$AZUREKMS_SCOPE\"" >> secrets-export.sh
+fi
 # Assign role.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies.

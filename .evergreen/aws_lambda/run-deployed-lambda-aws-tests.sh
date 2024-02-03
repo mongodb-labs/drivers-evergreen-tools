@@ -27,15 +27,23 @@ LAMBDA_STACK_NAME
 AWS_REGION
 )
 
+# Set up the common variables
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+SECRETS_FILE=$SCRIPT_DIR/../atlas/secrets-export.sh
+
+if [ -f $SECRETS_FILE ]; then
+  echo "Sourcing secrets"
+  source $SECRETS_FILE
+fi
+
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
 for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Set up the common variables
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/../handle-paths.sh
+# Set up the atlas variables.
 . $SCRIPT_DIR/../atlas/setup-variables.sh
 
 # Restarts the cluster's primary node.

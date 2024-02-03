@@ -18,6 +18,10 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
+# Set up the common variables.
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+
 VARLIST=(
 DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
@@ -29,15 +33,27 @@ task_id
 execution
 )
 
+pushd $SCRIPT_DIR
+
+# Load the secrets file if it exists.
+if [ -f ./secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source ./secrets-export.sh
+fi
+
+# Attempt to handle the secrets automatically if env vars are not set.
+if [ -z "$DRIVERS_ATLAS_PUBLIC_API_KEY" ];
+  . ../secrets_handling/setup-secrets.sh drivers/atlas
+  source ./secrets-export.sh
+fi
+
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
 for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Set up the common variables.
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/../handle-paths.sh
+# Set up the cluster variables.
 . $SCRIPT_DIR/setup-variables.sh
 
 # The cluster server version.
@@ -139,3 +155,5 @@ check_cluster ()
 create_cluster
 
 check_cluster
+
+popd

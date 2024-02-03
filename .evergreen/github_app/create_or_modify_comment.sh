@@ -7,12 +7,12 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Bootstrap the secrets.
-bash $SCRIPT_DIR/../auth_aws/setup_secrets.sh drivers/comment-bot
+bash ../secrets_handling/setup-secrets.sh drivers/comment-bot
 source secrets-export.sh
 
 # Install node and activate it.
-bash $SCRIPT_DIR/../install-node.sh
-source $SCRIPT_DIR/../init-node-and-npm-env.sh
+bash ../install-node.sh
+source ../init-node-and-npm-env.sh
 
 # Install and run the app.
 set -x

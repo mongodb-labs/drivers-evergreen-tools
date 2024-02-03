@@ -6,6 +6,11 @@ set -o errexit # Exit on first command error.
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
+if [ -f secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source ./secrets-export.sh
+fi
+
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_KEYFILE to the JSON file for the service account"
@@ -38,6 +43,12 @@ echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > testgcpkms-expansions.yml
 echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> testgcpkms-expansions.yml
 echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> testgcpkms-expansions.yml
 echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> testgcpkms-expansions.yml
+if [ -f secrets-export.sh ]; then
+    echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> secrets-export.sh
+    echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> secrets-export.sh
+    echo "export GCPKMS_PROJECT=$GCPKMS_PROJECT" >> secrets-export.sh
+    echo "export GCPKMS_ZONE=$GCPKMS_ZONE" >> secrets-export.sh
+fi
 
 # Wait for a maximum of five minutes for VM to finish booting.
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.

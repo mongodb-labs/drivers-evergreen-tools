@@ -89,6 +89,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # See https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets
-    # for details on usage.
     main()

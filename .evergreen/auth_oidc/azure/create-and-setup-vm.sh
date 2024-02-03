@@ -12,20 +12,20 @@ fi
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
+pushd $SCRIPT_DIR
 
 # Set defaults.
-BASE_PATH="$DRIVERS_TOOLS/.evergreen/auth_oidc"
-export AZUREKMS_PUBLICKEYPATH="$BASE_PATH/azure/keyfile.pub"
-export AZUREKMS_PRIVATEKEYPATH="$BASE_PATH/azure/keyfile"
+export AZUREKMS_PUBLICKEYPATH="$SCRIPT_DIR/keyfile.pub"
+export AZUREKMS_PRIVATEKEYPATH="$SCRIPT_DIR/keyfile"
 export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
-export AZUREOIDC_ENVPATH="$BASE_PATH/azure/env.sh"
+export AZUREOIDC_ENVPATH="SCRIPT_DIR/env.sh"
 export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 
-# Handle secrets from vault.
-cd $BASE_PATH
-. ./activate-authoidcvenv.sh
-bash ../auth_aws/setup_secrets.sh drivers/azureoidc
-source secrets-export.sh
+# Handle secrets from AWS vault.
+if [ ! -f $AZUREOIDC_ENVPATH ]; then
+    . ./setup-secrets.sh
+fi
+source $AZUREOIDC_ENVPATH
 
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
 export AZUREKMS_SECRET=$AZUREOIDC_SECRET
@@ -47,19 +47,13 @@ fi
 # Login.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
-# Get the rest of the secrets from the Azure vault.
-python ./azure/handle_secrets.py
-source $AZUREOIDC_ENVPATH
-
 # Create VM.
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREOIDC_VMNAME="$AZUREKMS_VMNAME"
 export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
 
-# Update expansions and env viles.
-echo "AZUREOIDC_VMNAME: $AZUREOIDC_VMNAME" > testazureoidc-expansions.yml
-echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> $AZUREOIDC_ENVPATH
-echo "export DRIVERS_TOOLS=${DRIVERS_TOOLS}" >> $AZUREOIDC_ENVPATH
+# Update secrets file for teardown.
+echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> ./secrets-export.sh
 
 # Install dependencies.
 AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
@@ -95,3 +89,5 @@ AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/start-mongodb
 # Run the self-test
 AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/run-test.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+
+popd

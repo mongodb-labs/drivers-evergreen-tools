@@ -7,14 +7,14 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 if [ ! -f ./secrets-export.sh ]; then
-    echo "Please run the setup_secrets.sh script"
+    echo "Please run the setup-secrets.sh script"
     exit 1
 fi
 
 source ./secrets-export.sh
 
 if [ -z "${CSFLE_TLS_CA_FILE-}" ]; then
-    echo "Please run the setup_secrets.sh script"
+    echo "Please run the setup-secrets.sh script"
     exit 1
 fi
 

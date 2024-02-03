@@ -14,16 +14,8 @@ if [ "Windows_NT" = "$OS" ]; then
 fi
 mkdir -p $OIDC_TOKEN_DIR
 
-pushd $SCRIPT_DIR
-. ./activate-authoidcvenv.sh
-popd
-
 if [ ! -f "./secrets-export.sh" ]; then
-    set -x
-    echo "Getting oidc secrets"
-    python $SCRIPT_DIR/../auth_aws/setup_secrets.py drivers/oidc
-    echo "Got secrets"
+    . $SCRIPT_DIR/setup-secrets.sh
 fi
 
-source ./secrets-export.sh
-python $SCRIPT_DIR/oidc_get_tokens.py
+python ./oidc_get_tokens.py

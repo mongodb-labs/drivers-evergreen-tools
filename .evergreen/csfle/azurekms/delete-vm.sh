@@ -3,6 +3,14 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
+
+if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source $SCRIPT_DIR/secrets-export.sh
+fi
+
 # Delete an Azure VM. `az` is expected to be logged in.
 if [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
    [ -z "${AZUREKMS_VMNAME:-}" ]; then
