@@ -6,9 +6,15 @@ set -o errexit # Exit on first command error.
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
-if [ -f secrets-export.sh ]; then
+pushd $SCRIPT_DIR
+
+# Handle secrets from vault.
+if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
   source ./secrets-export.sh
+fi
+if [ -z "${GCPKMS_KEYFILE:-}" ]; then
+    . ./setup-secrets.sh
 fi
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then

@@ -34,12 +34,7 @@ Your Evergreen config should look something like:
 - name: testazurekms_task_group
 setup_group:
     - func: fetch source
-    - func: prepare resources
-    - command: subprocess.exec
-        params:
-        binary: bash
-        args: |
-            ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/setup-secrets.sh      
+    - func: prepare resources    
     - command: subprocess.exec
       params:
         binary: bash

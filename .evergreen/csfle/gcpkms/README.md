@@ -19,23 +19,18 @@ from the `drivers/gcpkms` vault.
 - name: testgcpkms_task_group
 setup_group:
     - func: fetch source
-    - func: prepare resources
-    - command: subprocess.exec
-        params:
-        binary: bash
-        args: |
-            ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup-secrets.sh      
+    - func: prepare resources    
     - command: subprocess.exec
       params:
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/create-and-setup-vm.sh
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/create-and-setup-instance.sh
 teardown_group:
     - command: subprocess.exec
       params:
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/delete-vm.sh
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/delete-instance.sh
     - func: "upload test results"
 setup_group_can_fail_task: true
 teardown_group_can_fail_task: true

@@ -18,4 +18,5 @@ if [ ! -f "./secrets-export.sh" ]; then
     . $SCRIPT_DIR/setup-secrets.sh
 fi
 
+source ./secrets-export.sh
 python ./oidc_get_tokens.py

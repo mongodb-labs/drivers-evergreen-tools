@@ -53,7 +53,7 @@ export AZUREOIDC_VMNAME="$AZUREKMS_VMNAME"
 export AZUREKMS_VMNAME="$AZUREOIDC_VMNAME"
 
 # Update secrets file for teardown.
-echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> ./secrets-export.sh
+echo "export AZUREOIDC_VMNAME=${AZUREOIDC_VMNAME}" >> $AZUREOIDC_ENVPATH
 
 # Install dependencies.
 AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \

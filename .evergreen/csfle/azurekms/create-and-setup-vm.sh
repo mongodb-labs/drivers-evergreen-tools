@@ -6,9 +6,15 @@ set -o nounset
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
-if [ -f secrets-export.sh ]; then
+pushd $SCRIPT_DIR
+
+# Handle secrets.
+if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
   source ./secrets-export.sh
+fi
+if [ -z "${AZUREKMS_PUBLICKEY:-}" ]; then
+    . ./setup-secrets.sh
 fi
 
 if [ -n "${AZUREKMS_PUBLICKEY:-}" ]; then
@@ -83,3 +89,5 @@ AZUREKMS_DST="./" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./start-mongodb.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+
+popd
