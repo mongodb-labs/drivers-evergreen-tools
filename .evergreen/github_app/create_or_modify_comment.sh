@@ -7,8 +7,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Bootstrap the secrets.
-bash ../secrets_handling/setup-secrets.sh drivers/comment-bot
-source secrets-export.sh
+. ../secrets_handling/setup-secrets.sh drivers/comment-bot
 
 # Install node and activate it.
 bash ../install-node.sh

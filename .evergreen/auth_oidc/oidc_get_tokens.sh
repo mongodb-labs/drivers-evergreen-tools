@@ -14,9 +14,13 @@ if [ "Windows_NT" = "$OS" ]; then
 fi
 mkdir -p $OIDC_TOKEN_DIR
 
+pushd $SCRIPT_DIR
 if [ ! -f "./secrets-export.sh" ]; then
-    . $SCRIPT_DIR/setup-secrets.sh
+    . /setup-secrets.sh
+else
+    source ./secrets-export.sh
 fi
 
-source ./secrets-export.sh
+. ./activate-authoidcvenv.sh
 python ./oidc_get_tokens.py
+popd
