@@ -5,6 +5,6 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
-. $SCRIPT_DIR/../../secrets_handling/setup_secrets.sh drivers/azurekms
+. $SCRIPT_DIR/../../secrets_handling/setup-secrets.sh drivers/azurekms
 popd
 cp $SCRIPT_DIR/secrets-export.sh $(pwd)/secrets-export.sh
