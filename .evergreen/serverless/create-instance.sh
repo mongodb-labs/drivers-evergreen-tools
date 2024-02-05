@@ -137,7 +137,7 @@ MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
-        if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
+        if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
           # Download binaries and crypt_shared
           MONGODB_VERSION=rapid bash ./download-crypt.sh
         fi
