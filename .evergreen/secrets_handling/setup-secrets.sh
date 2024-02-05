@@ -10,6 +10,7 @@
 # All of the variables will be written to the same file.
 set -eu
 
+ORIG_SCRIPT_DIR=${SCRIPT_DIR:-}
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
@@ -21,3 +22,8 @@ echo "Getting secrets:" "$@"
 python $SCRIPT_DIR/setup_secrets.py "$@"
 source $(pwd)/secrets-export.sh
 echo "Got secrets"
+
+# Restore the script dir if we've overridden it.
+if [ -n ${ORIG_SCRIPT_DIR} ]; then
+    SCRIPT_DIR=$ORIG_SCRIPT_DIR
+fi
