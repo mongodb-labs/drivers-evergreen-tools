@@ -18,7 +18,7 @@ if [ -z "${CSFLE_TLS_CA_FILE-}" ]; then
     exit 1
 fi
 
-. ./stop_servers.sh
+. ./stop-servers.sh
 . ./activate-kmstlsvenv.sh
 
 # The -u options forces the stdout and stderr streams to be unbuffered.
@@ -53,4 +53,4 @@ echo "$!" >> kmip_pids.pid
 echo "Starting Fake Azure IMDS...done."
 sleep 1
 
-bash ./await_servers.sh
+bash ./await-servers.sh
