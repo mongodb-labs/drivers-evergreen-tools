@@ -22,6 +22,7 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_URI            SRV connection string for newly created instance
 #   SERVERLESS_INSTANCE_NAME  Name of newly created instance (required for "get" and "delete" scripts)
 
+CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
@@ -56,14 +57,14 @@ fi
 # Historically, this script accepted LOADBALANCED=ON to opt in to testing load
 # balanced serverless instances. Since all serverless instances now use a load
 # balancer, prohibit opting out (i.e. defining LOADBALANCED != ON).
-if [ -n "$LOADBALANCED" -a "$LOADBALANCED" != "ON" ]; then
+if [ -n "${LOADBALANCED:-}" -a "${LOADBALANCED:-}" != "ON" ]; then
     echo "Cannot opt out of testing load balanced serverless instances"
     exit 1
 fi
 
 # Generate a random instance name if one was not provided.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
-if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
+if [ -z "${SERVERLESS_INSTANCE_NAME:-}" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
@@ -120,7 +121,7 @@ while [ true ]; do
 
         SERVERLESS_URI=$SERVERLESS_URI \
         SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
-        cat << EOF > serverless-expansion.yml
+        cat << EOF > $CURRENT_DIR/serverless-expansion.yml
 SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
