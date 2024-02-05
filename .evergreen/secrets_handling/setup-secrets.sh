@@ -18,6 +18,6 @@ pushd $SCRIPT_DIR/../auth_aws
 popd
 set -x
 echo "Getting secrets:" "$@"
-python $SCRIPT_DIR/../auth_aws/setup_secrets.py "$@"
+python $SCRIPT_DIR/setup_secrets.py "$@"
 source ./secrets-export.sh
 echo "Got secrets"
