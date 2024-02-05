@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR
 
-# Handle secrets.
+# Handle secrets from vault.
 if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
   source ./secrets-export.sh
@@ -40,7 +40,7 @@ AZUREKMS_SCOPE
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
 for VARNAME in ${VARLIST[*]}; do
-[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+[[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
 # Set defaults.
