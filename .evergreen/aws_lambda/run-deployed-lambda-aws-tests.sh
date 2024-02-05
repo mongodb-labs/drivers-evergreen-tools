@@ -49,6 +49,7 @@ deploy_lambda_function ()
 {
   echo "Deploying Lambda function..."
   sam deploy \
+    --no-confirm-changeset \
     --stack-name "${FUNCTION_NAME}" \
     --capabilities CAPABILITY_IAM \
     --resolve-s3 \
