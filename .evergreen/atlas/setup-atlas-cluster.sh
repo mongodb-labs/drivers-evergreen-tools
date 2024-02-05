@@ -19,6 +19,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
 # Set up the common variables.
+CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
@@ -146,7 +147,7 @@ check_cluster ()
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
     MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
     # Put the MONGODB_URI in an expansions yml
-    echo 'MONGODB_URI: "'$MONGODB_URI'"' > atlas-expansion.yml
+    echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
   fi
 }
 
