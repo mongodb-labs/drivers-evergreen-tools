@@ -21,7 +21,7 @@ fi
 if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then 
     export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
     # convert content from base64 to JSON and write to file
-    echo ${GCPKMS_KEYFILE_CONTENT} | | base64 --decode > $GCPKMS_KEYFILE
+    echo ${GCPKMS_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
 fi 
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
