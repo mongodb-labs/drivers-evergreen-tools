@@ -20,7 +20,8 @@ fi
 # Write the keyfile content to a local JSON path.
 if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then 
     export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
-    echo "${GCPKMS_KEYFILE_CONTENT}" > $GCPKMS_KEYFILE
+    # convert content from base64 to JSON and write to file
+    echo ${GCPKMS_KEYFILE_CONTENT} | | base64 --decode > $GCPKMS_KEYFILE
 fi 
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
@@ -29,6 +30,9 @@ if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo " GCPKMS_SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
     exit 1
 fi
+
+# Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
+chmod 600 $GCPKMS_KEYFILE
 
 # Set defaults.
 export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"devprod-drivers"}
