@@ -146,8 +146,9 @@ check_cluster ()
     # else set the mongodb uri
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
     MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
-    # Put the MONGODB_URI in an expansions yml
+    # Put the MONGODB_URI in an expansions yml and secrets file.
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
+    echo "MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
   fi
 }
 
