@@ -19,5 +19,5 @@ popd
 set -x
 echo "Getting secrets:" "$@"
 python $SCRIPT_DIR/setup_secrets.py "$@"
-source ./secrets-export.sh
+source $(pwd)/secrets-export.sh
 echo "Got secrets"
