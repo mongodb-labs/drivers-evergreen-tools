@@ -22,19 +22,6 @@ set -o errexit  # Exit the script with error if any of the commands fail
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-VARLIST=(
-DRIVERS_ATLAS_PUBLIC_API_KEY
-DRIVERS_ATLAS_PRIVATE_API_KEY
-DRIVERS_ATLAS_GROUP_ID
-DRIVERS_ATLAS_LAMBDA_USER
-DRIVERS_ATLAS_LAMBDA_PASSWORD
-LAMBDA_STACK_NAME
-task_id
-execution
-)
-
-pushd $SCRIPT_DIR
-
 # Load the secrets file if it exists.
 if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
@@ -46,6 +33,19 @@ if [ -z "$DRIVERS_ATLAS_PUBLIC_API_KEY" ]; then
   . ../secrets_handling/setup-secrets.sh drivers/atlas
   source ./secrets-export.sh
 fi
+
+pushd $SCRIPT_DIR
+
+VARLIST=(
+DRIVERS_ATLAS_PUBLIC_API_KEY
+DRIVERS_ATLAS_PRIVATE_API_KEY
+DRIVERS_ATLAS_GROUP_ID
+DRIVERS_ATLAS_LAMBDA_USER
+DRIVERS_ATLAS_LAMBDA_PASSWORD
+LAMBDA_STACK_NAME
+task_id
+execution
+)
 
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
