@@ -13,9 +13,15 @@ if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
   source ./secrets-export.sh
 fi
-if [ -z "${GCPKMS_KEYFILE:-}" ]; then
+if [ -z "${GCPKMS_SERVICEACCOUNT:-}" ]; then
     . ./setup-secrets.sh
 fi
+
+# Write the keyfile content to a local JSON path.
+if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then 
+    export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
+    echo "${GCPKMS_KEYFILE_CONTENT}" > $GCPKMS_KEYFILE
+fi 
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
