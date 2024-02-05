@@ -137,6 +137,12 @@ MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
+        # Add the instance name and uri to the secrets file.
+        if [ -f "./secrets-export.sh" ]; then 
+          echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
+          echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
+        fi
+
         if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
           # Download binaries and crypt_shared
           MONGODB_VERSION=rapid bash ./download-crypt.sh
@@ -148,11 +154,5 @@ EOF
         sleep 60
     fi
 done
-
-# Add the instance name and uri to the secrets file.
-if [ -f "./secrets-export.sh" ]; then 
-  echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
-  echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
-fi
 
 popd
