@@ -18,7 +18,7 @@ if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
 fi
 
 pushd $SCRIPT_DIR
-. $PARENT_DIR/secrets_handling/setup-secrets.sh drivers/atlas
+. $PARENT_DIR/secrets_handling/setup-secrets.sh drivers/csfle
 . ./activate-kmstlsvenv.sh
 python ./setup_secrets.py
 cp secrets-export.sh $CURRENT
