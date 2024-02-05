@@ -48,7 +48,7 @@ execution
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
 for VARNAME in ${VARLIST[*]}; do
-[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+[[ -z "${VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
 # Set up the cluster variables.
