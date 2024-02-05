@@ -69,6 +69,34 @@ Finally, we tear down the vm:
 $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
 ```
 
+An example task group would look like:
+
+```yaml
+- name: testazureoidc_task_group
+  setup_group:
+    - func: fetch source
+    - func: other setup function
+    - command: shell.exec
+    params:
+        shell: bash
+        script: |-
+        set -o errexit
+        ${PREPARE_SHELL}
+        export AZUREOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
+        $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
+  teardown_task:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+        ${PREPARE_SHELL}
+        $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  tasks:
+    - oidc-auth-test-azure-latest
+```
+
 ### Environment Variables
 
 Below is an explanantion of the environment variables stored in the Azure key vault.
