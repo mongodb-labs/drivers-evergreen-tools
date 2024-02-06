@@ -4,7 +4,7 @@ set -x
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
-pushd $SCRIPT_DIR/..
+pushd $SCRIPT_DIR
 . $SCRIPT_DIR/../../secrets_handling/setup-secrets.sh drivers/azureoidc
 . ./activate-authoidcvenv.sh
 python handle_secrets.py
