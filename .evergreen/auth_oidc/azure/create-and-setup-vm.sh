@@ -48,7 +48,9 @@ fi
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
-. ../activate-authoidcvenv.sh
+pushd ..
+. ./activate-authoidcvenv.sh
+popd
 python ./handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
