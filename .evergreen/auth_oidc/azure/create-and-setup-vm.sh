@@ -48,7 +48,7 @@ fi
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
-python ./azure/handle_secrets.py
+python ./handle_secrets.py
 source $AZUREOIDC_ENVPATH
 
 # Create VM.
