@@ -22,10 +22,10 @@ export AZUREOIDC_ENVPATH="SCRIPT_DIR/env.sh"
 export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 
 # Handle secrets from AWS vault.
-if [ ! -f $AZUREOIDC_ENVPATH ]; then
+if [ ! -f ./secrets-export.sh ]; then
     . ./setup-secrets.sh
 fi
-source $AZUREOIDC_ENVPATH
+source ./secrets-export.sh
 
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
 export AZUREKMS_SECRET=$AZUREOIDC_SECRET
@@ -46,6 +46,10 @@ fi
 
 # Login.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+
+# Get the rest of the secrets from the Azure vault.
+python ./azure/handle_secrets.py
+source $AZUREOIDC_ENVPATH
 
 # Create VM.
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
