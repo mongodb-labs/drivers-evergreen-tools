@@ -3,6 +3,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+CURR_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
@@ -65,7 +66,7 @@ fi
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
 # Store items needed for teardown.
-cat <<EOT > testazurekms-expansions.yml
+cat <<EOT > "$CURR_DIR/testazurekms-expansions.yml"
 AZUREKMS_VMNAME: $AZUREKMS_VMNAME
 AZUREKMS_RESOURCEGROUP: $AZUREKMS_RESOURCEGROUP
 AZUREKMS_SCOPE: $AZUREKMS_SCOPE

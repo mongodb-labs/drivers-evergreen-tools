@@ -3,6 +3,7 @@
 # On success, creates testgcpkms-expansions.yml expansions 
 set -o errexit # Exit on first command error.
 
+CURR_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
@@ -55,10 +56,11 @@ echo "create-instance.sh ... begin"
 echo "create-instance.sh ... end"
 
 # Echo expansions required for delete-instance.sh. If the remaining setup fails, delete-instance.sh can still clean up resources.
-echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > testgcpkms-expansions.yml
-echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> testgcpkms-expansions.yml
-echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> testgcpkms-expansions.yml
-echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> testgcpkms-expansions.yml
+EXPANSION_FILE="$CURR_DIR/testgcpkms-expansions.yml"
+echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > $EXPANSION_FILE
+echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> $EXPANSION_FILE
+echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> $EXPANSION_FILE
+echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> $EXPANSION_FILE
 if [ -f secrets-export.sh ]; then
     echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> secrets-export.sh
     echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> secrets-export.sh
