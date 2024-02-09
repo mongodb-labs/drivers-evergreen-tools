@@ -28,7 +28,7 @@ Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials 
 
 ### Usage
 
-Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporary director, including
+Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporary directory, including
 `test_user1` and `test_user1_expires`.  The temp file location is exported as `OIDC_TOKEN_DIR`.
 
 ```bash
