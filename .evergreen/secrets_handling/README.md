@@ -24,7 +24,8 @@ If using a Linux host on Evergreen, the shorthand version of the script can be u
         ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
-or
+if using one of the convenience scripts in one of the subfolders, or the following to use the 
+script in this directory:
 
 ```yaml
 - command: subprocess.exec

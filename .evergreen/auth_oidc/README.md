@@ -38,12 +38,13 @@ AWS_WEB_IDENTITY_TOKEN_FILE="$OIDC_TOKEN_DIR/test_user1" /my/test/command
 
 ## Local Server Testing
 
-`MONGODB-OIDC` is only supported on Linux, so the following steps can be used
-to each local development and testing.
+`MONGODB-OIDC` is only supported on Linux, but we support running locally in
+a Docker container.
 
 `Dockerfile`, `docker_entry.sh`, and `start_local_server.sh` are used to launch a
 local docker container running `mongo-orchestration` with OIDC enabled.
-To run locally, docker and python must be installed locally (both can be
+
+To run locally, `docker` and `python` must be installed locally (both can be
 installed using brew).
 
 Running `./start_local_server.sh` will use docker to launch the server

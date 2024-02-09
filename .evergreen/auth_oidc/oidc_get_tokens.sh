@@ -16,7 +16,7 @@ mkdir -p $OIDC_TOKEN_DIR
 
 pushd $SCRIPT_DIR
 if [ ! -f "./secrets-export.sh" ]; then
-    . /setup-secrets.sh
+    . ./setup-secrets.sh
 else
     source ./secrets-export.sh
 fi
