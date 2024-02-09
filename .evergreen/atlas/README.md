@@ -9,7 +9,7 @@ from the `drivers/atlas` vault.
 
 ## Usage
 
-It is recommended that you use task group to ensure the cluster is shut down properly.  
+It is recommended that you use the cluster's task group to ensure the cluster is shut down properly.  
 Note that we have to pass "task_id" and "execution" to ensure unique cluster name,
 and the `LAMBDA_STACK_NAME`.
 An example task group running on a Linux EVG host might look like:
