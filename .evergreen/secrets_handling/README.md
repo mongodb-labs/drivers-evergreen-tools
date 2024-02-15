@@ -9,7 +9,23 @@ NOTE: Add `secrets-export.sh` to your `.gitignore` to prevent checking in creden
 since some of the scripts (including `csfle`) will copy the `secrets-export.sh` to your repo.
 
 The `setup-secrets.sh` script in this folder can be used for other vaults such as `drivers/enterprise_auth` or
-`drivers/atlas_connect`.
+`drivers/atlas_connect`.  A full list of vaults and their usages is as follows:
+
+| Vault                     | Usage |
+| -----                     | ------|
+| drivers/adl               | Used in `../atlas_data_lake` for Atlas Data Lake testing. |
+| drivers/atlas             | Used in `../atlas` to launch an atlas cluster. |
+| drivers/atlas_connect     | Has the URIs used in the Atlas Connect Drivers tests. |
+| drivers/auth_aws          | Used in `../auth_aws`  for AWS Auth testing. |
+| drives/azurekms           | Used in `../csfle/azurekms` for Azure KMS testing. |
+| drivers/azure_oidc        | Used in `../auth_oidc/azure` for OIDC Testing on Azure. |
+| drivers/comment-bot       | Used in `../github_app` for the DBX Comment bot. |
+| drivers/csfle             | Used in `../csfle` for encryption related tests. |
+| drivers/enterprise_auth   | Has the creds needed for Enterprise Auth testing. |
+| drivers/gcpkms            | Used in `../csfle/gcpkms` for GCP KMS testing. |
+| drivers/oidc              | Used in `../oidc` for OIDC Auth testing. |
+| drivers/serverless        | Used in `../serverless` for serverless testing. |
+| drivers/serverless_next   | Used in `../serverless` for serverless proxy testing. |
 
 ## Evergreen Secrets Handling
 
