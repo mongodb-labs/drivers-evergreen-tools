@@ -8,16 +8,13 @@ from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackRes
 # Force MONGODB-OIDC to be enabled.
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
-app_id = os.environ['AZUREOIDC_CLIENTID']
-object_id = os.environ['AZUREOIDC_USERNAME']
+audience = os.environ['GCPOIDC_AUDIENCE']
 
 class MyCallback(OIDCCallback):
     def fetch(self, context: OIDCCallbackContext) -> OIDCCallbackResult:
-        url = "http://169.254.169.254/metadata/identity/oauth2/token"
-        url += "?api-version=2018-02-01"
-        url += f"&resource=api://{app_id}"
-        url += f"&object_id={object_id}"
-        headers = { "Metadata": "true", "Accept": "application/json" }
+        url = "'http://metadata/computeMetadata/v1/instance/service-accounts/default/identity"
+        url += f"&audience={audience}"
+        headers = { "Metadata-Flavor": "Google", "Accept": "application/json" }
         print('Fetching url', url)
         request = Request(url, headers=headers)
         try:
@@ -35,11 +32,11 @@ class MyCallback(OIDCCallback):
         try:
             data = json.loads(body)
         except Exception:
-            raise ValueError("Azure IMDS response must be in JSON format.")
+            raise ValueError("GCP IMDS response must be in JSON format.")
 
         for key in ["access_token", "expires_in"]:
             if not data.get(key):
-                msg = "Azure IMDS response must contain %s, but was %s."
+                msg = "GCP IMDS response must contain %s, but was %s."
                 msg = msg % (key, body)
                 raise ValueError(msg)
         return OIDCCallbackResult(access_token=data['access_token'])

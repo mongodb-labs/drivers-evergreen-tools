@@ -64,6 +64,7 @@ echo "Adding expiration time to SSH key ... begin"
 $GCPKMS_GCLOUD compute os-login ssh-keys update --key-file ~/.ssh/google_compute_engine.pub --ttl 7200s
 echo "Adding expiration time to SSH key ... end"
 
+SETUP_INSTANCE=${GCPKMS_SETUP_INSTANCE:-$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh}
 echo "setup-instance.sh ... begin"
-. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh
+. $SETUP_INSTANCE
 echo "setup-instance.sh ... end"
