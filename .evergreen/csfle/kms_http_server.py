@@ -59,9 +59,9 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
             self.wfile.write("Unknown URL".encode())
 
     def _do_post(self):
-        clen = int(self.headers.get('content-length'))
+        c_len = int(self.headers.get('content-length'))
 
-        raw_input = self.rfile.read(clen)
+        raw_input = self.rfile.read(c_len)
 
         print("RAW INPUT: " + str(raw_input))
 
@@ -250,4 +250,3 @@ def main():
 if __name__ == '__main__':
 
     main()
-

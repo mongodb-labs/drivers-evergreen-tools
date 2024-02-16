@@ -3,7 +3,7 @@
 ## mongodb-drivers-comment-bot
 
 Use mongodb-drivers-comment-bot to create/update comments on PRs
-with the results of an EVG task.  We offer a convenience script to install node, 
+with the results of an EVG task.  We offer a convenience script to install node,
 fetch secrets and run the app:
 
 ```bash

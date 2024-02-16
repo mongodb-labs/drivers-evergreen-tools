@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create and setup a GCE instance.
-# On success, creates testgcpkms-expansions.yml expansions 
+# On success, creates testgcpkms-expansions.yml expansions
 set -o errexit # Exit on first command error.
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})

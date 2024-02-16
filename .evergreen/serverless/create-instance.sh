@@ -26,7 +26,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
 # Ensure that secrets have already been set up.
-if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then 
+if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then
   source "$SCRIPT_DIR/secrets-export.sh"
 fi
 

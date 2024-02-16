@@ -7,4 +7,3 @@ python3 ../ocsp_mock.py \
    -p 8100 \
    -v \
    --fault revoked
-

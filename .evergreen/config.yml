@@ -1049,7 +1049,7 @@ buildvariants:
   display_name: OIDC
   run_on: ubuntu2004-small
   tasks:
-    - "test-oidc"  
+    - "test-oidc"
     - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"

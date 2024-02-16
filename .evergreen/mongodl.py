@@ -596,7 +596,7 @@ def _print_list(db: CacheDB, version: 'str | None', target: 'str | None',
                   '    Info: {}\n\n'.format(comp_key, version, target, arch,
                                             edition, comp_data))
         if counter == 1:
-            print('Only one matchin item')
+            print('Only one matching item')
         elif counter == 0:
             print('No items matched the listed filters')
         else:

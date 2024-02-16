@@ -22,7 +22,7 @@ OIDC_ISSUER_2_URI       # The issuer URI for mock IdP 2
 
 ### Prerequisites
 
-See the 
+See the
 The `oidc_get_tokens.sh` script will automatically fetch the credentials from the `drivers/oidc` vault.
 
 ### Usage

@@ -205,7 +205,7 @@ def _remote_gc_services_container_args(args):
 
 def remote_gc_services_container(cluster):
     """
-    Delete all ECS services over then a given treshold.
+    Delete all ECS services over then a given threshold.
     """
     ecs_client = boto3.client('ecs', region_name=_get_region(cluster))
 

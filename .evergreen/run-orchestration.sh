@@ -52,7 +52,7 @@ fi
 download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
 
 # Write the crypt shared path to the expansion file if given.
-if [ -n $CRYPT_SHARED_LIB_PATH ]; then
+if [ -n "$CRYPT_SHARED_LIB_PATH" ]; then
     cat <<EOT >> mo-expansion.yml
 CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
 EOT

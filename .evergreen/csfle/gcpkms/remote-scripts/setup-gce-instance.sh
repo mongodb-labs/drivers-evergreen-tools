@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Install dependencies and start a MongoDB server on a GCE instance.
 # This script is expected to be run on the GCE instance.
 set -o errexit # Exit on first command error.

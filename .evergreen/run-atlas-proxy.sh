@@ -32,7 +32,7 @@ MONGODB_VERSION=${MONGODB_VERSION:-"3.4"}
 ORIG_DIR="$(pwd)"
 
 #--------------------------------------------------------------------------#
-# Downlaod MongoDB Binary
+# Download MongoDB Binary
 #--------------------------------------------------------------------------#
 
 DL_START=$(date +%s)

@@ -2,7 +2,7 @@
 
 The scripts in this directory are used to test MongoDB Serverless instances on Atlas.
 
-## Prequisites
+## Prerequisites
 
 Set up your environment to obtain secrets from the Drivers [AWS Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
 
