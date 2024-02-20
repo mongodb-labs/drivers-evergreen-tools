@@ -1,5 +1,14 @@
 # Delete GCE instance.
 set -o errexit # Exit on first command error.
+
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
+
+if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source $SCRIPT_DIR/secrets-export.sh
+fi
+
 if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"

@@ -4,7 +4,8 @@ The scripts in this directory are used to test MongoDB Serverless instances on A
 
 ## Prequisites
 
-Set up your environment to obtain secrets from the Drivers [AWS Vault](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+from the `drivers/serverless` or `drivers/serverless_next` vault.
 
 ## Usage
 
@@ -14,10 +15,10 @@ First, get the appropriate secrets from the vault using:
 bash $DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh
 ```
 
-If targeting the dev version of Serverless, use:
+If targeting the proxy version of Serverless, use:
 
 ```bash
-$DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh serverless_next
+bash $DRIVERS_TOOLS/.evergreen/serverless/setup-secrets.sh serverless_next
 ```
 
 Next, start the cluster with:
@@ -32,7 +33,8 @@ Make sure you shut down the instance with:
 bash ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
 ```
 
-A full Evergreen task group might look like:
+If running only on a Linux EVG host, the following setup could be used, where `VAULT_NAME`
+is `serverless` or `serverless_next`:
 
 ```yaml
   - name: serverless_task_group
@@ -41,23 +43,29 @@ A full Evergreen task group might look like:
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: "bash"
-          script: |
-            ${PREPARE_SHELL}
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup-secrets.sh
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
-      - command: expansions.update
+          binary: bash
+          env:
+            VAULT_NAME: ${VAULT_NAME}
+          args: |
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
+    teardown_task:
+      - command: subprocess.exec
         params:
-          file: serverless-expansion.yml
-    teardown_group:
-      - command: shell.exec
-        params:
-          script: |
-            ${PREPARE_SHELL}
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
+          binary: bash
+          args: |
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
       - func: "upload test results"
     tasks:
       - ".serverless"
+```
+
+If other OSes are needed, use the `setup-secrets.sh` script in this directory with the full `ec2.assume_role`
+method described in [Secrets Handling](../secrets_handling/README.md).
+
+To access `SERVERLESS_URI` and the secrets values in your serverless task, source the secrets file.
+
+```bash
+source ${DRIVERS_TOOLS}/.evergreen/serverless/secrets-export.sh
 ```
