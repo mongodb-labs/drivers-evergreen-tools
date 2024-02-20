@@ -15,7 +15,7 @@ pushd $SCRIPT_DIR
 
 # Ensure that secrets have already been set up.
 if [ ! -f "secrets-export.sh" ]; then
-    echo "ERROR: please run './setup_secrets.sh drivers/aws_auth' in this folder"
+    echo "ERROR: please run './setup-secrets.sh' in this folder"
 fi
 
 # Activate the venv and source the secrets file.
