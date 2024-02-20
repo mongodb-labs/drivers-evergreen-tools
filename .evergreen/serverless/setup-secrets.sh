@@ -8,8 +8,8 @@ set -eux
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-pushd $SCRIPT_DIR
 
 VAULT_NAME="${1:-serverless}"
-bash ../auth_aws/setup_secrets.sh drivers/$VAULT_NAME
+pushd $SCRIPT_DIR
+. ../secrets_handling/setup-secrets.sh drivers/$VAULT_NAME
 popd

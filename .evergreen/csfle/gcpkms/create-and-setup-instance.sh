@@ -3,8 +3,27 @@
 # On success, creates testgcpkms-expansions.yml expansions
 set -o errexit # Exit on first command error.
 
+CURR_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
+
+pushd $SCRIPT_DIR
+
+# Handle secrets from vault.
+if [ -f ./secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source ./secrets-export.sh
+fi
+if [ -z "${GCPKMS_SERVICEACCOUNT:-}" ]; then
+    . ./setup-secrets.sh
+fi
+
+# Write the keyfile content to a local JSON path.
+if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then 
+    export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
+    # convert content from base64 to JSON and write to file
+    echo ${GCPKMS_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
+fi 
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
@@ -12,6 +31,9 @@ if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo " GCPKMS_SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
     exit 1
 fi
+
+# Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
+chmod 600 $GCPKMS_KEYFILE
 
 # Set defaults.
 export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"devprod-drivers"}
@@ -34,10 +56,17 @@ echo "create-instance.sh ... begin"
 echo "create-instance.sh ... end"
 
 # Echo expansions required for delete-instance.sh. If the remaining setup fails, delete-instance.sh can still clean up resources.
-echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > testgcpkms-expansions.yml
-echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> testgcpkms-expansions.yml
-echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> testgcpkms-expansions.yml
-echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> testgcpkms-expansions.yml
+EXPANSION_FILE="$CURR_DIR/testgcpkms-expansions.yml"
+echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > $EXPANSION_FILE
+echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> $EXPANSION_FILE
+echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> $EXPANSION_FILE
+echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> $EXPANSION_FILE
+if [ -f secrets-export.sh ]; then
+    echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> secrets-export.sh
+    echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> secrets-export.sh
+    echo "export GCPKMS_PROJECT=$GCPKMS_PROJECT" >> secrets-export.sh
+    echo "export GCPKMS_ZONE=$GCPKMS_ZONE" >> secrets-export.sh
+fi
 
 # Wait for a maximum of five minutes for VM to finish booting.
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
