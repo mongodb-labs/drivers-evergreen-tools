@@ -3,7 +3,7 @@
 ## Testing with the Decidicated Atlas Clusters
 
 We have two dedicated Atlas clusters that are configured with OIDC, one with a single Identity Provider (Idp),
-and one with multiple IdPs configured. 
+and one with multiple IdPs configured.
 
 
 These include:

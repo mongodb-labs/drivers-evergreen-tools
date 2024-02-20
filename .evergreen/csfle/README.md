@@ -7,7 +7,7 @@ for more information on those specific scenarios.
 
 ## Prerequisites
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.
 
 Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo.

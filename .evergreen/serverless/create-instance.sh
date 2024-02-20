@@ -28,7 +28,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Load the secrets file if it exists.
-if [ -f "./secrets-export.sh" ]; then 
+if [ -f "./secrets-export.sh" ]; then
   source "./secrets-export.sh"
 fi
 
@@ -137,7 +137,7 @@ SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
         # Add the instance name and uri to the secrets file.
-        if [ -f "./secrets-export.sh" ]; then 
+        if [ -f "./secrets-export.sh" ]; then
           echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
           echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
         fi

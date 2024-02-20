@@ -4,7 +4,7 @@ The scripts in this directory are used to test MongoDB Serverless instances on A
 
 ## Prerequisites
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/serverless` or `drivers/serverless_next` vault.
 
 ## Usage

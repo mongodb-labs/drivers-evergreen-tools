@@ -14,7 +14,7 @@ For all testing variants except for ECS, the general test flow is:
 bash $DRIVERS_TOOLS/.evergreen/auth_aws/setup-secrets.sh
 ```
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/auth_aws` vault using the `setup-secrets.sh` script in th  `$DRIVERS_TOOLS/.evergreen/auth_aws` directory.
 
 - Run the setup for the test variant and then run your specific tests.

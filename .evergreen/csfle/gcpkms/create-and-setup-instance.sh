@@ -19,11 +19,11 @@ if [ -z "${GCPKMS_SERVICEACCOUNT:-}" ]; then
 fi
 
 # Write the keyfile content to a local JSON path.
-if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then 
+if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then
     export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
     # convert content from base64 to JSON and write to file
     echo ${GCPKMS_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
-fi 
+fi
 
 if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"

@@ -9,7 +9,7 @@ and then tearing down the VM and its resources.
 There are a set of scripts that facilitate these operations.
 They build on top of the scripts used in `csfle/azurekms`.
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/azureoidc` vault.  
+See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/azureoidc` vault.
 These secrets are used to log in to Azure, and the rest of the secrets are fetched from the "OIDC-Key-Vault" in our Drivers Azure Subscription (https://portal.azure.com/#home).
 
 See the Azure machine flows section of the OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-ServiceAccounts/ManagedIdentities/MachineFlows) for more information
