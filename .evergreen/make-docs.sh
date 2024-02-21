@@ -20,6 +20,6 @@ The evergreen URL differs for patch builds and normal builds
 EOT
 cat <<EOT >> doc/html/intro.html
 This page is never actually uploaded by evergreen, only the index page was uploaded.
-Thats why there is a link to the index page ("Rendered docs") while this is not an actual artifact.
-This page was uploaded seperately with the s3cmd tools
+That's why there is a link to the index page ("Rendered docs") while this is not an actual artifact.
+This page was uploaded separately with the s3cmd tools
 EOT

@@ -143,7 +143,7 @@ class OCSPResponseBuilder(object):
             A unicode string of OCSP response type:
             - "successful" - when the response includes information about the certificate
             - "malformed_request" - when the request could not be understood
-            - "internal_error" - when an internal error occured with the OCSP responder
+            - "internal_error" - when an internal error occurred with the OCSP responder
             - "try_later" - when the OCSP responder is temporarily unavailable
             - "sign_required" - when the OCSP request must be signed
             - "unauthorized" - when the responder is not the correct responder for the certificate
@@ -261,7 +261,7 @@ class OCSPResponseBuilder(object):
         if not isinstance(responder_private_key, keys.PrivateKeyInfo) and not is_oscrypto:
             raise TypeError(_pretty_message(
                 '''
-                responder_private_key must be an instance ofthe c
+                responder_private_key must be an instance of the c
                 asn1crypto.keys.PrivateKeyInfo or
                 oscrypto.asymmetric.PrivateKey, not %s
                 ''',

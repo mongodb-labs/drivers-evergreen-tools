@@ -9,9 +9,8 @@ and then tearing down the VM and its resources.
 There are a set of scripts that facilitate these operations.
 They build on top of the scripts used in `csfle/azurekms`.
 
-See https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets for more background
-on how the secrets are managed for these tests.  These secrets are used to log in to Azure, and the 
-rest of the secrets are fetched from the "OIDC-Key-Vault" in our Drivers Azure Subscription (https://portal.azure.com/#home).
+See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/azureoidc` vault.
+These secrets are used to log in to Azure, and the rest of the secrets are fetched from the "OIDC-Key-Vault" in our Drivers Azure Subscription (https://portal.azure.com/#home).
 
 See the Azure machine flows section of the OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-ServiceAccounts/ManagedIdentities/MachineFlows) for more information
 about the Azure integration.
@@ -30,7 +29,7 @@ Locally, it can be installed as `brew install az`.
 
 ## Usage
 
-To ensure proper setup and teardown, we use a task group in Evergreen config.  The setup portion 
+To ensure proper setup and teardown, we use a task group in Evergreen config.  The setup portion
 should run the equivalent of the following, substituting your driver name:
 
 ```bash
@@ -55,7 +54,7 @@ export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergr
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 ```
 
-In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_AUDIENCE` 
+In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_AUDIENCE`
 auth mechanism property, e.g.
 
 ```python
@@ -99,7 +98,7 @@ An example task group would look like:
 
 ### Environment Variables
 
-Below is an explanantion of the environment variables stored in the Azure key vault.
+Below is an explananion of the environment variables stored in the Azure key vault.
 
 - AZUREOIDC_AUTHPREFIX - The auth prefix used for DB user and role names.
 - AZUREOIDC_AUTHCLAIM - The object ID of the Azure Group, used in the DB role name.

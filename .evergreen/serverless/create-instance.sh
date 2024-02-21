@@ -22,12 +22,20 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 #   SERVERLESS_URI            SRV connection string for newly created instance
 #   SERVERLESS_INSTANCE_NAME  Name of newly created instance (required for "get" and "delete" scripts)
 
+CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+pushd $SCRIPT_DIR
 
-# Ensure that secrets have already been set up.
-if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then 
-  source "$SCRIPT_DIR/secrets-export.sh"
+# Load the secrets file if it exists.
+if [ -f "./secrets-export.sh" ]; then
+  source "./secrets-export.sh"
+fi
+
+# Attempt to handle the secrets automatically if env vars are not set.
+if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
+    . ./setup-secrets.sh ${VAULT_NAME:-}
+  source ./secrets-export.sh
 fi
 
 if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
@@ -48,21 +56,21 @@ fi
 # Historically, this script accepted LOADBALANCED=ON to opt in to testing load
 # balanced serverless instances. Since all serverless instances now use a load
 # balancer, prohibit opting out (i.e. defining LOADBALANCED != ON).
-if [ -n "$LOADBALANCED" -a "$LOADBALANCED" != "ON" ]; then
+if [ -n "${LOADBALANCED:-}" -a "${LOADBALANCED:-}" != "ON" ]; then
     echo "Cannot opt out of testing load balanced serverless instances"
     exit 1
 fi
 
 # Generate a random instance name if one was not provided.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
-if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
+if [ -z "${SERVERLESS_INSTANCE_NAME:-}" ]; then
     SERVERLESS_INSTANCE_NAME="$RANDOM-DRIVERTEST"
 fi
 
 SERVERLESS_REGION="${SERVERLESS_REGION:-US_EAST_2}"
 
 # Ensure that a Python binary is available for JSON decoding
-. $SCRIPT_DIR/../find-python3.sh || exit 1
+. ../find-python3.sh || exit 1
 echo "Finding Python3 binary..."
 PYTHON_BINARY="$(find_python3 2>/dev/null)" || exit 1
 echo "Finding Python3 binary... done."
@@ -112,7 +120,7 @@ while [ true ]; do
 
         SERVERLESS_URI=$SERVERLESS_URI \
         SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
-        cat << EOF > serverless-expansion.yml
+        cat << EOF > $CURRENT_DIR/serverless-expansion.yml
 SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
@@ -128,9 +136,15 @@ MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
-        if [ "$SERVERLESS_SKIP_CRYPT" != "OFF" ]; then
+        # Add the instance name and uri to the secrets file.
+        if [ -f "./secrets-export.sh" ]; then
+          echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
+          echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
+        fi
+
+        if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
           # Download binaries and crypt_shared
-          MONGODB_VERSION=rapid bash $SCRIPT_DIR/download-crypt.sh
+          MONGODB_VERSION=rapid bash ./download-crypt.sh
         fi
 
         exit 0
@@ -139,3 +153,5 @@ EOF
         sleep 60
     fi
 done
+
+popd

@@ -54,7 +54,7 @@ else:
 
 
 def parse_qs(qs: str) -> 'dict[str, str]':
-    # Re-use the bottle.py query string parser. It's a private function, but
+    # Reuse the bottle.py query string parser. It's a private function, but
     # we're using a fixed version of Bottle.
     return dict(bottle._parse_qsl(qs))  # type: ignore
 

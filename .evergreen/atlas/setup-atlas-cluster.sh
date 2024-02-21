@@ -18,6 +18,23 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
+# Set up the common variables.
+CURRENT_DIR=$(pwd)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+pushd $SCRIPT_DIR
+
+# Load the secrets file if it exists.
+if [ -f ./secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source ./secrets-export.sh
+fi
+
+# Attempt to handle the secrets automatically if env vars are not set.
+if [ -z "$DRIVERS_ATLAS_PUBLIC_API_KEY" ]; then
+  . ../secrets_handling/setup-secrets.sh drivers/atlas
+fi
+
 VARLIST=(
 DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
@@ -32,12 +49,10 @@ execution
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
 for VARNAME in ${VARLIST[*]}; do
-[[ -z "${!VARNAME}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+[[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Set up the common variables.
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/../handle-paths.sh
+# Set up the cluster variables.
 . $SCRIPT_DIR/setup-variables.sh
 
 # The cluster server version.
@@ -124,18 +139,21 @@ check_cluster ()
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 20 minute timeframe or error occured."
+    echo "No cluster could be created in the 20 minute timeframe or error occurred."
     exit 1
   else
     echo "Setting MONGODB_URI in the environment to the new cluster."
     # else set the mongodb uri
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
     MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
-    # Put the MONGODB_URI in an expansions yml
-    echo 'MONGODB_URI: "'$MONGODB_URI'"' > atlas-expansion.yml
+    # Put the MONGODB_URI in an expansions yml and secrets file.
+    echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
+    echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
   fi
 }
 
 create_cluster
 
 check_cluster
+
+popd

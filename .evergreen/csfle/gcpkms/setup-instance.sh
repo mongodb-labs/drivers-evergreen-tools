@@ -5,7 +5,7 @@ set -o errexit # Exit on first command error.
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
-if [-z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then
+if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"
     echo " GCPKMS_PROJECT to the GCP project"

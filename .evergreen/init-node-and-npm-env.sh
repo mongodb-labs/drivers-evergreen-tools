@@ -10,7 +10,7 @@
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$SCRIPT_DIR/node-artifacts"
-if [[ "$OS" == "Windows_NT" ]]; then
+if [[ "${OS:-}" == "Windows_NT" ]]; then
   NODE_ARTIFACTS_PATH=$(cygpath --unix "$NODE_ARTIFACTS_PATH")
 fi
 
