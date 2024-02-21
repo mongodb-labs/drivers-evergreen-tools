@@ -12,14 +12,14 @@ The included mock_server may be useful for local development. It simulates a [Me
 
 # Usage with AWS Vault
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/gcpkms` vault.
 
 ```yaml
 - name: testgcpkms_task_group
 setup_group:
     - func: fetch source
-    - func: prepare resources    
+    - func: prepare resources
     - command: subprocess.exec
       params:
         binary: bash
@@ -49,5 +49,5 @@ echo "Copying files ... end"
 echo "Untarring file ... begin"
 GCPKMS_CMD="tar xf mongo-python-driver.tgz" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
 echo "Untarring file ... end"
-GCPKMS_CMD="SUCCESS=true TEST_FLE_GCP_AUTO=1 ./.evergreen/tox.sh -m test-eg" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh  
+GCPKMS_CMD="SUCCESS=true TEST_FLE_GCP_AUTO=1 ./.evergreen/tox.sh -m test-eg" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
 ```

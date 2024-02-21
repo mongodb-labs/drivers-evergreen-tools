@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Delete GCE instance.
 set -o errexit # Exit on first command error.
 

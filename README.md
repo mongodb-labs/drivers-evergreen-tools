@@ -1,6 +1,6 @@
 # This Repository is NOT a supported MongoDB product
 
-# drivers-evergreen-tools
+## drivers-evergreen-tools
 
 This repo is meant for MongoDB drivers to bootstrap their Evergreen
 configuration files.
@@ -8,9 +8,7 @@ It contains set of scripts for tasks that most drivers will need to perform,
 such as downloading MongoDB for the current platform, and launching various
 topologies.
 
-# Using
-
-## In Evergreen
+## Using In Evergreen
 
 The bundled [`.evergreen/config.yml`](.evergreen/config.yml) file contains a
 suggested template for drivers to use.
@@ -39,12 +37,7 @@ The `** Release Archive Creator` buildvariant is special, and does not run the "
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
 
-## evergreen_config_generator
-
-This repo also contains a Python package for use in scripts that generate
-Evergreen config files from Python dicts. See evergreen_config_generator/README.
-
-# Using With GitHub Actions
+## Using With GitHub Actions
 
 This repository includes a metadata file for GitHub Actions to allow downloading
 MongoDB and launching topologies from a GitHub Action Workflow. To use this
@@ -84,3 +77,33 @@ returned from the `setup-mongodb` workflow step when running tests:
         env:
           MONGODB_URI: ${{ steps.setup-mongodb.outputs.cluster-uri }}
 ```
+
+## Linters and Formatters
+
+This repo uses [pre-commit](https://pre-commit.com/) for managing linting and formatting of the codebase.
+`pre-commit` performs various checks on all files in the repo and uses tools that help follow a consistent code
+style.
+
+To set up `pre-commit` locally, run:
+
+```bash
+brew install pre-commit
+pre-commit install
+```
+
+To run pre-commit manually, run:
+
+```bash
+pre-commit run --all-files
+```
+
+To run an individual hook like `shellcheck` manually, run:
+
+```bash
+pre-commit run --all-files shellcheck
+```
+
+## evergreen_config_generator
+
+This repo also contains a Python package for use in scripts that generate
+Evergreen config files from Python dicts. See evergreen_config_generator/README.

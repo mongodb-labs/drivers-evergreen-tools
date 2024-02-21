@@ -5,9 +5,9 @@ This folder contains scripts for use with In-Use Encryption.
 See the [Azure KMS](./azurekms/README.md) and [GCP KMS](./gcpkms/README.md)
 for more information on those specific scenarios.
 
-## Prerequisities
+## Prerequisites
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.
 
 Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo.
@@ -40,7 +40,7 @@ $DRIVERS_TOOLS/.evergreen/csfle/stop-servers.sh
 If you are starting your CSFLE servers in a separate Evergreen function, it is recommended that you setup secrets
 and start the servers in the background, and then have a separate function that uses `await-servers.sh`
 in the foreground to wait for the servers to be ready.  This will ensure the servers are not torn down
-between functions (or the function may stall and not finish because there are processes still running).  
+between functions (or the function may stall and not finish because there are processes still running).
 If you are starting the servers in a step within the same function as your tests, you
 can just start the servers directly in a foreground step.
 

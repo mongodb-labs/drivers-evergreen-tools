@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Run a command on a remote GCE instance.
 set -o errexit # Exit on first command error.
 if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" -o -z "$GCPKMS_CMD" ]; then

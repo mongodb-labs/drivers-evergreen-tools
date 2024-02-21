@@ -2,7 +2,7 @@
 #
 # Bootstrapping file to launch a local oidc-enabled server and create
 # OIDC tokens that can be used for local testing.  See README for
-# prequisites and usage.
+# prerequisites and usage.
 #
 set -eux
 

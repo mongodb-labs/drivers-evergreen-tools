@@ -25,7 +25,7 @@ The URN may be passed as `AZUREKMS_IMAGE`.
 
 # Usage with AWS Vault
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/azurekms` vault.
 
 Your Evergreen config should look something like:
@@ -34,7 +34,7 @@ Your Evergreen config should look something like:
 - name: testazurekms_task_group
 setup_group:
     - func: fetch source
-    - func: prepare resources    
+    - func: prepare resources
     - command: subprocess.exec
       params:
         binary: bash

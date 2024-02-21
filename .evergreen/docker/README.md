@@ -43,7 +43,7 @@ ORCHESTRATION_FILE
 Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration/configs/servers) and the default `ORCHESTRATION_FILE` is `basic.json`. For example, to run a replica using the [auth](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/configs/replica_sets/auth.json) orchestration:
 
 ```bash
-TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh 
+TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh
 ```
 
 If you want to test server versions older than 4.4, you can use the 18.04 image, e.g.:

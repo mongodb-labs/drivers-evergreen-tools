@@ -24,6 +24,6 @@ source $(pwd)/secrets-export.sh
 echo "Got secrets"
 
 # Restore the script dir if we've overridden it.
-if [ -n ${ORIG_SCRIPT_DIR} ]; then
+if [ -n "${ORIG_SCRIPT_DIR}" ]; then
     SCRIPT_DIR=$ORIG_SCRIPT_DIR
 fi

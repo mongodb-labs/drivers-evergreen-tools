@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Download gcloud CLI for Linux 64-bit (x86_64).
 # Evergreen scripts must use the expansions.update command to load the expansion.
 set -o errexit # Exit on first command error.

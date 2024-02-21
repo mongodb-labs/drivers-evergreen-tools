@@ -3,7 +3,7 @@
 ## Docker Image
 
 The scripts must be run from a Linux EVG Host.
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets 
+See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/adl` vault.  The `pull-mongohouse-image.sh` script will handle the access
 to the vault.
 

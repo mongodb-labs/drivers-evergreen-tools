@@ -139,7 +139,7 @@ check_cluster ()
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 20 minute timeframe or error occured."
+    echo "No cluster could be created in the 20 minute timeframe or error occurred."
     exit 1
   else
     echo "Setting MONGODB_URI in the environment to the new cluster."

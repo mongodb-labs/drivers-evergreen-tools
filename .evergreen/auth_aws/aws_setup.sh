@@ -14,7 +14,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Ensure that secrets have already been set up.
-if [ ! -f "secrets-export.sh" ]; then 
+if [ ! -f "secrets-export.sh" ]; then
     echo "ERROR: please run './setup-secrets.sh' in this folder"
 fi
 
@@ -68,7 +68,7 @@ case $1 in
         SESSION_TOKEN=$(jsonkey SessionToken)
         SESSION_TOKEN=$(urlencode "$SESSION_TOKEN")
         ;;
-    
+
     session-creds)
         AWS_ACCESS_KEY_ID=$(jsonkey AccessKeyId)
         AWS_SECRET_ACCESS_KEY=$(jsonkey SecretAccessKey)

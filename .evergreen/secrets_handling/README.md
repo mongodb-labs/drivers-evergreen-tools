@@ -3,7 +3,7 @@
 This folder has a script that can be used to access the drivers [AWS Vaults](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
 
 Many of the sibling folders like `csfle` have their own `setup-secrets.sh` script that should be used
-to ensure the proper secrets are written to that folder for local usage.  
+to ensure the proper secrets are written to that folder for local usage.
 
 NOTE: Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo,
 since some of the scripts (including `csfle`) will copy the `secrets-export.sh` to your repo.
@@ -40,7 +40,7 @@ If using a Linux host on Evergreen, the shorthand version of the script can be u
         ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
-if using one of the convenience scripts in one of the subfolders, or the following to use the 
+if using one of the convenience scripts in one of the subfolders, or the following to use the
 script in this directory:
 
 ```yaml

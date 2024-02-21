@@ -25,7 +25,7 @@ program
   .parse(process.argv);
 
 const options = program.opts();
-const { 
+const {
   repoOwner: owner,
   repoName: repo,
   bodyMatch,

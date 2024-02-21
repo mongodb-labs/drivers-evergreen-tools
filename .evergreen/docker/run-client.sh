@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run a driver test in a docker container that targets the 
+# Run a driver test in a docker container that targets the
 # the server running in docker.
 #
 set -eu
@@ -50,4 +50,4 @@ ARGS+=" -v `pwd`:/src"
 ARGS+=" -v $DRIVERS_TOOLS:/root/drivers-evergreen-tools"
 
 # Launch client docker container.
-docker run $ARGS $@
+docker run $ARGS "$@"
