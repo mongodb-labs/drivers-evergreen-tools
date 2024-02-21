@@ -6,8 +6,12 @@ set -o errexit  # Exit the script with error if any of the commands fail
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
+pushd $SCRIPT_DIR
+
 if [ -n "${MONGO_ORCHESTRATION_HOME:-}" ]; then
-    bash ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
+    bash ./stop-orchestration.sh
+    # Consolidate the logs into the log directory.
+    find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 fi
 
 # Remove all Docker images
@@ -18,12 +22,11 @@ if [ -n "$DOCKER" ]; then
 fi
 
 # Execute all available teardown scripts.
-find $SCRIPT_DIR -name "teardown.sh" -exec bash {} \;
+find . -name "teardown.sh" -exec bash {} \;
 
-# Move all log files into $DRIVERS_TOOLS/logs.tar.gz
-pushd $SCRIPT_DIR
-find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
-find $SCRIPT_DIR -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+# Move all child log files into $DRIVERS_TOOLS/logs.tar.gz
+find . -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 tar zcvf $DRIVERS_TOOLS/logs.tar.gz -C log_dir/ .
 rm -rf log_dir
+
 popd
