@@ -17,8 +17,7 @@ fi
 # Remove all Docker images
 DOCKER=$(command -v docker) || true
 if [ -n "$DOCKER" ]; then
-    echo "TODO"
-    # docker rmi -f $(docker images -a -q) &> /dev/null || true
+    docker rmi -f $(docker images -a -q) &> /dev/null || true
 fi
 
 # Execute all available teardown scripts.
