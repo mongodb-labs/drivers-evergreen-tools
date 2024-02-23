@@ -745,13 +745,11 @@ tasks:
         - func: "run docker test"
           vars:
             TARGET_IMAGE: ubuntu18.04
-        - func: "cleanup docker"
 
     - name: "test-oidc"
       tags: ["latest", "oidc"]
       commands:
         - func: "run oidc test"
-        - func: "cleanup docker"
 
     - name: "test-oidc-azure"
       commands:
@@ -928,7 +926,7 @@ buildvariants:
   run_on: ubuntu2004-small
   tasks:
     - "test-oidc"
-    - "testazureoidc"
+    - "test-oidc-azure"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
