@@ -8,6 +8,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR
 
+# Initialize log directory.
+rm -rf ./log_dir
+mkdir ./log_dir
+
 # Stop orchestration if it is running.
 if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     # Purposely use sh here to ensure backwards compatibility.
