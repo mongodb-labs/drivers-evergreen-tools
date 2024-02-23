@@ -10,4 +10,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 source $SCRIPT_DIR/secrets-export.sh
 
 # Call the parent delete script.
-bash $DRIVERS_TOOLS/csfle/gcpkms/delete-instance.sh
+bash $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/delete-instance.sh

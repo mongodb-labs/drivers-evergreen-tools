@@ -9,10 +9,13 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR
 
+# Handle secrets file location.
+GCPKMS_SECRETS_FILE=${GCPKMS_SECRETS_FILE:-./secrets-export.sh}
+
 # Handle secrets from vault.
-if [ -f ./secrets-export.sh ]; then
+if [ -f "$GCPKMS_SECRETS_FILE" ]; then
   echo "Sourcing secrets"
-  source ./secrets-export.sh
+  source $GCPKMS_SECRETS_FILE
 fi
 if [ -z "${GCPKMS_SERVICEACCOUNT:-}" ]; then
     . ./setup-secrets.sh
@@ -61,11 +64,11 @@ echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > $EXPANSION_FILE
 echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> $EXPANSION_FILE
 echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> $EXPANSION_FILE
 echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> $EXPANSION_FILE
-if [ -f secrets-export.sh ]; then
-    echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> secrets-export.sh
-    echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> secrets-export.sh
-    echo "export GCPKMS_PROJECT=$GCPKMS_PROJECT" >> secrets-export.sh
-    echo "export GCPKMS_ZONE=$GCPKMS_ZONE" >> secrets-export.sh
+if [ -f "$GCPKMS_SECRETS_FILE" ]; then
+    echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> $GCPKMS_SECRETS_FILE
+    echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> $GCPKMS_SECRETS_FILE
+    echo "export GCPKMS_PROJECT=$GCPKMS_PROJECT" >> $GCPKMS_SECRETS_FILE
+    echo "export GCPKMS_ZONE=$GCPKMS_ZONE" >> $GCPKMS_SECRETS_FILE
 fi
 
 # Wait for a maximum of five minutes for VM to finish booting.
