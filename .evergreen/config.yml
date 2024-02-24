@@ -426,7 +426,7 @@ functions:
           cd $DRIVERS_TOOLS
           git add .
           git commit -m "add files"
-          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-vm.sh
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
     - command: shell.exec
       params:
         shell: bash
@@ -1052,7 +1052,7 @@ task_groups:
             git add .
             git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-instance.sh
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
     teardown_task:
       - command: shell.exec
         params:
