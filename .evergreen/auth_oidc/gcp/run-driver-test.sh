@@ -8,33 +8,31 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Check for inputs.
-if [ -z "${AZUREOIDC_DRIVERS_TAR_FILE:-}" ] || \
-   [ -z "${AZUREOIDC_TEST_CMD:-}" ]; then
+if [ -z "${GCPOIDC_DRIVERS_TAR_FILE:-}" ] || \
+   [ -z "${GCPOIDC_TEST_CMD:-}" ]; then
     echo "Please set the following required environment variables"
-    echo " AZUREOIDC_DRIVERS_TAR_FILE"
-    echo " AZUREOIDC_TEST_CMD"
+    echo " GCPOIDC_DRIVERS_TAR_FILE"
+    echo " GCPOIDC_TEST_CMD"
     exit 1
 fi
 
 # Read in the env variables.
-source ./env.sh
+source ./secrets-export.sh
 
 # Set up variables.
-export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
-export AZUREKMS_VMNAME=$AZUREOIDC_VMNAME
-export AZUREKMS_PRIVATEKEYPATH=$SCRIPT_DIR/keyfile
+export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
 
 # Set up the remote driver checkout.
-DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
-AZUREKMS_SRC=${AZUREOIDC_DRIVERS_TAR_FILE} \
-AZUREKMS_DST="~/" \
-  $SCRIPT_DIR/../../csfle/azurekms/copy-file.sh
+DRIVER_TARFILE_BASE=$(basename ${GCPOIDC_DRIVERS_TAR_FILE})
+GCPKMS_SRC=${GCPOIDC_DRIVERS_TAR_FILE} \
+GCPKMS_DST="~/" \
+  $SCRIPT_DIR/../../csfle/gcpkms/copy-file.sh
 echo "Copying files ... end"
 echo "Untarring file ... begin"
-AZUREKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
-  $SCRIPT_DIR/../../csfle/azurekms/run-command.sh
+GCPKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
+  $SCRIPT_DIR/../../csfle/gcpkms/run-command.sh
 echo "Untarring file ... end"
 
 # Run the driver test.
-AZUREKMS_CMD="${AZUREOIDC_TEST_CMD}" \
-    $SCRIPT_DIR/../../csfle/azurekms/run-command.sh
+GCPKMS_CMD="${GCPOIDC_TEST_CMD}" \
+    $SCRIPT_DIR/../../csfle/gcpkms/run-command.sh

@@ -26,6 +26,3 @@ echo ${GCPOIDC_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
 
 # Create the instance using the script.
 bash $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/create-and-setup-instance.sh
-
-# TODO:
-# ModuleNotFoundError: No module named 'setuptools'
