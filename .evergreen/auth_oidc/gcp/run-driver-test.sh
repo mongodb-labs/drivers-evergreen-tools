@@ -19,20 +19,14 @@ fi
 # Read in the env variables.
 source ./secrets-export.sh
 
-# Set up variables.
-export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
-
-# Set up the remote driver checkout.
-DRIVER_TARFILE_BASE=$(basename ${GCPOIDC_DRIVERS_TAR_FILE})
-GCPKMS_SRC=${GCPOIDC_DRIVERS_TAR_FILE} \
-GCPKMS_DST="~/" \
-  $SCRIPT_DIR/../../csfle/gcpkms/copy-file.sh
+echo "Copying files ... begin"
+GCPKMS_SRC=$GCPOIDC_DRIVERS_TAR_FILE GCPKMS_DST=$GCPKMS_INSTANCENAME: $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/copy-file.sh
 echo "Copying files ... end"
+
 echo "Untarring file ... begin"
-GCPKMS_CMD="tar xf ${DRIVER_TARFILE_BASE}" \
-  $SCRIPT_DIR/../../csfle/gcpkms/run-command.sh
+GCPKMS_CMD="tar xf $GCPOIDC_DRIVERS_TAR_FILE" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
 echo "Untarring file ... end"
 
-# Run the driver test.
-GCPKMS_CMD="${GCPOIDC_TEST_CMD}" \
-    $SCRIPT_DIR/../../csfle/gcpkms/run-command.sh
+echo "Running test ... begin"
+GPKSM_CMD=$GCPOIDC_TEST_CMD $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
+echo "Running test ... end"
