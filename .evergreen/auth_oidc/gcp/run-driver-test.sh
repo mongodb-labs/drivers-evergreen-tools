@@ -24,7 +24,8 @@ GCPKMS_SRC=$GCPOIDC_DRIVERS_TAR_FILE GCPKMS_DST=$GCPKMS_INSTANCENAME: $DRIVERS_T
 echo "Copying files ... end"
 
 echo "Untarring file ... begin"
-GCPKMS_CMD="tar xf $GCPOIDC_DRIVERS_TAR_FILE" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
+TARFILE_NAME=$(basename $GCPOIDC_DRIVERS_TAR_FILE)
+GCPKMS_CMD="tar xf $TARFILE_NAME" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
 echo "Untarring file ... end"
 
 echo "Running test ... begin"
