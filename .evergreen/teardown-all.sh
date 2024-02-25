@@ -17,8 +17,7 @@ if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     # Purposely use sh here to ensure backwards compatibility.
     sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
     # Consolidate the logs into the log directory.
-    find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
-    cp "${MONGO_ORCHESTRATION_HOME}/server.log" ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
+    find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 fi
 
 # Stop the load balancer.
@@ -39,7 +38,7 @@ fi
 find . -name "teardown.sh" -exec bash {} \;
 
 # Move all child log files into $DRIVERS_TOOLS/test_logs.tar.gz
-find . -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+find . -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 tar zcvf $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz -C log_dir/ .
 rm -rf log_dir
 
