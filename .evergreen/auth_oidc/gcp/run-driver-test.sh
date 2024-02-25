@@ -29,5 +29,5 @@ GCPKMS_CMD="tar xf $TARFILE_NAME" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-com
 echo "Untarring file ... end"
 
 echo "Running test ... begin"
-GPKSM_CMD=$GCPOIDC_TEST_CMD $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
+GCPKMS_CMD="$GCPOIDC_TEST_CMD" $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/run-command.sh
 echo "Running test ... end"
