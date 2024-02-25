@@ -8,10 +8,6 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR
 
-# Initialize log directory.
-rm -rf ./log_dir
-mkdir ./log_dir
-
 # Stop orchestration if it is running.
 if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     # Purposely use sh here to ensure backwards compatibility.
@@ -35,9 +31,16 @@ fi
 # Execute all available teardown scripts.
 find . -name "teardown.sh" -exec bash {} \;
 
-# Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz
-find "$(pwd -P)"  -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $x)' \;
-tar zcvf $(pwd -P)/test_logs.tar.gz -C log_dir/ .
-rm -rf log_dir
+# Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
+export LOG_DIR=$(mktemp -d)
+if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
+    LOG_DIR=$(cygpath -m $LOG_DIR)
+fi
+# Collapse the file path into the file name.
+find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x $LOG_DIR/$(basename $(dirname $x))_$(basename $x)' \;
+# Handle files in this directory.
+find $LOG_DIR -name '.evergreen_*' -exec sh -c 'x="{}"; mv $x ${x/.evergreen_/}' \;
+# Slurp into a tar file.
+tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 
 popd

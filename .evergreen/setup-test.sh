@@ -26,7 +26,7 @@ if [ -f "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh" ]; then
 fi
 
 # Ensure there is at least one log file.
-cat << EOF > ${DRIVERS_TOOLS}/.evergreen/test.log
+cat << EOF > ${DRIVERS_TOOLS}/.evergreen/inputs.log
 PROJECT_DIRECTORY=$PROJECT_DIRECTORY
 DRIVERS_TOOLS=$DRIVERS_TOOLS
 MONGODB_BINARIES=$MONGODB_BINARIES
