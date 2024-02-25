@@ -243,7 +243,7 @@ functions:
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: test_logs.tar.gz
+        local_file: ${PROJECT_DIRECTORY}/test_logs.tar.gz
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-logs.tar.gz
         bucket: mciuploads
         permissions: public-read
