@@ -9,8 +9,11 @@ echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTR
 # Copy client certificate because symlinks do not work on Windows.
 cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem || true
 
-# Create failing test result file.
+# Create failing test result files.
 echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > ${PROJECT_DIRECTORY}/test-results.json
+
+# Create a stub mongo-orchestration results file.
+echo '{"results": [{ "status": "PASS", "test_file": "Build", "log_raw": "Stub file for mongo-orchestration results"  } ]}' > ${DRIVERS_TOOLS}/results.json
 
 # Handle absolute paths.
 for filename in $(find ${DRIVERS_TOOLS} -name \*.json); do
