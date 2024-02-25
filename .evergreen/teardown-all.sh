@@ -16,8 +16,6 @@ mkdir ./log_dir
 if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     # Purposely use sh here to ensure backwards compatibility.
     sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
-    # Consolidate the logs into the log directory.
-    find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 fi
 
 # Stop the load balancer.
