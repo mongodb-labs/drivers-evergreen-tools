@@ -17,7 +17,9 @@ command_type: system
 # That roughly accounts for variable system performance for various buildvariants
 exec_timeout_secs: 1800 # 6 minutes is the longest we'll ever run
 
-# Ensure that teardown is working as expected.
+# Ensure that setup and teardown is working as expected.
+pre_error_fails_task: true
+ppre_timeout_secs: 1800 # 5 minutes
 post_error_fails_task: true
 post_timeout_secs: 1800 # 5 minutes
 
@@ -304,6 +306,7 @@ functions:
         file_location: "${PROJECT_DIRECTORY}/test-results.json"
     - command: attach.results
       params:
+        optional: true
         file_location: "${DRIVERS_TOOLS}/results.json"
 
   "bootstrap mongo-orchestration":
