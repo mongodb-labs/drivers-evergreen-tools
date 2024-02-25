@@ -37,6 +37,6 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
   done
 fi
 
-if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
+if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi

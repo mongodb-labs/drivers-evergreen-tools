@@ -37,7 +37,7 @@ find . -name "teardown.sh" -exec bash {} \;
 
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz
 find "$(pwd -P)"  -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $x)' \;
-tar zcvf $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz -C log_dir/ .
+tar zcvf $(pwd -P)/test_logs.tar.gz -C log_dir/ .
 rm -rf log_dir
 
 popd
