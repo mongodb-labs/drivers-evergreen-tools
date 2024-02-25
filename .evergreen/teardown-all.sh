@@ -37,11 +37,12 @@ rm -rf $LOG_DIR
 mkdir $LOG_DIR
 # Prepend the parent directory name to the file name.
 find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+# Delete the log_dir prefixed files.
+find $LOG_DIR -name log_dir_\* -exec sh -c 'rm {}' \;
 # Handle files from this directory.
 find $LOG_DIR -name \.evergreen_\* -exec sh -c 'x="{}"; mv $x ${x/.evergreen_/}' \;
-# Delete the log_dir prefixed files.
-find $LOG_DIR -name log_dir\* -exec sh -c 'rm {}' \;
 # Slurp into a tar file.
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
+rm -rf $LOG_DIR
 
 popd
