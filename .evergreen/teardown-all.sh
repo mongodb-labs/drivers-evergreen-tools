@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Handle proper teardown of all assets and services created by drivers-evergreen-tools.
 
-set -o errexit  # Exit the script with error if any of the commands fail
+set -eux
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh

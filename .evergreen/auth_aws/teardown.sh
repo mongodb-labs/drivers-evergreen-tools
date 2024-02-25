@@ -7,7 +7,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
 pushd $SCRIPT_DIR
-if [ -f "./setup-secrets.sh" ]; then
+if [ -f "./secrets-export.sh" ]; then
     . ./activate-authawsvenv.sh
     python ./lib/aws_assign_instance_profile.py
 fi
