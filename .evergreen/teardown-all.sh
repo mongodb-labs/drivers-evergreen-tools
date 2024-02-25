@@ -37,7 +37,7 @@ if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
     LOG_DIR=$(cygpath -m $LOG_DIR)
 fi
 # Prepend the parent directory name to the file name.
-find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x $LOG_DIR/$(basename $(dirname $x))_$(basename $x)' \;
+find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ${LOG_DIR}/$(basename $(dirname $x))_$(basename $x)' \;
 # Handle files from this directory.
 find $LOG_DIR -name \.evergreen_\* -exec sh -c 'x="{}"; mv $x ${x/.evergreen_/}' \;
 # Slurp into a tar file.
