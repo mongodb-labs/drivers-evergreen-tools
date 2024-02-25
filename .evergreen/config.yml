@@ -444,7 +444,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           set -x
-          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-vm.sh
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
 
   "cleanup":
     - command: shell.exec
