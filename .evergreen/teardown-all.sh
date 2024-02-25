@@ -32,14 +32,15 @@ fi
 find . -name "teardown.sh" -exec bash {} \;
 
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
-LOG_DIR=$(mktemp -d)
-if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
-    LOG_DIR=$(cygpath -m $LOG_DIR)
-fi
+LOG_DIR=./log_dir
+rm -rf $LOG_DIR
+mkdir $LOG_DIR
 # Prepend the parent directory name to the file name.
-find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ${LOG_DIR}/$(basename $(dirname $x))_$(basename $x)' \;
+find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x).bak' \;
 # Handle files from this directory.
 find $LOG_DIR -name \.evergreen_\* -exec sh -c 'x="{}"; mv $x ${x/.evergreen_/}' \;
+# Rename the files.
+find $LOG_DIR -name \*.bak -exec sh -c 'x="{}"; mv $x ${x/.bak/}' \;
 # Slurp into a tar file.
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 
