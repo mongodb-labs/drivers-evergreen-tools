@@ -18,6 +18,7 @@ if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
     # Consolidate the logs into the log directory.
     find $MONGO_ORCHESTRATION_HOME -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+    cp "${MONGO_ORCHESTRATION_HOME}/server.log" ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
 fi
 
 # Stop the load balancer.

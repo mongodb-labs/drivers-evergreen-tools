@@ -3,7 +3,7 @@
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
-# Set up the mongo orchestrationn config.
+# Set up the mongo orchestration config.
 echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
 # Copy client certificate because symlinks do not work on Windows.
@@ -21,3 +21,15 @@ done
 if [ -f "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh" ]; then
     bash "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh"
 fi
+
+# Ensure there is at least one log file.
+cat << EOF >> ${DRIVERS_TOOLS}/test.log
+PROJECT_DIRECTORY=$PROJECT_DIRECTORY
+DRIVERS_TOOLS=$DRIVERS_TOOLS
+MONGODB_BINARIES=$MONGODB_BINARIES
+MONGO_ORCHESTRATION_HOME=$MONGO_ORCHESTRATION_HOME
+PROJECT_ORCHESTRATION_HOME=$PROJECT_ORCHESTRATION_HOME
+CURRENT_VERSION=$CURRENT_VERSION
+OS=${OS:-}
+PATH=$PATH
+EOF
