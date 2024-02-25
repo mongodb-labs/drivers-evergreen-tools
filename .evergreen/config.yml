@@ -409,6 +409,7 @@ functions:
 
   "teardown assets":
     - command: shell.exec
+      shell: bash
       params:
         script: |
           ${PREPARE_SHELL}
