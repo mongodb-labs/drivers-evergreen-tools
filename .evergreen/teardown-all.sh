@@ -39,7 +39,7 @@ find . -name "teardown.sh" -exec bash {} \;
 
 # Move all child log files into $DRIVERS_TOOLS/test_logs.tar.gz
 find . -name \*.log -exec sh -c 'x="{}"; mv $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
-tar zcvf $DRIVERS_TOOLS/test_logs.tar.gz -C log_dir/ .
+tar zcvf $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz -C log_dir/ .
 rm -rf log_dir
 
 popd
