@@ -40,7 +40,7 @@ find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(
 # Delete the log_dir prefixed files.
 find $LOG_DIR -name log_dir_\* -exec sh -c 'rm {}' \;
 # Handle files from this directory.
-find $LOG_DIR -name \.evergreen_\* -exec sh -c 'x="{}"; mv $x ${x/.evergreen_/}' \;
+rename 's/.evergreen_//g' $LOG_DIR/.evergreen_*.log
 # Slurp into a tar file.
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 rm -rf $LOG_DIR
