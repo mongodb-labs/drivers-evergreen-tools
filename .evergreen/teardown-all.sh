@@ -36,11 +36,13 @@ LOG_DIR=./log_dir
 rm -rf $LOG_DIR
 mkdir $LOG_DIR
 # Prepend the parent directory name to the file name.
-find "$(pwd -P)" -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 # Delete the log_dir prefixed files.
-find $LOG_DIR -name log_dir_\* -exec sh -c 'rm {}' \;
-# Handle files from this directory.
-rename 's/.evergreen_//g' $LOG_DIR/.evergreen_*.log
+pushd $LOG_DIR
+find . -name log_dir_\* | xargs rm
+# Handle files from the .evergreen directory.
+find . -name .evergreen_\* -exec bash -c 'mv $0 ${0/.evergreen_/}' {} \;
+popd
 # Slurp into a tar file.
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 rm -rf $LOG_DIR
