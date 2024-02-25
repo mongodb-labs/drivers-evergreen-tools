@@ -23,20 +23,20 @@ if [ -f "$DRIVERS_TOOLS/haproxy.conf" ]; then
     bash /.evergreen/run-load-balancer.sh stop
 fi
 
-# Clean up docker
+# Clean up docker.
 DOCKER=$(command -v docker) || true
 if [ -n "$DOCKER" ]; then
-    # Kill all containers
-    docker rm $(docker ps -a -q)&> /dev/null || true
-    # Remove all images
+    # Kill all containers.
+    docker rm $(docker ps -a -q) &> /dev/null || true
+    # Remove all images.
     docker rmi -f $(docker images -a -q) &> /dev/null || true
 fi
 
 # Execute all available teardown scripts.
 find . -name "teardown.sh" -exec bash {} \;
 
-# Move all child log files into $DRIVERS_TOOLS/test_logs.tar.gz
-find . -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+# Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz
+find "$(pwd -P)"  -name \*.log -exec sh -c 'x="{}"; cp $x ./log_dir/$(basename $x)' \;
 tar zcvf $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz -C log_dir/ .
 rm -rf log_dir
 
