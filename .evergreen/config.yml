@@ -805,12 +805,12 @@ tasks:
         - func: "run tests"
 
     - name: "test-serverless"
-      tags: ["serverless"]
+      tags: ["serverless", "pr"]
       commands:
         - func: "run serverless tests"
 
     - name: "test-docker"
-      tags: ["latest", "docker"]
+      tags: ["latest", "docker", "pr"]
       commands:
         - func: "run docker test"
         - func: "run docker test"
@@ -819,12 +819,13 @@ tasks:
         - func: "cleanup docker"
 
     - name: "test-oidc"
-      tags: ["latest", "oidc"]
+      tags: ["latest", "oidc", "pr"]
       commands:
         - func: "run oidc test"
         - func: "cleanup docker"
 
     - name: "test-oidc-azure"
+      tags: ["oidc", "pr"]
       commands:
         - func: "run oidc azure test"
 
@@ -890,9 +891,9 @@ axes:
     display_name: OS
     values:
 
-      - id: debian10
-        display_name: "Debian 10.0"
-        run_on: debian10-small
+      - id: debian11
+        display_name: "Debian 11.0"
+        run_on: debian11-small
 
       - id: ubuntu-20.04
         display_name: "Ubuntu 20.04"
