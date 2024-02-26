@@ -13,7 +13,7 @@ if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
     # Purposely use sh here to ensure backwards compatibility.
     sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
     # Ensure that the logs are accessible to the child log scraper below.
-    cp "${MONGO_ORCHESTRATION_HOME}/*.log" $DRIVERS_TOOLS/.evergreen/orchestration
+    cp ${MONGO_ORCHESTRATION_HOME}/*.log $DRIVERS_TOOLS/.evergreen/orchestration
 fi
 
 # Stop the load balancer if it is running.
