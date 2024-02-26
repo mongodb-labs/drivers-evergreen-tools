@@ -45,9 +45,9 @@ class MyCallback(OIDCCallback):
         return OIDCCallbackResult(access_token=data['access_token'])
 
 props = dict(OIDC_CALLBACK=MyCallback())
-print('Testing MONGODB-OIDC on gcp...')
+print('Testing MONGODB-OIDC on azure...')
 c = MongoClient('mongodb://localhost:27017/?authMechanism=MONGODB-OIDC', authMechanismProperties=props)
 c.test.test.insert_one({})
 c.close()
-print('Testing MONGODB-OIDC on gcp... done.')
+print('Testing MONGODB-OIDC on azure... done.')
 print('Self test complete!')
