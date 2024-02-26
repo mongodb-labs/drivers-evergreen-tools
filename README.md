@@ -103,6 +103,23 @@ To run an individual hook like `shellcheck` manually, run:
 pre-commit run --all-files shellcheck
 ```
 
+## Setup and Teardown
+
+For convenience, there are two scripts that can be used for setup and teardown of assets and services
+used by `drivers-evergreen-tools`.
+
+`$DRIVERS_TOOLS/.evergreen/setup-test.sh` will handle common setup actions that have previously
+been spread through multiple `pre:` tasks in drivers.
+
+`$DRIVERS_TOOLS/.evergreen/teardown-all.sh` will clean up assets and services, including any
+that were started in the subfolders, by invoking the `teardown.sh` script in each folder.
+Using this script in a `post:` task can remove the need for `task_groups` to ensure that services
+are properly torn down.  The script will also consolidate all logs into a single
+`${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz` for convenient uploading.
+
+NOTE: The use of the `teardown.sh` scripts requires first migrating from
+EVG project variables to using [Secrets Handling](./.evergreen/secrets_handling/README.md).
+
 ## evergreen_config_generator
 
 This repo also contains a Python package for use in scripts that generate
