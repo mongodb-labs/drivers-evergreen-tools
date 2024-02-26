@@ -75,4 +75,4 @@ The token in `$OIDC_TOKEN_DIR/test_user1_expires` can be used to test expired cr
 
 ## Azure Testing
 
-See the readme [./azure/README.md].
+See the [Azure README](./azure/README.md).
