@@ -27,8 +27,7 @@ const options = program.opts();
 const {
   repoOwner: owner,
   repoName: repo,
-  bodyMatch,
-  commentPath,
+  reviewersFilePath,
   headSha: targetSha
  } = options;
 
@@ -67,6 +66,9 @@ if (issue.requested_reviewers.length > 1) {
 //     process.exit(1);
 // }
 
+const reviewers = fs.readFileSync(reviewersFilePath, { encoding: "utf-8"});
+// TODO: get the list of reviewers, ignoring comment line and the author of the
+// PR
 const choices = ['NoahStapp'];
 const choice = choices[Math.floor(Math.random() * choices.length)]
 
