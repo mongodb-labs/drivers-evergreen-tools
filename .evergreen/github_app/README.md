@@ -15,7 +15,8 @@ Note: this script be run on a Linux EVG Host or locally.  It will self-manage th
 ## apply-labels
 
 Uses `mongodb-drivers-comment-bot` to apply labels according to [labeler](https://github.com/actions/labeler) config,
-without the need for a `pull_request_target` trigger.
+without the need for a `pull_request_target` trigger.  Note: only the `changed-files: > any-glob-to-any-file:` config
+is currently implemented.
 
  We offer a convenience script to install node,
 fetch secrets and run the app:
