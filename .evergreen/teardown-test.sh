@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Handle proper teardown of all assets and services created by drivers-evergreen-tools.
+# Handle common teardown actions for drivers-tools.
+# This includes mongo-orchestration, load-balancer, docker, and consolidation
+# of log files.
+# Note: To avoid scope creep, any new functionality should be
+# handled in sub-folders with their own setup and teardown scripts.
 
 set -eux
 
@@ -29,9 +33,6 @@ if [ -n "$DOCKER" ]; then
     # Remove all images.
     docker rmi -f $(docker images -a -q) &> /dev/null || true
 fi
-
-# Execute all available teardown scripts.
-find . -name "teardown.sh" -exec bash {} \;
 
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
 LOG_DIR=./log_dir

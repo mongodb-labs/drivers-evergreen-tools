@@ -42,6 +42,12 @@ echo "Finding Python3 binary..."
 PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
 
+# Set up the mongo orchestration config.
+echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+
+# Copy client certificate because symlinks do not work on Windows.
+cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem || true
+
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
     get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
@@ -105,6 +111,7 @@ else
   exit 1
 fi
 
+# Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
 # Docker does not enable ipv6 by default.
