@@ -111,13 +111,14 @@ used by `drivers-evergreen-tools`.
 `$DRIVERS_TOOLS/.evergreen/setup-test.sh` will handle common setup actions that have previously
 been spread through multiple `pre:` tasks in drivers.
 
-`$DRIVERS_TOOLS/.evergreen/teardown-all.sh` will clean up assets and services, including any
-that were started in the subfolders, by invoking the `teardown.sh` script in each folder.
-Using this script in a `post:` task can remove the need for `task_groups` to ensure that services
-are properly torn down.  The script will also consolidate all logs into a single
-`${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz` for convenient uploading.
+`$DRIVERS_TOOLS/.evergreen/teardown-test.sh` will clean up common assets and services.
+The script will also consolidate all logs into a single `${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz`
+for convenient uploading.
 
-NOTE: The use of the `teardown.sh` scripts requires first migrating from
+Subfolders that have setup and teardown requirements are encouraged to also provide
+`setup-test.sh` and `teardown-test.sh`.
+
+NOTE: The use of the `teardown-test.sh` scripts in subfolders requires first migrating from
 EVG project variables to using [Secrets Handling](./.evergreen/secrets_handling/README.md).
 
 ## evergreen_config_generator
