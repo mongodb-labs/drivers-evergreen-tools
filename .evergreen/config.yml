@@ -341,11 +341,6 @@ functions:
 
   "run serverless tests":
     - command: shell.exec
-      params:
-        shell: "bash"
-        script: |
-          bash ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
-    - command: shell.exec
       type: test
       params:
         include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD"]
@@ -413,7 +408,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          bash ${DRIVERS_TOOLS}/.evergreen/teardown-all.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/teardown-test.sh
 
   "cleanup":
     - command: shell.exec
@@ -763,23 +758,75 @@ tasks:
     - name: "test-oidc-azure"
       tags: ["oidc", "pr"]
       commands:
-        - command: shell.exec
-          params:
-            shell: bash
-            script: |
-              set -o errexit
-              set -x
-              ${PREPARE_SHELL}
-              # ensure HEAD points to current commit
-              cd $DRIVERS_TOOLS
-              git add .
-              git commit -m "add files"
-              export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-              $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
         - func: "run oidc azure test"
 
 # }}}
 
+task_groups:
+
+  - name: serverless_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: "fetch source"
+      - func: "prepare resources"
+      - command: shell.exec
+        params:
+          shell: "bash"
+          script: |
+            ${PREPARE_SHELL}
+            set +o xtrace
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup-test.sh
+    teardown_group:
+      - command: shell.exec
+        params:
+          script: |
+            ${PREPARE_SHELL}
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/teardown-test.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - ".serverless"
+
+  - name: testazureoidc_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            set -o errexit
+            set -x
+            ${PREPARE_SHELL}
+            # ensure HEAD points to current commit
+            cd $DRIVERS_TOOLS
+            git add .
+            git commit -m "add files"
+            export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup-test.sh
+    teardown_group:
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            ${PREPARE_SHELL}
+            set -x
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown-test.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-oidc-azure
 
 axes:
   - id: versions
@@ -936,7 +983,7 @@ buildvariants:
   run_on: ubuntu2004-small
   tasks:
     - "test-oidc"
-    - "test-oidc-azure"
+    - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
@@ -1017,7 +1064,7 @@ buildvariants:
       - "ubuntu-20.04"
   display_name: "Serverless ${os-requires-50}"
   tasks:
-    - ".serverless"
+    - serverless_task_group
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
