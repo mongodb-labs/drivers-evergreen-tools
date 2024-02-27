@@ -55,9 +55,31 @@ if (issue == null) {
     console.error(`ERROR: Could not find matching pull request for sha ${targetSha}`)
     process.exit(1)
 }
-const { number: issueNumber } = issue
+const { number } = issue
 
 if (issue.requested_reviewers.length > 1) {
     console.log("Review already requested!");
     process.exit(1);
 }
+
+// if (issue.draft) {
+//     console.log("PR is in draft mode!");
+//     process.exit(1);
+// }
+
+const choices = ['NoahStapp'];
+const choice = choices[Math.floor(Math.random() * choices.length)]
+
+// Assign the reviewer.
+console.log("Assigning reviewer to PR...");
+resp = await octokit.request("POST /repos/{owner}/{repo}/pulls/{number}/requested_reviewers", {
+    owner,
+    repo,
+    number,
+    reviewers: [
+        choice
+    ],
+    headers
+});
+console.log(resp.data)
+console.log("Assigning reviewer to PR... done.");
