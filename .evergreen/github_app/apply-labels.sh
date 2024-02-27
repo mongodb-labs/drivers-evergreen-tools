@@ -10,7 +10,7 @@ pushd $SCRIPT_DIR
 . ../secrets_handling/setup-secrets.sh drivers/comment-bot
 
 # Install node and activate it.
-#bash ../install-node.sh
+bash ../install-node.sh
 source ../init-node-and-npm-env.sh
 
 # Install and run the app.
