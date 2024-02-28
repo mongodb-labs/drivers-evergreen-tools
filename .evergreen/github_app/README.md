@@ -25,4 +25,4 @@ fetch secrets and run the app:
 bash apply-labels.sh -o "<repo-owner>" -n "<repo-name>" -h "<head-commit-sha>" -l "<path-to-labeler-config>"
 ```
 
-Note: this script be run on a Linux EVG Host or locally.  It will self-manage the credentials it needs.
+Note: this script can be run on a Linux EVG Host or locally.  It will self-manage the credentials it needs.
