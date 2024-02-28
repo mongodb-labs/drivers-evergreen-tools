@@ -67,7 +67,7 @@ An example task group would look like:
         set -o errexit
         ${PREPARE_SHELL}
         export GCPOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
-        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-vm.sh
+        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
   teardown_task:
     - command: shell.exec
       params:
