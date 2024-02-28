@@ -89,13 +89,10 @@ for (const line of resp.data.split('\n')) {
 const labelSet = new Set();
 const config = parse(fs.readFileSync(labelerPath, { encoding: 'utf-8'}));
 for (let label in config) {
-    console.log(label)
-    console.log(config[label])
     let patterns = config[label][0]['changed-files'][0]['any-glob-to-any-file'];
     if (!Array.isArray(patterns)) {
         patterns = [patterns];
     }
-    console.log(patterns)
     for (let pattern of patterns) {
         const matches = minimatch.match(fileNames, pattern, { matchBase: true });
         if (matches.length > 0) {
