@@ -106,6 +106,11 @@ for (let label in config) {
 
 // Apply the appropriate labels.
 console.log("Adding labels to PR...");
+if (labelSet.size === 0) {
+    console.warn(`No labels result from labelerPath "${labelerPath}"`);
+    process.exit(0);
+}
+
 const labels = Array.from(labelSet)
 resp = await octokit.request("POST /repos/{owner}/{repo}/issues/{number}/labels", {
     owner,
