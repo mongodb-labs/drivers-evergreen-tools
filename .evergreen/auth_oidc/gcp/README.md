@@ -20,7 +20,7 @@ should run the equivalent of the following, substituting your driver name:
 
 ```bash
 export GCPOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
-$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-vm.sh
+$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
 ```
 
 This script can be run locally or in CI.  The script also runs a self-test on the VM using the Python driver.
