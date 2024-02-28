@@ -50,7 +50,7 @@ TOKEN_AUDIENCE=os.environ["GCPOIDC_AUDIENCE"]
 Finally, we tear down the vm:
 
 ```bash
-$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-vm.sh
+$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
 ```
 
 An example task group would look like:
