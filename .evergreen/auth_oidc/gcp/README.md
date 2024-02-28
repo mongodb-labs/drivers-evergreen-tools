@@ -74,7 +74,7 @@ An example task group would look like:
         shell: bash
         script: |-
         ${PREPARE_SHELL}
-        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-vm.sh
+        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
   setup_group_can_fail_task: true
   setup_group_timeout_secs: 1800
   tasks:
