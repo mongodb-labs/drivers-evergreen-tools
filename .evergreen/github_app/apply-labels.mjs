@@ -31,7 +31,7 @@ const {
   repoName: repo,
   labelerPath,
   headSha: targetSha
- } = options;
+} = options;
 
 // Set up the app.
 const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
