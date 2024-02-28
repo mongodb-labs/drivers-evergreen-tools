@@ -18,7 +18,7 @@ Uses `mongodb-drivers-comment-bot` to apply labels according to [labeler](https:
 without the need for a `pull_request_target` trigger.  Note: only the `changed-files: > any-glob-to-any-file:` config
 is currently implemented.
 
- We offer a convenience script to install node,
+We offer a convenience script to install node,
 fetch secrets and run the app:
 
 ```bash
