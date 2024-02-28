@@ -54,7 +54,7 @@ let resp = await octokit.request("GET /repos/{owner}/{repo}/pulls?state=open&per
 });
 const issue = resp.data.find(pr => pr.head.sha === targetSha);
 if (issue == null) {
-    console.error(`ERROR: Could not find matching pull request for sha ${targetSha}`)
+    console.error(`Could not find matching pull request for sha ${targetSha}`)
     process.exit(1)
 }
 const { number } = issue;
