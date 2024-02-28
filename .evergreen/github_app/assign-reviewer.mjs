@@ -61,27 +61,30 @@ if (issue.requested_reviewers.length > 1) {
     process.exit(1);
 }
 
-// if (issue.draft) {
-//     console.log("PR is in draft mode!");
-//     process.exit(1);
-// }
+if (issue.draft) {
+    console.log("PR is in draft mode!");
+    process.exit(1);
+}
 
-const reviewers = fs.readFileSync(reviewersFilePath, { encoding: "utf-8"});
-// TODO: get the list of reviewers, ignoring comment line and the author of the
-// PR
-const choices = ['NoahStapp'];
-const choice = choices[Math.floor(Math.random() * choices.length)]
+const reviewers = [];
+const reviewersSource = fs.readFileSync(reviewersFilePath, { encoding: "utf-8"});
+for (let line of reviewersSource.split('\n')) {
+    line = line.trim()
+    if (line.length == 0 || line.startsWith('#') || line == issue.user.login) {
+        continue;
+    }
+    reviewers.push(line);
+}
+const reviewer = reviewers[Math.floor(Math.random() * reviewers.length)]
 
-// Assign the reviewer.
 console.log("Assigning reviewer to PR...");
 resp = await octokit.request("POST /repos/{owner}/{repo}/pulls/{number}/requested_reviewers", {
     owner,
     repo,
     number,
     reviewers: [
-        choice
+        reviewer
     ],
     headers
 });
-console.log(resp.data)
 console.log("Assigning reviewer to PR... done.");
