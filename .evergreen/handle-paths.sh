@@ -20,7 +20,7 @@ then
 else
   SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" &> /dev/null && pwd )"
 fi
-if [[ "${OSTYPE:-}" = cygwin ]]; then
+if [[ "$(uname -s)" == CYGWIN* ]]; then
   SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
 fi
 
@@ -37,6 +37,6 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
   done
 fi
 
-if [[ "${OSTYPE:-}" == cygwin ]]; then
+if [[ "$(uname -s)" == CYGWIN* ]]; then
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi
