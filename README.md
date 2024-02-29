@@ -118,8 +118,8 @@ for convenient uploading.
 Subfolders that have setup and teardown requirements are encouraged to also provide
 `setup-test.sh` and `teardown-test.sh`.
 
-NOTE: The use of the `teardown-test.sh` scripts in subfolders requires first migrating from
-EVG project variables to using [Secrets Handling](./.evergreen/secrets_handling/README.md).
+NOTE: The subfolder setup/teardown scripts requires users to have configured
+support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
 
 ## evergreen_config_generator
 
