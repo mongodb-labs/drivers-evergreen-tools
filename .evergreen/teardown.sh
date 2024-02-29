@@ -38,10 +38,8 @@ fi
 LOG_DIR="$(mktemp -d)"
 # Prepend the parent directory name to the file name.
 find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
-# Delete the log_dir prefixed files.
-pushd $LOG_DIR
-find . -name log_dir_\* | xargs rm
 # Handle files from the .evergreen directory.
+pushd $LOG_DIR
 find . -name .evergreen_\* -exec bash -c 'mv $0 ${0/.evergreen_/}' {} \;
 popd
 # Slurp into a tar file.
