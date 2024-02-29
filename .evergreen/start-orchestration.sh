@@ -53,13 +53,13 @@ if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then
 fi
 
 ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
-if [[ "${OSTYPE:-}" == cygwin ]]; then
+if [[ "$(uname -s)" == CYGWIN* ]]; then
   ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
 fi
 
 # Forcibly kill the process listening on port 8889, most likely a wild
 # mongo-orchestration left running from a previous task.
-if [[ "${OSTYPE:-}" == cygwin ]]; then
+if [[ "$(uname -s)" == CYGWIN* ]]; then
   OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
     taskkill /F /T /PID "$OLD_MO_PID" || true

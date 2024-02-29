@@ -21,10 +21,7 @@ else
   SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" &> /dev/null && pwd )"
 fi
 if [[ "$(uname -s)" == CYGWIN* ]]; then
-  echo "HERE I AM"
   SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
-else
-  echo "OH NO $(uname -s)"
 fi
 
 # Find the DRIVERS_TOOLS by walking up the folder tree until there
