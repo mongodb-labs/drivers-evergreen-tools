@@ -112,7 +112,7 @@ used by `drivers-evergreen-tools`.
 been spread through multiple `pre:` tasks in drivers.
 
 `$DRIVERS_TOOLS/.evergreen/teardown-test.sh` will clean up common assets and services.
-The script will also consolidate all logs into a single `${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz`
+This script will also collect all logs files recursively found in the `${DRIVERS_TOOLS}` directory into a single `${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz` file
 for convenient uploading.
 
 Subfolders that have setup and teardown requirements are encouraged to also provide
