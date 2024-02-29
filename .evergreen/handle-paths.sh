@@ -37,6 +37,6 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
   done
 fi
 
-if [[ "${OSTYPE:?}" = cygwin ]]; then
+if [[ "${OSTYPE:?}" == cygwin ]]; then
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi

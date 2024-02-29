@@ -55,7 +55,7 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           if [[ "${OSTYPE:?}" = cygwin ]]; then
+           if [[ "${OSTYPE:?}" == cygwin ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
            fi
@@ -241,11 +241,6 @@ functions:
         display_name: "Scan Build Report"
 
   "upload logs":
-    - command: archive.targz_pack
-      params:
-        target: "${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz"
-        source_dir: "${DRIVERS_TOOLS}/.evergreen"
-        include: ["*.log"]
     - command: s3.put
       params:
         aws_key: ${aws_key}
@@ -783,13 +778,13 @@ task_groups:
           script: |
             ${PREPARE_SHELL}
             set +o xtrace
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup-test.sh
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
     teardown_group:
       - command: shell.exec
         params:
           script: |
             ${PREPARE_SHELL}
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/teardown-test.sh
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
@@ -817,7 +812,7 @@ task_groups:
             git add .
             git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup-test.sh
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
       - command: shell.exec
         params:
@@ -825,7 +820,7 @@ task_groups:
           script: |
             ${PREPARE_SHELL}
             set -x
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown-test.sh
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"

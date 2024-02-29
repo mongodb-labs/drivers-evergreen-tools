@@ -7,7 +7,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
 # Ensure environment variables are set.
-if [ -z "$PROJECT_DIRECTORY" ]; then
+if [[ -z "$PROJECT_DIRECTORY" ]]; then
   echo "Please set the PROJECT_DIRECTORY environment variable."
   exit 1
 fi
@@ -19,7 +19,7 @@ echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test
 echo '{"results": [{ "status": "PASS", "test_file": "Build", "log_raw": "Stub file for mongo-orchestration results"  } ]}' > ${DRIVERS_TOOLS}/results.json
 
 # Install project dependencies.
-if [ -f "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh" ]; then
+if [[ -f "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh" ]]; then
     bash "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh"
 fi
 
