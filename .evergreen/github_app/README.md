@@ -26,3 +26,16 @@ bash apply-labels.sh -o "<repo-owner>" -n "<repo-name>" -h "<head-commit-sha>" -
 ```
 
 Note: this script can be run on a Linux EVG Host or locally.  It will self-manage the credentials it needs.
+
+## add-reviewer
+
+Uses `mongodb-drivers-comment-bot` to apply add a random reviewer based on a text file.
+
+We offer a convenience script to install node,
+fetch secrets and run the app:
+
+```bash
+bash assign-reviewer.sh -o "<repo-owner>" -n "<repo-name>" -h "<head-commit-sha>" -p "<path-to-reviewer-list>"
+```
+
+Note: this script can be run on a Linux EVG Host or locally.  It will self-manage the credentials it needs.
