@@ -35,9 +35,7 @@ if [ -n "$DOCKER" ]; then
 fi
 
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
-LOG_DIR=./log_dir
-rm -rf $LOG_DIR
-mkdir $LOG_DIR
+LOG_DIR="$(mktemp -d)"
 # Prepend the parent directory name to the file name.
 find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
 # Delete the log_dir prefixed files.
