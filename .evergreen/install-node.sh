@@ -23,7 +23,6 @@ CURL_FLAGS=(
   --silent        # Do not print a progress bar
   --show-error    # Despite the silent flag still print out errors
   --max-time 900  # 900 seconds is 15 minutes, evergreen times out at 20
-  --continue-at - # If a download is interrupted it can figure out where to resume
 )
 
 mkdir -p "$NODE_ARTIFACTS_PATH/npm_global"

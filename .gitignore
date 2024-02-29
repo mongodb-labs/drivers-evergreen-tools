@@ -98,6 +98,7 @@ kmstlsvenv
 /uri.txt
 /results.json
 /mongodb
+node_index.tab
 mongodb-binaries.tgz
 /.evergreen/docker/ubuntu*/mongodb
 /mongosh
