@@ -80,7 +80,7 @@ AP_END=$(date +%s)
 # Write results file
 DL_ELAPSED=$(expr $DL_END - $DL_START)
 AP_ELAPSED=$(expr $AP_END - $AP_START)
-cat <<EOT > $DRIVERS_TOOLS/results.json
+cat <<EOT >| $DRIVERS_TOOLS/results.json
 {"results": [
   {
     "status": "PASS",

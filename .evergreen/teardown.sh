@@ -13,7 +13,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Stop orchestration if it is running.
-if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
+if [[ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]]; then
     # Purposely use sh here to ensure backwards compatibility.
     sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
     # Ensure that the logs are accessible to the child log scraper below.
@@ -21,13 +21,13 @@ if [ -f "${MONGO_ORCHESTRATION_HOME}/server.log" ]; then
 fi
 
 # Stop the load balancer if it is running.
-if [ -f "$DRIVERS_TOOLS/haproxy.conf" ]; then
+if [[ -f "$DRIVERS_TOOLS/haproxy.conf" ]]; then
     bash /.evergreen/run-load-balancer.sh stop
 fi
 
 # Clean up docker.
 DOCKER=$(command -v docker) || true
-if [ -n "$DOCKER" ]; then
+if [[ -n "$DOCKER" ]]; then
     # Kill all containers.
     docker rm $(docker ps -a -q) &> /dev/null || true
     # Remove all images.

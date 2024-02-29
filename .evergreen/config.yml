@@ -55,7 +55,7 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
+           if [[ "${OSTYPE:?}" = cygwin ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
            fi
@@ -106,7 +106,7 @@ functions:
           else
             git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
           fi
-          $DRIVERS_TOOLS/.evergreen/setup-test.sh
+          $DRIVERS_TOOLS/.evergreen/setup.sh
 
   "upload release":
     - command: s3.put
@@ -413,7 +413,7 @@ functions:
       params:
         script: |
           ${PREPARE_SHELL}
-          bash ${DRIVERS_TOOLS}/.evergreen/teardown-test.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/teardown.sh
 
   "cleanup":
     - command: shell.exec

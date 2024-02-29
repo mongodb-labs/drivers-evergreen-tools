@@ -150,7 +150,7 @@ printf "\nCluster URI: %s\n" "$URI"
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)
 DL_ELAPSED=$(expr $DL_END - $DL_START)
-cat <<EOT > $DRIVERS_TOOLS/results.json
+cat <<EOT >| $DRIVERS_TOOLS/results.json
 {"results": [
   {
     "status": "PASS",
