@@ -23,6 +23,7 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 | drivers/csfle             | Used in `../csfle` for encryption related tests. |
 | drivers/enterprise_auth   | Has the creds needed for Enterprise Auth testing. |
 | drivers/gcpkms            | Used in `../csfle/gcpkms` for GCP KMS testing. |
+| drivers/gcpoidc           | Used in `../auth_oidc/gcp` for OIDC Testing on GCP. |
 | drivers/oidc              | Used in `../oidc` for OIDC Auth testing. |
 | drivers/serverless        | Used in `../serverless` for serverless testing. |
 | drivers/serverless_next   | Used in `../serverless` for serverless proxy testing. |
