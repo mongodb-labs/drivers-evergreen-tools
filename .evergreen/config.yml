@@ -414,6 +414,38 @@ functions:
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
           bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 
+  "run oidc gcp test":
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |
+          set -o errexit
+          set -x
+          ${PREPARE_SHELL}
+          # ensure HEAD points to current commit
+          cd $DRIVERS_TOOLS
+          git add .
+          git commit -m "add files"
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          ${PREPARE_SHELL}
+          cd $DRIVERS_TOOLS
+          export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
+          git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
+          export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
+          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-driver-test.sh
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |
+          ${PREPARE_SHELL}
+          set -x
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
+
   "cleanup":
     - command: shell.exec
       params:
@@ -829,6 +861,11 @@ tasks:
       commands:
         - func: "run oidc azure test"
 
+    - name: "test-oidc-gcp"
+      tags: ["latest", "oidc"]
+      commands:
+        - func: "run oidc gcp test"
+
 # }}}
 
 
@@ -1051,6 +1088,7 @@ buildvariants:
   run_on: ubuntu2004-small
   tasks:
     - "test-oidc"
+    - "test-oidc-gcp"
     - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"

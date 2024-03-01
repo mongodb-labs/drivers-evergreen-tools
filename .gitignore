@@ -83,39 +83,32 @@ evergreen_config_generator/dist
 .evergreen/auth_oidc/azure/env.sh
 .evergreen/auth_oidc/azure/keyfile
 .evergreen/auth_oidc/azure/keyfile.pub
-testazureoidc-expansions.yml
-
-# The oidc config files are created as needed
-.evergreen/orchestration/configs/*/auth-oidc.json
+*-expansions.yml
+*-expansion.yml
+secrets-export.sh
+token_file.txt
 
 # Virtual envs
 .venv
-venv
-authawsvenv
-authoidcvenv
-kmstlsvenv
+*venv
 
+# Temporary files created during operation.
 /uri.txt
 /results.json
 /mongodb
 node_index.tab
 mongodb-binaries.tgz
+.evergreen/orchestration/configs/*/auth-oidc.json
 /.evergreen/docker/ubuntu*/mongodb
 /mongosh
-mo-expansion.yml
-mo-expansion.sh
 tmp.json
 haproxy.conf
 *.pid
-lb-expansion.yml
 .idea/
 .DS_Store
 *.log
 .nvm
 orchestration.config
-atlas-expansion.yml
-secrets-export.sh
-token_file.txt
 pykmip.log.*
 nohup.out
 pykmip.db
