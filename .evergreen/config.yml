@@ -1165,7 +1165,7 @@ buildvariants:
       - "ubuntu-20.04"
   display_name: "Atlas ${os-requires-50}"
   tasks:
-    - test_atlas_task_group_task_group
+    - test_atlas_task_group
 
 - matrix_name: "serverless"
   matrix_spec:
