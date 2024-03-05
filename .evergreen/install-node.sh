@@ -85,7 +85,7 @@ echo "Node.js ${node_index_version} for ${operating_system}-${architecture} rele
 
 set -o xtrace
 
-if [[ ! -d "${NODE_ARTIFACTS_PATH}/${node_directory}" ]]; then
+if [[ ! -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
   curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
 
   if [[ "$file_extension" = "zip" ]]; then
