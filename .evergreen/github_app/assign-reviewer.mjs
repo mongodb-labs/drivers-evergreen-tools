@@ -56,7 +56,7 @@ if (issue == null) {
 }
 const { number } = issue
 
-if (issue.requested_reviewers.length > 1) {
+if (issue.requested_reviewers.length > 0) {
     console.log("Review already requested!");
     process.exit(0);
 }
