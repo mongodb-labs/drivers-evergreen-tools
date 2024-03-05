@@ -44,8 +44,17 @@ echo "Finding Python3 binary..."
 PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
 
+# Fix orchestration path.
+if [[ "$(uname -s)" == CYGWIN* ]]; then
+  MONGO_ORCHESTRATION_HOME=$(cygpath -m $MONGO_ORCHESTRATION_HOME)
+fi
+
 # Set up the mongo orchestration config.
 if [ -n "${MONGODB_BINARIES}" ]; then
+  # Fix binaries path.
+  if [[ "$(uname -s)" == CYGWIN* ]]; then
+    MONGODB_BINARIES=$(cygpath -m $MONGODB_BINARIES)
+  fi
   echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 fi
 
