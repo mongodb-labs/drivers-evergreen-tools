@@ -110,12 +110,18 @@ EOF
 create_cluster ()
 {
   echo "Creating new Atlas Cluster..."
-  curl \
+  resp=$(curl \
     --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
     -d "${CREATE_CLUSTER_JSON}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true"
+    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true" \
+    -o /dev/stderr  \
+    -w "%{http_code}")
+  if [[ resp -neq 200 ]]; then
+    exit 1
+  fi
+  echo "Creating new Atlas Cluster... done."
 }
 
 # Check if cluster has a srv address, and assume once it does, it can be used.

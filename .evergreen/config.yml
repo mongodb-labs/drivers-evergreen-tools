@@ -355,6 +355,17 @@ functions:
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
             bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
+  "run atlas tests":
+    - command: shell.exec
+      type: test
+      params:
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set +o xtrace
+          MONGODB_URI="${MONGODB_URI}" \
+            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+
   "run docker test":
     - command: shell.exec
       type: test
@@ -757,6 +768,11 @@ tasks:
       commands:
         - func: "run serverless tests"
 
+    - name: "test-atlas"
+      tags: ["atlas", "pr"]
+      commands:
+        - func: "run atlas tests"
+
     - name: "test-docker"
       tags: ["latest", "docker", "pr"]
       commands:
@@ -811,6 +827,34 @@ task_groups:
       - func: "cleanup"
     tasks:
       - ".serverless"
+
+  - name: test_atlas_task_group
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          include_expansions_in_env: ["task_id", "execution"]
+          env:
+              LAMBDA_STACK_NAME: dbx-drivers-tools
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-atlas-cluster.sh
+      - command: expansions.update
+        params:
+          # Set MONGODB_URI
+          file: atlas-expansion.yml
+    teardown_task:
+      - command: subprocess.exec
+        params:
+          working_dir: src
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown-atlas-cluster.sh
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    tasks:
+      - ".atlas"
 
   - name: testazureoidc_task_group
     setup_group_can_fail_task: true
@@ -1114,6 +1158,14 @@ buildvariants:
       then:
         add_tasks:
           - "test-3.6-standalone"
+
+- matrix_name: "atlas"
+  matrix_spec:
+    os-requires-50:
+      - "ubuntu-20.04"
+  display_name: "Atlas ${os-requires-50}"
+  tasks:
+    - test_atlas_task_group_task_group
 
 - matrix_name: "serverless"
   matrix_spec:
