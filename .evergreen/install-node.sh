@@ -85,6 +85,7 @@ echo "Node.js ${node_index_version} for ${operating_system}-${architecture} rele
 
 set -o xtrace
 
+rm -rf $node_archive_path || true
 curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
 
 if [[ "$file_extension" = "zip" ]]; then
