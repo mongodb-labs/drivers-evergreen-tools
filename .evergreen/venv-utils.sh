@@ -41,7 +41,7 @@ venvcreate() {
   local -r venv_path="${2:?'venvcreate requires a path to the virtual environment to create'}"
 
   local real_path
-  if [[ "$(uname -s)" == CYGWIN* ]]; then
+  if [[ "${OSTYPE:?}" == cygwin ]]; then
     real_path="$(cygpath -aw "$venv_path")" || return
   else
     real_path="$venv_path"

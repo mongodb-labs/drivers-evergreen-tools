@@ -43,6 +43,7 @@ functions:
     - command: shell.exec
       params:
         working_dir: "src"
+        shell: bash
         script: |
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
@@ -55,7 +56,7 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           if [[ "$(uname -s)" == CYGWIN* ]]; then
+           if [[ "${OSTYPE:?}" == cygwin ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
            fi

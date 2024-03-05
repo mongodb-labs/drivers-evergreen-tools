@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # This script will handle the correct cross-platform absolute
 # paths for a script directory and DRIVERS_TOOLS.
