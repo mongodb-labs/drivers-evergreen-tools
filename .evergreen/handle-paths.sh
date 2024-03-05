@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # This script will handle the correct cross-platform absolute
 # paths for a script directory and DRIVERS_TOOLS.
@@ -20,7 +20,7 @@ then
 else
   SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" &> /dev/null && pwd )"
 fi
-if [ "Windows_NT" = "${OS:-}" ]; then # Magic variable in cygwin
+if [[ "$(uname -s)" == CYGWIN* ]]; then
   SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
 fi
 
@@ -35,4 +35,8 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
     fi
     DRIVERS_TOOLS=$(dirname $DRIVERS_TOOLS)
   done
+fi
+
+if [[ "$(uname -s)" == CYGWIN* ]]; then
+    DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi

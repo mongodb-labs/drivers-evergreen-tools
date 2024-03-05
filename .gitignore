@@ -111,4 +111,5 @@ haproxy.conf
 orchestration.config
 pykmip.log.*
 nohup.out
+*.tar.gz
 pykmip.db

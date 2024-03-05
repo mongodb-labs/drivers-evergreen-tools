@@ -90,7 +90,7 @@ is_venv_capable() (
   local -r tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
 
-  if [[ "$OSTYPE" == cygwin ]]; then
+  if [[ "${OSTYPE:?}" == cygwin ]]; then
     local -r real_path="$(cygpath -aw "$tmp")" || return
   else
     local -r real_path="$tmp"
@@ -142,7 +142,7 @@ is_virtualenv_capable() (
   trap 'rm -rf "$tmp"' EXIT
 
   local real_path
-  if [[ "$OSTYPE" == cygwin ]]; then
+  if [[ "${OSTYPE:?}" == cygwin ]]; then
     real_path="$(cygpath -aw "$tmp")" || return
   else
     real_path="$tmp"

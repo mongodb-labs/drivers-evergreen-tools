@@ -17,6 +17,12 @@ command_type: system
 # That roughly accounts for variable system performance for various buildvariants
 exec_timeout_secs: 1800 # 6 minutes is the longest we'll ever run
 
+# Ensure that setup and teardown is working as expected.
+pre_error_fails_task: true
+pre_timeout_secs: 1800 # 5 minutes
+post_error_fails_task: true
+post_timeout_secs: 1800 # 5 minutes
+
 # What to do when evergreen hits the timeout (`post:` tasks are run automatically)
 timeout:
   - command: shell.exec
@@ -37,6 +43,7 @@ functions:
     - command: shell.exec
       params:
         working_dir: "src"
+        shell: bash
         script: |
            # Get the current unique version of this checkout
            if [ "${is_patch}" = "true" ]; then
@@ -49,7 +56,8 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           if [ "Windows_NT" = "$OS" ]; then # Magic variable in cygwin
+           set -x
+           if [[ "$(uname -s)" == CYGWIN* ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
            fi
@@ -100,7 +108,7 @@ functions:
           else
             git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
           fi
-          echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+          $DRIVERS_TOOLS/.evergreen/setup.sh
 
   "upload release":
     - command: s3.put
@@ -234,26 +242,22 @@ functions:
         content_type: text/html
         display_name: "Scan Build Report"
 
-  "upload mo artifacts":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          find $MONGO_ORCHESTRATION_HOME -name \*.log | xargs tar czf mongodb-logs.tar.gz
+  "upload logs":
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
-        local_file: mongodb-logs.tar.gz
-        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-mongodb-logs.tar.gz
+        local_file: ${DRIVERS_TOOLS}/.evergreen/test_logs.tar.gz
+        remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-logs.tar.gz
         bucket: mciuploads
         permissions: public-read
         content_type: ${content_type|application/x-gzip}
-        display_name: "mongodb-logs.tar.gz"
+        display_name: "test_logs.tar.gz"
     - command: s3.put
       params:
         aws_key: ${aws_key}
         aws_secret: ${aws_secret}
+        optional: true
         local_file: ${DRIVERS_TOOLS}/.evergreen/orchestration/server.log
         remote_file: ${UPLOAD_BUCKET}/${build_variant}/${revision}/${version_id}/${build_id}/logs/${task_id}-${execution}-orchestration.log
         bucket: mciuploads
@@ -304,6 +308,7 @@ functions:
         file_location: "${PROJECT_DIRECTORY}/test-results.json"
     - command: attach.results
       params:
+        optional: true
         file_location: "${DRIVERS_TOOLS}/results.json"
 
   "bootstrap mongo-orchestration":
@@ -318,14 +323,6 @@ functions:
       params:
         file: mo-expansion.yml
 
-  "stop mongo-orchestration":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          # Purposely use sh here to ensure backwards compatibility.
-          sh ${DRIVERS_TOOLS}/.evergreen/stop-orchestration.sh
-
   "start load balancer":
     - command: shell.exec
       params:
@@ -334,12 +331,6 @@ functions:
     - command: expansions.update
       params:
         file: lb-expansion.yml
-
-  "stop load balancer":
-    - command: shell.exec
-      params:
-        script: |
-          bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh stop
 
   "run tests":
     - command: shell.exec
@@ -359,7 +350,6 @@ functions:
         script: |
           ${PREPARE_SHELL}
           set +o xtrace
-
           MONGODB_URI="${MONGODB_URI}" \
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
@@ -418,18 +408,6 @@ functions:
     - command: shell.exec
       params:
         shell: bash
-        script: |
-          set -o errexit
-          set -x
-          ${PREPARE_SHELL}
-          # ensure HEAD points to current commit
-          cd $DRIVERS_TOOLS
-          git add .
-          git commit -m "add files"
-          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
-    - command: shell.exec
-      params:
-        shell: bash
         script: |-
           set -o errexit
           ${PREPARE_SHELL}
@@ -438,13 +416,14 @@ functions:
           git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
           bash $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-driver-test.sh
+
+  "teardown assets":
     - command: shell.exec
+      shell: bash
       params:
-        shell: bash
         script: |
           ${PREPARE_SHELL}
-          set -x
-          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/teardown.sh
 
   "cleanup":
     - command: shell.exec
@@ -453,82 +432,19 @@ functions:
           ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
 
-  "cleanup docker":
-    - command: shell.exec
-      params:
-        script: |
-          # Kill all containers
-          docker rm $(docker ps -a -q)&> /dev/null || true
-          # Remove all images
-          docker rmi -f $(docker images -a -q) &> /dev/null || true
-
-  "fix absolute paths":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          for filename in $(find ${DRIVERS_TOOLS} -name \*.json); do
-            perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $filename
-          done
-
-  "windows fix":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${PROJECT_DIRECTORY}/.evergreen -name \*.sh); do
-            cat $i | tr -d '\r' > $i.new
-            mv $i.new $i
-          done
-          # Copy client certificate because symlinks do not work on Windows.
-          cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem
-
-  "make files executable":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          for i in $(find ${DRIVERS_TOOLS}/.evergreen ${PROJECT_DIRECTORY}/.evergreen -name \*.sh); do
-            chmod +x $i
-          done
-
-  "init test-results":
-    - command: shell.exec
-      params:
-        script: |
-          ${PREPARE_SHELL}
-          echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test-results.json found was created"  } ]}' > ${PROJECT_DIRECTORY}/test-results.json
-
-  "install dependencies":
-    - command: shell.exec
-      params:
-        working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          file="${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
-          # Don't use ${file} syntax here because evergreen treats it as an empty expansion.
-          [ -f "$file" ] && bash $file || echo "$file not available, skipping"
-
 pre:
   - func: "fetch source"
   - func: "prepare resources"
-  - func: "windows fix"
-  - func: "fix absolute paths"
-  - func: "init test-results"
-  - func: "make files executable"
-  - func: "install dependencies"
 
 post:
   # Skip: uploading the full working directory is not needed by drivers-evergreen-tools.
   # - func: "upload working dir"
-  - func: "upload mo artifacts"
+  - func: "teardown assets"
+  - func: "upload logs"
   - func: "upload test results"
-  - func: "stop mongo-orchestration"
   - func: "cleanup"
 
 tasks:
-
-
     # Wildcard task. Do you need to find out what tools are available and where?
     # Throw it here, and execute this task on all buildvariants
     - name: getdata
@@ -848,13 +764,11 @@ tasks:
         - func: "run docker test"
           vars:
             TARGET_IMAGE: ubuntu18.04
-        - func: "cleanup docker"
 
     - name: "test-oidc"
       tags: ["latest", "oidc", "pr"]
       commands:
         - func: "run oidc test"
-        - func: "cleanup docker"
 
     - name: "test-oidc-azure"
       tags: ["oidc", "pr"]
@@ -862,12 +776,113 @@ tasks:
         - func: "run oidc azure test"
 
     - name: "test-oidc-gcp"
-      tags: ["latest", "oidc"]
+      tags: ["latest", "oidc", "pr"]
       commands:
         - func: "run oidc gcp test"
 
 # }}}
 
+task_groups:
+
+  - name: serverless_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: "fetch source"
+      - func: "prepare resources"
+      - command: shell.exec
+        params:
+          shell: "bash"
+          script: |
+            ${PREPARE_SHELL}
+            set +o xtrace
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
+    teardown_group:
+      - command: shell.exec
+        params:
+          script: |
+            ${PREPARE_SHELL}
+            bash ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - ".serverless"
+
+  - name: testazureoidc_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            set -o errexit
+            set -x
+            ${PREPARE_SHELL}
+            # ensure HEAD points to current commit
+            cd $DRIVERS_TOOLS
+            git add .
+            git commit -m "add files"
+            export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup.sh
+    teardown_group:
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            ${PREPARE_SHELL}
+            set -x
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-oidc-azure
+
+  - name: testgcpoidc_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            set -o errexit
+            set -x
+            ${PREPARE_SHELL}
+            # ensure HEAD points to current commit
+            cd $DRIVERS_TOOLS
+            git add .
+            git commit -m "add files"
+            export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/setup.sh
+    teardown_group:
+      - command: shell.exec
+        params:
+          shell: bash
+          script: |
+            ${PREPARE_SHELL}
+            set -x
+            $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-oidc-gcp
 
 axes:
   - id: versions
@@ -1001,70 +1016,6 @@ axes:
         variables:
            STORAGE_ENGINE: "inmemory"
 
-task_groups:
-  - name: serverless_task_group
-    setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800 # 30 minutes
-    setup_group:
-      - func: "fetch source"
-      - func: "prepare resources"
-      - command: shell.exec
-        params:
-          shell: "bash"
-          script: |
-            ${PREPARE_SHELL}
-            set +o xtrace
-            SERVERLESS_DRIVERS_GROUP=${SERVERLESS_DRIVERS_GROUP} \
-            SERVERLESS_API_PUBLIC_KEY=${SERVERLESS_API_PUBLIC_KEY} \
-            SERVERLESS_API_PRIVATE_KEY=${SERVERLESS_API_PRIVATE_KEY} \
-              bash ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
-      - command: expansions.update
-        params:
-          file: serverless-expansion.yml
-    teardown_group:
-      - command: shell.exec
-        params:
-          script: |
-            ${PREPARE_SHELL}
-            set +o xtrace
-            SERVERLESS_DRIVERS_GROUP=${SERVERLESS_DRIVERS_GROUP} \
-            SERVERLESS_API_PUBLIC_KEY=${SERVERLESS_API_PUBLIC_KEY} \
-            SERVERLESS_API_PRIVATE_KEY=${SERVERLESS_API_PRIVATE_KEY} \
-            SERVERLESS_INSTANCE_NAME=${SERVERLESS_INSTANCE_NAME} \
-              bash ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
-    tasks:
-      - ".serverless"
-
-  - name: testazureoidc_task_group
-    setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800
-    setup_group:
-      - func: fetch source
-      - func: prepare resources
-      - command: shell.exec
-        params:
-          shell: bash
-          script: |
-            set -o errexit
-            set -x
-            ${PREPARE_SHELL}
-            # ensure HEAD points to current commit
-            cd $DRIVERS_TOOLS
-            git add .
-            git commit -m "add files"
-            export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
-    teardown_task:
-      - command: shell.exec
-        params:
-          shell: bash
-          script: |
-            ${PREPARE_SHELL}
-            set -x
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/delete-vm.sh
-    tasks:
-      - test-oidc-azure
-
 buildvariants:
 
 # Test packaging and other release related routines
@@ -1088,7 +1039,7 @@ buildvariants:
   run_on: ubuntu2004-small
   tasks:
     - "test-oidc"
-    - "test-oidc-gcp"
+    - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
 
 - matrix_name: "tests-all"
@@ -1170,7 +1121,7 @@ buildvariants:
       - "ubuntu-20.04"
   display_name: "Serverless ${os-requires-50}"
   tasks:
-    - "serverless_task_group"
+    - serverless_task_group
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available

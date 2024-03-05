@@ -13,6 +13,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
 #   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
 #   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
+#   MONGODB_BINARIES       Set to a non-empty string to set the path to the MONGODB_BINARIES for mongo orchestration.
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 
 AUTH=${AUTH:-noauth}
@@ -25,6 +26,7 @@ DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
+MONGODB_BINARIES=${MONGODB_BINARIES:-}
 INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
@@ -41,6 +43,14 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 echo "Finding Python3 binary..."
 PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
+
+# Set up the mongo orchestration config.
+if [ -n "${MONGODB_BINARIES}" ]; then
+  echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+fi
+
+# Copy client certificate because symlinks do not work on Windows.
+cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem || true
 
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -105,6 +115,7 @@ else
   exit 1
 fi
 
+# Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
 # Docker does not enable ipv6 by default.
@@ -139,7 +150,7 @@ printf "\nCluster URI: %s\n" "$URI"
 MO_END=$(date +%s)
 MO_ELAPSED=$(expr $MO_END - $MO_START)
 DL_ELAPSED=$(expr $DL_END - $DL_START)
-cat <<EOT >> $DRIVERS_TOOLS/results.json
+cat <<EOT >$DRIVERS_TOOLS/results.json
 {"results": [
   {
     "status": "PASS",
