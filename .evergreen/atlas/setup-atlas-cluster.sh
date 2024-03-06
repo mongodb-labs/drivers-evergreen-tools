@@ -31,7 +31,7 @@ if [ -f ./secrets-export.sh ]; then
 fi
 
 # Attempt to handle the secrets automatically if env vars are not set.
-if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:}" ]; then
+if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:-}" ]; then
   . ../secrets_handling/setup-secrets.sh drivers/atlas
 fi
 
