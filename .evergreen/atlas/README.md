@@ -22,22 +22,25 @@ An example task group running on a Linux EVG host might look like:
       params:
         binary: bash
         env:
-            LAMBDA_STACK_NAME: dbx-python-lambda
+            LAMBDA_STACK_NAME: dbx-python
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-atlas-cluster.sh
+          - ${DRIVERS_TOOLS}/.evergreen/atlas/setup.sh
     - command: expansions.update
       params:
         # Set MONGODB_URI
         file: atlas-expansion.yml
-  teardown_task:
+  teardown_group:
     - command: subprocess.exec
       params:
         working_dir: src
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown-atlas-cluster.sh
+          - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown.sh
+    - func: "cleanup"
   setup_group_can_fail_task: true
   setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
   tasks:
     - test-aws-lambda-deployed
 ```

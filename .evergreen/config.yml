@@ -838,7 +838,7 @@ task_groups:
           env:
               LAMBDA_STACK_NAME: dbx-drivers-tools
           args:
-            - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-atlas-cluster.sh
+            - ${DRIVERS_TOOLS}/.evergreen/atlas/setup.sh
       - command: expansions.update
         params:
           # Set MONGODB_URI
@@ -849,7 +849,7 @@ task_groups:
           working_dir: src
           binary: bash
           args:
-            - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown-atlas-cluster.sh
+            - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
