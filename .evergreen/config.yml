@@ -843,15 +843,21 @@ task_groups:
         params:
           # Set MONGODB_URI
           file: atlas-expansion.yml
-    teardown_task:
+    teardown_group:
       - command: subprocess.exec
         params:
           working_dir: src
           binary: bash
           args:
             - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown-atlas-cluster.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800
     tasks:
       - ".atlas"
 
