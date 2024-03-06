@@ -15,6 +15,6 @@ set -eu
 DEFAULT_URL="https://cloud.mongodb.com/api/atlas/v1.0"
 ATLAS_BASE_URL="${DRIVERS_ATLAS_BASE_URL:-$DEFAULT_URL}"
 
-# Create a unique atlas project.
-suffix=$(node -e "require('crypto').randomBytes(32).toString('hex').slice(0,16)")
+# Create a unique atlas project name.
+suffix=$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('hex').slice(0,16))")
 CLUSTER_NAME="${CLUSTER_PREFIX}-${suffix}"
