@@ -10,7 +10,7 @@ set -eu
 
 # Explanation of generated variables:
 #
-# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
+# CLUSTER_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
 # Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX

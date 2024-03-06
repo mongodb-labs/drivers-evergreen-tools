@@ -14,7 +14,7 @@ set -eu
 # Explanation of generated variables:
 #
 # MONGODB_URI: The URI for the created Atlas cluster during this script.
-# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
+# CLUSTER_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
@@ -81,7 +81,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
   "mongoDBMajorVersion" : "${VERSION}",
-  "name" : "${FUNCTION_NAME}",
+  "name" : "${CLUSTER_NAME}",
   "numShards" : 1,
   "paused" : false,
   "pitEnabled" : false,
@@ -141,7 +141,7 @@ check_cluster ()
     SRV_ADDRESS=$(curl \
       --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}" \
+      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}" \
       | jq -r '.srvAddress'
     );
     count=$(( $count + 1 ))
@@ -160,7 +160,7 @@ check_cluster ()
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
     echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
     echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
-    echo "export FUNCTION_NAME=$FUNCTION_NAME" >> ./secrets-export.sh
+    echo "export CLUSTER_NAME=$CLUSTER_NAME" >> ./secrets-export.sh
   fi
 }
 
