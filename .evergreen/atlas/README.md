@@ -10,8 +10,7 @@ from the `drivers/atlas` vault.
 ## Usage
 
 It is recommended that you use the cluster's task group to ensure the cluster is shut down properly.
-Note that we have to pass "task_id" and "execution" to ensure unique cluster name,
-and the `LAMBDA_STACK_NAME`.
+Note that we have to pass a `LAMBDA_STACK_NAME`, which is used to generate the Atlas cluster name.
 An example task group running on a Linux EVG host might look like:
 
 ```yaml
@@ -22,7 +21,6 @@ An example task group running on a Linux EVG host might look like:
     - command: subprocess.exec
       params:
         binary: bash
-        include_expansions_in_env: ["task_id", "execution"]
         env:
             LAMBDA_STACK_NAME: dbx-python-lambda
         args:

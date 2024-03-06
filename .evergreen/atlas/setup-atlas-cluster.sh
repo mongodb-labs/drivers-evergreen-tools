@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -o errexit  # Exit the script with error if any of the commands fail
+set -eu
 
 # Explanation of required environment variables:
 #
@@ -42,8 +42,6 @@ DRIVERS_ATLAS_GROUP_ID
 DRIVERS_ATLAS_LAMBDA_USER
 DRIVERS_ATLAS_LAMBDA_PASSWORD
 LAMBDA_STACK_NAME
-task_id
-execution
 )
 
 # Ensure that all variables required to run the test are set, otherwise throw
@@ -156,6 +154,8 @@ check_cluster ()
     # Put the MONGODB_URI in an expansions yml and secrets file.
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
     echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
+    echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
+    echo "export FUNCTION_NAME=$FUNCTION_NAME" >> ./secrets-export.sh
   fi
 }
 

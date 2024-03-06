@@ -835,7 +835,6 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: bash
-          include_expansions_in_env: ["task_id", "execution"]
           env:
               LAMBDA_STACK_NAME: dbx-drivers-tools
           args:

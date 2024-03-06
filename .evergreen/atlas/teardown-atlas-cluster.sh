@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -o errexit  # Exit the script with error if any of the commands fail
+set -eu
 
 # Explanation of required environment variables:
 #
@@ -18,8 +18,6 @@ DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
 DRIVERS_ATLAS_GROUP_ID
 LAMBDA_STACK_NAME
-task_id
-execution
 )
 
 # Set up the common variables.
@@ -39,7 +37,9 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the cluster variables.
-. $SCRIPT_DIR/setup-variables.sh
+if [ -z "${FUNCTION_NAME:-}" ]; then
+  . $SCRIPT_DIR/setup-variables.sh
+fi
 
 # Delete the cluster.
 echo "Deleting Atlas Cluster..."
