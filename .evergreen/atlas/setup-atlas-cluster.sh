@@ -6,9 +6,9 @@ set -eu
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
 # DRIVERS_ATLAS_PRIVATE_API_KEY: The private Atlas key for the drivers org.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
-# DRIVERS_ATLAS_LAMBDA_USER: The user for the lambda cluster.
-# DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
-# LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
+# DRIVERS_ATLAS_USER: The user for the cluster.
+# DRIVERS_ATLAS_PASSWORD: The password for the user.
+# CLUSTER_PREFIX: The prefix for the cluster name, (e.g. dbx-python)
 # MONGODB_VERSION: The major version of the cluster to deploy.  Defaults to 6.0.
 
 # Explanation of generated variables:
@@ -35,13 +35,18 @@ if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:}" ]; then
   . ../secrets_handling/setup-secrets.sh drivers/atlas
 fi
 
+# Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
+if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
+  CLUSTER_PREFIX=$LAMBDA_STACK_NAME
+fi
+
 VARLIST=(
 DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
 DRIVERS_ATLAS_GROUP_ID
-DRIVERS_ATLAS_LAMBDA_USER
-DRIVERS_ATLAS_LAMBDA_PASSWORD
-LAMBDA_STACK_NAME
+DRIVERS_ATLAS_USER
+DRIVERS_ATLAS_PASSWORD
+CLUSTER_PREFIX
 )
 
 # Ensure that all variables required to run the test are set, otherwise throw
@@ -150,7 +155,7 @@ check_cluster ()
     echo "Setting MONGODB_URI in the environment to the new cluster."
     # else set the mongodb uri
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
-    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
+    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
     # Put the MONGODB_URI in an expansions yml and secrets file.
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
     echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh

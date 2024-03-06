@@ -6,18 +6,23 @@ set -eu
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
 # DRIVERS_ATLAS_PRIVATE_API_KEY: The private Atlas key for the drivers org.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
-# LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
+# CLUSTER_PREFIX: The prefix for the cluster name, (e.g. dbx-python)
 
 # Explanation of generated variables:
 #
 # FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
+# Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
+if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
+  CLUSTER_PREFIX=$LAMBDA_STACK_NAME
+fi
+
 VARLIST=(
 DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
 DRIVERS_ATLAS_GROUP_ID
-LAMBDA_STACK_NAME
+CLUSTER_PREFIX
 )
 
 # Set up the common variables.
@@ -37,7 +42,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set up the cluster variables.
-if [ -z "${FUNCTION_NAME:-}" ]; then
+if [ -z "${CLUSTER_NAME:-}" ]; then
   . $SCRIPT_DIR/setup-variables.sh
 fi
 
@@ -46,6 +51,6 @@ echo "Deleting Atlas Cluster..."
 curl \
   --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
   -X DELETE \
-  "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}?pretty=true"
+  "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}?pretty=true"
 
 popd

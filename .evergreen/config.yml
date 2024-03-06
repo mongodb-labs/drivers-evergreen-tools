@@ -836,7 +836,7 @@ task_groups:
         params:
           binary: bash
           env:
-              LAMBDA_STACK_NAME: dbx-drivers-tools
+            CLUSTER_PREFIX: dbx-drivers-tools
           args:
             - ${DRIVERS_TOOLS}/.evergreen/atlas/setup.sh
       - command: expansions.update
