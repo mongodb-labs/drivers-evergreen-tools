@@ -15,6 +15,10 @@ An example task group running on a Linux EVG host might look like:
 
 ```yaml
 - name: test_atlas_group
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800 # 30 minutes
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800 # 30 minutes
   setup_group:
     - func: fetch source
     - func: prepare resources
@@ -37,10 +41,6 @@ An example task group running on a Linux EVG host might look like:
         args:
           - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown.sh
     - func: "cleanup"
-  setup_group_can_fail_task: true
-  setup_group_timeout_secs: 1800
-  teardown_group_can_fail_task: true
-  teardown_group_timeout_secs: 1800
   tasks:
     - run-atlas-test
 ```

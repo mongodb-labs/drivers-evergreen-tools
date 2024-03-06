@@ -829,6 +829,10 @@ task_groups:
       - ".serverless"
 
   - name: test_atlas_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
       - func: prepare resources
@@ -854,10 +858,6 @@ task_groups:
       - func: "upload logs"
       - func: "upload test results"
       - func: "cleanup"
-    setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
-    teardown_group_timeout_secs: 1800
     tasks:
       - ".atlas"
 
