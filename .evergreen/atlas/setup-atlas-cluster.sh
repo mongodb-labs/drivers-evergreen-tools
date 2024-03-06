@@ -122,7 +122,6 @@ create_cluster ()
     echo "Exiting due to response code $resp != 201"
     exit 1
   fi
-  echo "Got repsponse $resp"
   echo "Creating new Atlas Cluster... done."
 }
 
