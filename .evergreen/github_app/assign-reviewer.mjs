@@ -56,14 +56,14 @@ if (issue == null) {
 }
 const { number } = issue
 
-if (issue.requested_reviewers.length > 1) {
+if (issue.requested_reviewers.length > 0) {
     console.log("Review already requested!");
-    process.exit(1);
+    process.exit(0);
 }
 
 if (issue.draft) {
     console.log("PR is in draft mode!");
-    process.exit(1);
+    process.exit(0);
 }
 
 const reviewers = [];

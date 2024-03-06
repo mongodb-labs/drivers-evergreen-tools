@@ -88,16 +88,24 @@ set -o xtrace
 curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
 
 if [[ "$file_extension" = "zip" ]]; then
-  unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
-  mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
-  # Windows "bins" are at the top level
-  mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs/bin"
-  # Need to add executable flag ourselves
-  chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/node.exe"
-  chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npm"
+  if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
+    echo "Node.js already installed!"
+  else
+    unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
+    mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
+    # Windows "bins" are at the top level
+    mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs/bin"
+    # Need to add executable flag ourselves
+    chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/node.exe"
+    chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npm"
+  fi
 else
-  tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
-  mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
+  if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/${node_directory}" ]]; then
+    echo "Node.js already installed!"
+  else
+    tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
+    mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
+  fi
 fi
 
 if [[ $operating_system != "win" ]]; then
