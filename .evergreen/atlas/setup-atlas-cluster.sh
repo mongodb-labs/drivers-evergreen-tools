@@ -118,9 +118,10 @@ create_cluster ()
     "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true" \
     -o /dev/stderr  \
     -w "%{http_code}")
-  # if [[ "$resp" != "200" ]]; then
-  #   exit 1
-  # fi
+  if [[ "$resp" != "201" ]]; then
+    echo "Exiting due to response code $resp != 201"
+    exit 1
+  fi
   echo "Got repsponse $resp"
   echo "Creating new Atlas Cluster... done."
 }
