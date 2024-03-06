@@ -15,11 +15,6 @@ set -eu
 DEFAULT_URL="https://cloud.mongodb.com/api/atlas/v1.0"
 ATLAS_BASE_URL="${DRIVERS_ATLAS_BASE_URL:-$DEFAULT_URL}"
 
-# Create a unique atlas project
-# Use the timestamp so we can prune old projects.
-# Add a random suffix to differentiate clusters.
-timestamp=$(date +%s)
-salt=$(node -e "process.stdout.write((Math.random() + 1).toString(36).substring(2))")
-
-# Add git commit to name of function and cluster.
-CLUSTER_NAME="${CLUSTER_PREFIX}-${timestamp}-${salt}"
+# Create a unique atlas project.
+suffix=$(node -e "require('crypto').randomBytes(32).toString('hex').slice(0,16)")
+CLUSTER_NAME="${CLUSTER_PREFIX}-${suffix}"

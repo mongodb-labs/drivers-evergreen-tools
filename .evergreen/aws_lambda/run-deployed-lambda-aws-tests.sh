@@ -43,9 +43,6 @@ for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Set up the atlas variables.
-. $SCRIPT_DIR/../atlas/setup-variables.sh
-
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
 {
