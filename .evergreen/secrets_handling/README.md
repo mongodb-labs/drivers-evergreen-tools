@@ -1,6 +1,7 @@
 # Secrets Handling
 
-This folder has a script that can be used to access the drivers [AWS Vaults](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+This folder has a script that can be used to access the drivers AWS Vaults, see
+[Using AWS Secrets Manager to Store Testing Secrets wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
 
 Many of the sibling folders like `csfle` have their own `setup-secrets.sh` script that should be used
 to ensure the proper secrets are written to that folder for local usage.
@@ -13,20 +14,20 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 
 | Vault                     | Usage |
 | -----                     | ------|
-| drivers/adl               | Used in `../atlas_data_lake` for Atlas Data Lake testing. |
-| drivers/atlas             | Used in `../atlas` to launch an atlas cluster. |
+| drivers/adl               | Used in [`atlas_data_lake`](../atlas_data_lake/README.md) for Atlas Data Lake testing. |
+| drivers/atlas             | Used in [`atlas`](../atlas/README.md) to launch an atlas cluster. |
 | drivers/atlas_connect     | Has the URIs used in the Atlas Connect Drivers tests. |
-| drivers/aws_auth          | Used in `../auth_aws`  for AWS Auth testing. |
-| drives/azurekms           | Used in `../csfle/azurekms` for Azure KMS testing. |
-| drivers/azure_oidc        | Used in `../auth_oidc/azure` for OIDC Testing on Azure. |
-| drivers/comment-bot       | Used in `../github_app` for the DBX Comment bot. |
-| drivers/csfle             | Used in `../csfle` for encryption related tests. |
+| drivers/aws_auth          | Used in [`auth_aws`](../auth_aws/README.md)  for AWS Auth testing. |
+| drives/azurekms           | Used in [`csfle/azurekms`](../csfle/azurekms/README.md) for Azure KMS testing. |
+| drivers/azure_oidc        | Used in [`auth_oidc/azure`](../auth_oidc/azure/README.md) for OIDC Testing on Azure. |
+| drivers/comment-bot       | Used in [`github_app`](../github_app/README.md) for the DBX Comment bot. |
+| drivers/csfle             | Used in [`cslfe`](../csfle/README.md) for encryption related tests. |
 | drivers/enterprise_auth   | Has the creds needed for Enterprise Auth testing. |
-| drivers/gcpkms            | Used in `../csfle/gcpkms` for GCP KMS testing. |
-| drivers/gcpoidc           | Used in `../auth_oidc/gcp` for OIDC Testing on GCP. |
-| drivers/oidc              | Used in `../oidc` for OIDC Auth testing. |
-| drivers/serverless        | Used in `../serverless` for serverless testing. |
-| drivers/serverless_next   | Used in `../serverless` for serverless proxy testing. |
+| drivers/gcpkms            | Used in [`cslfe/gcpkms`](../csfle/gcpkms/README.md) for GCP KMS testing. |
+| drivers/gcpoidc           | Used in [`auth_oidc/gcp`](../auth_oidc/gcp/README.md) for OIDC Testing on GCP. |
+| drivers/oidc              | Used in [`oidc`](../oidc/README.md) for OIDC Auth testing. |
+| drivers/serverless        | Used in [`serverless`](../serverless/README.md) for serverless testing. |
+| drivers/serverless_next   | Used in [`serverless`](../serverless/README.md) for serverless proxy testing. |
 
 ## Evergreen Secrets Handling
 

@@ -121,6 +121,12 @@ Subfolders that have setup and teardown requirements are encouraged to also prov
 NOTE: The subfolder setup/teardown scripts requires users to have configured
 support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
 
+
+## Secrets Handling
+
+See the Secrets Handling [readme](./.evergreen/secrets_handling/README.md) for more information on how secrets are managed
+locally and on on Evergreen.
+
 ## evergreen_config_generator
 
 This repo also contains a Python package for use in scripts that generate

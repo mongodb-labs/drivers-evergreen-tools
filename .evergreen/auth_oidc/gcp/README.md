@@ -11,7 +11,7 @@ They build on top of the scripts used in `csfle/gcpkms`.
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/gcpoidc` vault.
 
-See the "Overview of GCP Infrastructure" section of the GCP OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/KERNEL/external_auth_oidc_gcp+Evergreen+Test+Suite) for more information about the GCP integration.
+See the "GCP IMDS" section OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-GCPIMDS) for more information about the GCP integration.
 
 ## Usage
 
@@ -56,7 +56,11 @@ $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
 An example task group would look like:
 
 ```yaml
-- name: testgcpeoidc_task_group
+- name: testgcpoidc_task_group
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
   setup_group:
     - func: fetch source
     - func: other setup function
@@ -64,19 +68,17 @@ An example task group would look like:
     params:
         shell: bash
         script: |-
-        set -o errexit
-        ${PREPARE_SHELL}
-        export GCPOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
-        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
-  teardown_task:
-    - command: shell.exec
+          set -o errexit
+          ${PREPARE_SHELL}
+          export GCPOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
+          $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/setup.sh
+  teardown_group:
+    - command: subprocess.exec
       params:
-        shell: bash
-        script: |-
-        ${PREPARE_SHELL}
-        $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
-  setup_group_can_fail_task: true
-  setup_group_timeout_secs: 1800
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/teardown.sh
+    - func: other teardown function
   tasks:
     - oidc-auth-test-gcp-latest
 ```
