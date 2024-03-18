@@ -54,12 +54,12 @@ export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergr
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 ```
 
-In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_AUDIENCE`
+In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_RESOURCE`
 auth mechanism property, e.g.
 
 ```python
 username=os.environ["AZUREOIDC_USERNAME"]
-TOKEN_AUDIENCE=os.environ["AZUREOIDC_AUDIENCE"]
+TOKEN_RESOURCE=os.environ["AZUREOIDC_RESOURCE"]
 ```
 
 Finally, we tear down the vm:
@@ -103,7 +103,7 @@ Below is an explananion of the environment variables stored in the Azure key vau
 - AZUREOIDC_AUTHPREFIX - The auth prefix used for DB user and role names.
 - AZUREOIDC_AUTHCLAIM - The object ID of the Azure Group, used in the DB role name.
 - AZUREOIDC_USERNAME - The Object (principal) ID of the Azure Manager Identity, used for the `username`.
-- AZUREOIDC_AUDIENCE - The escaped Application ID URI to use in the `TOKEN_AUDIENCE` auth mechanism property.
+- AZUREOIDC_RESOURCE - The escaped Application ID URI to use in the `TOKEN_RESOURCE` auth mechanism property.
 - AZUREOIDC_CLIENTID - The client ID of the Azure App registration, used to generate the unescaped Application ID URI.
 - AZUREOIDC_TENANTID - The tenant ID of the Azure App registration, used to derive the `issuer` URI.
 - AZUREKMS_IDENTITY - A space separated string with the Resource ID of the managed identity (`/subscriptions/...`).  Used to assign the identity to the VM.
