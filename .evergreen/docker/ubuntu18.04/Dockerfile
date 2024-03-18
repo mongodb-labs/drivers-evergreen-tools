@@ -33,14 +33,14 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && apt-get install -qqy mongodb-enterprise \
   && rm -rf /var/lib/apt/lists/*
 
-# Install python 3.8 from source
-RUN wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz \
-  && tar -xf Python-3.8.10.tgz \
-  && cd Python-3.8.10 \
-  && ./configure --enable-optimizations \
-  && make -j 8 \
-  && make install \
-  && rm -rf Python-3.8.10
+# Install python 3.8 from ppa
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && export TZ=Etc/UTC \
+  && add-apt-repository ppa:deadsnakes/ppa \
+  && apt-get update \
+  && apt-get install -qqy python3.8 python3.8-venv python3-venv \
+  && ln -sf /usr/bin/python3.8 /usr/bin/python3 \
+  && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID
 ARG GROUP_ID
