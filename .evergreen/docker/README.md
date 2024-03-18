@@ -52,6 +52,21 @@ If you want to test server versions older than 4.4, you can use the 18.04 image,
 TOPOLOGY=sharded_cluster MONGODB_VERSION=4.2 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
 ```
 
+### Get Logs
+
+To see where the `mongod` log files are and get the container id, run:
+
+```bash
+cat $DRIVERS_TOOLS/server.log
+docker ps
+```
+
+Then, to grab the server log from the box:
+
+```bash
+docker cp "<container>:<path>" mongod.log
+```
+
 ## Driver Testing using this Docker container
 
 First, start this container with the appropriate environment variables, running as:

@@ -15,6 +15,6 @@ python oidc_write_orchestration.py
 
 bash /root/base-entrypoint.sh
 
-$MONGODB_BINARIES/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
+$MONGODB_BINARIES/mongosh -f $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
 
 echo "Server started!"
