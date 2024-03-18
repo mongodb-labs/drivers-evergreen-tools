@@ -33,7 +33,7 @@ Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporar
 
 ```bash
 source ./oidc_get_tokens.sh
-AWS_WEB_IDENTITY_TOKEN_FILE="$OIDC_TOKEN_DIR/test_user1" /my/test/command
+OIDC_TOKEN_FILE="$OIDC_TOKEN_DIR/test_user1" /my/test/command
 ```
 
 ## Local Server Testing
@@ -69,7 +69,7 @@ You can then run mongo orchestration with `TOPOLOGY=replicaset` and `ORCHESTRATI
 
 To set up the server auth roles, run `mongosh setup_oidc.js`.
 
-Then, tests can be run against the server.  Set `AWS_WEB_IDENTITY_TOKEN_FILE` to either `$OIDC_TOKEN_DIR/test_user1` or `$OIDC_TOKEN_DIR/test_user2` as desired.
+Then, tests can be run against the server.  Set `OIDC_TOKEN_FILE` to either `$OIDC_TOKEN_DIR/test_user1` or `$OIDC_TOKEN_DIR/test_user2` as desired.
 
 The token in `$OIDC_TOKEN_DIR/test_user1_expires` can be used to test expired credentials.
 
