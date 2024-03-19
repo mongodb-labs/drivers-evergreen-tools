@@ -64,7 +64,7 @@ ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04
 To see where the `mongod` log files are and get the container id, run:
 
 ```bash
-cat $DRIVERS_TOOLS/server.log
+cat $DRIVERS_TOOLS/.evergreen/docker/ubuntu20.04/orchestration/server.log
 docker ps
 ```
 
