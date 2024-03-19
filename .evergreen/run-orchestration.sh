@@ -50,6 +50,7 @@ if [ -n "${MONGODB_BINARIES}" ]; then
 fi
 
 # Copy client certificate because symlinks do not work on Windows.
+mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
 cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem || true
 
 get_distro
