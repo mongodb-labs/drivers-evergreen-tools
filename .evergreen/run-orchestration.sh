@@ -45,6 +45,7 @@ PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
 echo "Finding Python3 binary... done."
 
 # Set up the mongo orchestration config.
+mkdir -p $MONGO_ORCHESTRATION_HOME
 if [ -n "${MONGODB_BINARIES}" ]; then
   echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 fi
