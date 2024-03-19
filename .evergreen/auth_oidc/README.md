@@ -1,5 +1,8 @@
 # Scripts for OIDC testing
 
+`MONGODB-OIDC` is only supported on Linux, but can be run using docker.  It is recommended to use the
+[Local Server](#local-server-testing) during development, so you can access the server logs locally.
+
 ## Testing with the Decidicated Atlas Clusters
 
 We have two dedicated Atlas clusters that are configured with OIDC, one with a single Identity Provider (Idp),
@@ -8,7 +11,7 @@ and one with multiple IdPs configured.
 
 These include:
 
-```
+```bash
 OIDC_ALTAS_USER         # Atlas admin username and password
 OIDC_ATLAS_PASSWORD
 OIDC_ATLAS_URI_MULTI    # URI for the cluster with multiple IdPs configured
@@ -50,6 +53,8 @@ installed using brew).
 Running `./start_local_server.sh` will use docker to launch the server
 with the correct configuration, and expose the server on local ports 27017
 and 27018.
+
+See [instructions](../docker/README.md#get-logs) for how to get the server logs from the box.
 
 ## Evergreen Testing With Local Server - Linux Only
 

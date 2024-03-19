@@ -20,8 +20,9 @@ fi
 docker build $PLATFORM -t $NAME $IMAGE
 pushd $DRIVERS_TOOLS
 
-# Remove existing mongodb files
+# Remove existing mongodb and orchestration files
 rm -rf $SCRIPT_DIR/$IMAGE/mongodb
+rm -f $SCRIPT_DIR/$IMAGE/orchestration
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}

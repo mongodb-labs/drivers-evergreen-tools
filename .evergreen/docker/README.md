@@ -59,6 +59,21 @@ is not available in Ubuntu 18.04 for those versions.
 ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
 ```
 
+### Get Logs
+
+To see where the `mongod` log files are and get the container id, run:
+
+```bash
+cat $DRIVERS_TOOLS/.evergreen/docker/ubuntu20.04/orchestration/server.log
+docker ps
+```
+
+Then, to grab the server log from the box:
+
+```bash
+docker cp "<container>:<path>" mongod.log
+```
+
 ## Driver Testing using this Docker container
 
 First, start this container with the appropriate environment variables, running as:
