@@ -52,6 +52,13 @@ If you want to test server versions older than 4.4, you can use the 18.04 image,
 TOPOLOGY=sharded_cluster MONGODB_VERSION=4.2 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
 ```
 
+You must also specify `ARCH=amd64` in order to run MongoDB 3.6 and 4.0, since `aarch` support
+is not available in Ubuntu 18.04 for those versions.
+
+```bash
+ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
+```
+
 ## Driver Testing using this Docker container
 
 First, start this container with the appropriate environment variables, running as:
