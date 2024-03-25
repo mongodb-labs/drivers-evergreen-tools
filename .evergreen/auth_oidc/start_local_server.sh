@@ -30,6 +30,7 @@ test -t 1 && USE_TTY="-t"
 
 echo "Drivers tools: $DRIVERS_TOOLS"
 pushd ../docker
+rm -rf ./ubuntu20.04/mongodb
 docker build -t drivers-evergreen-tools ./ubuntu20.04
 popd
 docker build -t oidc-test .

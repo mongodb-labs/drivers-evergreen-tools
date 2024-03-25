@@ -33,14 +33,14 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && apt-get install -qqy mongodb-enterprise \
   && rm -rf /var/lib/apt/lists/*
 
-# Install python 3.8 from source
-RUN wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz \
-  && tar -xf Python-3.8.10.tgz \
-  && cd Python-3.8.10 \
-  && ./configure --enable-optimizations \
-  && make -j 8 \
-  && make install \
-  && rm -rf Python-3.8.10
+# Install python 3.8 from ppa
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && export TZ=Etc/UTC \
+  && add-apt-repository ppa:deadsnakes/ppa \
+  && apt-get update \
+  && apt-get install -qqy python3.8 python3.8-venv python3-venv \
+  && ln -sf /usr/bin/python3.8 /usr/bin/python3 \
+  && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID
 ARG GROUP_ID
@@ -49,7 +49,7 @@ ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
 ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/mongodb/bin
 ENV MONGODB_BINARY_ROOT=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/
-ENV MONGO_ORCHESTRATION_HOME=/root
+ENV MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/orchestration
 ENV DOCKER_RUNNING=true
 
 COPY ./local-entrypoint.sh /root/local-entrypoint.sh

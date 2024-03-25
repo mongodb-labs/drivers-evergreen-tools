@@ -9,14 +9,14 @@ from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackRes
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
 app_id = os.environ['AZUREOIDC_CLIENTID']
-object_id = os.environ['AZUREOIDC_USERNAME']
+client_id = os.environ['AZUREOIDC_USERNAME']
 
 class MyCallback(OIDCCallback):
     def fetch(self, context: OIDCCallbackContext) -> OIDCCallbackResult:
         url = "http://169.254.169.254/metadata/identity/oauth2/token"
         url += "?api-version=2018-02-01"
         url += f"&resource=api://{app_id}"
-        url += f"&object_id={object_id}"
+        url += f"&client_id={client_id}"
         headers = { "Metadata": "true", "Accept": "application/json" }
         print('Fetching url', url)
         request = Request(url, headers=headers)

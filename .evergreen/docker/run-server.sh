@@ -10,13 +10,19 @@ NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
 PLATFORM=${DOCKER_PLATFORM:-}
+ARCH=${ARCH:-}
 # e.g. --platform linux/amd64
+
+if [[ -z $PLATFORM && -n $ARCH ]]; then
+    PLATFORM="--platform linux/$ARCH"
+fi
 
 docker build $PLATFORM -t $NAME $IMAGE
 pushd $DRIVERS_TOOLS
 
-# Remove existing mongodb files
+# Remove existing mongodb and orchestration files
 rm -rf $SCRIPT_DIR/$IMAGE/mongodb
+rm -f $SCRIPT_DIR/$IMAGE/orchestration
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}

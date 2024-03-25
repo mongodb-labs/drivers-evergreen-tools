@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-set -o errexit  # Exit the script with error if any of the commands fail
+set -eu
 
 # Explanation of required environment variables:
 #
 # DRIVERS_ATLAS_PUBLIC_API_KEY: The public Atlas key for the drivers org.
 # DRIVERS_ATLAS_PRIVATE_API_KEY: The private Atlas key for the drivers org.
 # DRIVERS_ATLAS_GROUP_ID: The id of the individual projects under the drivers org, per language.
-# DRIVERS_ATLAS_LAMBDA_USER: The user for the lambda cluster.
-# DRIVERS_ATLAS_LAMBDA_PASSWORD: The password for the user.
-# LAMBDA_STACK_NAME: The name of the stack on lambda "dbx-<language>-lambda"
+# DRIVERS_ATLAS_USER: The user for the cluster.
+# DRIVERS_ATLAS_PASSWORD: The password for the user.
+# CLUSTER_PREFIX: The prefix for the cluster name, (e.g. dbx-python)
 # MONGODB_VERSION: The major version of the cluster to deploy.  Defaults to 6.0.
 
 # Explanation of generated variables:
 #
 # MONGODB_URI: The URI for the created Atlas cluster during this script.
-# FUNCTION_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
+# CLUSTER_NAME: Uses the stack name plus the current commit sha to create a unique cluster and function.
 # CREATE_CLUSTER_JSON: The JSON used to create a cluster via the Atlas API.
 # ATLAS_BASE_URL: Where the Atlas API root resides.
 
@@ -31,19 +31,22 @@ if [ -f ./secrets-export.sh ]; then
 fi
 
 # Attempt to handle the secrets automatically if env vars are not set.
-if [ -z "$DRIVERS_ATLAS_PUBLIC_API_KEY" ]; then
+if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:-}" ]; then
   . ../secrets_handling/setup-secrets.sh drivers/atlas
+fi
+
+# Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
+if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
+  CLUSTER_PREFIX=$LAMBDA_STACK_NAME
 fi
 
 VARLIST=(
 DRIVERS_ATLAS_PUBLIC_API_KEY
 DRIVERS_ATLAS_PRIVATE_API_KEY
 DRIVERS_ATLAS_GROUP_ID
-DRIVERS_ATLAS_LAMBDA_USER
-DRIVERS_ATLAS_LAMBDA_PASSWORD
-LAMBDA_STACK_NAME
-task_id
-execution
+DRIVERS_ATLAS_USER
+DRIVERS_ATLAS_PASSWORD
+CLUSTER_PREFIX
 )
 
 # Ensure that all variables required to run the test are set, otherwise throw
@@ -78,7 +81,7 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
   "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
   "mongoDBMajorVersion" : "${VERSION}",
-  "name" : "${FUNCTION_NAME}",
+  "name" : "${CLUSTER_NAME}",
   "numShards" : 1,
   "paused" : false,
   "pitEnabled" : false,
@@ -110,12 +113,19 @@ EOF
 create_cluster ()
 {
   echo "Creating new Atlas Cluster..."
-  curl \
+  resp=$(curl \
     --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
     -d "${CREATE_CLUSTER_JSON}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true"
+    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true" \
+    -o /dev/stderr  \
+    -w "%{http_code}")
+  if [[ "$resp" != "201" ]]; then
+    echo "Exiting due to response code $resp != 201"
+    exit 1
+  fi
+  echo "Creating new Atlas Cluster... done."
 }
 
 # Check if cluster has a srv address, and assume once it does, it can be used.
@@ -131,7 +141,7 @@ check_cluster ()
     SRV_ADDRESS=$(curl \
       --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}" \
+      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}" \
       | jq -r '.srvAddress'
     );
     count=$(( $count + 1 ))
@@ -145,10 +155,12 @@ check_cluster ()
     echo "Setting MONGODB_URI in the environment to the new cluster."
     # else set the mongodb uri
     URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
-    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_LAMBDA_USER}:${DRIVERS_ATLAS_LAMBDA_PASSWORD}@${URI}"
+    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
     # Put the MONGODB_URI in an expansions yml and secrets file.
     echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
     echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
+    echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
+    echo "export CLUSTER_NAME=$CLUSTER_NAME" >> ./secrets-export.sh
   fi
 }
 

@@ -43,9 +43,6 @@ for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Set up the atlas variables.
-. $SCRIPT_DIR/../atlas/setup-variables.sh
-
 # Restarts the cluster's primary node.
 restart_cluster_primary ()
 {
@@ -53,7 +50,7 @@ restart_cluster_primary ()
   curl \
     --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${FUNCTION_NAME}/restartPrimaries"
+    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}/restartPrimaries"
 }
 
 # Deploys a lambda function to the set stack name.
@@ -62,7 +59,7 @@ deploy_lambda_function ()
   echo "Deploying Lambda function..."
   sam deploy \
     --no-confirm-changeset \
-    --stack-name "${FUNCTION_NAME}" \
+    --stack-name "${CLUSTER_NAME}" \
     --capabilities CAPABILITY_IAM \
     --resolve-s3 \
     --parameter-overrides "MongoDbUri=${MONGODB_URI}" \
@@ -74,7 +71,7 @@ get_lambda_function_arn ()
 {
   echo "Getting Lambda function ARN..."
   LAMBDA_FUNCTION_ARN=$(sam list stack-outputs \
-    --stack-name ${FUNCTION_NAME} \
+    --stack-name ${CLUSTER_NAME} \
     --region ${AWS_REGION} \
     --output json | jq '.[] | select(.OutputKey == "MongoDBFunction") | .OutputValue' | tr -d '"'
   )
@@ -85,7 +82,7 @@ get_lambda_function_arn ()
 delete_lambda_function ()
 {
   echo "Deleting Lambda Function..."
-  sam delete --stack-name ${FUNCTION_NAME} --no-prompts --region us-east-1
+  sam delete --stack-name ${CLUSTER_NAME} --no-prompts --region us-east-1
 }
 
 cleanup ()
