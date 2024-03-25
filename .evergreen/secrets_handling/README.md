@@ -1,7 +1,7 @@
 # Secrets Handling
 
 This folder has a script that can be used to access the drivers AWS Vaults, see
-[Using AWS Secrets Manager to Store Testing Secrets wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets).
+[Using AWS Secrets Manager to Store Testing Secrets wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets) for more information.
 
 Many of the sibling folders like `csfle` have their own `setup-secrets.sh` script that should be used
 to ensure the proper secrets are written to that folder for local usage.
