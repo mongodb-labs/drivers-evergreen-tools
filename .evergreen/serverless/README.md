@@ -38,8 +38,10 @@ is `serverless` or `serverless_next`:
 
 ```yaml
   - name: serverless_task_group
-    setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800 # 30 minutes
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
@@ -49,13 +51,13 @@ is `serverless` or `serverless_next`:
           env:
             VAULT_NAME: ${VAULT_NAME}
           args: |
-            - ${DRIVERS_TOOLS}/.evergreen/serverless/create-instance.sh
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
     teardown_task:
       - command: subprocess.exec
         params:
           binary: bash
           args: |
-            - ${DRIVERS_TOOLS}/.evergreen/serverless/delete-instance.sh
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
       - func: "upload test results"
     tasks:
       - ".serverless"

@@ -17,26 +17,27 @@ from the `drivers/gcpkms` vault.
 
 ```yaml
 - name: testgcpkms_task_group
-setup_group:
-    - func: fetch source
-    - func: prepare resources
-    - command: subprocess.exec
-      params:
-        binary: bash
-        args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/create-and-setup-instance.sh
-teardown_group:
-    - command: subprocess.exec
-      params:
-        binary: bash
-        args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/delete-instance.sh
-    - func: "upload test results"
-setup_group_can_fail_task: true
-teardown_group_can_fail_task: true
-setup_group_timeout_secs: 1800
-tasks:
-- testgcpkms-task
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
+  setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup.sh
+  teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/teardown.sh
+      - func: "upload test results"
+  tasks:
+  - testgcpkms-task
 ```
 
 And your task should include a script that does something like:

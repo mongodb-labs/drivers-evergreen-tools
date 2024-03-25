@@ -22,7 +22,7 @@ pushd $DRIVERS_TOOLS
 
 # Remove existing mongodb and orchestration files
 rm -rf $SCRIPT_DIR/$IMAGE/mongodb
-rm -f $SCRIPT_DIR/$IMAGE/orchestration
+rm -rf $SCRIPT_DIR/$IMAGE/orchestration
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}

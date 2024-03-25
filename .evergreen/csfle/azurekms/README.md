@@ -32,26 +32,27 @@ Your Evergreen config should look something like:
 
 ```yaml
 - name: testazurekms_task_group
-setup_group:
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
+  setup_group:
     - func: fetch source
     - func: prepare resources
     - command: subprocess.exec
       params:
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/create-and-setup-vm.sh
-teardown_group:
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/setup.sh
+  teardown_group:
     - command: subprocess.exec
       params:
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/delete-vm.sh
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/teardown.sh
     - func: "upload test results"
-setup_group_can_fail_task: true
-teardown_group_can_fail_task: true
-setup_group_timeout_secs: 1800
-tasks:
-- testazurekms-task
+  tasks:
+  - testazurekms-task
 ```
 
 And your task should include a script that does something like:
