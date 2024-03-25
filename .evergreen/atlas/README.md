@@ -10,38 +10,39 @@ from the `drivers/atlas` vault.
 ## Usage
 
 It is recommended that you use the cluster's task group to ensure the cluster is shut down properly.
-Note that we have to pass "task_id" and "execution" to ensure unique cluster name,
-and the `LAMBDA_STACK_NAME`.
+Note that we have to pass a `CLUSTER_PREFIX`, which is used to generate the Atlas cluster name.
 An example task group running on a Linux EVG host might look like:
 
 ```yaml
-- name: test_aws_lambda_task_group
+- name: test_atlas_group
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800 # 30 minutes
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800 # 30 minutes
   setup_group:
     - func: fetch source
     - func: prepare resources
     - command: subprocess.exec
       params:
         binary: bash
-        include_expansions_in_env: ["task_id", "execution"]
         env:
-            LAMBDA_STACK_NAME: dbx-python-lambda
+          CLUSTER_PREFIX: dbx-python
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-atlas-cluster.sh
+          - ${DRIVERS_TOOLS}/.evergreen/atlas/setup.sh
     - command: expansions.update
       params:
         # Set MONGODB_URI
         file: atlas-expansion.yml
-  teardown_task:
+  teardown_group:
     - command: subprocess.exec
       params:
         working_dir: src
         binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown-atlas-cluster.sh
-  setup_group_can_fail_task: true
-  setup_group_timeout_secs: 1800
+          - ${DRIVERS_TOOLS}/.evergreen/atlas/teardown.sh
+    - func: "cleanup"
   tasks:
-    - test-aws-lambda-deployed
+    - run-atlas-test
 ```
 
 If other OSes are needed, use the `setup-secrets.sh` script in this directory with the full `ec2.assume_role`
