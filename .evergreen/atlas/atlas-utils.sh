@@ -27,7 +27,7 @@ create_deployment ()
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
+    -u "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
     -o /dev/stderr  \
     -w "%{http_code}")
   if [[ "$resp" != "201" ]]; then
