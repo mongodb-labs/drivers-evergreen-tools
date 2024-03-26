@@ -72,6 +72,7 @@ echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 export ATLAS_PUBLIC_API_KEY=$SERVERLESS_API_PUBLIC_KEY
 export ATLAS_PRIVATE_API_KEY=$SERVERLESS_API_PRIVATE_KEY
 export ATLAS_GROUP_ID=$SERVERLESS_DRIVERS_GROUP
+export DEPLOYMENT_NAME=$SERVERLESS_INSTANCE_NAME
 export DEPLOYMENT_TYPE=serverless
 
 # Note: backingProviderName and regionName below should correspond to the
