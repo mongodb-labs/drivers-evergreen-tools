@@ -90,17 +90,18 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 EOF
 )
 
+# Write the serverless instance name early for teardown in case there is an error.
+echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
+cat SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME" > $CURRENT_DIR/serverless-expansion.yml
+
 # Get the utility functions
 . $SCRIPT_DIR/../atlas/atlas-utils.sh
 
 create_deployment
 SERVERLESS_URI=$(check_deployment)
 
-SERVERLESS_URI=$SERVERLESS_URI \
-SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
-cat << EOF > $CURRENT_DIR/serverless-expansion.yml
+cat << EOF >> $CURRENT_DIR/serverless-expansion.yml
 SERVERLESS_URI: "$SERVERLESS_URI"
-SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
 # Define original variables for backwards compatibility
 MONGODB_URI: "$SERVERLESS_URI"
@@ -114,10 +115,9 @@ MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
-# Add the instance name and uri to the secrets file.
+# Add the uri to the secrets file.
 if [ -f "./secrets-export.sh" ]; then
   echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
-  echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
 fi
 
 if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
