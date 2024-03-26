@@ -32,7 +32,7 @@ fi
 
 # Attempt to handle the secrets automatically if env vars are not set.
 if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:-}" ]; then
-  . ../secrets_handling/setup-secrets.sh drivers/atlas
+  . ./setup-secrets.sh
 fi
 
 # Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
