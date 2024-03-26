@@ -100,6 +100,7 @@ echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-ex
 echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
 export SERVERLESS_URI=$(check_deployment)
+echo "SERVERLESS_URI=$SERVERLESS_URI"
 if [ $SERVERLESS_URI = "null" ]; then
   exit 1
 fi

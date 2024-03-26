@@ -79,6 +79,6 @@ check_deployment ()
     exit 1
   else
     # Return the MONGODB_URI
-    echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat
+    echo $SRV_ADDRESS
   fi
 }
