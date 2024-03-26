@@ -67,6 +67,7 @@ check_deployment ()
     SRV_ADDRESS=$(curl \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
+      -o /dev/stderr  \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE}/${DEPLOYMENT_NAME}" \
       | jq -r '.srvAddress'
     );

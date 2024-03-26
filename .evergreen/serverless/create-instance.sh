@@ -92,7 +92,7 @@ EOF
 
 # Write the serverless instance name early for teardown in case there is an error.
 echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
-cat SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME" > $CURRENT_DIR/serverless-expansion.yml
+echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
 # Get the utility functions
 . $SCRIPT_DIR/../atlas/atlas-utils.sh
