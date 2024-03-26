@@ -74,7 +74,7 @@ check_deployment ()
     count=$(( $count + 1 ))
   done
 
-  if [ $SRV_ADDRESS = "null" ]; then
+  if [ $SRV_ADDRESS == "null" ]; then
     echo "No deployment could be created in the 20 minute timeframe or error occurred."
     exit 1
   else
