@@ -100,12 +100,14 @@ echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-ex
 echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
 export SERVERLESS_URI=$(check_deployment)
-set -x
-SERVERLESS_MONGODB_VERSION=$(curl \
+if [ $SERVERLESS_URI = "null" ]; then
+  exit 1
+fi
+
+SERVERLESS_MONGODB_VERSION=$(curl -sS \
   --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
   -X GET \
-  -o /dev/stderr  \
-  "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE}/${DEPLOYMENT_NAME}" \
+  "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/serverless/${DEPLOYMENT_NAME}" \
   | jq -r '.mongoDBVersion'
 );
 echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"

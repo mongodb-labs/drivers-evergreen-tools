@@ -65,17 +65,17 @@ check_deployment ()
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.
     sleep 15
-    SRV_ADDRESS=$(curl \
+    SRV_ADDRESS=$(curl -sS \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}" \
-      | jq -r '.srvAddress'
+      | jq -r '.connectionStrings.standardSrv'
     );
     count=$(( $count + 1 ))
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No deployment could be created in the 20 minute timeframe or error occurred."
+    echo "No deployment could be created in the 20 minute timeframe or error occurred." 1>&2
     exit 1
   else
     # Return the MONGODB_URI
