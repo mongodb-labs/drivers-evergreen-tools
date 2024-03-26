@@ -15,7 +15,8 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 | Vault                     | Usage |
 | -----                     | ------|
 | drivers/adl               | Used in [`atlas_data_lake`](../atlas_data_lake/README.md) for Atlas Data Lake testing. |
-| drivers/atlas             | Used in [`atlas`](../atlas/README.md) to launch an atlas cluster. |
+| drivers/atlas             | Can be manually used in conjunction with [`atlas`](../atlas/README.md) to launch an atlas cluster in the prod environment. |
+| drivers/atlas-dev         | Used in [`atlas`](../atlas/README.md) to launch an atlas cluster in the dev environment. |
 | drivers/atlas_connect     | Has the URIs used in the Atlas Connect Drivers tests. |
 | drivers/aws_auth          | Used in [`auth_aws`](../auth_aws/README.md)  for AWS Auth testing. |
 | drives/azurekms           | Used in [`csfle/azurekms`](../csfle/azurekms/README.md) for Azure KMS testing. |
