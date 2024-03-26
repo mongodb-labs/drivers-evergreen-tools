@@ -23,11 +23,11 @@ create_deployment ()
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment..."
   resp=$(curl -sS \
-    --digest "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+    --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    -u "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
+    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
     -o /dev/stderr  \
     -w "%{http_code}")
   if [[ "$resp" != "201" ]]; then
@@ -65,9 +65,9 @@ check_deployment ()
     # Poll every 15 seconds to check the deployment creation.
     sleep 15
     SRV_ADDRESS=$(curl -sS \
-      --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
+      --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}" \
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/clusters/${DEPLOYMENT_NAME}" \
       | jq -r '.srvAddress'
     );
     count=$(( $count + 1 ))
