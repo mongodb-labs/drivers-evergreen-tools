@@ -23,7 +23,7 @@ create_deployment ()
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment..."
   resp=$(curl \
-    --digest -s -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+    --digest -s "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
@@ -67,7 +67,6 @@ check_deployment ()
     SRV_ADDRESS=$(curl -s \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      -o /dev/stderr  \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE}/${DEPLOYMENT_NAME}" \
       | jq -r '.srvAddress'
     );
