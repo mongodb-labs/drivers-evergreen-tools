@@ -27,7 +27,7 @@ create_deployment ()
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
+    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}" \
     -o /dev/stderr  \
     -w "%{http_code}")
   if [[ "$resp" != "201" ]]; then
@@ -65,10 +65,10 @@ check_deployment ()
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.
     sleep 15
-    SRV_ADDRESS=$(curl -sS \
+    SRV_ADDRESS=$(curl \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/clusters/${DEPLOYMENT_NAME}" \
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}" \
       | jq -r '.srvAddress'
     );
     count=$(( $count + 1 ))
