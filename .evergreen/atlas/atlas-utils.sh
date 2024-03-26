@@ -60,6 +60,7 @@ check_deployment ()
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
 
   # Don't try longer than 20 minutes.
+  echo "" 1>&2
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.

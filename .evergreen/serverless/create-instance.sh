@@ -99,7 +99,7 @@ create_deployment
 echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
 echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
-SERVERLESS_URI=$(check_deployment)
+export SERVERLESS_URI=$(check_deployment)
 set -x
 SERVERLESS_MONGODB_VERSION=$(curl \
   --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
