@@ -66,6 +66,18 @@ if (issue.draft) {
     process.exit(0);
 }
 
+// See if there are any reviews.
+resp = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews", {
+    owner,
+    repo,
+    pull_number: number,
+    headers
+});
+if (resp.data.length > 0) {
+    console.log("Review already submitted!");
+    process.exit(0);
+}
+
 const reviewers = [];
 const reviewersSource = fs.readFileSync(reviewersFilePath, { encoding: "utf-8"});
 for (let line of reviewersSource.split('\n')) {
