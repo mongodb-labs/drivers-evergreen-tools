@@ -23,7 +23,7 @@ create_deployment ()
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment..."
   resp=$(curl \
-    --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+    --digest -s -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
@@ -64,7 +64,7 @@ check_deployment ()
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.
     sleep 15
-    SRV_ADDRESS=$(curl \
+    SRV_ADDRESS=$(curl -s \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       -o /dev/stderr  \
@@ -74,7 +74,7 @@ check_deployment ()
     count=$(( $count + 1 ))
   done
 
-  if [ $SRV_ADDRESS == "null" ]; then
+  if [[ "$SRV_ADDRESS" == "null" ]]; then
     echo "No deployment could be created in the 20 minute timeframe or error occurred."
     exit 1
   else
