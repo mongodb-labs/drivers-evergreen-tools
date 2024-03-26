@@ -116,11 +116,12 @@ export ATLAS_PRIVATE_API_KEY=$DRIVERS_ATLAS_PRIVATE_API_KEY
 export ATLAS_GROUP_ID=$DRIVERS_ATLAS_GROUP_ID
 export DEPLOYMENT_NAME=$CLUSTER_NAME
 
+create_deployment
+
 # Add variables to secrets file so we can shut down the cluster if needed.
 echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
 echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
-create_deployment
 URI=$(check_deployment)
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 

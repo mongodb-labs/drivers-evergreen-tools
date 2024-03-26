@@ -90,14 +90,15 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 EOF
 )
 
-# Write the serverless instance name early for teardown in case there is an error.
-echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
-echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
-
 # Get the utility functions
 . $SCRIPT_DIR/../atlas/atlas-utils.sh
 
 create_deployment
+
+# Write the serverless instance name early for teardown in case there is an error.
+echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
+echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
+
 SERVERLESS_URI=$(check_deployment)
 
 cat << EOF >> $CURRENT_DIR/serverless-expansion.yml

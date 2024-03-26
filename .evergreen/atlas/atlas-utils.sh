@@ -72,7 +72,6 @@ check_deployment ()
       | jq -r '.srvAddress'
     );
     count=$(( $count + 1 ))
-    echo $SRV_ADDRESS 1>&2
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
