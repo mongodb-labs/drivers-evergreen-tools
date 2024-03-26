@@ -112,8 +112,13 @@ EOF
 )
 
 export ATLAS_PUBLIC_API_KEY=$DRIVERS_ATLAS_PUBLIC_API_KEY
-export ATLAS_PUBLIC_API_KEY=$DRIVERS_ATLAS_PRIVATE_API_KEY
+export ATLAS_PRIVATE_API_KEY=$DRIVERS_ATLAS_PRIVATE_API_KEY
 export ATLAS_GROUP_ID=$DRIVERS_ATLAS_GROUP_ID
+export DEPLOYMENT_NAME=$CLUSTER_NAME
+
+# Add variables to secrets file so we can shut down the cluster if needed.
+echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
+echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
 create_deployment
 URI=$(check_deployment)
@@ -122,7 +127,4 @@ MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI
 # Put the MONGODB_URI in an expansions yml and secrets file.
 echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
-echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
-echo "export CLUSTER_NAME=$CLUSTER_NAME" >> ./secrets-export.sh
-
 popd

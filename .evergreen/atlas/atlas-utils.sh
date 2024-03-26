@@ -61,8 +61,8 @@ check_deployment ()
 
   # Don't try longer than 20 minutes.
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
-    echo "Checking every 15 seconds for cluster to be created..." 1>&2
-    # Poll every 15 seconds to check the cluster creation.
+    echo "Checking every 15 seconds for deployment to be created..." 1>&2
+    # Poll every 15 seconds to check the deployment creation.
     sleep 15
     SRV_ADDRESS=$(curl \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
@@ -75,7 +75,7 @@ check_deployment ()
   done
 
   if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 20 minute timeframe or error occurred."
+    echo "No deployment could be created in the 20 minute timeframe or error occurred."
     exit 1
   else
     # Return the MONGODB_URI
