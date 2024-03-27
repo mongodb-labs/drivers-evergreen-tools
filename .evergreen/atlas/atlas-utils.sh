@@ -58,6 +58,11 @@ check_deployment ()
 
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
+  if [ $TYPE = "serverless" ]; then
+      match_str=".connectionStrings.standardSrv"
+  else
+      match_str=".srvAddress"
+  fi
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2
@@ -70,7 +75,7 @@ check_deployment ()
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}" \
-      | jq -r '.connectionStrings.standardSrv'
+      | jq -r ${match_str}
     );
     count=$(( $count + 1 ))
   done
