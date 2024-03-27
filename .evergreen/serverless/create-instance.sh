@@ -38,20 +38,18 @@ if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
   source ./secrets-export.sh
 fi
 
-if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
-    echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
-    exit 1
-fi
+VARLIST=(
+SERVERLESS_DRIVERS_GROUP
+SERVERLESS_API_PRIVATE_KEY
+SERVERLESS_API_PUBLIC_KEY
+SERVERLESS_DRIVERS_GROUP
+)
 
-if [ -z "$SERVERLESS_API_PRIVATE_KEY" ]; then
-    echo "Atlas API private key must be provided via SERVERLESS_API_PRIVATE_KEY environment variable"
-    exit 1
-fi
-
-if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
-    echo "Atlas API public key must be provided via SERVERLESS_API_PUBLIC_KEY environment variable"
-    exit 1
-fi
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 # Historically, this script accepted LOADBALANCED=ON to opt in to testing load
 # balanced serverless instances. Since all serverless instances now use a load
@@ -69,29 +67,17 @@ fi
 
 SERVERLESS_REGION="${SERVERLESS_REGION:-US_EAST_2}"
 
-# Ensure that a Python binary is available for JSON decoding
-. ../find-python3.sh || exit 1
-echo "Finding Python3 binary..."
-PYTHON_BINARY="$(find_python3 2>/dev/null)" || exit 1
-echo "Finding Python3 binary... done."
-
 echo "Creating new serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 
-# See: https://www.mongodb.com/docs/atlas/reference/api/serverless/create-one-serverless-instance/
-API_BASE_URL="https://account-dev.mongodb.com/api/atlas/v1.0/groups/$SERVERLESS_DRIVERS_GROUP"
+export ATLAS_PUBLIC_API_KEY=$SERVERLESS_API_PUBLIC_KEY
+export ATLAS_PRIVATE_API_KEY=$SERVERLESS_API_PRIVATE_KEY
+export ATLAS_GROUP_ID=$SERVERLESS_DRIVERS_GROUP
+export DEPLOYMENT_NAME=$SERVERLESS_INSTANCE_NAME
+export DEPLOYMENT_TYPE=serverless
 
 # Note: backingProviderName and regionName below should correspond to the
 # multi-tenant MongoDB (MTM) associated with $SERVERLESS_DRIVERS_GROUP.
-curl \
-  -u "$SERVERLESS_API_PUBLIC_KEY:$SERVERLESS_API_PRIVATE_KEY" \
-  --silent \
-  --show-error \
-  -X POST \
-  --digest \
-  --header "Accept: application/json" \
-  --header "Content-Type: application/json" \
-  "$API_BASE_URL/serverless?pretty=true" \
-  --data @- << EOF
+export DEPLOYMENT_DATA=$(cat <<EOF
 {
   "name" : "$SERVERLESS_INSTANCE_NAME",
   "providerSettings" : {
@@ -102,27 +88,33 @@ curl \
   }
 }
 EOF
+)
 
-echo ""
+# Get the utility functions
+. $SCRIPT_DIR/../atlas/atlas-utils.sh
 
-SECONDS=0
+create_deployment
 
-while [ true ]; do
-    API_RESPONSE=`SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME bash $SCRIPT_DIR/get-instance.sh`
-    STATE_NAME=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['stateName'])" | tr -d '\r\n'`
-    SERVERLESS_MONGODB_VERSION=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['mongoDBVersion'])" | tr -d '\r\n'`
+# Write the serverless instance name early for teardown in case there is an error.
+echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
+echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
-    if [ "$STATE_NAME" = "IDLE" ]; then
-        duration="$SECONDS"
-        echo "Setup done! ($(($duration / 60))m $(($duration % 60))s elapsed)"
+export SERVERLESS_URI=$(check_deployment)
+echo "SERVERLESS_URI=$SERVERLESS_URI"
+if [ $SERVERLESS_URI = "null" ]; then
+  exit 1
+fi
 
-        SERVERLESS_URI=`echo $API_RESPONSE | $PYTHON_BINARY -c "import sys, json; print(json.load(sys.stdin)['connectionStrings']['standardSrv'])" | tr -d '\r\n'`
+SERVERLESS_MONGODB_VERSION=$(curl -sS \
+  --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+  -X GET \
+  "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/serverless/${DEPLOYMENT_NAME}" \
+  | jq -r '.mongoDBVersion'
+);
+echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"
 
-        SERVERLESS_URI=$SERVERLESS_URI \
-        SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME \
-        cat << EOF > $CURRENT_DIR/serverless-expansion.yml
+cat << EOF >> $CURRENT_DIR/serverless-expansion.yml
 SERVERLESS_URI: "$SERVERLESS_URI"
-SERVERLESS_INSTANCE_NAME: "$SERVERLESS_INSTANCE_NAME"
 
 # Define original variables for backwards compatibility
 MONGODB_URI: "$SERVERLESS_URI"
@@ -136,22 +128,14 @@ MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
 SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
 EOF
 
-        # Add the instance name and uri to the secrets file.
-        if [ -f "./secrets-export.sh" ]; then
-          echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
-          echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
-        fi
+# Add the uri to the secrets file.
+if [ -f "./secrets-export.sh" ]; then
+  echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
+fi
 
-        if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
-          # Download binaries and crypt_shared
-          MONGODB_VERSION=rapid bash ./download-crypt.sh
-        fi
-
-        exit 0
-    else
-        echo "Setup still in progress, status=$STATE_NAME, sleeping for 1 minute..."
-        sleep 60
-    fi
-done
+if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
+  # Download binaries and crypt_shared
+  MONGODB_VERSION=rapid bash ./download-crypt.sh
+fi
 
 popd

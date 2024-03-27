@@ -18,25 +18,18 @@ if [ -f "$SCRIPT_DIR/secrets-export.sh" ]; then
   source "$SCRIPT_DIR/secrets-export.sh"
 fi
 
-if [ -z "$SERVERLESS_INSTANCE_NAME" ]; then
-    echo "Instance name must be provided via SERVERLESS_INSTANCE_NAME environment variable"
-    exit 1
-fi
+VARLIST=(
+SERVERLESS_INSTANCE_NAME
+SERVERLESS_DRIVERS_GROUP
+SERVERLESS_API_PRIVATE_KEY
+SERVERLESS_API_PUBLIC_KEY
+)
 
-if [ -z "$SERVERLESS_DRIVERS_GROUP" ]; then
-    echo "Drivers Atlas group must be provided via SERVERLESS_DRIVERS_GROUP environment variable"
-    exit 1
-fi
-
-if [ -z "$SERVERLESS_API_PRIVATE_KEY" ]; then
-    echo "Atlas API private key must be provided via SERVERLESS_API_PRIVATE_KEY environment variable"
-    exit 1
-fi
-
-if [ -z "$SERVERLESS_API_PUBLIC_KEY" ]; then
-    echo "Atlas API public key must be provided via SERVERLESS_API_PUBLIC_KEY environment variable"
-    exit 1
-fi
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 echo "Deleting serverless instance \"$SERVERLESS_INSTANCE_NAME\"..."
 

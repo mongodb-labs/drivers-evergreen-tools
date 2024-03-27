@@ -64,11 +64,14 @@ done
 # Set up the cluster variables.
 . $SCRIPT_DIR/setup-variables.sh
 
+# Get the utility functions
+. $SCRIPT_DIR/atlas-utils.sh
+
 # The cluster server version.
-VERSION="${MONGODB_VERSION:-6.0}"
+export VERSION="${MONGODB_VERSION:-6.0}"
 
 # Set the create cluster configuration.
-CREATE_CLUSTER_JSON=$(cat <<EOF
+export DEPLOYMENT_DATA=$(cat <<EOF
 {
   "autoScaling" : {
     "autoIndexingEnabled" : false,
@@ -114,64 +117,21 @@ CREATE_CLUSTER_JSON=$(cat <<EOF
 EOF
 )
 
-# Create an Atlas M10 cluster - this returns immediately so we'll need to poll until
-# the cluster is created.
-create_cluster ()
-{
-  echo "Creating new Atlas Cluster..."
-  resp=$(curl \
-    --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
-    -d "${CREATE_CLUSTER_JSON}" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters?pretty=true" \
-    -o /dev/stderr  \
-    -w "%{http_code}")
-  if [[ "$resp" != "201" ]]; then
-    echo "Exiting due to response code $resp != 201"
-    exit 1
-  fi
-  echo "Creating new Atlas Cluster... done."
-}
+export ATLAS_PUBLIC_API_KEY=$DRIVERS_ATLAS_PUBLIC_API_KEY
+export ATLAS_PRIVATE_API_KEY=$DRIVERS_ATLAS_PRIVATE_API_KEY
+export ATLAS_GROUP_ID=$DRIVERS_ATLAS_GROUP_ID
+export DEPLOYMENT_NAME=$CLUSTER_NAME
 
-# Check if cluster has a srv address, and assume once it does, it can be used.
-check_cluster ()
-{
-  count=0
-  SRV_ADDRESS="null"
-  # Don't try longer than 20 minutes.
-  while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
-    echo "Checking every 15 seconds for cluster to be created..."
-    # Poll every 15 seconds to check the cluster creation.
-    sleep 15
-    SRV_ADDRESS=$(curl \
-      --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
-      -X GET \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}" \
-      | jq -r '.srvAddress'
-    );
-    count=$(( $count + 1 ))
-    echo $SRV_ADDRESS
-  done
+create_deployment
 
-  if [ $SRV_ADDRESS = "null" ]; then
-    echo "No cluster could be created in the 20 minute timeframe or error occurred."
-    exit 1
-  else
-    echo "Setting MONGODB_URI in the environment to the new cluster."
-    # else set the mongodb uri
-    URI=$(echo $SRV_ADDRESS | grep -Eo "[^(\/\/)]*$" | cat)
-    MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
-    # Put the MONGODB_URI in an expansions yml and secrets file.
-    echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
-    echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
-    echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
-    echo "export CLUSTER_NAME=$CLUSTER_NAME" >> ./secrets-export.sh
-  fi
-}
+# Add variables to secrets file so we can shut down the cluster if needed.
+echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
+echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
-create_cluster
+URI=$(check_deployment | grep -Eo "[^(\/\/)]*$" | cat)
+MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
-check_cluster
-
+# Put the MONGODB_URI in an expansions yml and secrets file.
+echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
+echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
 popd
