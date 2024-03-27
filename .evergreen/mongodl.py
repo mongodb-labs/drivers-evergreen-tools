@@ -100,6 +100,7 @@ DISTRO_ID_TO_TARGET = {
         '9': 'debian92',
         '10': 'debian10',
         '11': 'debian11',
+        '12': 'debian12',
     },
     'rhel': {
         '6': 'rhel60',

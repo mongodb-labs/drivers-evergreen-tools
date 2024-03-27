@@ -35,9 +35,15 @@ if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:-}" ]; then
   . ./setup-secrets.sh "$@"
 fi
 
-# Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
+# Backwards compatibility: map old names to new names.
 if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
   CLUSTER_PREFIX=$LAMBDA_STACK_NAME
+fi
+if [ -n "${DRIVERS_ATLAS_LAMBDA_USER:-}" ]; then
+  DRIVERS_ATLAS_USER=$DRIVERS_ATLAS_LAMBDA_USER
+fi
+if [ -n "${DRIVERS_ATLAS_LAMBDA_PASSWORD:-}" ]; then
+  DRIVERS_ATLAS_PASSWORD=$DRIVERS_ATLAS_LAMBDA_PASSWORD
 fi
 
 VARLIST=(
