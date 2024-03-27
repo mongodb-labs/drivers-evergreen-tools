@@ -21,20 +21,20 @@ create_deployment ()
 
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
-  echo "Creating new Atlas Deployment..."
+  echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID..."
   resp=$(curl -sS \
     --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}" \
+    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
     -o /dev/stderr  \
     -w "%{http_code}")
   if [[ "$resp" != "201" ]]; then
     echo "Exiting due to response code $resp != 201"
     exit 1
   fi
-  echo "Creating new Atlas Deployment... done."
+  echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID... done."
 }
 
 # Check if deployment has a srv address, and assume once it does, it can be used.
@@ -61,6 +61,7 @@ check_deployment ()
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2
+  echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID..." 1>&2
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.
@@ -81,4 +82,5 @@ check_deployment ()
     # Return the MONGODB_URI
     echo $SRV_ADDRESS
   fi
+  echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
 }

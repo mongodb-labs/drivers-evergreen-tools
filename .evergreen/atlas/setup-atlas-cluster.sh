@@ -122,7 +122,7 @@ create_deployment
 echo "export ATLAS_BASE_URL=$ATLAS_BASE_URL" >> ./secrets-export.sh
 echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
-URI=$(check_deployment)
+URI=$(check_deployment | grep -Eo "[^(\/\/)]*$" | cat)
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
 # Put the MONGODB_URI in an expansions yml and secrets file.
