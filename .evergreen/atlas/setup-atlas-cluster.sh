@@ -35,19 +35,16 @@ if [ -z "${DRIVERS_ATLAS_PUBLIC_API_KEY:-}" ]; then
   . ./setup-secrets.sh "$@"
 fi
 
-# Backwards compatibility: map LAMBDA_STACK_NAME to CLUSTER_PREFIX
+# Backwards compatibility: map old names to new names.
 if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
   CLUSTER_PREFIX=$LAMBDA_STACK_NAME
 fi
-
-VARLIST=(
-DRIVERS_ATLAS_PUBLIC_API_KEY
-DRIVERS_ATLAS_PRIVATE_API_KEY
-DRIVERS_ATLAS_GROUP_ID
-DRIVERS_ATLAS_USER
-DRIVERS_ATLAS_PASSWORD
-CLUSTER_PREFIX
-)
+if [ -n "${DRIVERS_ATLAS_LAMBDA_USER:-}" ]; then
+  DRIVERS_ATLAS_USER=$DRIVERS_ATLAS_LAMBDA_USER
+fi
+if [ -n "${DRIVERS_ATLAS_LAMBDA_PASSWORD:-}" ]; then
+  DRIVERS_ATLAS_PASSWORD=$DRIVERS_ATLAS_LAMBDA_PASSWORD
+fi
 
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
