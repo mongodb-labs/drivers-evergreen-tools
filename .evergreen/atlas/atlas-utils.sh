@@ -74,7 +74,7 @@ check_deployment ()
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}")
-    SRV_ADDRESS=$(cat $RESP | jq -r ${match_str})
+    SRV_ADDRESS=$(echo $RESP | jq -r ${match_str})
     count=$(( $count + 1 ))
   done
 
