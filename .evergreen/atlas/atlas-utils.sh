@@ -28,7 +28,6 @@ create_deployment ()
     -H 'Content-Type: application/json' \
     -X POST \
     "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
-    -o /dev/stderr  \
     -w "%{http_code}"
     -O "resp.txt"
 

@@ -114,6 +114,7 @@ else
   echo "Could not find orchestration file $ORCHESTRATION_FILE (checked in $PROJECT_ORCHESTRATION_HOME and $MONGO_ORCHESTRATION_HOME)"
   exit 1
 fi
+echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
 # Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
