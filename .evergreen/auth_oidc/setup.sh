@@ -81,11 +81,12 @@ create_deployment
 if [ "$(uname -s)" = "Linux" ]; then
     . ./activate-authoidcvenv.sh
     python oidc_write_orchestration.py
-    bash run-orchestration.sh
+    bash ../run-orchestration.sh
     $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
     echo "export OIDC_URI_MULTI=mongodb//:27018/?directConnection=true" >> "secrets-export.sh"
 fi
 
 # Wait for the Atlas Cluster
 OIDC_URI_SINGLE=$(check_deployment)
+
 echo "export OIDC_URI_SINGLE=$OIDC_URI_SINGLE" >> "secrets-export.sh"

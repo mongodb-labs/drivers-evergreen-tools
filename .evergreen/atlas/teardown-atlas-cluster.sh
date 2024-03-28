@@ -30,6 +30,8 @@ for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
+ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
+
 # Delete the cluster.
 echo "Deleting Atlas Cluster..."
 curl -sS \
