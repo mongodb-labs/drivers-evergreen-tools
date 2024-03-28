@@ -29,7 +29,7 @@ create_deployment ()
     -X POST \
     "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
     -w "%{http_code}" \
-    -O "resp.txt"
+    -o "resp.txt"
 
   if [[ "$(cat resp.txt)" != "201" ]]; then
     echo "Exiting due to response code $resp != 201"
@@ -76,7 +76,7 @@ check_deployment ()
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}"
-      -O resp.txt
+      -o resp.txt
     SRV_ADDRESS=$(cat resp.txt | jq -r ${match_str})
     count=$(( $count + 1 ))
   done
