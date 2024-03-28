@@ -20,6 +20,6 @@ console.log('Adding role:', role1Name);
 admin.runCommand({createRole: role1Name, roles:[{role: 'readWrite', db: 'test'}], privileges: []});
 
 console.log('Adding role:', role2Name);
-admin.runCommand({createRole: role2Name, roles:[{role: 'read', db: 'test'}], privileges: []});
+admin.runCommand({createRole: role2Name, roles:[{role: 'readWrite', db: 'test'}], privileges: []});
 
 }());
