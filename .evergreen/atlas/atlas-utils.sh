@@ -31,7 +31,8 @@ create_deployment ()
     -w "%{http_code}" \
     -o "resp.txt"
 
-  if [[ "$(cat resp.txt)" != "201" ]]; then
+  resp=$(cat resp.txt)
+  if [[ "$resp" != "201" ]]; then
     echo "Exiting due to response code $resp != 201"
     exit 1
   fi
