@@ -22,15 +22,17 @@ create_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID..."
-  resp=$(curl -sS \
+  curl -sS -L \
     --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
     "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
     -o /dev/stderr  \
-    -w "%{http_code}")
-  if [[ "$resp" != "201" ]]; then
+    -w "%{http_code}"
+    -O "resp.txt"
+
+  if [[ "$(cat resp.txt)" != "201" ]]; then
     echo "Exiting due to response code $resp != 201"
     exit 1
   fi
@@ -71,12 +73,12 @@ check_deployment ()
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
     # Poll every 15 seconds to check the deployment creation.
     sleep 15
-    SRV_ADDRESS=$(curl -sS \
+    curl -sS -L \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}" \
-      | jq -r ${match_str}
-    );
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}"
+      -O resp.txt
+    SRV_ADDRESS=$(cat resp.txt | jq -r ${match_str})
     count=$(( $count + 1 ))
   done
 

@@ -81,7 +81,7 @@ create_deployment
 if [ "$(uname -s)" = "Linux" ]; then
     . ./activate-authoidcvenv.sh
     python oidc_write_orchestration.py
-    TOPOLOGY=replica_set bash ../run-orchestration.sh
+    TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
     $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
     echo "export OIDC_URI_MULTI=mongodb//:27018/?directConnection=true" >> "secrets-export.sh"
 fi
