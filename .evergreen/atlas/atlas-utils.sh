@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-
 # Create an Atlas M10 deployment - this returns immediately so we'll need to poll until
 # the deployment is created.
 create_deployment ()
