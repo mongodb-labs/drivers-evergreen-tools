@@ -38,6 +38,7 @@ curl -sS \
   --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
   -X DELETE \
   "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}?pretty=true"
+echo ""
 echo "Deleting Atlas Cluster... done."
 
 popd

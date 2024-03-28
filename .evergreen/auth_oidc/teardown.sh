@@ -4,6 +4,7 @@ set -o errexit
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+pushd $SCRIPT_DIR
 
 # Tear down the Atlas Cluster
 source ./secrets-export.sh
