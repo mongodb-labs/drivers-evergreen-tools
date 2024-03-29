@@ -26,7 +26,8 @@ def azure():
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id}",
-        "authorizationClaim": "groups"
+        "authorizationClaim": "groups",
+        "supportsHumanFlows": False,
     }
     providers = json.dumps([provider_info], separators=(',',':'))
 
