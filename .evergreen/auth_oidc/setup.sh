@@ -79,7 +79,7 @@ if [ "$(uname -s)" = "Linux" ]; then
     python oidc_write_orchestration.py
     TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
     $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
-    echo "export MONGODB_URI_MULTI=mongodb//:27018/?directConnection=true" >> "secrets-export.sh"
+    echo "export MONGODB_URI_MULTI=mongodb://127.0.0.1:27018/?directConnection=true" >> "secrets-export.sh"
 fi
 
 # Get the tokens.
