@@ -15,11 +15,9 @@ export MONGO_ORCHESTRATION_HOME=$HOME
 export SKIP_LEGACY_SHELL=true
 export NO_IPV6=${NO_IPV6:-""}
 
-mv secrets-export.sh $DRIVERS_TOOLS/.evergreen/auth_oidc
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 python oidc_write_orchestration.py --azure
-bash oidc_get_tokens.sh
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 $DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js
