@@ -35,7 +35,7 @@ def main():
 
     uri = "mongodb://localhost"
     suffix = "authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:azure"
-    suffix += f",TOKEN_RESOURCE={secrets['AUDIENCE']}"
+    suffix += f",TOKEN_RESOURCE:{secrets['AUDIENCE']}"
     with open(HERE / "env.sh", 'w') as fid:
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
