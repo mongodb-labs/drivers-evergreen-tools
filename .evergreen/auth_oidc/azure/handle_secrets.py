@@ -1,19 +1,16 @@
 import logging
 import os
 from base64 import b64decode
-from pathlib import Path
 
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
-
-
-HERE = Path(__file__).absolute().parent
 
 
 def main():
     vault_name = os.environ["AZUREOIDC_KEYVAULT"]
     private_key_file = os.environ['AZUREKMS_PRIVATEKEYPATH']
     public_key_file = os.environ['AZUREKMS_PUBLICKEYPATH']
+    env_file = os.environ['AZUREOIDC_ENVPATH']
     client_id = os.environ['AZUREOIDC_CLIENTID']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
@@ -36,7 +33,7 @@ def main():
     uri = "mongodb://localhost"
     suffix = "authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:azure"
     suffix += f",TOKEN_RESOURCE:{secrets['AUDIENCE']}"
-    with open(HERE / "env.sh", 'w') as fid:
+    with open(env_file, 'w') as fid:
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREOIDC_TOKENCLIENT={secrets["TOKENCLIENT"]}\n')
@@ -48,7 +45,7 @@ def main():
         fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
         fid.write(f'export AZUREOIDC_USERNAME="{secrets["USERNAME"]}"\n')
         fid.write(f'export AZUREOIDC_RESOURCE="{secrets["AUDIENCE"]}"\n')
-        fid.write(f'\nexport OIDC_ADMIN_USER="{secrets["USERNAME"]}"\n')
+        fid.write(f'export OIDC_ADMIN_USER="{secrets["USERNAME"]}"\n')
         fid.write('export OIDC_ADMIN_PWD=pwd123\n')
         fid.write(f'export MONGODB_URI="{uri}"\n')
         fid.write(f'export MONGODB_URI_SINGLE="{uri}/?{suffix}"\n')
