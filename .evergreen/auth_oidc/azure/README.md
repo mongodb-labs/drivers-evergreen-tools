@@ -68,7 +68,8 @@ The full set of variables available is:
 OIDC_TOKEN_DIR      # The directory containing the token files
 OIDC_TOKEN_FILE     # The default token file for use with Workload (machine) callbacks
 MONGODB_URI         # The base, admin URI
-MONGODB_URI_SINGLE  # The URI with the Workload Provider
+MONGODB_URI_SINGLE  # The URI with the Workload Provider.  # The URI will contain the `authMechanism` parameter and
+                    # the `TOKEN_RESOURCE` auth mechanism property.
 OIDC_ADMIN_USER     # The username and password for use with an admin connection
 OIDC_ADMIN_PWD
 AZUREOIDC_RESOURCE  # The resource to request for the token

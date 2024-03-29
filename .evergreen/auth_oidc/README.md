@@ -43,9 +43,11 @@ OIDC_DOMAIN         # The domain associated with the Workforce Provider in Atlas
 OIDC_TOKEN_DIR      # The directory containing the token files
 OIDC_TOKEN_FILE     # The default token file for use with Workload (machine) callbacks
 MONGODB_URI         # The base, admin URI
-MONGODB_URI_SINGLE  # The URI with a single Workforce Provider configured, as well as one or more Workload Providers
+MONGODB_URI_SINGLE  # The URI with a single Workforce Provider configured, as well as one or more Workload Providers.
+                    # The URI will contain the `authMechanism` parameter.
 MONGODB_URI_MULTI   # The URI with multiple Workforce Providers configured.  This will only be set if a local
                     # server is launched, as only a single Workforce Provider is allowed on Atlas.
+                    # The URI will contain the `authMechanism` parameter.
 OIDC_ADMIN_USER     # The username and password for use with an admin connection
 OIDC_ADMIN_PWD
 ```
