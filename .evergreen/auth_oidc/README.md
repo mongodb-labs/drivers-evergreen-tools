@@ -12,7 +12,7 @@ Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials 
 The values in the vault are:
 
 ```bash
-OIDC_ALTAS_USER             # Atlas admin username and password
+OIDC_ATLAS_USER             # Atlas admin username and password
 OIDC_ATLAS_PASSWORD
 OIDC_ATLAS_PUBLIC_API_KEY   # The public Atlas API key used to launch clusters
 OIDC_ATLAS_PRIVATE_API_KEY
