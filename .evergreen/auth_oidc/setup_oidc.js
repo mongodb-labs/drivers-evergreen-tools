@@ -13,7 +13,7 @@ console.log("Setting up User");
 const authorizationPrefix = process.env['AZUREOIDC_AUTHPREFIX'] || 'test1';
 const authorizationClaim = process.env['AZUREOIDC_AUTHCLAIM'] || 'readWrite';
 const role1Name = authorizationPrefix + '/' + authorizationClaim;
-const role2Name = 'test2/read';
+const role2Name = 'test2/readWrite';
 
 // Add the roles.
 console.log('Adding role:', role1Name);

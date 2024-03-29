@@ -103,7 +103,7 @@ def main():
         }]
     }
 
-    provider2_info['matchPattern'] = "test_user2"
+    provider2_info['matchPattern'] = 'test_user2'
     del provider2_info['supportsHumanFlows']
 
     providers = [provider1_info, provider2_info]

@@ -69,8 +69,11 @@ AZUREKMS_DST="./" \
 AZUREKMS_CMD="./setup-azure-vm.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
-# Write the env variables file
+# Write the env variables file and the secrets file
 AZUREKMS_SRC=$AZUREOIDC_ENVPATH \
+AZUREKMS_DST="./" \
+    "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+AZUREKMS_SRC=$SCRIPT_DIR/secrets-export.sh \
 AZUREKMS_DST="./" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 

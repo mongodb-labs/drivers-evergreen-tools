@@ -7,12 +7,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 # Get the secrets
-if [ -f ./secrets-export.sh ]; then
-    echo "Sourcing secrets"
-    source ./secrets-export.sh
-else
-    . ./setup-secrets.sh
-fi
+rm -f secrets-export.sh
+. ./setup-secrets.sh
 
 # Start an Atlas Cluster
 
@@ -83,10 +79,18 @@ if [ "$(uname -s)" = "Linux" ]; then
     python oidc_write_orchestration.py
     TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
     $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
-    echo "export OIDC_URI_MULTI=mongodb//:27018/?directConnection=true" >> "secrets-export.sh"
+    echo "export MONGODB_URI_MULTI=mongodb//:27018/?directConnection=true" >> "secrets-export.sh"
 fi
 
-# Wait for the Atlas Cluster
-OIDC_URI_SINGLE=$(check_deployment)
+# Get the tokens.
+bash ./oidc_get_tokens.sh
 
-echo "export OIDC_URI_SINGLE=$OIDC_URI_SINGLE" >> "secrets-export.sh"
+# Wait for the Atlas Cluster
+URI=$(check_deployment)
+
+cat <<EOF >> "secrets-export.sh"
+export MONGODB_URI="$URI"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC"
+export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
+export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
+EOF

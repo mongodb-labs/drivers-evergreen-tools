@@ -3,49 +3,57 @@
 `MONGODB-OIDC` is only supported on Linux, but can be run using docker.  It is recommended to use the
 [Local Server](#local-server-testing) during development, so you can access the server logs locally.
 
-## Testing with the Decidicated Atlas Clusters
-
-We have two dedicated Atlas clusters that are configured with OIDC, one with a single Identity Provider (Idp),
-and one with multiple IdPs configured.
-
-
-These include:
-
-```bash
-OIDC_ALTAS_USER         # Atlas admin username and password
-OIDC_ATLAS_PASSWORD
-OIDC_ATLAS_URI_MULTI    # URI for the cluster with multiple IdPs configured
-OIDC_ATLAS_URI_SINGLE   # URI for the cluster with single IdP configured
-OIDC_CLIENT_SECRET      # The client secret used by the IdPs
-OIDC_RSA_KEY            # The RSA key used by the IdPs
-OIDC_JWKS_URI           # The JWKS URI used by the IdPs
-OIDC_ISSUER_1_URI       # The issuer URI for mock IdP 1
-OIDC_ISSUER_2_URI       # The issuer URI for mock IdP 2
-```
-
 ### Prerequisites
 
-The `oidc_get_tokens.sh` script will automatically fetch the credentials from the `drivers/oidc` vault.
+The `setup.sh` or `start_local_server.sh` scripts will automatically fetch the credentials from the `drivers/oidc` vault.
 See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the vault.
 Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo.
 
-### Usage
-
-Use the `oidc_get_tokens.sh` script to create a set of OIDC tokens in a temporary directory, including
-`test_user1` and `test_user1_expires`.  The temp file location is exported as `OIDC_TOKEN_DIR`.
+The values in the vault are:
 
 ```bash
-source ./oidc_get_tokens.sh
-OIDC_TOKEN_FILE="$OIDC_TOKEN_DIR/test_user1" /my/test/command
+OIDC_ALTAS_USER             # Atlas admin username and password
+OIDC_ATLAS_PASSWORD
+OIDC_ATLAS_PUBLIC_API_KEY   # The public Atlas API key used to launch clusters
+OIDC_ATLAS_PRIVATE_API_KEY
+OIDC_ATLAS_GROUP_ID         # The Atlas group used to launch clusters
+OIDC_DOMAIN                 # The domain associated with the Workforce Provider in Atlas
+OIDC_CLIENT_SECRET          # The client secret used by the IdPs
+OIDC_RSA_KEY                # The RSA key used by the IdPs
+OIDC_JWKS_URI               # The JWKS URI used by the IdPs
+OIDC_ISSUER_1_URI           # The issuer URI for mock IdP 1
+OIDC_ISSUER_2_URI           # The issuer URI for mock IdP 2
+```
+
+## Usage
+
+Run either `setup.sh` for Atlas clusters or `start_local_server.sh` for a local server (see below).
+
+Both scripts will do the following:
+
+- Fetch secrets
+- Configure the cluster
+- Generate token files
+
+Once finished, the following variables can be used in your tests by sourcing `secrets-export.sh` in this
+folder:
+
+```bash
+OIDC_DOMAIN         # The domain associated with the Workforce Provider in Atlas
+OIDC_TOKEN_DIR      # The directory containing the token files
+OIDC_TOKEN_FILE     # The default token file for use with Workload (machine) callbacks
+MONGODB_URI         # The base, admin URI
+MONGODB_URI_SINGLE  # The URI with a single Workforce Provider configured, as well as one or more Workload Providers
+MONGODB_URI_MULTI   # The URI with multiple Workforce Providers configured.  This will only be set if a local
+                    # server is launched, as only a single Workforce Provider is allowed on Atlas.
+OIDC_ADMIN_USER     # The username and password for use with an admin connection
+OIDC_ADMIN_PWD
 ```
 
 ## Local Server Testing
 
 `MONGODB-OIDC` is only supported on Linux, but we support running locally in
 a Docker container.
-
-`Dockerfile`, `docker_entry.sh`, and `start_local_server.sh` are used to launch a
-local docker container running `mongo-orchestration` with OIDC enabled.
 
 To run locally, `docker` and `python` must be installed locally (both can be
 installed using brew).
@@ -56,27 +64,39 @@ and 27018.
 
 See [instructions](../docker/README.md#get-logs) for how to get the server logs from the box.
 
-## Evergreen Testing With Local Server - Linux Only
+## Evergreen Testing
 
-On Evergreen, use `ec2.assume_role` to assume the Drivers Secrets role
+Running `setup.sh` in this folder will launch an Atlas cluster on all three platforms.
+On a Linux EVG host, it will also start a local server that is used for `MONGODB_URI_MULTI`.
+
+To support MacOS hosts, you must first use `ec2.assume_role` to assume the Drivers Secrets role
 and set the three AWS variables accordingly.
 
-```bash
-. ./activate-authoidcvenv.sh
-python oidc_write_orchestration.py
-source ./oidc_get_tokens.sh
+A full task group will look something like:
+
+```yaml
+- name: testoidc_task_group
+  setup_group:
+    - func: fetch source
+    - func: prepare resources
+    - func: assume ec2 role
+    - command: subprocess.exec
+      params:
+        binary: bash
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        args:
+        - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/setup.sh
+  teardown_task:
+    - command: subprocess.exec
+      params:
+        binary: bash
+        args:
+        - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/teardown.sh
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  tasks:
+    - oidc-auth-test
 ```
-
-This will create the tokens in `OIDC_TOKEN_DIR` and
-create the file `$DRIVERS_TOOLS/orchestration/configs/servers/auth-oidc.json`.
-
-You can then run mongo orchestration with `TOPOLOGY=replicaset` and `ORCHESTRATION_FILE=auth-oidc.json`.
-
-To set up the server auth roles, run `mongosh setup_oidc.js`.
-
-Then, tests can be run against the server.  Set `OIDC_TOKEN_FILE` to either `$OIDC_TOKEN_DIR/test_user1` or `$OIDC_TOKEN_DIR/test_user2` as desired.
-
-The token in `$OIDC_TOKEN_DIR/test_user1_expires` can be used to test expired credentials.
 
 ## Azure Testing
 
