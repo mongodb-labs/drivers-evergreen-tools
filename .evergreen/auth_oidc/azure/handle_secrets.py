@@ -56,7 +56,7 @@ def main():
         fid.write(f'export AZUREOIDC_RESOURCE="{secrets["AUDIENCE"]}"\n')
         fid.write(f'export AZUREOIDC_USERNAME="{secrets["USERNAME"]}"\n')
         fid.write(f'export OIDC_TOKEN_DIR=/tmp/tokens\n')
-        fid.write(f'export OIDC_TOKEN_FILE/tmp/tokens/test_machine\n')
+        fid.write(f'export OIDC_TOKEN_FILE=/tmp/tokens/test_machine\n')
 
     if os.path.exists(private_key_file):
         os.remove(private_key_file)
