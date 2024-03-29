@@ -50,7 +50,7 @@ def main():
         fid.write(f'\nexport OIDC_ADMIN_USER="{secrets["USERNAME"]}"\n')
         fid.write('export OIDC_ADMIN_PWD=pwd123\n')
         fid.write(f'export MONGODB_URI="{uri}"\n')
-        fid.write(f'export MONGODB_URI_SINGLE="{uri}/?${suffix}"\n')
+        fid.write(f'export MONGODB_URI_SINGLE="{uri}/?{suffix}"\n')
 
     if os.path.exists(private_key_file):
         os.remove(private_key_file)
