@@ -14,26 +14,30 @@ if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GC
     exit 1
 fi
 
+echo "Copying setup-gce-instance.sh to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+# Copy files to test. Use "-p" to preserve execute mode.
+$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh "$GCPKMS_INSTANCENAME":~ \
+    --zone $GCPKMS_ZONE \
+    --project $GCPKMS_PROJECT \
+    --scp-flag="-p"
+echo "Copying setup-gce-instance.sh to GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
+echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+$GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
+    --zone $GCPKMS_ZONE \
+    --project $GCPKMS_PROJECT \
+    --command "./setup-gce-instance.sh"
+echo "Exit code of test-script is: $?"
+echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
 echo "Copying test files to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
-$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-test.sh "$GCPKMS_INSTANCENAME":~ \
+$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/remote-scripts/run-self-test.sh "$GCPKMS_INSTANCENAME":~ \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT \
     --scp-flag="-p"
-$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/test.py "$GCPKMS_INSTANCENAME":~ \
-    --zone $GCPKMS_ZONE \
-    --project $GCPKMS_PROJECT \
-    --scp-flag="-p"
-$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/secrets-export.sh "$GCPKMS_INSTANCENAME":~ \
+$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/remote-scripts/test.py "$GCPKMS_INSTANCENAME":~ \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT \
     --scp-flag="-p"
 echo "Copying test files to GCE instance ($GCPKMS_INSTANCENAME) ... end"
-
-echo "Running run-test.sh on GCE instance ($GCPKMS_INSTANCENAME) ... begin"
-$GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
-    --zone $GCPKMS_ZONE \
-    --project $GCPKMS_PROJECT \
-    --command "./run-test.sh"
-echo "Exit code of test-script is: $?"
-echo "Running run-test.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"

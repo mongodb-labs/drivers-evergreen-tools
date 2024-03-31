@@ -29,3 +29,19 @@ $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
     --command "./setup-gce-instance.sh"
 echo "Exit code of test-script is: $?"
 echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
+echo "Copying start-mongodb.sh to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+# Copy files to test. Use "-p" to preserve execute mode.
+$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/start-mongodb.sh "$GCPKMS_INSTANCENAME":~ \
+    --zone $GCPKMS_ZONE \
+    --project $GCPKMS_PROJECT \
+    --scp-flag="-p"
+echo "Copying start-mongodb.sh to GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
+echo "Running start-mongodb.sh on GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+$GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
+    --zone $GCPKMS_ZONE \
+    --project $GCPKMS_PROJECT \
+    --command "./start-mongodb.sh"
+echo "Exit code of test-script is: $?"
+echo "Running start-mongodb.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"

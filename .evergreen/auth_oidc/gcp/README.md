@@ -1,8 +1,8 @@
 # GCP OIDC Testing
 
-Testing OIDC with GCP integration involves launching an GCP VM,
+Testing OIDC with GCP integration involves launching an Atlas cluster and GCP VM,
 pushing the code to the VM, running the OIDC tests for the driver,
-and then tearing down the VM and its resources.
+and then tearing down the Atlas cluster, and VM and its resources.
 
 ## Background
 
@@ -20,7 +20,7 @@ should run the equivalent of the following, substituting your driver name:
 
 ```bash
 export GCPOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
-$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/create-and-setup-instance.sh
+$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/setup.sh
 ```
 
 This script can be run locally or in CI.  The script also runs a self-test on the VM using the Python driver.
@@ -40,17 +40,19 @@ export GCPOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=gcp ./.evergreen/
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-driver-test.sh
 ```
 
-In your tests, you can use the environment variables in `secrets-export.sh` to define the `TOKEN_AUDIENCE`
-auth mechanism property, e.g.
+The following variables can be used in your tests by sourcing `$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/secrets-export.sh`:
 
-```python
-TOKEN_AUDIENCE=os.environ["GCPOIDC_AUDIENCE"]
+```bash
+MONGODB_URI         # The base, admin URI
+MONGODB_URI_SINGLE  # The OIDC connection string with auth mechanism and properties.
+OIDC_ADMIN_USER     # The username and password for use with an admin connection
+OIDC_ADMIN_PWD
 ```
 
 Finally, we tear down the vm:
 
 ```bash
-$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/delete-instance.sh
+$DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
 ```
 
 An example task group would look like:
@@ -80,15 +82,19 @@ An example task group would look like:
           - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/teardown.sh
     - func: other teardown function
   tasks:
-    - oidc-auth-test-gcp-latest
+    - oidc-auth-test-gcp
 ```
 
 ### Environment Variables
 
-Below is an explananion of the environment variables used in the test:
+Below is an explanation of the environment variables used in the test:
 
-- GCPOIDC_AUDIENCE - The value to use in the `TOKEN_AUDIENCE` auth mechanism property.
-- GCPOIDC_ATLAS_URI - The URI of the Atlas cluster configured for OIDC GCP testing.
+- GCPOIDC_AUDIENCE - The value used in the `TOKEN_RESOURCE` auth mechanism property.
 - GCPOIDC_SERVICEACCOUNT - The GCP Service Account to use for GCP access.
 - GCPOIDC_KEYFILE_CONTENT - The base64-encoded GCP keyfile content.
 - GCPOIDC_MACHINE - The GCE machine type to use for the VM.
+- GCPOIDC_ATLAS_USER - The username for admin database access.
+- GCPOIDC_ATLAS_PASSWORD
+- OIDC_ATLAS_PUBLIC_API_KEY - The Atlas API key used to create/delete clusters.
+- OIDC_ATLAS_PRIVATE_API_KEY
+- OIDC_ATLAS_GROUP_ID - The Atlas Dev Group ID where the clusters are launched.
