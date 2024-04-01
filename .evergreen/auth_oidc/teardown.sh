@@ -14,3 +14,5 @@ export DRIVERS_ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
 export DRIVERS_ATLAS_GROUP_ID=$OIDC_ATLAS_GROUP_ID
 
 bash ../atlas/teardown-atlas-cluster.sh
+
+popd

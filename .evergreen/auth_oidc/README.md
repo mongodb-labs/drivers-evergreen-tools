@@ -35,8 +35,8 @@ Both scripts will do the following:
 - Configure the cluster
 - Generate token files
 
-Once finished, the following variables can be used in your tests by sourcing `secrets-export.sh` in this
-folder:
+Once finished, the following variables can be used in your tests by sourcing `secrets-export.sh` in the
+`$DRIVERS_TOOLS/.evergreen/auth_oidc` folder.
 
 ```bash
 OIDC_DOMAIN         # The domain associated with the Workforce Provider in Atlas
