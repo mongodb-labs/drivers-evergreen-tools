@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-
 # Create an Atlas M10 deployment - this returns immediately so we'll need to poll until
 # the deployment is created.
 create_deployment ()
@@ -22,16 +21,16 @@ create_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID..."
-  resp=$(curl -sS \
+  RESP=$(curl -sS -L \
     --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \
     -H 'Content-Type: application/json' \
     -X POST \
-    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true" \
-    -o /dev/stderr  \
-    -w "%{http_code}")
-  if [[ "$resp" != "201" ]]; then
-    echo "Exiting due to response code $resp != 201"
+    "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true")
+  echo "$RESP"
+  STATE=$(echo $RESP | jq ".stateName")
+  if [[ $STATE != *"CREATING"* ]]; then
+    echo "Exiting due to unexpected response $STATE"
     exit 1
   fi
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID... done."
@@ -69,14 +68,12 @@ check_deployment ()
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID..." 1>&2
   while [ $SRV_ADDRESS = "null" ] && [ $count -le 80 ]; do
     echo "Checking every 15 seconds for deployment to be created..." 1>&2
-    # Poll every 15 seconds to check the deployment creation.
     sleep 15
-    SRV_ADDRESS=$(curl -sS \
+    RESP=$(curl -sS \
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
-      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}" \
-      | jq -r ${match_str}
-    );
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}")
+    SRV_ADDRESS=$(echo $RESP | jq -r ${match_str})
     count=$(( $count + 1 ))
   done
 

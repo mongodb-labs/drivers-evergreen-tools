@@ -40,3 +40,6 @@ fi
 if [[ "$(uname -s)" == CYGWIN* ]]; then
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi
+
+MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
+MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}

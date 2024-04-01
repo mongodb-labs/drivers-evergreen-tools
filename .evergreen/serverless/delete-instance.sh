@@ -47,3 +47,4 @@ curl \
   "${API_BASE_URL}/serverless/${SERVERLESS_INSTANCE_NAME}?pretty=true"
 
 echo ""
+echo "Deleting serverless instance \"$SERVERLESS_INSTANCE_NAME\"... done."

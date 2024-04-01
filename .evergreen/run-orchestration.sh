@@ -46,9 +46,7 @@ echo "Finding Python3 binary... done."
 
 # Set up the mongo orchestration config.
 mkdir -p $MONGO_ORCHESTRATION_HOME
-if [ -n "${MONGODB_BINARIES}" ]; then
-  echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
-fi
+echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
 # Copy client certificate because symlinks do not work on Windows.
 mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
@@ -116,6 +114,7 @@ else
   echo "Could not find orchestration file $ORCHESTRATION_FILE (checked in $PROJECT_ORCHESTRATION_HOME and $MONGO_ORCHESTRATION_HOME)"
   exit 1
 fi
+echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
 # Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE

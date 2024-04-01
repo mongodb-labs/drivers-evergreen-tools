@@ -8,6 +8,22 @@ set -eux
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+pushd $SCRIPT_DIR
+
+# Get the tokens.
+rm -f secrets-export.sh
+bash ./oidc_get_tokens.sh
+
+# Write the expected secrets to the file.
+URI="mongodb://localhost"
+cat <<EOF >> "secrets-export.sh"
+export MONGODB_URI="$URI"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC"
+export MONGODB_URI_MULTI="$URI:27018/?directConnection=true&authMechanism=MONGODB-OIDC"
+export OIDC_ADMIN_USER=bob
+export OIDC_ADMIN_PWD=pwd123
+EOF
+
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
 VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
@@ -25,12 +41,12 @@ else
     VOL="$VOL -v $HOME/.aws:/root/.aws"
 fi
 
-rm -rf $DRIVERS_TOOLS/.evergreen/auth_oidc/authoidcvenv
 test -t 1 && USE_TTY="-t"
 
 echo "Drivers tools: $DRIVERS_TOOLS"
 pushd ../docker
 rm -rf ./ubuntu20.04/mongodb
+rm -rf ./ubuntu20.04/orchestration
 docker build -t drivers-evergreen-tools ./ubuntu20.04
 popd
 docker build -t oidc-test .

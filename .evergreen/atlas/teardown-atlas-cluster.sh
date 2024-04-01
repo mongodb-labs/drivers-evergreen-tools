@@ -30,12 +30,15 @@ for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
+ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
+
 # Delete the cluster.
 echo "Deleting Atlas Cluster..."
 curl -sS \
   --digest -u ${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY} \
   -X DELETE \
   "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}?pretty=true"
+echo ""
 echo "Deleting Atlas Cluster... done."
 
 popd

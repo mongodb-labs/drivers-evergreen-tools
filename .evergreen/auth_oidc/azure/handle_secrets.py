@@ -30,6 +30,9 @@ def main():
         retrieved = client.get_secret(secret)
         secrets[secret] = retrieved.value
 
+    uri = "mongodb://localhost"
+    suffix = "authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:azure"
+    suffix += f",TOKEN_RESOURCE:{secrets['AUDIENCE']}"
     with open(env_file, 'w') as fid:
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
@@ -42,6 +45,10 @@ def main():
         fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
         fid.write(f'export AZUREOIDC_USERNAME="{secrets["USERNAME"]}"\n')
         fid.write(f'export AZUREOIDC_RESOURCE="{secrets["AUDIENCE"]}"\n')
+        fid.write(f'export OIDC_ADMIN_USER="{secrets["USERNAME"]}"\n')
+        fid.write('export OIDC_ADMIN_PWD=pwd123\n')
+        fid.write(f'export MONGODB_URI="{uri}"\n')
+        fid.write(f'export MONGODB_URI_SINGLE="{uri}/?{suffix}"\n')
 
     if os.path.exists(private_key_file):
         os.remove(private_key_file)

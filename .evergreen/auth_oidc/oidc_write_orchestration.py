@@ -26,7 +26,8 @@ def azure():
         "issuer": f"https://sts.windows.net/{tenant_id}/",
         "clientId": client_id,
         "audience": f"api://{app_id}",
-        "authorizationClaim": "groups"
+        "authorizationClaim": "groups",
+        "supportsHumanFlows": False,
     }
     providers = json.dumps([provider_info], separators=(',',':'))
 
@@ -68,9 +69,19 @@ def main():
         "audience": DEFAULT_CLIENT,
         "authorizationClaim": "foo",
         "requestScopes": ["fizz", "buzz"],
-
+        "matchPattern": "test_user1"
     }
-    providers = json.dumps([provider1_info], separators=(',',':'))
+    provider2_info = {
+        "authNamePrefix": "test2",
+        "issuer": secrets['oidc_issuer_2_uri'],
+        "clientId": DEFAULT_CLIENT,
+        "audience": DEFAULT_CLIENT,
+        "authorizationClaim": "bar",
+        "supportsHumanFlows": False,
+        "requestScopes": ["foo", "bar"],
+    }
+
+    providers = json.dumps([provider1_info, provider2_info], separators=(',',':'))
 
     data = {
         "id": "oidc-repl0",
@@ -86,23 +97,16 @@ def main():
                 "port": 27017,
                 "setParameter": {
                     "enableTestCommands": 1,
-                    "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                    "authenticationMechanisms": "SCRAM-SHA-1,SCRAM-SHA-256,MONGODB-OIDC",
                     "oidcIdentityProviders": providers
                 }
             }
         }]
     }
 
-    provider1_info['matchPattern'] = "test_user1"
-    provider2_info = {
-        "authNamePrefix": "test2",
-        "issuer": secrets['oidc_issuer_2_uri'],
-        "clientId": DEFAULT_CLIENT,
-        "audience": DEFAULT_CLIENT,
-        "authorizationClaim": "bar",
-        "matchPattern": "test_user2",
-        "requestScopes": ["foo", "bar"],
-    }
+    provider2_info['matchPattern'] = 'test_user2'
+    del provider2_info['supportsHumanFlows']
+
     providers = [provider1_info, provider2_info]
     providers = json.dumps(providers, separators=(',',':'))
     data['members'].append({
@@ -113,7 +117,7 @@ def main():
             "port": 27018,
             "setParameter": {
                 "enableTestCommands": 1,
-                "authenticationMechanisms": "SCRAM-SHA-256,MONGODB-OIDC",
+                "authenticationMechanisms": "SCRAM-SHA-1,SCRAM-SHA-256,MONGODB-OIDC",
                 "oidcIdentityProviders": providers
             }
         },

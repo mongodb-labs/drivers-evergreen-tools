@@ -99,7 +99,7 @@ def get_id_token(config=None, expires=None):
     creds = f'{client_id}:{client_secret}'
     creds = base64.urlsafe_b64encode(creds.encode('utf-8')).decode('utf-8')
     headers = dict(Authorization=f'Basic {creds}')
-    extra_claims = {'foo': ['readWrite'], 'bar': ['read'] }
+    extra_claims = {'foo': ['readWrite'], 'bar': ['readWrite'] }
     response = provider.handle_token_request(f'grant_type=authorization_code&subject_type=public&code={code}&redirect_uri={MOCK_ENDPOINT}', headers, extra_id_token_claims=extra_claims)
 
     token = response["id_token"]

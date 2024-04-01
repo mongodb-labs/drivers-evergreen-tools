@@ -34,7 +34,7 @@ should run the equivalent of the following, substituting your driver name:
 
 ```bash
 export AZUREOIDC_VMNAME_PREFIX="PYTHON_DRIVER"
-$DRIVERS_TOOLS/.evergreen/auth_oidc/azure/create-and-setup-vm.sh
+$DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup.sh
 ```
 
 This script can be run locally or in CI.  The script also runs a self-test on the VM using the Python driver.
@@ -50,16 +50,32 @@ git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
 # Define the command to run on the VM.
 # Ensure that we source the environment file created for us, set up any other variables we need,
 # and then run our test suite on the vm.
-export AZUREOIDC_TEST_CMD="source ./env.sh && OIDC_PROVIDER_NAME=azure ./.evergreen/run-mongodb-oidc-test.sh"
+export AZUREOIDC_TEST_CMD="source ./secrets-export.sh && OIDC_ENV=azure ./.evergreen/run-mongodb-oidc-test.sh"
 bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
 ```
 
-In your tests, you can use the environment variables in `env.sh` to define the `username` and `TOKEN_RESOURCE`
+In your tests, you can use the environment variables in `secrets-export.sh` to define the `username` and `TOKEN_RESOURCE`
 auth mechanism property, e.g.
 
 ```python
 username=os.environ["AZUREOIDC_USERNAME"]
 TOKEN_RESOURCE=os.environ["AZUREOIDC_RESOURCE"]
+```
+
+The full set of variables available is:
+
+```bash
+OIDC_TOKEN_DIR      # The directory containing the token files
+OIDC_TOKEN_FILE     # The default token file for use with Workload (machine) callbacks
+MONGODB_URI         # The base, admin URI
+MONGODB_URI_SINGLE  # The URI with the Workload Provider.  # The URI will contain the `authMechanism` parameter and
+                    # the `TOKEN_RESOURCE` auth mechanism property.
+OIDC_ADMIN_USER     # The username and password for use with an admin connection
+OIDC_ADMIN_PWD
+AZUREOIDC_RESOURCE  # The resource to request for the token
+AZUREOIDC_USERNAME  # The username, which is the client_id for the identity on the VM
+OIDC_TOKEN_DIR      # The directory containing the token files
+OIDC_TOKEN_FILE     # The default token file for use with Workload callbacks
 ```
 
 Finally, we tear down the vm:

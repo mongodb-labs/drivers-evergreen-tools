@@ -23,4 +23,10 @@ fi
 
 . ./activate-authoidcvenv.sh
 python ./oidc_get_tokens.py
+
+cat <<EOF >> "secrets-export.sh"
+export OIDC_TOKEN_DIR=$OIDC_TOKEN_DIR
+export OIDC_TOKEN_FILE=$OIDC_TOKEN_DIR/test_machine
+EOF
+
 popd
