@@ -94,7 +94,7 @@ AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/remote-script
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
-AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/remote/scripts/run-self-test.sh" \
+AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/remote-scripts/run-self-test.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 popd
