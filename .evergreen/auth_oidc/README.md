@@ -7,7 +7,7 @@
 
 The `setup.sh` or `start_local_server.sh` scripts will automatically fetch the credentials from the `drivers/oidc` vault.
 See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the vault.
-Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials in your repo.
+Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials to your repo.
 
 The values in the vault are:
 
