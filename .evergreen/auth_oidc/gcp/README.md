@@ -94,7 +94,7 @@ Below is an explanation of the environment variables used in the test:
 - GCPOIDC_KEYFILE_CONTENT - The base64-encoded GCP keyfile content.
 - GCPOIDC_MACHINE - The GCE machine type to use for the VM.
 - GCPOIDC_ATLAS_USER - The username for admin database access.
-- GCPOIDC_ATLAS_PASSWORD
-- OIDC_ATLAS_PUBLIC_API_KEY - The Atlas API key used to create/delete clusters.
-- OIDC_ATLAS_PRIVATE_API_KEY
+- GCPOIDC_ATLAS_PASSWORD - The password for admin database access.
+- OIDC_ATLAS_PUBLIC_API_KEY - The Atlas Publi API key used to create/delete clusters.
+- OIDC_ATLAS_PRIVATE_API_KEY - The Atlas Private API key.
 - OIDC_ATLAS_GROUP_ID - The Atlas Dev Group ID where the clusters are launched.
