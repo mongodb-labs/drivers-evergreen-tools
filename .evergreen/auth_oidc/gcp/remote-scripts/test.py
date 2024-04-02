@@ -9,7 +9,7 @@ from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackRes
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
 audience = os.environ['GCPOIDC_AUDIENCE']
-atlas_uri = os.environ["GCPOIDC_ATLAS_URI"]
+atlas_uri = os.environ["MONGODB_URI"]
 
 class MyCallback(OIDCCallback):
     def fetch(self, context: OIDCCallbackContext) -> OIDCCallbackResult:

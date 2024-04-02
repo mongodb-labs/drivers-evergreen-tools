@@ -12,5 +12,5 @@ pushd mongo-python-driver
 python setup.py install --no_ext
 popd
 pip install -q requests
-python azure/test.py
+python azure/remote-scripts/test.py
 popd

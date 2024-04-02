@@ -90,11 +90,11 @@ echo "Untarring file ... end"
 popd
 
 # Start mongodb.
-AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/start-mongodb.sh" \
+AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/remote-scripts/start-mongodb.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 # Run the self-test
-AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/run-test.sh" \
+AZUREKMS_CMD="./drivers-evergreen-tools/.evergreen/auth_oidc/azure/remote-scripts/run-self-test.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 
 popd
