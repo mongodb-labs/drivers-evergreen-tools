@@ -1081,13 +1081,13 @@ buildvariants:
 - name: tests-docker
   display_name: Docker
   run_on:
-    - ubuntu2004-large
+    - ubuntu2204-large
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
 - name: tests-oidc
   display_name: OIDC
-  run_on: ubuntu2004-small
+  run_on: ubuntu2204-small
   tasks:
     - "test-oidc"
     - "testgcpoidc_task_group"
