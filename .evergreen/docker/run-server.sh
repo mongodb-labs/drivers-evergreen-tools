@@ -17,7 +17,8 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
     PLATFORM="--platform linux/$ARCH"
 fi
 
-docker build $PLATFORM -t $NAME $IMAGE  --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
+USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
+docker build $PLATFORM -t $NAME $USER $IMAGE
 pushd $DRIVERS_TOOLS
 
 # Remove existing mongodb and orchestration files
