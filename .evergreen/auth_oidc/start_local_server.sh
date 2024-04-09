@@ -22,6 +22,7 @@ export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC"
 export MONGODB_URI_MULTI="$URI:27018/?directConnection=true&authMechanism=MONGODB-OIDC"
 export OIDC_ADMIN_USER=bob
 export OIDC_ADMIN_PWD=pwd123
+export OIDC_IS_LOCAL=1
 EOF
 
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}

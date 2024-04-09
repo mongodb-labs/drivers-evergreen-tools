@@ -380,7 +380,27 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run oidc test":
+  "run oidc local test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: shell.exec
+      type: test
+      params:
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        working_dir: "src"
+        script: |
+          ${PREPARE_SHELL}
+          set -ex
+          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/setup.sh
+          test -f /tmp/tokens/test_user1
+          test -f /tmp/tokens/test_user2
+          test -f /tmp/tokens/test_machine
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
+  "run oidc docker test":
     - command: ec2.assume_role
       params:
         role_arn: ${aws_test_secrets_role}
@@ -394,10 +414,9 @@ functions:
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/auth_oidc
           ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
-          # Get tokens
-          bash oidc_get_tokens.sh
           test -f /tmp/tokens/test_user1
           test -f /tmp/tokens/test_user2
+          test -f /tmp/tokens/test_machine
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -783,10 +802,15 @@ tasks:
             MONGODB_VERSION: 3.6
             ARCH: amd64
 
-    - name: "test-oidc"
+    - name: "test-oidc-local"
       tags: ["latest", "oidc", "pr"]
       commands:
-        - func: "run oidc test"
+        - func: "run oidc local test"
+
+    - name: "test-oidc-docker"
+      tags: ["latest", "oidc", "pr"]
+      commands:
+        - func: "run oidc docker test"
 
     - name: "test-oidc-azure"
       tags: ["oidc", "pr"]
@@ -1089,7 +1113,8 @@ buildvariants:
   display_name: OIDC
   run_on: ubuntu2204-small
   tasks:
-    - "test-oidc"
+    - "test-oidc-local"
+    - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
 

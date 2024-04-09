@@ -10,18 +10,38 @@ pushd $SCRIPT_DIR
 rm -f secrets-export.sh
 . ./setup-secrets.sh
 
-# Start an Atlas Cluster
+# Get the tokens.
+bash ./oidc_get_tokens.sh
 
-# Get the utility functions
-. ../atlas/atlas-utils.sh
+if [ "$(uname -s)" = "Linux" ]; then
+    # On Linux, we start a local server so we can have better control of the idp configuration.
+    . ./activate-authoidcvenv.sh
+    python oidc_write_orchestration.py
+    TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
+    URI="mongodb://127.0.0.1:27017/?directConnection=true"
+    $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "$URI&serverSelectionTimeoutMS=10000"
+    cat <<EOF >> "secrets-export.sh"
+export MONGODB_URI="$URI"
+export MONGODB_URI_SINGLE="$URI&authMechanism=MONGODB-OIDC"
+export MONGODB_URI_MULTI="mongodb://127.0.0.1:27018/?directConnection=true&authMechanism=MONGODB-OIDC"
+export OIDC_ADMIN_USER=bob
+export OIDC_ADMIN_PWD=pwd123
+export OIDC_IS_LOCAL=1
 
-# Generate a random cluster name.
-# See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
-DEPLOYMENT_NAME="$RANDOM-DRIVERTEST"
-echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "secrets-export.sh"
+EOF
+else
+  # Start an Atlas Cluster
 
-# Set the create cluster configuration.
-export DEPLOYMENT_DATA=$(cat <<EOF
+  # Get the utility functions
+  . ../atlas/atlas-utils.sh
+
+  # Generate a random cluster name.
+  # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
+  DEPLOYMENT_NAME="$RANDOM-DRIVERTEST"
+  echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "secrets-export.sh"
+
+  # Set the create cluster configuration.
+  export DEPLOYMENT_DATA=$(cat <<EOF
 {
   "autoScaling" : {
     "autoIndexingEnabled" : false,
@@ -65,34 +85,21 @@ export DEPLOYMENT_DATA=$(cat <<EOF
   "versionReleaseSystem" : "LTS"
 }
 EOF
-)
+  )
 
-export ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
-export ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
-export ATLAS_GROUP_ID=$OIDC_ATLAS_GROUP_ID
+  export ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
+  export ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
+  export ATLAS_GROUP_ID=$OIDC_ATLAS_GROUP_ID
 
-create_deployment
+  create_deployment
 
-# If on Linux, start a local server and write OIDC_URI_MULTI to secrets file.
-if [ "$(uname -s)" = "Linux" ]; then
-    . ./activate-authoidcvenv.sh
-    python oidc_write_orchestration.py
-    TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
-    $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "mongodb://127.0.0.1:27017/directConnection=true&serverSelectionTimeoutMS=10000"
-    echo "export MONGODB_URI_MULTI=mongodb://127.0.0.1:27018/?directConnection=true&authMechanism=MONGODB-OIDC" >> "secrets-export.sh"
-fi
-
-# Get the tokens.
-bash ./oidc_get_tokens.sh
-
-# Wait for the Atlas Cluster
-URI=$(check_deployment)
-
-cat <<EOF >> "secrets-export.sh"
+  URI=$(check_deployment)
+  cat <<EOF >> "secrets-export.sh"
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF
+fi
 
 popd
