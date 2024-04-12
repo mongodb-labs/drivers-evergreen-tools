@@ -44,6 +44,7 @@ activate_kmstlsvenv() {
       "boto3~=1.19.0"
       "git+https://github.com/kevinAlbs/PyKMIP.git@DRIVERS-2659" # Add work around for DRIVERS-2659
       "sqlalchemy<2.0.0" # sqlalchemy.exc.InvalidRequestError: Implicitly combining column managed_objects.uid with column crypto_objects.uid under attribute 'unique_identifier'.
+      "flask>=3.0"
     )
 
     if [[ "$OSTYPE" == darwin16 && "$HOSTTYPE" == x86_64 ]]; then
