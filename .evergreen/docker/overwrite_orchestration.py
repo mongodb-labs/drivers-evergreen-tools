@@ -28,8 +28,7 @@ traverse(data)
 for item in items:
     item['ipv6'] = False
     item['bind_ip'] = '0.0.0.0,::1'
-    item['dbpath'] = f"/tmp/mongod-{item['port']}"
-
+    item['dbpath'] = f"/tmp/mongo-{item['port']}"
 
 print(json.dumps(data, indent=2))
 
