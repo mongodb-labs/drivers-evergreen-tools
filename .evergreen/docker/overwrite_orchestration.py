@@ -20,10 +20,13 @@ def traverse(root):
         if isinstance(value, (dict, list)):
             traverse(value)
 
+# Docker does not enable ipv6 by default.
+# https://docs.docker.com/config/daemon/ipv6/
+# We also need to use 0.0.0.0 instead of 127.0.0.1
 for item in items:
     item['ipv6'] = False
     item['bind_ip'] = '0.0.0.0,::1'
-    item['dpath'] = f'/tmp/mongod-{item['port']}'
+    item['dbpath'] = f"/tmp/mongod-{item['port']}"
 
 
 print(json.dumps(data, indent=2))
