@@ -61,17 +61,17 @@ ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04
 
 ### Get Logs
 
-To see where the `mongod` log files are and get the container id, run:
+The orchestration logs can be found using `docker logs`:
 
 ```bash
-cat $DRIVERS_TOOLS/.evergreen/docker/ubuntu20.04/orchestration/server.log
-docker ps
+docker logs mongodb
 ```
 
-Then, to grab the server log from the box:
+The server logs can be found on the container in /tmp, with the scheme `/tmp/mongo-<port>/mongo.log`.
+You can pull them locally using `docker cp`:
 
 ```bash
-docker cp "<container>:<path>" mongod.log
+docker cp mongodb:/tmp/mongo-27017/mongod.log mongod.log
 ```
 
 ## Driver Testing using this Docker container

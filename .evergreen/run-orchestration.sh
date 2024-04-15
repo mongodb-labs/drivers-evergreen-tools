@@ -119,14 +119,11 @@ echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 # Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
 
-# Docker does not enable ipv6 by default.
-# https://docs.docker.com/config/daemon/ipv6/
-# We also need to use 0.0.0.0 instead of 127.0.0.1
+# If running on Docker, update the orchestration file to be docker-friendly.
 if [ -n "$DOCKER_RUNNING" ]; then
   cp $ORCHESTRATION_FILE /root/config.json
   export ORCHESTRATION_FILE=/root/config.json
-  sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
-  sed -i "s/\"127\.0\.0\.1\,/\"0.0.0.0\,/g" $ORCHESTRATION_FILE
+  $PYTHON $SCRIPT_DIR/docker/overwrite_orchestration.py
 fi
 
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
