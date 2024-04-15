@@ -2,6 +2,7 @@
 set -eux
 
 rm -f $DRIVERS_TOOLS/results.json
+rm -rf /tmp/mongo*
 cd $DRIVERS_TOOLS/.evergreen
 bash run-orchestration.sh
 

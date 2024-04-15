@@ -125,8 +125,7 @@ perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRAT
 if [ -n "$DOCKER_RUNNING" ]; then
   cp $ORCHESTRATION_FILE /root/config.json
   export ORCHESTRATION_FILE=/root/config.json
-  sed -i "s/\"ipv6\": true,/\"ipv6\": false,/g" $ORCHESTRATION_FILE
-  sed -i "s/\"127\.0\.0\.1\,/\"0.0.0.0\,/g" $ORCHESTRATION_FILE
+  $PYTHON $SCRIPT_DIR/docker/overwrite_orchestration.py
 fi
 
 export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
