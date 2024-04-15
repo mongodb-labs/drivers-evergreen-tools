@@ -11,7 +11,7 @@ items = []
 # Gather all the items that have process settings.
 def traverse(root):
     if isinstance(root, list):
-        [traverse(i) for i in list]
+        [traverse(i) for i in root]
         return
     if 'ipv6' in root:
         items.append(root)
