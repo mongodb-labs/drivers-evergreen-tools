@@ -16,7 +16,9 @@ def traverse(root):
     if 'ipv6' in root:
         items.append(root)
         return
-    for value in root.values():
+    for key, value in root.items():
+        if key == 'routers':
+            continue
         if isinstance(value, (dict, list)):
             traverse(value)
 
@@ -29,6 +31,12 @@ for item in items:
     item['ipv6'] = False
     item['bind_ip'] = '0.0.0.0,::1'
     item['dbpath'] = f"/tmp/mongo-{item['port']}"
+
+if 'routers' in data:
+    for router in data['routers']:
+        router['ipv6'] = False
+        router['bind_ip'] = '0.0.0.0,::1'
+        router['logpath'] = f"/tmp/mongodb-{item['port']}.log"
 
 print(json.dumps(data, indent=2))
 
