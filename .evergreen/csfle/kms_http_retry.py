@@ -19,7 +19,6 @@ def gcp_auth():
     return jsonify({"access_token": "foo", "expires_in": 99999})
 
 # AWS encrypt or decrypt
-# no separate auth endpoint
 @app.route('/', methods=['POST'])
 def aws():
     if 'X-Amz-Target' in request.headers:
@@ -68,8 +67,8 @@ def gcp_azure(path):
     return 'You have reached an unhandled route: %s' % path
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='MongoDB Mock AWS KMS Endpoint.')
-    parser.add_argument('-p', '--port', type=int, default=8000, help="Port to listen on")
+    parser = argparse.ArgumentParser(description='MongoDB mock KMS retry endpoint.')
+    parser.add_argument('-p', '--port', type=int, default=9003, help="Port to listen on")
     args = parser.parse_args()
 
     certfile = '../x509gen/server.pem'
@@ -79,6 +78,5 @@ if __name__ == '__main__':
     context.load_cert_chain(certfile=certfile, keyfile=certfile)
     context.load_verify_locations(cafile=cafile)
     context.verify_mode = ssl.CERT_OPTIONAL
-    
-    app = Flask(__name__)
+
     app.run(debug=False, port=args.port, ssl_context=context)
