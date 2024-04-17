@@ -53,10 +53,13 @@ ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
 # Expose the required ports.
 if [ "$TOPOLOGY" == "server" ]; then
     ARGS+=" -p 27017:27017"
-elif [ -n "$LOAD_BALANCER" ]; then
-    ARGS+=" -p 27017:27017 -p 27018:27018 -p 27019:27019 -p 27050:27050 -p 27051:27051"
-else
+elif [ "$TOPOLOGY" == "replica_set" ]; then
     ARGS+=" -p 27017:27017 -p 27018:27018 -p 27019:27019"
+elif [ "$TOPOLOGY" == "sharded_cluster" ]; then
+    ARGS+=" -p 27017:27017 -p 27018:27018 -p 27217:27217 -p 27218:27218 -p 27219:27219"
+fi
+if [ -n "$LOAD_BALANCER" ]; then
+    ARGS+=" -p 27050:27050 -p 27051:27051"
 fi
 
 # If there is a tty, add the -t arg.
