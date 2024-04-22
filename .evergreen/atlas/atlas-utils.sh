@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -eu
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../handle-paths.sh
+
+. "$SCRIPT_DIR/../find-python3.sh"
+
 # Create an Atlas M10 deployment - this returns immediately so we'll need to poll until
 # the deployment is created.
 create_deployment ()
@@ -28,8 +33,7 @@ create_deployment ()
     -X POST \
     "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true")
   echo "$RESP"
-  STATE=$(echo $RESP | jq ".stateName")
-  if [[ $STATE != *"CREATING"* ]]; then
+  if [[ ! "$RESP" =~ '"stateName" : "CREATING"' ]]; then
     echo "Exiting due to unexpected response $STATE"
     exit 1
   fi
@@ -57,11 +61,10 @@ check_deployment ()
 
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
-  if [ $TYPE = "serverless" ]; then
-      match_str=".connectionStrings.standardSrv"
-  else
-      match_str=".srvAddress"
-  fi
+
+  echo "Finding Python3 binary..." 1>&2
+  PYTHON="$(find_python3 2>/dev/null)"
+  echo "Finding Python3 binary... done." 1>&2
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2
@@ -73,7 +76,14 @@ check_deployment ()
       --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
       -X GET \
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}")
-    SRV_ADDRESS=$(echo $RESP | jq -r ${match_str})
+    if [[ "$RESP" =~ '"stateName":"IDLE"' ]]; then
+        if [ $TYPE = "serverless" ]; then
+            PROP="['connectionString']['standardSrv']"
+        else
+            PROP="['srvAddress']"
+        fi
+        SRV_ADDRESS=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d${PROP})")
+    fi
     count=$(( $count + 1 ))
   done
 
@@ -82,6 +92,7 @@ check_deployment ()
     exit 1
   else
     # Return the MONGODB_URI
+    echo "$RESP" 1>&2
     echo $SRV_ADDRESS
   fi
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
