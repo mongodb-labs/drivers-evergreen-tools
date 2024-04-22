@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 
+PREV_SCRIPT_DIR=$SCRIPT_DIR
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
 . "$SCRIPT_DIR/../find-python3.sh"
+SCRIPT_DIR=$PREV_SCRIPT_DIR
 
 # Create an Atlas M10 deployment - this returns immediately so we'll need to poll until
 # the deployment is created.
