@@ -80,7 +80,7 @@ check_deployment ()
       "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}/${DEPLOYMENT_NAME}")
     if [[ "$RESP" =~ '"stateName":"IDLE"' ]]; then
         if [ $TYPE = "serverless" ]; then
-            PROP="['connectionString']['standardSrv']"
+            PROP="['connectionStrings']['standardSrv']"
         else
             PROP="['srvAddress']"
         fi
