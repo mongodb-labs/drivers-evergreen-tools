@@ -11,7 +11,6 @@ def main():
     private_key_file = os.environ['AZUREKMS_PRIVATEKEYPATH']
     public_key_file = os.environ['AZUREKMS_PUBLICKEYPATH']
     env_file = os.environ['AZUREOIDC_ENVPATH']
-    app_id = os.environ['AZUREOIDC_CLIENTID']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
     print('Getting secrets from vault ... begin')
@@ -26,7 +25,7 @@ def main():
 
     secrets = dict()
     for secret in ['RESOURCEGROUP', 'PUBLICKEY', 'PRIVATEKEY', 'AUTHCLAIM', 'AUTHPREFIX', 'IDENTITY',
-                   'USERNAME', 'AUDIENCE']:
+                   'USERNAME', 'AUDIENCE', 'APPID']:
         retrieved = client.get_secret(secret)
         secrets[secret] = retrieved.value
 
@@ -37,7 +36,7 @@ def main():
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREOIDC_AUTHCLAIM={secrets["AUTHCLAIM"]}\n')
-        fid.write(f'export AZUREOIDC_APP_ID={app_id}\n')
+        fid.write(f'export AZUREOIDC_APPID={secrets["APPID"]}\n')
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
         fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
