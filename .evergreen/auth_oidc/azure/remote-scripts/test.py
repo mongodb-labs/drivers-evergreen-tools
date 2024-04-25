@@ -8,7 +8,7 @@ from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackRes
 # Force MONGODB-OIDC to be enabled.
 _AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
-app_id = os.environ['AZUREOIDC_CLIENTID']
+app_id = os.environ['AZUREOIDC_APP_ID']
 client_id = os.environ['AZUREOIDC_USERNAME']
 
 class MyCallback(OIDCCallback):
