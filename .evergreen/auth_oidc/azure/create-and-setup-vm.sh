@@ -29,7 +29,7 @@ source ./secrets-export.sh
 
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
 export AZUREKMS_SECRET=$AZUREOIDC_SECRET
-export AZUREKMS_CLIENTID=$AZUREOIDC_CLIENTID
+export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 
 # Check for Azure Command-Line Interface (`az`) version 2.25.0 or newer.
 if ! command -v az &> /dev/null; then
