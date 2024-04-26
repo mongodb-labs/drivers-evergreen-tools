@@ -10,6 +10,7 @@ def main():
     vault_name = os.environ["AZUREOIDC_KEYVAULT"]
     private_key_file = os.environ['AZUREKMS_PRIVATEKEYPATH']
     public_key_file = os.environ['AZUREKMS_PUBLICKEYPATH']
+    app_id = os.env['AZUREOIDC_APPID']
     env_file = os.environ['AZUREOIDC_ENVPATH']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
@@ -36,7 +37,7 @@ def main():
         fid.write(f'export AZUREOIDC_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREKMS_RESOURCEGROUP={secrets["RESOURCEGROUP"]}\n')
         fid.write(f'export AZUREOIDC_AUTHCLAIM={secrets["AUTHCLAIM"]}\n')
-        fid.write(f'export AZUREOIDC_APPID={secrets["APPID"]}\n')
+        fid.write(f'export AZUREOIDC_APPID={app_id}\n')
         fid.write(f'export AZUREOIDC_TENANTID={tenant_id}\n')
         fid.write(f'export AZUREOIDC_AUTHPREFIX={secrets["AUTHPREFIX"]}\n')
         fid.write(f'export AZUREKMS_IDENTITY="{secrets["IDENTITY"]}"\n')
