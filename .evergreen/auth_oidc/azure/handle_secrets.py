@@ -10,7 +10,7 @@ def main():
     vault_name = os.environ["AZUREOIDC_KEYVAULT"]
     private_key_file = os.environ['AZUREKMS_PRIVATEKEYPATH']
     public_key_file = os.environ['AZUREKMS_PUBLICKEYPATH']
-    app_id = os.env['AZUREOIDC_APPID']
+    app_id = os.environ['AZUREOIDC_APPID']
     env_file = os.environ['AZUREOIDC_ENVPATH']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
     vault_uri = f"https://{vault_name}.vault.azure.net"
