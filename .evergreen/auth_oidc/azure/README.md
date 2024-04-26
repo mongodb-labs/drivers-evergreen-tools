@@ -12,8 +12,7 @@ They build on top of the scripts used in `csfle/azurekms`.
 See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/azureoidc` vault.
 These secrets are used to log in to Azure, and the rest of the secrets are fetched from the "OIDC-Key-Vault" in our Drivers Azure Subscription (https://portal.azure.com/#home).
 
-See the Azure machine flows section of the OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-ServiceAccounts/ManagedIdentities/MachineFlows) for more information
-about the Azure integration.
+See the [How-To: Set up Azure OIDC Infrastructure](https://wiki.corp.mongodb.com/display/DRIVERS/How-To%3A+Set+up+Azure+OIDC+Infrastructure) wiki for background on how the infrastructure is set up.
 
 ## Prerequisites
 
@@ -113,16 +112,3 @@ An example task group would look like:
   tasks:
     - oidc-auth-test-azure-latest
 ```
-
-### Environment Variables
-
-Below is an explananion of the environment variables stored in the Azure key vault.
-
-- AZUREOIDC_AUTHPREFIX - The auth prefix used for DB user and role names.
-- AZUREOIDC_AUTHCLAIM - The object ID of the Azure Group, used in the DB role name.
-- AZUREOIDC_USERNAME - The Object (principal) ID of the Azure Manager Identity, used for the `username`.
-- AZUREOIDC_RESOURCE - The escaped Application ID URI to use in the `TOKEN_RESOURCE` auth mechanism property.
-- AZUREOIDC_CLIENTID - The client ID of the Azure App registration, used to generate the unescaped Application ID URI.
-- AZUREOIDC_TENANTID - The tenant ID of the Azure App registration, used to derive the `issuer` URI.
-- AZUREKMS_IDENTITY - A space separated string with the Resource ID of the managed identity (`/subscriptions/...`).  Used to assign the identity to the VM.
-- AZUREOIDC_RESOURCEGROUP - The name of the Azure Resource Group, used when accessing the VM through the CLI.

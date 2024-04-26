@@ -85,6 +85,10 @@ check_deployment ()
             PROP="['srvAddress']"
         fi
         SRV_ADDRESS=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d${PROP})")
+        # Remove trailing CR
+        if [[ "$(uname -s)" == CYGWIN* ]]; then
+            SRV_ADDRESS=$(echo $SRV_ADDRESS | dos2unix)
+        fi
     fi
     count=$(( $count + 1 ))
   done

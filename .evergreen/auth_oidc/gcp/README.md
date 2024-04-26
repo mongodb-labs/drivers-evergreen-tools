@@ -11,7 +11,7 @@ They build on top of the scripts used in `csfle/gcpkms`.
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/gcpoidc` vault.
 
-See the "GCP IMDS" section OIDC Configuration [wiki](https://wiki.corp.mongodb.com/display/ENG/OIDC+Configuration#OIDCConfiguration-GCPIMDS) for more information about the GCP integration.
+See the [How-To: Set up GCP OIDC Infrastructure](https://wiki.corp.mongodb.com/display/DRIVERS/How-To%3A+Set+up+GCP+OIDC+Infrastructure) wiki for information on how the infrastructure is set up.
 
 ## Usage
 
@@ -84,17 +84,3 @@ An example task group would look like:
   tasks:
     - oidc-auth-test-gcp
 ```
-
-### Environment Variables
-
-Below is an explanation of the environment variables used in the test:
-
-- GCPOIDC_AUDIENCE - The value used in the `TOKEN_RESOURCE` auth mechanism property.
-- GCPOIDC_SERVICEACCOUNT - The GCP Service Account to use for GCP access.
-- GCPOIDC_KEYFILE_CONTENT - The base64-encoded GCP keyfile content.
-- GCPOIDC_MACHINE - The GCE machine type to use for the VM.
-- GCPOIDC_ATLAS_USER - The username for admin database access.
-- GCPOIDC_ATLAS_PASSWORD - The password for admin database access.
-- OIDC_ATLAS_PUBLIC_API_KEY - The Atlas Publi API key used to create/delete clusters.
-- OIDC_ATLAS_PRIVATE_API_KEY - The Atlas Private API key.
-- OIDC_ATLAS_GROUP_ID - The Atlas Dev Group ID where the clusters are launched.

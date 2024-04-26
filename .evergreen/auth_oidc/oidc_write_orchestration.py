@@ -15,7 +15,7 @@ from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
 def azure():
     client_id = os.environ['AZUREOIDC_USERNAME']
     tenant_id = os.environ['AZUREOIDC_TENANTID']
-    app_id = os.environ['AZUREOIDC_CLIENTID']
+    app_id = os.environ['AZUREOIDC_APPID']
     auth_name_prefix = os.environ['AZUREOIDC_AUTHPREFIX']
 
     print("Bootstrapping OIDC config")
