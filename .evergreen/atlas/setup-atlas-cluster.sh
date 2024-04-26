@@ -130,6 +130,9 @@ echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
 RAW_URI=$(check_deployment)
 URI=$(echo $RAW_URI | grep -Eo "[^(\/\/)]*$" | cat)
+if [[ "$(uname -s)" == CYGWIN* ]]; then
+    URI=$(echo $URI | dos2unix)
+fi
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
 # Put the MONGODB_URI in an expansions yml and secrets file.
