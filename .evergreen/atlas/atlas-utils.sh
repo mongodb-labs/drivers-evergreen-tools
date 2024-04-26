@@ -95,6 +95,7 @@ check_deployment ()
   else
     # Return the MONGODB_URI
     echo "$RESP" 1>&2
+    echo "RAW_URI: $SRV_ADDRESS" 1>&2
     echo $SRV_ADDRESS
   fi
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
