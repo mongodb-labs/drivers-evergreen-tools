@@ -85,6 +85,10 @@ check_deployment ()
             PROP="['srvAddress']"
         fi
         SRV_ADDRESS=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d${PROP})")
+        # Remove trailing CR
+        if [[ "$(uname -s)" == CYGWIN* ]]; then
+            SRV_ADDRESS=$(echo $SRV_ADDRESS | dos2unix)
+        fi
     fi
     count=$(( $count + 1 ))
   done
@@ -95,7 +99,6 @@ check_deployment ()
   else
     # Return the MONGODB_URI
     echo "$RESP" 1>&2
-    echo "RAW_URI: $SRV_ADDRESS" 1>&2
     echo $SRV_ADDRESS
   fi
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
