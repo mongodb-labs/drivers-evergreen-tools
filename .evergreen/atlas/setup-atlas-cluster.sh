@@ -130,6 +130,7 @@ echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> ./secrets-export.sh
 
 RAW_URI=$(check_deployment)
 URI=$(echo $RAW_URI | grep -Eo "[^(\/\/)]*$" | cat)
+echo "URI: $URI"
 if [[ "$(uname -s)" == CYGWIN* ]]; then
     URI=$(echo $URI | dos2unix)
 fi
