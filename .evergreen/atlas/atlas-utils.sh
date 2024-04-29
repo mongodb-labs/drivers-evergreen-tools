@@ -36,7 +36,7 @@ create_deployment ()
     "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${TYPE}?pretty=true")
   echo "$RESP"
   if [[ ! "$RESP" =~ '"stateName" : "CREATING"' ]]; then
-    echo "Exiting due to unexpected response $STATE"
+    echo "Exiting due to unexpected response state"
     exit 1
   fi
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID... done."
