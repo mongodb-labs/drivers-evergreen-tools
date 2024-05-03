@@ -556,6 +556,33 @@ tasks:
 
 # Standard test tasks {{{
 
+    - name: "test-8.0-standalone"
+      tags: ["8.0", "standalone"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            TOPOLOGY: "server"
+        - func: "run tests"
+
+    - name: "test-8.0-replica_set"
+      tags: ["8.0", "replica_set"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            TOPOLOGY: "replica_set"
+        - func: "run tests"
+
+    - name: "test-8.0-sharded_cluster"
+      tags: ["8.0", "sharded_cluster"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            TOPOLOGY: "sharded_cluster"
+        - func: "run tests"
+
     - name: "test-7.0-standalone"
       tags: ["7.0", "standalone"]
       commands:
@@ -967,6 +994,10 @@ axes:
         display_name: "latest"
         variables:
            VERSION: "latest"
+      - id: "8.0"
+        display_name: "8.0"
+        variables:
+           VERSION: "8.0"
       - id: "7.0"
         display_name: "7.0"
         variables:
@@ -1126,6 +1157,9 @@ buildvariants:
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
      - name: "test-latest-load_balancer"
+     - name: "test-8.0-replica_set"
+     - name: "test-8.0-sharded_cluster"
+     - name: "test-8.0-standalone"
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
@@ -1155,6 +1189,9 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-8.0-replica_set"
+     - name: "test-8.0-sharded_cluster"
+     - name: "test-8.0-standalone"
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
@@ -1182,6 +1219,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-latest-standalone"
+          - "test-8.0-standalone"
           - "test-7.0-standalone"
           - "test-3.6-standalone"
     - if:
