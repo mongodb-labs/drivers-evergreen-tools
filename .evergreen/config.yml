@@ -1044,6 +1044,27 @@ axes:
         display_name: "Windows 64"
         run_on: windows-64-vsMulti-small
 
+  # OSes that support versions of MongoDB>=7.0 with SSL.
+  - id: os-requires-70
+    display_name: OS
+    values:
+
+      - id: debian12
+        display_name: "Debian 12.0"
+        run_on: debian12-small
+
+      - id: ubuntu-22.04
+        display_name: "Ubuntu 22.04"
+        run_on: ubuntu2004-test
+
+      - id: amazon-2023-x64
+        display_name: "Amazon Linux 2023 x64"
+        run_on: amazon2023.0-small
+
+      - id: rhel9
+        display_name: "RHEL 9.0 x64"
+        run_on: rhel91-small
+
   # OSes that support versions of MongoDB>=5.0 with SSL.
   - id: os-requires-50
     display_name: OS
@@ -1058,7 +1079,7 @@ axes:
         run_on: ubuntu2004-test
 
       - id: ubuntu2004-arm64-small
-        display_name: "Ubuntu 18.04 (ARM64)"
+        display_name: "Ubuntu 20.04 (ARM64)"
         run_on: ubuntu2004-arm64-small
 
       - id: rhel87-power8
@@ -1201,6 +1222,20 @@ buildvariants:
      - name: "test-5.0-replica_set"
      - name: "test-5.0-sharded_cluster"
      - name: "test-5.0-standalone"
+
+- matrix_name: "tests-os-requires-70"
+  matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
+  display_name: "${os-requires-70} ${auth} ${ssl}"
+  tasks:
+     - name: "test-latest-replica_set"
+     - name: "test-latest-sharded_cluster"
+     - name: "test-latest-standalone"
+     - name: "test-8.0-replica_set"
+     - name: "test-8.0-sharded_cluster"
+     - name: "test-8.0-standalone"
+     - name: "test-7.0-replica_set"
+     - name: "test-7.0-sharded_cluster"
+     - name: "test-7.0-standalone"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
