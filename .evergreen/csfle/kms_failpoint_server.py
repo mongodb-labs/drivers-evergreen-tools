@@ -140,7 +140,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._send_not_found()
 
 if __name__ == "__main__":
-    server_address = ("localhost", 9003)
+    args = parser.parse_args()
     httpd = HTTPServerWithTLS(server_address, Handler)
     print("Mock HTTP server listening on port " + str(server_address))
     httpd.serve_forever()
