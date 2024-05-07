@@ -1,3 +1,4 @@
+import argparse
 import http.server
 import json
 import urllib
@@ -22,7 +23,8 @@ $ curl -X POST localhost:3000
 """
 
 failpoint_type = None
-remaining_decrypt_fails = 0;
+remaining_decrypt_fails = 0
+remaining_network_fails = 0
 
 fake_ciphertext = 'a' * 96
 fake_plaintext = 'b' * 96
@@ -59,23 +61,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(msg)
 
     def _decrypt_fail(self):
-        global failpoint_type
         global remaining_decrypt_fails
         remaining_decrypt_fails -= 1
-        if failpoint_type == "http":
-            self.send_response(429)
-            return
-        elif failpoint_type == "network":
-            raise Exception("mock network error")
+        self.send_response(429)
+        return
     
     def do_GET(self):
         global failpoint_type
         global remaining_decrypt_fails
+        global remaining_network_fails
         parts = urllib.parse.urlsplit(self.path)
         path = parts[2]
         if path.startswith("/set_failpoint"):
             parts = path.split('/')
-            if parts[2] not in ['network', 'http']:
+            if parts[2] == 'network':
+                remaining_network_fails = int(parts[3])
+            elif parts[2] == 'http':
+                remaining_decrypt_fails = int(parts[3])
+            else:
                 self.send_response(404)
                 self.end_headers()
                 return
@@ -91,13 +94,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         global remaining_decrypt_fails
+        global remaining_network_fails
         global failpoint_type
         parts = urllib.parse.urlsplit(self.path)
         path = parts[2]
 
         # If a failpoint was set, fail the request.
-        if failpoint_type == "network":
-            failpoint_type = None  # Clear failpoint
+        if remaining_network_fails > 0:
+            remaining_network_fails -= 1
             raise Exception("mock network error")
 
         if 'X-Amz-Target' in self.headers:
@@ -140,7 +144,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._send_not_found()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='MongoDB mock KMS retry endpoint.')
+    parser.add_argument('-p', '--port', type=int, default=9003, help="Port to listen on")
     args = parser.parse_args()
+
+    server_address = ("localhost", args.port)
     httpd = HTTPServerWithTLS(server_address, Handler)
     print("Mock HTTP server listening on port " + str(server_address))
     httpd.serve_forever()
