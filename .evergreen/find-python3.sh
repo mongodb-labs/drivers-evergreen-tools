@@ -233,6 +233,9 @@ find_python3() (
     # /opt/mongodbtoolchain/vX/bin/python
     append_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python"
 
+    # /Library/Frameworks/Python.Framework/Versions/XXX/bin/python3 (used by AWS Mac Fleet)
+    append_bins "/Library/Frameworks/Python.Framework/Versions/" "[0-9]*" "bin/python3"
+
     bin="python3"
     if is_python3 "$bin"; then bins+=("$bin"); fi
 
