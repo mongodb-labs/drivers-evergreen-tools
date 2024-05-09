@@ -22,6 +22,7 @@ $ curl -X POST localhost:3000
 
 """
 
+# A new instance of Hander is created for every request, so these have to be global variables
 failpoint_type = None
 remaining_decrypt_fails = 0
 remaining_network_fails = 0
@@ -104,6 +105,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             remaining_network_fails -= 1
             raise Exception("mock network error")
 
+        # No path for AWS
         if 'X-Amz-Target' in self.headers:
             print('AWS')
             aws_op = self.headers['X-Amz-Target']
