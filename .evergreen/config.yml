@@ -315,6 +315,13 @@ functions:
       params:
         # Purposely use sh here to ensure backwards compatibility.
         binary: sh
+        env:
+          MONGODB_VERSION: ${VERSION}
+          TOPOLOGY: ${TOPOLOGY}
+          SSL: ${SSL}
+          STORAGE_ENGINE: ${STORAGE_ENGINE}
+          LOAD_BALANCER: ${LOAD_BALANCER}
+          REQUIRE_API_VERSION: ${REQUIRE_API_VERSION}
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
@@ -339,6 +346,11 @@ functions:
       params:
         binary: bash
         working_dir: "src"
+        env:
+          AUTH: ${AUTH}
+          SSL: ${SSL}
+          MONGODB_URI: ${MONGODB_URI}
+          CRYPT_SHARED_LIB_PATH: ${CRYPT_SHARED_LIB_PATH}
         args:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
@@ -346,12 +358,11 @@ functions:
     - command: subprocess.exec
       type: test
       params:
-        working_dir: "$DRIVERS_TOOLS/.evergreen/docker"
         binary: bash
         env:
           ENTRYPOINT: /root/test-entrypoint.sh
         args:
-          - run-server.sh
+          - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: subprocess.exec
       type: test
       params:
@@ -912,13 +923,13 @@ task_groups:
             git add .
             git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup.sh
+            ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
       - command: subprocess.exec
         params:
           binary: bash
           args:
-            - $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown.sh
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
