@@ -73,6 +73,9 @@ test -t 1 && ARGS+=" -t"
 # Map in the DRIVERS_TOOLS directory.
 ARGS+=" -v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 
+echo "Running docker with args:"
+echo "$ARGS $NAME $ENTRYPOINT"
+
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
 
