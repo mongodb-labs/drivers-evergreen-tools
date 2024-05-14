@@ -53,7 +53,7 @@ ARGS+=" -e STORAGE_ENGINE=$STORAGE_ENGINE"
 ARGS+=" -e REQUIRE_API_VERSION=$REQUIRE_API_VERSION"
 ARGS+=" -e DISABLE_TEST_COMMANDS=$DISABLE_TEST_COMMANDS"
 ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
-ARGS+=" -e DRIVERS_TOOLS=/root/drivers-evergeen-tools"
+ARGS+=" -e DRIVERS_TOOLS=/root/drivers-evergreen-tools"
 
 # Expose the required ports.
 if [ "$TOPOLOGY" == "server" ]; then
@@ -75,7 +75,6 @@ ARGS+=" -v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 
 echo "Running docker with args:"
 echo "$ARGS $NAME $ENTRYPOINT"
-ls -lah $DRIVERS_TOOLS
 
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
