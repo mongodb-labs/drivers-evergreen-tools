@@ -334,7 +334,7 @@ functions:
         file: lb-expansion.yml
 
   "run tests":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
         binary: bash
