@@ -832,6 +832,7 @@ tasks:
     - name: "test-docker"
       tags: ["latest", "docker", "pr"]
       commands:
+        - func: "install mongosh"
         - func: "run docker test"
         - func: "run docker test"
           vars:
