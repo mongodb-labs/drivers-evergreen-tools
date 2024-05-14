@@ -75,6 +75,7 @@ ARGS+=" -v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 
 echo "Running docker with args:"
 echo "$ARGS $NAME $ENTRYPOINT"
+ls $DRIVERS_TOOLS
 
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
