@@ -110,7 +110,7 @@ functions:
           fi
           $DRIVERS_TOOLS/.evergreen/setup.sh
 
-  "download mongosh":
+  "install mongosh":
     - command: shell.exec
       params:
         script: |
