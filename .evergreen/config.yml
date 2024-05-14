@@ -116,7 +116,7 @@ functions:
         directory: "src"
         script: |
           ${PREPARE_SHELL}
-          bash -c "source .evergreen/download-mongodb.sh && download_and_extract_mongosh"
+          bash -c "source $DRIVERS_TOOLS/.evergreen/download-mongodb.sh && download_and_extract_mongosh"
 
   "upload release":
     - command: s3.put
