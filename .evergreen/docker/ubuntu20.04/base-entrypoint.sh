@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 
-export DRIVERS_TOOLS=/root/drivers-evergreen-tools
-export PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
-export MONGODB_BINARIES=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/mongodb/bin
-export MONGODB_BINARY_ROOT=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/
-export MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/orchestration
-export DOCKER_RUNNING=true
-
-rm $DRIVERS_TOOLS/.env
+# Clear out files that might interfere.
 rm -f $DRIVERS_TOOLS/results.json
 rm -rf /tmp/mongo*
+rm $DRIVERS_TOOLS/.env
+
+# Start the server.
 cd $DRIVERS_TOOLS/.evergreen
 bash run-orchestration.sh
 
