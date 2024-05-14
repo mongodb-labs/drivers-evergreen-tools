@@ -61,6 +61,7 @@ functions:
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
            fi
+           export DRIVERS_TOOLS=$(realpath $DRIVERS_TOOLS)
 
            export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
            export PROJECT_ORCHESTRATION_HOME="$PROJECT_DIRECTORY/.evergreen/orchestration"
