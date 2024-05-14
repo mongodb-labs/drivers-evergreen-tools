@@ -8,6 +8,7 @@ export MONGODB_BINARY_ROOT=/root/drivers-evergreen-tools/.evergreen/docker/ubunt
 export MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/orchestration
 export DOCKER_RUNNING=true
 
+rm $DRIVERS_TOOLS/.env
 rm -f $DRIVERS_TOOLS/results.json
 rm -rf /tmp/mongo*
 cd $DRIVERS_TOOLS/.evergreen
