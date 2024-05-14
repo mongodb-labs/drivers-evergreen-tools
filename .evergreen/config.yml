@@ -872,7 +872,6 @@ task_groups:
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
-      - func: install mongosh
       - command: shell.exec
         params:
           shell: "bash"
@@ -880,6 +879,7 @@ task_groups:
             ${PREPARE_SHELL}
             set +o xtrace
             bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
+      - func: install mongosh
     teardown_group:
       - command: shell.exec
         params:
