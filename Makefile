@@ -1,6 +1,5 @@
 .PHONY: clean sleep
 
-
 all:
 	@echo "Project successfully compiled"
 

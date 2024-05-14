@@ -28,9 +28,6 @@ fi
 
 echo "Running $AUTH tests over $SSL, connecting to $MONGODB_URI"
 
-echo "PWD: $(pwd)"
-ls
-
 # Run the tests, and store the results in a Evergreen compatible JSON results file
 case "$OS" in
    cygwin*)
