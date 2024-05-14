@@ -75,19 +75,18 @@ functions:
            MONGODB_BINARIES: "$MONGODB_BINARIES"
            UPLOAD_BUCKET: "$UPLOAD_BUCKET"
            PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"
-           PREPARE_SHELL: |
-              set -o errexit
-              export DRIVERS_TOOLS="$DRIVERS_TOOLS"
-              export MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
-              export PROJECT_ORCHESTRATION_HOME="$PROJECT_ORCHESTRATION_HOME"
-              export MONGODB_BINARIES="$MONGODB_BINARIES"
-              export UPLOAD_BUCKET="$UPLOAD_BUCKET"
-              export PROJECT_DIRECTORY="$PROJECT_DIRECTORY"
-
-              export TMPDIR="$MONGO_ORCHESTRATION_HOME/db"
-              export PATH="$MONGODB_BINARIES:$PATH"
-              export PROJECT="${project}"
            EOT
+
+           cat <<EOT > .env
+           CURRENT_VERSION="$CURRENT_VERSION"
+           DRIVERS_TOOLS="$DRIVERS_TOOLS"
+           MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
+           PROJECT_ORCHESTRATION_HOME="$PROJECT_ORCHESTRATION_HOME"
+           MONGODB_BINARIES="$MONGODB_BINARIES"
+           UPLOAD_BUCKET="$UPLOAD_BUCKET"
+           PROJECT_DIRECTORY="$PROJECT_DIRECTORY"
+           EOT
+
            # See what we've done
            cat expansion.yml
 
@@ -99,8 +98,8 @@ functions:
   "prepare resources":
     - command: shell.exec
       params:
+        include_expansions_in_env: ["DRIVERS_TOOLS"]
         script: |
-          ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS
           if [ "${project}" = "drivers-tools" ]; then
             # If this was a patch build, doing a fresh clone would not actually test the patch
@@ -162,8 +161,8 @@ functions:
       type: test
       params:
         working_dir: "src"
+        include_expansions_in_env: ["PROJECT_DIRECTORY"]
         script: |
-          ${PREPARE_SHELL}
           [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "exec script" :
@@ -171,8 +170,8 @@ functions:
       type: test
       params:
         working_dir: "src"
+        include_expansions_in_env: ["PROJECT_DIRECTORY"]
         script: |
-          ${PREPARE_SHELL}
           [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
@@ -312,22 +311,24 @@ functions:
         file_location: "${DRIVERS_TOOLS}/results.json"
 
   "bootstrap mongo-orchestration":
-    - command: shell.exec
+    - command: subprocess.exec
       params:
-        script: |
-          ${PREPARE_SHELL}
-          # Purposely use sh here to ensure backwards compatibility.
-          MONGODB_VERSION=${VERSION} TOPOLOGY=${TOPOLOGY} AUTH=${AUTH} SSL=${SSL} STORAGE_ENGINE=${STORAGE_ENGINE} LOAD_BALANCER=${LOAD_BALANCER} REQUIRE_API_VERSION=${REQUIRE_API_VERSION} sh ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
+        # Purposely use sh here to ensure backwards compatibility.
+        binary: sh
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
         file: mo-expansion.yml
 
   "start load balancer":
-    - command: shell.exec
+    - command: subprocess.exec
       params:
-        script: |
-          MONGODB_URI=${MONGODB_URI} bash ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh start
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh
+          - start
     - command: expansions.update
       params:
         file: lb-expansion.yml
@@ -336,49 +337,27 @@ functions:
     - command: shell.exec
       type: test
       params:
-        working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
-
-  "run serverless tests":
-    - command: shell.exec
-      type: test
-      params:
-        include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD"]
-        working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          set +o xtrace
-          MONGODB_URI="${MONGODB_URI}" \
-          SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
-          CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
-            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
-
-  "run atlas tests":
-    - command: shell.exec
-      type: test
-      params:
-        working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          set +o xtrace
-          MONGODB_URI="${MONGODB_URI}" \
-            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+        binary: bash
+        args:
+          - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run docker test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
+        working_dir: "$DRIVERS_TOOLS/.evergreen/docker"
+        binary: bash
+        env:
+          ENTRYPOINT: /root/test-entrypoint.sh
+        args:
+          - run-server.sh
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: make
         working_dir: "src"
-        script: |
-          ${PREPARE_SHELL}
-          set -ex
-          cd $DRIVERS_TOOLS/.evergreen/docker
-          ARCH=${ARCH} TARGET_IMAGE=${TARGET_IMAGE} MONGODB_VERSION=${MONGODB_VERSION} ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        args:
+          - test
 
   "run oidc local test":
     - command: ec2.assume_role
@@ -448,18 +427,17 @@ functions:
           bash $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-driver-test.sh
 
   "teardown assets":
-    - command: shell.exec
-      shell: bash
+    - command: subprocess.exec
       params:
-        script: |
-          ${PREPARE_SHELL}
-          bash ${DRIVERS_TOOLS}/.evergreen/teardown.sh
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/teardown.sh
 
   "cleanup":
     - command: shell.exec
       params:
+        include_expansions_in_env: ["DRIVERS_TOOLS"]
         script: |
-          ${PREPARE_SHELL}
           rm -rf $DRIVERS_TOOLS || true
 
 pre:
@@ -812,12 +790,12 @@ tasks:
     - name: "test-serverless"
       tags: ["serverless", "pr"]
       commands:
-        - func: "run serverless tests"
+        - func: "run tests"
 
     - name: "test-atlas"
       tags: ["atlas", "pr"]
       commands:
-        - func: "run atlas tests"
+        - func: "run tests"
 
     - name: "test-docker"
       tags: ["latest", "docker", "pr"]
@@ -861,19 +839,18 @@ task_groups:
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: "bash"
-          script: |
-            ${PREPARE_SHELL}
-            set +o xtrace
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
+          binary: "bash"
+          include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD", "SERVERLESS_ATLAS_USER"]
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
     teardown_group:
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          script: |
-            ${PREPARE_SHELL}
-            bash ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
+          binary: "bash"
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
@@ -936,13 +913,11 @@ task_groups:
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: bash
-          script: |
-            ${PREPARE_SHELL}
-            set -x
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown.sh
+          binary: bash
+          args:
+            - $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
@@ -972,13 +947,11 @@ task_groups:
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: bash
-          script: |
-            ${PREPARE_SHELL}
-            set -x
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
+          binary: bash
+          args:
+            - $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"

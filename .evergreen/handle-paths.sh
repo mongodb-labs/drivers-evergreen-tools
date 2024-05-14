@@ -41,5 +41,16 @@ if [[ "$(uname -s)" == CYGWIN* ]]; then
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
 fi
 
+# Handle .env files
+if [ -f "$DRIVERS_TOOLS/.env" ]; then
+  echo "Reading $DRIVERS_TOOLS/.env file"
+  export $(grep -v '^#' $DRIVERS_TOOLS/.env | xargs)
+fi
+
+if [ -f "$SCRIPT_DIR/.env" ]; then
+  echo "Reading $SCRIPT_DIR/.env file"
+  export $(grep -v '^#' $SCRIPT_DIR/.env | xargs)
+fi
+
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}

@@ -16,6 +16,11 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   MONGODB_BINARIES       Set to a non-empty string to set the path to the MONGODB_BINARIES for mongo orchestration.
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 
+# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
+# Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
+SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+. $SCRIPT_DIR/handle-paths.sh
+
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
 TOPOLOGY=${TOPOLOGY:-server}
@@ -30,10 +35,6 @@ MONGODB_BINARIES=${MONGODB_BINARIES:-}
 INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
 
 DL_START=$(date +%s)
-# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
-# Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
-SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-. $SCRIPT_DIR/handle-paths.sh
 
 # Functions to fetch MongoDB binaries.
 . $SCRIPT_DIR/download-mongodb.sh
