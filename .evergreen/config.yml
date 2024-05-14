@@ -347,7 +347,7 @@ functions:
         working_dir: "src"
         script: |
           ${PREPARE_SHELL}
-          AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+          TEST_CONNECTION=1 AUTH=${AUTH} SSL=${SSL} MONGODB_URI="${MONGODB_URI}" sh ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run serverless tests":
     - command: shell.exec
@@ -358,6 +358,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           set +o xtrace
+          TEST_CONNECTION=1  \
           MONGODB_URI="${MONGODB_URI}" \
           SERVERLESS_ATLAS_USER="${SERVERLESS_ATLAS_USER}" \
           CRYPT_SHARED_LIB_PATH="${CRYPT_SHARED_LIB_PATH}" \
@@ -371,6 +372,7 @@ functions:
         script: |
           ${PREPARE_SHELL}
           set +o xtrace
+          TEST_CONNECTION=1 \
           MONGODB_URI="${MONGODB_URI}" \
             bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
