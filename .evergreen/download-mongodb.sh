@@ -726,7 +726,11 @@ download_and_extract_package ()
 download_and_extract_mongosh ()
 {
    MONGOSH_DOWNLOAD_URL=$1
-   EXTRACT_MONGOSH=$2
+   EXTRACT_MONGOSH=${2:-"tar zxf"}
+
+   if [ -z "$MONGOSH_DOWNLOAD_URL" ]; then
+      get_mongodb_download_url_for $(get_distro) latest false
+   fi
 
    if [ -n "$MONGODB_BINARY_ROOT" ]; then
       cd $MONGODB_BINARY_ROOT
@@ -741,6 +745,7 @@ download_and_extract_mongosh ()
 
    rm -f mongosh.tgz
    mv mongosh-* mongosh
+   mkdir -p mongodb/bin
    mv mongosh/bin/* mongodb/bin
    rm -rf mongosh
    chmod -R +x mongodb/bin

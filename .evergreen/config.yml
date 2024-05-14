@@ -110,6 +110,14 @@ functions:
           fi
           $DRIVERS_TOOLS/.evergreen/setup.sh
 
+  "download mongosh":
+    - command: shell.exec
+      params:
+        script: |
+          ${PREPARE_SHELL}
+          source .evergreen/download-mongodb.sh
+          download_and_extract_mongosh
+
   "upload release":
     - command: s3.put
       params:
@@ -861,6 +869,7 @@ task_groups:
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
+      - func: install mongosh
       - command: shell.exec
         params:
           shell: "bash"
@@ -889,6 +898,7 @@ task_groups:
     setup_group:
       - func: fetch source
       - func: prepare resources
+      - func: install mongosh
       - command: subprocess.exec
         params:
           binary: bash
