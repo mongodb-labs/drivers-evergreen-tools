@@ -98,16 +98,15 @@ functions:
   "prepare resources":
     - command: shell.exec
       params:
-        include_expansions_in_env: ["DRIVERS_TOOLS"]
         script: |
-          rm -rf $DRIVERS_TOOLS
+          rm -rf ${DRIVERS_TOOLS}
           if [ "${project}" = "drivers-tools" ]; then
             # If this was a patch build, doing a fresh clone would not actually test the patch
-            cp -R ${PROJECT_DIRECTORY}/ $DRIVERS_TOOLS
+            cp -R ${PROJECT_DIRECTORY}/ ${DRIVERS_TOOLS}
           else
-            git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
+            git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git ${DRIVERS_TOOLS}
           fi
-          $DRIVERS_TOOLS/.evergreen/setup.sh
+          ${DRIVERS_TOOLS}/.evergreen/setup.sh
 
   "upload release":
     - command: s3.put
@@ -161,7 +160,6 @@ functions:
       type: test
       params:
         working_dir: "src"
-        include_expansions_in_env: ["PROJECT_DIRECTORY"]
         script: |
           [ -f ${PROJECT_DIRECTORY}/${file} ] && BUILDTOOL="${buildtool}" bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
@@ -170,7 +168,6 @@ functions:
       type: test
       params:
         working_dir: "src"
-        include_expansions_in_env: ["PROJECT_DIRECTORY"]
         script: |
           [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
@@ -381,9 +378,8 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         working_dir: "src"
         script: |
-          ${PREPARE_SHELL}
           set -ex
-          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/setup.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/setup.sh
           test -f /tmp/tokens/test_user1
           test -f /tmp/tokens/test_user2
           test -f /tmp/tokens/test_machine
@@ -401,9 +397,8 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         working_dir: "src"
         script: |
-          ${PREPARE_SHELL}
           set -ex
-          cd $DRIVERS_TOOLS/.evergreen/auth_oidc
+          cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc
           ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
           test -f /tmp/tokens/test_user1
           test -f /tmp/tokens/test_user2
@@ -418,12 +413,11 @@ functions:
         shell: bash
         script: |-
           set -o errexit
-          ${PREPARE_SHELL}
-          cd $DRIVERS_TOOLS
+          cd ${DRIVERS_TOOLS}
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
-          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/azure/run-driver-test.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/run-driver-test.sh
 
   "run oidc gcp test":
     - command: shell.exec
@@ -431,12 +425,11 @@ functions:
         shell: bash
         script: |-
           set -o errexit
-          ${PREPARE_SHELL}
-          cd $DRIVERS_TOOLS
+          cd ${DRIVERS_TOOLS}
           export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
-          bash $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/run-driver-test.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/run-driver-test.sh
 
   "teardown assets":
     - command: subprocess.exec
@@ -448,9 +441,8 @@ functions:
   "cleanup":
     - command: shell.exec
       params:
-        include_expansions_in_env: ["DRIVERS_TOOLS"]
         script: |
-          rm -rf $DRIVERS_TOOLS || true
+          rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
   - func: "fetch source"
@@ -917,9 +909,8 @@ task_groups:
           script: |
             set -o errexit
             set -x
-            ${PREPARE_SHELL}
             # ensure HEAD points to current commit
-            cd $DRIVERS_TOOLS
+            cd ${DRIVERS_TOOLS}
             git add .
             git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
@@ -951,13 +942,12 @@ task_groups:
           script: |
             set -o errexit
             set -x
-            ${PREPARE_SHELL}
             # ensure HEAD points to current commit
-            cd $DRIVERS_TOOLS
+            cd ${DRIVERS_TOOLS}
             git add .
             git commit -m "add files"
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
-            $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/setup.sh
+            ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
       - command: subprocess.exec
         params:

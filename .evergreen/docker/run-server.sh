@@ -6,6 +6,8 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+
+
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
@@ -17,8 +19,10 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
     PLATFORM="--platform linux/$ARCH"
 fi
 
+pushd $SCRIPT_DIR
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
 docker build $PLATFORM -t $NAME $USER $IMAGE
+popd
 pushd $DRIVERS_TOOLS
 
 # Remove existing mongodb and orchestration files
