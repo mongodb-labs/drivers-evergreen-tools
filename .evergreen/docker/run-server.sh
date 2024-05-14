@@ -42,6 +42,7 @@ ORCHESTRATION_FILE=${ORCHESTRATION_FILE:-basic.json}
 
 # Build up the args.
 ARGS="$PLATFORM --rm -i --name mongodb"
+ARGS+=" --user 1000:100"
 ARGS+=" -e MONGODB_VERSION=$MONGODB_VERSION"
 ARGS+=" -e TOPOLOGY=$TOPOLOGY"
 ARGS+=" -e AUTH=$AUTH"
