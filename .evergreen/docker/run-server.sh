@@ -71,7 +71,7 @@ fi
 test -t 1 && ARGS+=" -t"
 
 # Map in the DRIVERS_TOOLS directory.
-ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
+ARGS+=" -v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
