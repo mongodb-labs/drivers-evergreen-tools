@@ -338,6 +338,7 @@ functions:
       type: test
       params:
         binary: bash
+        working_dir: "src"
         args:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
@@ -355,7 +356,7 @@ functions:
       type: test
       params:
         binary: make
-        working_dir: "src"
+        working_dir: "${DRIVERS_TOOLS}"
         args:
           - test
 
