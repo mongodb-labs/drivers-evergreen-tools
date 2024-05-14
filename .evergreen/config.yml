@@ -113,6 +113,7 @@ functions:
   "install mongosh":
     - command: shell.exec
       params:
+        directory: "src"
         script: |
           ${PREPARE_SHELL}
           bash -c "source .evergreen/download-mongodb.sh && download_and_extract_mongosh"
