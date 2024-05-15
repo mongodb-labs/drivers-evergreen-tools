@@ -806,11 +806,15 @@ tasks:
       tags: ["latest", "docker", "pr"]
       commands:
         - func: "run docker test"
-        - func: "run docker test"
-          vars:
-            TARGET_IMAGE: ubuntu18.04
-            MONGODB_VERSION: 3.6
-            ARCH: amd64
+
+    - name: "test-docker-3.6"
+      tags: ["latest", "docker", "pr"]
+      commands:
+      - func: "run docker test"
+        vars:
+          TARGET_IMAGE: ubuntu18.04
+          MONGODB_VERSION: 3.6
+          ARCH: amd64
 
     - name: "test-oidc-local"
       tags: ["latest", "oidc", "pr"]
