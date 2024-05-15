@@ -4,7 +4,7 @@ set -eux
 # Clear out files that might interfere.
 rm -f $DRIVERS_TOOLS/results.json
 rm -rf /tmp/mongo*
-rm $DRIVERS_TOOLS/.env
+rm -f $DRIVERS_TOOLS/.env
 
 # Start the server.
 cd $DRIVERS_TOOLS/.evergreen
