@@ -65,7 +65,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global remaining_decrypt_fails
         remaining_decrypt_fails -= 1
         self.send_response(429)
-        return
     
     def do_GET(self):
         global failpoint_type
@@ -80,8 +79,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             elif parts[2] == 'http':
                 remaining_decrypt_fails = int(parts[3])
             else:
-                self.send_response(404)
-                self.end_headers()
+                self._send_not_found()
                 return
 
             failpoint_type = parts[2]
@@ -90,7 +88,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._send_json(
                 {"message": "failpoint set for type: '{}'".format(failpoint_type)}
             )
-            return
+        else:
+            self._send_not_found()
         
 
     def do_POST(self):
