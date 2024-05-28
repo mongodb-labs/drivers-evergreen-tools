@@ -333,6 +333,8 @@ functions:
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh
           - start
+       env:
+          MONGODB_URI: ${MONGODB_URI}
     - command: expansions.update
       params:
         file: lb-expansion.yml
