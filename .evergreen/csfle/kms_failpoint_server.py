@@ -4,6 +4,7 @@ import json
 import urllib
 import ssl
 import base64
+import os
 
 """
 Example of setting a network failpoint:
@@ -33,11 +34,15 @@ fake_plaintext = 'b' * 96
 class HTTPServerWithTLS(http.server.HTTPServer):
     def __init__(self, server_address, Handler):
         super().__init__(server_address, Handler)
+
+        server_dir = os.path.dirname(__file__)
+        cert_file = os.path.join(server_dir, "..", "x509gen", "server.pem")
+        ca_file = os.path.join(server_dir, "..", "x509gen", "ca.pem")
         self.socket = ssl.wrap_socket(
             self.socket,
             server_side=True,
-            certfile='../x509gen/server.pem',
-            ca_certs='../x509gen/ca.pem',
+            certfile=cert_file,
+            ca_certs=ca_file,
             ssl_version=ssl.PROTOCOL_TLS
         )
 
