@@ -1,3 +1,23 @@
+"""
+A mock KMS (Azure, AWS, GCP) server with failpoints for testing error scenarios.
+
+Example of setting a network failpoint:
+
+python kms_failpoint_server.py -p 3000 --no-tls &
+
+$ curl -X POST localhost:3000/keys/{key-name}/{key-version}/unwrapkey
+{"plaintext": "YmJi..."}
+
+$ curl -X POST localhost:3000/set_failpoint/network -d '{"count": 1}'
+{"message": "failpoint set for type: 'network'"}
+
+$ curl -X POST localhost:3000/keys/{key-name}/{key-version}/unwrapkey
+curl: (52) Empty reply from server
+
+$ curl -X POST localhost:3000/keys/{key-name}/{key-version}/unwrapkey
+{"plaintext": "YmJi..."}
+"""
+
 import argparse
 import http.server
 import json
@@ -7,23 +27,6 @@ import base64
 import os
 from pathlib import PurePosixPath
 
-"""
-Example of setting a network failpoint:
-
-$ curl -X POST localhost:3000
-{"message": "ok"}
-
-$ curl -X GET localhost:3000/set_failpoint/network/1
-{"message": "failpoint set for type: 'network'"}
-
-$ curl -X POST localhost:3000
-curl: (52) Empty reply from server
-
-$ curl -X POST localhost:3000
-{"message": "ok"}
-
-"""
-
 # A new instance of Handler is created for every request, so these have to be global variables
 remaining_decrypt_fails = 0
 remaining_network_fails = 0
@@ -32,19 +35,20 @@ fake_ciphertext = 'a' * 96
 fake_plaintext = 'b' * 96
 
 class HTTPServerWithTLS(http.server.HTTPServer):
-    def __init__(self, server_address, Handler):
+    def __init__(self, server_address, Handler, use_tls=True):
         super().__init__(server_address, Handler)
 
-        server_dir = os.path.dirname(__file__)
-        cert_file = os.path.join(server_dir, "..", "x509gen", "server.pem")
-        ca_file = os.path.join(server_dir, "..", "x509gen", "ca.pem")
-        self.socket = ssl.wrap_socket(
-            self.socket,
-            server_side=True,
-            certfile=cert_file,
-            ca_certs=ca_file,
-            ssl_version=ssl.PROTOCOL_TLS
-        )
+        if use_tls:
+            server_dir = os.path.dirname(__file__)
+            cert_file = os.path.join(server_dir, "..", "x509gen", "server.pem")
+            ca_file = os.path.join(server_dir, "..", "x509gen", "ca.pem")
+            self.socket = ssl.wrap_socket(
+                self.socket,
+                server_side=True,
+                certfile=cert_file,
+                ca_certs=ca_file,
+                ssl_version=ssl.PROTOCOL_TLS
+            )
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -142,9 +146,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='MongoDB mock KMS retry endpoint.')
     parser.add_argument('-p', '--port', type=int, default=9003, help="Port to listen on")
+    parser.add_argument('--no-tls', action='store_true', help="Disable TLS")
     args = parser.parse_args()
 
     server_address = ("localhost", args.port)
-    httpd = HTTPServerWithTLS(server_address, Handler)
+    httpd = HTTPServerWithTLS(server_address, Handler, not args.no_tls)
     print("Mock HTTP server listening on port " + str(server_address))
     httpd.serve_forever()
