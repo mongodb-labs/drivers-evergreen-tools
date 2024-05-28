@@ -5,6 +5,7 @@ import urllib
 import ssl
 import base64
 import os
+from pathlib import PurePosixPath
 
 """
 Example of setting a network failpoint:
@@ -24,7 +25,6 @@ $ curl -X POST localhost:3000
 """
 
 # A new instance of Handler is created for every request, so these have to be global variables
-failpoint_type = None
 remaining_decrypt_fails = 0
 remaining_network_fails = 0
 
@@ -70,37 +70,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global remaining_decrypt_fails
         remaining_decrypt_fails -= 1
         self.send_response(429)
-    def do_GET(self):
-        global failpoint_type
+    def do_POST(self):
         global remaining_decrypt_fails
         global remaining_network_fails
         parts = urllib.parse.urlsplit(self.path)
-        path = parts[2]
-        if path.startswith("/set_failpoint"):
-            parts = path.split('/')
-            if parts[2] == 'network':
-                remaining_network_fails = int(parts[3])
-            elif parts[2] == 'http':
-                remaining_decrypt_fails = int(parts[3])
+        path = PurePosixPath(parts.path)
+
+        if path.match("/set_failpoint/*"):
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            failpoint_type = path.parts[-1]
+            if failpoint_type == 'network':
+                remaining_network_fails = data['count']
+            elif failpoint_type == 'http':
+                remaining_decrypt_fails = data['count']
             else:
                 self._send_not_found()
                 return
-
-            failpoint_type = parts[2]
-            remaining_decrypt_fails = int(parts[3])
             print("Enabling failpoint for type: {}".format(failpoint_type))
             self._send_json(
                 {"message": "failpoint set for type: '{}'".format(failpoint_type)}
             )
-        else:
-            self._send_not_found()
-
-    def do_POST(self):
-        global remaining_decrypt_fails
-        global remaining_network_fails
-        global failpoint_type
-        parts = urllib.parse.urlsplit(self.path)
-        path = parts[2]
+            return
 
         # If a failpoint was set, fail the request.
         if remaining_network_fails > 0:
@@ -108,7 +101,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             raise Exception("mock network error")
 
         # No path for AWS
-        if 'X-Amz-Target' in self.headers:
+        if 'X-Amz-Target' in self.headers and str(path) == "/":
             aws_op = self.headers['X-Amz-Target']
             if aws_op == "TrentService.Encrypt":
                 self._send_json({"CiphertextBlob": base64.b64encode(fake_ciphertext.encode()).decode()})
@@ -123,26 +116,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_not_found()
                 return
 
-        # Azure auth path: /c01df00d-cafe-g00d-dea1-decea5sedbeef/oath2/v2.0/token
-        if path.endswith("token"):
+        # Azure auth path: /c01df00d-cafe-g00d-dea1-decea5sedbeef/oauth2/v2.0/token
+        if path.match("*token"):
             return self._send_json({"access_token": "foo", "expires_in": 99999})
-        # GCP encrypt
-        elif path.endswith("encrypt"):
+        # GCP encrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:encrypt
+        elif path.match("*encrypt"):
             return self._send_json({"ciphertext": base64.b64encode(fake_ciphertext.encode()).decode()})
-        # GCP decrypt
-        elif path.endswith("decrypt"):
+        # GCP decrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:decrypt
+        elif path.match("*decrypt"):
             if remaining_decrypt_fails > 0:
                 self._decrypt_fail()
                 return
             return self._send_json({"plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
-        # Azure decrypt path: /keys/keyname//unwrapkey
-        elif path.endswith("unwrapkey"):
+        # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey  
+        elif path.match("*unwrapkey"):
             if remaining_decrypt_fails > 0:
                 self._decrypt_fail()
                 return
             return self._send_json({"value": base64.b64encode(fake_plaintext.encode()).decode()})
-        # Azure encrypt path: /keys/keyname//wrapkey
-        elif path.endswith("wrapkey"):
+        # Azure encrypt path: /keys/{key-name}/{key-version}/wrapkey
+        elif path.match("*wrapkey"):
             return self._send_json({"value": base64.b64encode(fake_ciphertext.encode()).decode()})
         self._send_not_found()
 
