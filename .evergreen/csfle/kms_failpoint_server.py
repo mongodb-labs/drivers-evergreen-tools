@@ -22,7 +22,7 @@ $ curl -X POST localhost:3000
 
 """
 
-# A new instance of Hander is created for every request, so these have to be global variables
+# A new instance of Handler is created for every request, so these have to be global variables
 failpoint_type = None
 remaining_decrypt_fails = 0
 remaining_network_fails = 0
@@ -65,7 +65,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global remaining_decrypt_fails
         remaining_decrypt_fails -= 1
         self.send_response(429)
-    
     def do_GET(self):
         global failpoint_type
         global remaining_decrypt_fails
@@ -90,7 +89,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
             )
         else:
             self._send_not_found()
-        
 
     def do_POST(self):
         global remaining_decrypt_fails
@@ -106,7 +104,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         # No path for AWS
         if 'X-Amz-Target' in self.headers:
-            print('AWS')
             aws_op = self.headers['X-Amz-Target']
             if aws_op == "TrentService.Encrypt":
                 self._send_json({"CiphertextBlob": base64.b64encode(fake_ciphertext.encode()).decode()})
