@@ -330,11 +330,11 @@ functions:
     - command: subprocess.exec
       params:
         binary: bash
+        env:
+          MONGODB_URI: ${MONGODB_URI}
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-load-balancer.sh
           - start
-       env:
-          MONGODB_URI: ${MONGODB_URI}
     - command: expansions.update
       params:
         file: lb-expansion.yml
