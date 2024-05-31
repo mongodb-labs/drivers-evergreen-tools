@@ -132,7 +132,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._decrypt_fail()
                 return
             return self._send_json({"plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
-        # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey  
+        # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey
         elif path.match("*unwrapkey"):
             if remaining_decrypt_fails > 0:
                 self._decrypt_fail()
