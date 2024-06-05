@@ -8,4 +8,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/setup-atlas-cluster.sh "$@"
 
 source $SCRIPT_DIR/secrets-export.sh
-bash ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
+. ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
