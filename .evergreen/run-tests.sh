@@ -7,6 +7,8 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #       MONGODB_URI             Set the suggested connection MONGODB_URI (including credentials and topology info)
 #       MARCH                   Machine Architecture. Defaults to lowercase uname -m
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+. $SCRIPT_DIR/handle-paths.sh
 
 AUTH=${AUTH:-noauth}
 SSL=${SSL:-nossl}
