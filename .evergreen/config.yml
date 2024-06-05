@@ -363,7 +363,8 @@ functions:
         script: |
           ${PREPARE_SHELL}
           set +o xtrace
-          bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
+          MONGODB_URI="${MONGODB_URI}" \
+            bash ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run docker test":
     - command: shell.exec
