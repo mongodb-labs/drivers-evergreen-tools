@@ -7,4 +7,5 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 . $SCRIPT_DIR/create-instance.sh
 
+source ${SCRIPT_DIR}/secrets-export.sh
 bash ${DRIVERS_TOOLS}/.evergreen/check-connection.sh

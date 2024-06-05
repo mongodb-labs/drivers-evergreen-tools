@@ -374,7 +374,7 @@ functions:
           set -ex
           cd $DRIVERS_TOOLS/.evergreen/docker
           ARCH=${ARCH} TARGET_IMAGE=${TARGET_IMAGE} MONGODB_VERSION=${MONGODB_VERSION} ENTRYPOINT=/root/test-entrypoint.sh bash run-server.sh
-          MONGODB_URI="${MONGODB_URI}" bash ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
+          bash ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
