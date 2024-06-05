@@ -127,6 +127,13 @@ support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
 See the Secrets Handling [readme](./.evergreen/secrets_handling/README.md) for more information on how secrets are managed
 locally and on on Evergreen.
 
+## Env Files
+
+This repo supports the use of `.env` files, which can be placed in `$DRIVERS_TOOLS` and in the sub-directories.
+The script will first read `$DRIVERS_TOOLS/.env` if it exists, and then `$SCRIPT_DIR/.env` if it exists, to give
+the local file higher precedence.  This pattern can be used to replace the use of legacy `${PREPARE_SHELL}`
+invocations in a  `shell.exec` Evergreen command, enabling the use of `subprocess.exec` instead.
+
 ## evergreen_config_generator
 
 This repo also contains a Python package for use in scripts that generate
