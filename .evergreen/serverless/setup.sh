@@ -9,5 +9,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 source ${SCRIPT_DIR}/secrets-export.sh
 export MONGODB_URI=$SERVERLESS_URI
-echo "MONGODB_URI=$MONGODB_URI"
 . ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
