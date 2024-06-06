@@ -48,26 +48,26 @@ script in this directory:
 
 ```yaml
 - command: subprocess.exec
-    params:
+  params:
     working_dir: src
     binary: bash
     args: |
-        ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
+      ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
 ```
 
 If using other hosts, the following form should be used:
 
 ```yaml
 - command: ec2.assume_role
-    params:
+  params:
     role_arn: ${aws_test_secrets_role}
 - command: subprocess.exec
-    params:
+  params:
     working_dir: src
     binary: bash
     include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
     args: |
-        ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+      ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
 ## Local Credential Access
