@@ -2,7 +2,6 @@ from pymongo import MongoClient
 import os
 import json
 from urllib.request import urlopen, Request
-from pymongo.auth import _AUTH_MAP, _authenticate_oidc
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
 
 audience = os.environ['GCPOIDC_AUDIENCE']
