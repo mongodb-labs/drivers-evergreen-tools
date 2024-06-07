@@ -9,7 +9,8 @@ pushd ./drivers-evergreen-tools/.evergreen/auth_oidc
 # Run the Python Driver Test
 git clone https://github.com/mongodb/mongo-python-driver
 pushd mongo-python-driver
-python setup.py install --no_ext
+pip install -U -q pip
+pip install .
 popd
 pip install -q requests
 python azure/remote-scripts/test.py
