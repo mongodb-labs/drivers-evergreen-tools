@@ -2,11 +2,7 @@ from pymongo import MongoClient
 import os
 import json
 from urllib.request import urlopen, Request
-from pymongo.auth import _AUTH_MAP, _authenticate_oidc
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
-
-# Force MONGODB-OIDC to be enabled.
-_AUTH_MAP["MONGODB-OIDC"] = _authenticate_oidc
 
 app_id = os.environ['AZUREOIDC_APPID']
 client_id = os.environ['AZUREOIDC_USERNAME']
