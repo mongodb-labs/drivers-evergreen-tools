@@ -36,11 +36,11 @@ If using a Linux host on Evergreen, the shorthand version of the script can be u
 
 ```yaml
 - command: subprocess.exec
-    params:
+  params:
     working_dir: src
     binary: bash
     args: |
-        ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+      ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
 if using one of the convenience scripts in one of the subfolders, or the following to use the
