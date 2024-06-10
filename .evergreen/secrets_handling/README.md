@@ -43,7 +43,7 @@ If using a Linux host on Evergreen, the shorthand version of the script can be u
       - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
-if using one of the convenience scripts in one of the subfolders, or the following to use the
+If using one of the convenience scripts in one of the subfolders, or the following to use the
 script in this directory:
 
 ```yaml
@@ -52,6 +52,7 @@ script in this directory:
     working_dir: src
     binary: bash
     args:
+      - -c
       - ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
 ```
 
