@@ -36,11 +36,11 @@ If using a Linux host on Evergreen, the shorthand version of the script can be u
 
 ```yaml
 - command: subprocess.exec
-    params:
+  params:
     working_dir: src
     binary: bash
-    args: |
-        ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+    args:
+      - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
 if using one of the convenience scripts in one of the subfolders, or the following to use the
@@ -51,8 +51,8 @@ script in this directory:
   params:
     working_dir: src
     binary: bash
-    args: |
-      ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
+    args:
+      - ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
 ```
 
 If using other hosts, the following form should be used:
@@ -66,8 +66,8 @@ If using other hosts, the following form should be used:
     working_dir: src
     binary: bash
     include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
-    args: |
-      ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+    args:
+      - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
 ```
 
 ## Local Credential Access
