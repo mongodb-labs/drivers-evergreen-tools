@@ -365,6 +365,12 @@ functions:
     - command: subprocess.exec
       type: test
       params:
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
+    - command: subprocess.exec
+      type: test
+      params:
         binary: make
         working_dir: "${DRIVERS_TOOLS}"
         args:
