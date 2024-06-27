@@ -4,12 +4,6 @@ set -eux
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
-
-if [ -z "${DRIVER_NAME:-}" ]; then
-    echo "Must set DRIVER_NAME!"
-    exit 1
-fi
-
 pushd $SCRIPT_DIR
 
 # Handle secrets from vault.
@@ -21,15 +15,19 @@ if [ -z "${AZUREKMS_TENANTID:-}" ]; then
     . ./../../secrets_handling/setup-secrets.sh drivers/aks
 fi
 
-# Login.
+# Handle credentials.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
-
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+
+# Create the pod with a random name.
+set -x
+POD_NAME="test-$RANDOM"
+echo "AKS_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ${DRIVER_NAME}-test
+  name: ${POD_NAME}
   namespace: ${AKS_SERVICE_ACCOUNT_NAMESPACE}
   labels:
     azure.workload.identity/use: "true"
@@ -44,3 +42,6 @@ spec:
   nodeSelector:
     kubernetes.io/os: linux
 EOF
+
+# Set up the pod.
+bash $DRIVERS_TOOLS/.evergreen/k8s/setup-pod.sh ${POD_NAME}

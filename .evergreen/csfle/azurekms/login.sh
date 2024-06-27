@@ -27,7 +27,7 @@ if [[ "$(printf "$ACTUAL_VERSION\n$EXPECTED_VERSION_NEWER\n" | sort -rV | head -
 fi
 
 echo "Log in to azure ... begin"
-az logout 2&>1 || true
+az logout || true
 az login --service-principal \
     --username "$AZUREKMS_CLIENTID" \
     --password "$AZUREKMS_SECRET" \
