@@ -22,7 +22,7 @@ az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_R
 # Create the pod with a random name.
 set -x
 POD_NAME="test-$RANDOM"
-echo "AKS_POD_NAME=$POD_NAME" >> ./secrets-export.sh
+echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod

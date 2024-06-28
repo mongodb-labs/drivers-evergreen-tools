@@ -11,4 +11,4 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
 fi
 
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
-kubectl delete pod ${AKS_POD_NAME}
+kubectl delete pod ${K8S_POD_NAME}
