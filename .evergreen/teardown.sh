@@ -37,7 +37,7 @@ fi
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
 LOG_DIR="$(mktemp -d)"
 # Prepend the parent directory name to the file name.
-find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x ./log_dir/$(basename $(dirname $x))_$(basename $x)' \;
+find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x '"${LOG_DIR}"'/$(basename $(dirname $x))_$(basename $x)' \;
 # Handle files from the .evergreen directory.
 pushd $LOG_DIR
 find . -name .evergreen_\* -exec bash -c 'mv $0 ${0/.evergreen_/}' {} \;

@@ -417,6 +417,7 @@ functions:
 
   "run oidc azure test":
     - command: shell.exec
+      type: test
       params:
         shell: bash
         script: |-
@@ -429,6 +430,7 @@ functions:
 
   "run oidc gcp test":
     - command: shell.exec
+      type: test
       params:
         shell: bash
         script: |-
@@ -441,12 +443,13 @@ functions:
 
   "run oidc k8s test":
     - command: shell.exec
+      type: test
       params:
         shell: bash
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
-          export K8S_VARIANT=${K8S_VARIANT}
+          export K8S_VARIANT=${VARIANT}
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
@@ -870,7 +873,7 @@ task_groups:
   - name: serverless_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: "fetch source"
@@ -897,7 +900,7 @@ task_groups:
   - name: test_atlas_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -930,7 +933,7 @@ task_groups:
   - name: testazureoidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -963,7 +966,7 @@ task_groups:
   - name: testgcpoidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -996,7 +999,7 @@ task_groups:
   - name: testk8soidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
