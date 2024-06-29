@@ -427,6 +427,8 @@ functions:
           git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/azure/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
           make test
 
   "run oidc gcp test":
@@ -441,6 +443,8 @@ functions:
           git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/gcp/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
           make test
 
   "run oidc k8s test":
@@ -456,6 +460,8 @@ functions:
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
           make test
 
   "teardown assets":
