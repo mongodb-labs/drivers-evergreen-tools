@@ -10,6 +10,7 @@ if [ -z ${POD_NAME} ]; then
     echo "Must supply a pod name as the first argument!"
     exit 1
 fi
-kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
-kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
-kubectl exec ${POD_NAME} -- git --version
+. ./download-kubectl.sh
+$KUBECTL cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
+$KUBECTL exec ${POD_NAME} -- /tmp/setup-pod.sh
+$KUBECTL exec ${POD_NAME} -- git --version
