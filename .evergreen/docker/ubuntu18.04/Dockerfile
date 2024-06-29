@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-  apt-get -qq update && apt-get -qq install -y --no-install-recommends \
+  apt-get -qq update && apt-get -qqy install --no-install-recommends \
     git \
     ca-certificates \
     curl \
@@ -30,7 +30,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && curl -fsSL https://pgp.mongodb.com/server-4.4.asc | gpg -o /usr/share/keyrings/mongodb-server-4.4.gpg --dearmor \
   && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-4.4.gpg ] https://repo.mongodb.com/apt/ubuntu bionic/mongodb-enterprise/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-enterprise-4.4.list \
   && apt-get -qq update \
-  && apt-get -qq install -y mongodb-enterprise \
+  && apt-get -qqy install mongodb-enterprise \
   && rm -rf /var/lib/apt/lists/*
 
 # Install python 3.8 from ppa
@@ -38,7 +38,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && export TZ=Etc/UTC \
   && add-apt-repository ppa:deadsnakes/ppa \
   && apt-get -qq update \
-  && apt-get -qq install -y python3.8 python3.8-venv python3-venv \
+  && apt-get -qqy install python3.8 python3.8-venv python3-venv \
   && ln -sf /usr/bin/python3.8 /usr/bin/python3 \
   && rm -rf /var/lib/apt/lists/*
 

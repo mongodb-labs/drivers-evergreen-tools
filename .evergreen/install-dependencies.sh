@@ -26,8 +26,8 @@ case "$DISTRO" in
 
    linux-ubuntu*)
       echo "Install Ubuntu dependencies"
-      sudo -qq apt-get update || true
-      sudo -qq apt-get -y -o DPkg::Lock::Timeout=-1 install awscli || true
+      sudo apt-get -qq update || true
+      sudo apt-get -yqq -o DPkg::Lock::Timeout=-1 install awscli || true
       ;;
 
    sunos*)
