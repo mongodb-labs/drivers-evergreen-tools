@@ -7,18 +7,19 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 pushd $SCRIPT_DIR
 
-# Check for inputs.
-if [ -z "${K8S_DRIVERS_TAR_FILE:-}" ] || \
-   [ -z "${K8S_TEST_CMD:-}" ] || \
-   [ -z "${K8S_VARIANT:-}" ]; then
-    echo "Please set the following required environment variables"
-    echo " K8S_DRIVERS_TAR_FILE"
-    echo " K8S_TEST_CMD"
-    echo " K8S_VARIANT"
-    exit 1
-fi
+VARLIST=(
+K8S_DRIVERS_TAR_FILE
+K8S_VARIANT
+K8S_TEST_CMD
+)
 
-# Read in the env variables.
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in ${VARLIST[*]}; do
+[[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
+
+# Read in the secrets.
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 source ./../../k8s/$VARIANT/secrets-export.sh
 
