@@ -993,7 +993,7 @@ task_groups:
     tasks:
       - test-oidc-gcp
 
-  - name: testgcpoidc_task_group
+  - name: testk8soidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_group_can_fail_task: true
