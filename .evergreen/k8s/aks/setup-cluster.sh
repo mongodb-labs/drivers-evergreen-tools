@@ -35,7 +35,7 @@ az identity create --name "${AKS_USER_ASSIGNED_IDENTITY_NAME}" --resource-group 
 export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group "${AKS_RESOURCE_GROUP}" \
   --name "${AKS_USER_ASSIGNED_IDENTITY_NAME}" --query 'clientId' -otsv)"
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
-. ../../ensure-binary.sh kubectl
+bash ../../ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount

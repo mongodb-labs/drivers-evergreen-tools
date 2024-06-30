@@ -11,5 +11,5 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
 fi
 
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
-. $SCRIPT_DIR/../../ensure-binary.sh kubectl
+bash $SCRIPT_DIR/../../ensure-binary.sh kubectl
 kubectl delete pod ${K8S_POD_NAME}
