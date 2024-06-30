@@ -50,4 +50,5 @@ fi
 
 echo "Downloading $NAME..."
 curl -L -s $URL -o $TARGET
+chmod +x $TARGET
 echo "Downloading $NAME... done."
