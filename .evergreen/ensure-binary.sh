@@ -16,8 +16,8 @@ if command -v $NAME &> /dev/null; then
   exit 0
 fi
 
-OS_NAME=$(uname -s)
-MARCH=$(uname -m)
+OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 TARGET=${DRIVERS_TOOLS}/.bin/$NAME
 URL=""
 
