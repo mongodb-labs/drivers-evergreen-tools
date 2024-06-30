@@ -49,6 +49,7 @@ if [ -z "$URL" ]; then
 fi
 
 echo "Downloading $NAME..."
-curl -L -s $URL -o $TARGET
+mkdir -p ${DRIVERS_TOOLS}/.bin
+curl -L -s --fail-with-body $URL -o $TARGET
 chmod +x $TARGET
 echo "Downloading $NAME... done."
