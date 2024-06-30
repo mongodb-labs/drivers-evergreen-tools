@@ -24,9 +24,9 @@ VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 source ./../../k8s/$VARIANT/secrets-export.sh
 
 # Extract the tar file to the /tmp/test directory.
-. ../../k8s/download-kubectl.sh
-$KUBECTL exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
-tar cf - ${K8S_DRIVERS_TAR_FILE} | $KUBECTL exec -i ${K8S_POD_NAME} -- /bin/sh -c 'tar xf - -C /tmp/test'
+. ./../../ensure-binary.sh kubectl
+kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
+tar cf - ${K8S_DRIVERS_TAR_FILE} | kubectl exec -i ${K8S_POD_NAME} -- /bin/sh -c 'tar xf - -C /tmp/test'
 
 # Run the command.
-$KUBECTL exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"

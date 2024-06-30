@@ -17,12 +17,12 @@ bash ./../../k8s/$VARIANT/setup.sh
 
 echo "Copying the test files to the pod..."
 source ./../../k8s/$VARIANT/secrets-export.sh
-. ../../k8s/download-kubectl.sh
-$KUBECTL cp ./remote-scripts/run-self-test.sh ${K8S_POD_NAME}:/tmp/run-self-test.sh
-$KUBECTL cp ./remote-scripts/test.py ${K8S_POD_NAME}:/tmp/test.py
-$KUBECTL cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/secrets-export.sh
+. ./../../ensure-binary.sh $kubectl
+kubectl cp ./remote-scripts/run-self-test.sh ${K8S_POD_NAME}:/tmp/run-self-test.sh
+kubectl cp ./remote-scripts/test.py ${K8S_POD_NAME}:/tmp/test.py
+kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/secrets-export.sh
 
 echo "Running the self test on the pod..."
-$KUBECTL exec ${K8S_POD_NAME} -- bash /tmp/run-self-test.sh
+kubectl exec ${K8S_POD_NAME} -- bash /tmp/run-self-test.sh
 
 popd
