@@ -7,7 +7,6 @@ pushd mongo-python-driver
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -U -q pip
-pip install -U -q requests
 pip install .
 popd
 echo "Installing dependencies ... end"

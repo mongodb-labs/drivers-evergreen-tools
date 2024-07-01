@@ -30,3 +30,5 @@ tar cf - ${K8S_DRIVERS_TAR_FILE} | kubectl exec -i ${K8S_POD_NAME} -- /bin/sh -c
 
 # Run the command.
 kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
+
+popd

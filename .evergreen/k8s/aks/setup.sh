@@ -46,3 +46,5 @@ EOF
 
 # Set up the pod.
 bash $DRIVERS_TOOLS/.evergreen/k8s/setup-pod.sh ${POD_NAME}
+
+popd
