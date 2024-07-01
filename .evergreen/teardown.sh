@@ -32,6 +32,10 @@ if [[ -n "$DOCKER" ]]; then
     docker rm $(docker ps -a -q) &> /dev/null || true
     # Remove all images.
     docker rmi -f $(docker images -a -q) &> /dev/null || true
+    # Remove all generated docker files
+    push docker
+    sudo git clean -dffx
+    popd
 fi
 
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
@@ -45,8 +49,5 @@ popd
 # Slurp into a tar file.
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 rm -rf $LOG_DIR
-
-# Remove all generated files
-sudo git clean -dffx
 
 popd
