@@ -6,5 +6,3 @@ source $DRIVERS_TOOLS/.evergreen/mo-expansion.sh
 URI="mongodb://127.0.0.1:27017/?serverSelectionTimeoutMS=10000"
 $MONGODB_BINARIES/mongosh $URI --eval "db.runCommand({\"ping\":1})"
 echo "Test complete!"
-# Sleep to keep the container alive for external connection test.
-sleep 1000

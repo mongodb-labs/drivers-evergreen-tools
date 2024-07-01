@@ -362,19 +362,14 @@ functions:
           ENTRYPOINT: /root/test-entrypoint.sh
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
-    - command: subprocess.exec
+    - command: shell.exec
       type: test
       params:
-        binary: bash
-        args:
-          - ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: make
-        working_dir: "${DRIVERS_TOOLS}"
-        args:
-          - test
+        shell: bash
+        working_dir: "src"
+        script: |
+          # Generate a test results file
+          make test
 
   "run oidc local test":
     - command: ec2.assume_role
