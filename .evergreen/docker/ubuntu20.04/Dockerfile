@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-  apt-get -qq update && apt-get -qqy install --no-install-recommends \
+  apt-get -qq update && apt-get -qq -y install --no-install-recommends \
   git \
   ca-certificates \
   curl \
@@ -14,7 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   lsof \
   software-properties-common \
   libsnmp35 \
-  net-tools \
+  net-tools < /dev/null > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID

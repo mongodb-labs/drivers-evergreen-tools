@@ -43,7 +43,7 @@ repos:
           .evergreen/csfle/bottle.py|
           .pem$
         )
-    args: ["-L", "fle"]
+    args: ["-L", "fle,aks"]
 
 - repo: local
   hooks:

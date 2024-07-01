@@ -54,3 +54,8 @@ fi
 
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}
+
+# Add the local .bin dir to the path.
+if [[ $PATH != *"$DRIVERS_TOOLS/.bin"* ]]; then
+  PATH="$PATH:$DRIVERS_TOOLS/.bin"
+fi

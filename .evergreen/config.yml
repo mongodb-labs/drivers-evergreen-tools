@@ -362,19 +362,14 @@ functions:
           ENTRYPOINT: /root/test-entrypoint.sh
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
-    - command: subprocess.exec
+    - command: shell.exec
       type: test
       params:
-        binary: bash
-        args:
-          - ${DRIVERS_TOOLS}/.evergreen/check-connection.sh
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: make
-        working_dir: "${DRIVERS_TOOLS}"
-        args:
-          - test
+        shell: bash
+        working_dir: "src"
+        script: |
+          # Generate a test results file
+          make test
 
   "run oidc local test":
     - command: ec2.assume_role
@@ -417,6 +412,7 @@ functions:
 
   "run oidc azure test":
     - command: shell.exec
+      type: test
       params:
         shell: bash
         script: |-
@@ -425,10 +421,14 @@ functions:
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
-          bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/run-driver-test.sh
+          bash ./.evergreen/auth_oidc/azure/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
 
   "run oidc gcp test":
     - command: shell.exec
+      type: test
       params:
         shell: bash
         script: |-
@@ -437,7 +437,27 @@ functions:
           export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
-          bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/run-driver-test.sh
+          bash ./.evergreen/auth_oidc/gcp/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
+  "run oidc k8s test":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}
+          export K8S_VARIANT=${VARIANT}
+          export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
+          git archive -o $K8S_DRIVERS_TAR_FILE HEAD
+          export K8S_TEST_CMD="echo 'hello'"
+          bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
 
   "teardown assets":
     - command: subprocess.exec
@@ -843,6 +863,13 @@ tasks:
       commands:
         - func: "run oidc gcp test"
 
+    - name: "test-oidc-k8s"
+      tags: ["latest", "oidc", "pr"]
+      commands:
+        - func: "run oidc k8s test"
+          vars:
+            VARIANT: aks
+
 # }}}
 
 task_groups:
@@ -850,7 +877,7 @@ task_groups:
   - name: serverless_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: "fetch source"
@@ -877,7 +904,7 @@ task_groups:
   - name: test_atlas_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -910,7 +937,7 @@ task_groups:
   - name: testazureoidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -943,7 +970,7 @@ task_groups:
   - name: testgcpoidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
+    teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: fetch source
@@ -972,6 +999,32 @@ task_groups:
       - func: "cleanup"
     tasks:
       - test-oidc-gcp
+
+  - name: testk8soidc_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-oidc-k8s
 
 axes:
   - id: versions
@@ -1156,6 +1209,7 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
+    - "testk8soidc_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }

@@ -115,3 +115,4 @@ nohup.out
 pykmip.db
 mo-expansion.sh
 .env
+.bin
