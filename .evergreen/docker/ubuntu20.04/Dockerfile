@@ -14,7 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   lsof \
   software-properties-common \
   libsnmp35 \
-  net-tools \
+  net-tools < /dev/null > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID

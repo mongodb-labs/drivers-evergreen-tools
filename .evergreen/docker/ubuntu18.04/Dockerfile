@@ -21,7 +21,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     libsqlite3-dev \
     libreadline-dev \
     libffi-dev wget \
-    libbz2-dev \
+    libbz2-dev < /dev/null > /dev/null \
   && rm -rf /var/lib/apt/lists/*
 
 # Install mongodb server to get deps
@@ -30,7 +30,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && curl -fsSL https://pgp.mongodb.com/server-4.4.asc | gpg -o /usr/share/keyrings/mongodb-server-4.4.gpg --dearmor \
   && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-4.4.gpg ] https://repo.mongodb.com/apt/ubuntu bionic/mongodb-enterprise/4.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-enterprise-4.4.list \
   && apt-get -qq update \
-  && apt-get -qq -y install mongodb-enterprise \
+  && apt-get -qq -y install mongodb-enterprise < /dev/null > /dev/null \
   && rm -rf /var/lib/apt/lists/*
 
 # Install python 3.8 from ppa
@@ -38,7 +38,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && export TZ=Etc/UTC \
   && add-apt-repository ppa:deadsnakes/ppa \
   && apt-get -qq update \
-  && apt-get -qq -y install python3.8 python3.8-venv python3-venv \
+  && apt-get -qq -y install python3.8 python3.8-venv python3-venv < /dev/null > /dev/null \
   && ln -sf /usr/bin/python3.8 /usr/bin/python3 \
   && rm -rf /var/lib/apt/lists/*
 
