@@ -15,3 +15,5 @@ kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=60s
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
+
+popd
