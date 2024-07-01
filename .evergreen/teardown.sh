@@ -33,7 +33,7 @@ if [[ -n "$DOCKER" ]]; then
     # Remove all images.
     docker rmi -f $(docker images -a -q) &> /dev/null || true
     # Remove all generated docker files
-    push docker
+    pushd docker
     sudo git clean -dffx
     popd
 fi
