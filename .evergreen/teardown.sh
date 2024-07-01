@@ -46,4 +46,7 @@ popd
 tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
 rm -rf $LOG_DIR
 
+# Remove all generated files
+sudo git clean -dffx
+
 popd

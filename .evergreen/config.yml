@@ -99,7 +99,7 @@ functions:
     - command: shell.exec
       params:
         script: |
-          sudo rm -rf ${DRIVERS_TOOLS}
+          rm -rf ${DRIVERS_TOOLS}
           if [ "${project}" = "drivers-tools" ]; then
             # If this was a patch build, doing a fresh clone would not actually test the patch
             cp -R ${PROJECT_DIRECTORY}/ ${DRIVERS_TOOLS}
@@ -475,7 +475,7 @@ functions:
     - command: shell.exec
       params:
         script: |
-          sudo rm -rf ${DRIVERS_TOOLS} || true
+          rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
   - func: "fetch source"
