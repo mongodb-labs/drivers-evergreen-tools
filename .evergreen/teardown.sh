@@ -26,15 +26,18 @@ if [[ -f "$DRIVERS_TOOLS/haproxy.conf" ]]; then
 fi
 
 # Clean up docker.
-DOCKER=$(command -v docker) || true
-if [[ -n "$DOCKER" ]]; then
+if command -v docker &> /dev/null; then
     # Kill all containers.
     docker rm $(docker ps -a -q) &> /dev/null || true
     # Remove all images.
     docker rmi -f $(docker images -a -q) &> /dev/null || true
     # Remove all generated docker files
     pushd docker
-    sudo git clean -dffx
+    if command -v sudo &> /dev/null; then
+        sudo git clean -dffx
+    else
+        git clean -dffx
+    fi
     popd
 fi
 
