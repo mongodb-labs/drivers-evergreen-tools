@@ -18,5 +18,4 @@ fi
 # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
 chmod 600 $GCPKMS_KEYFILE
 
-GCLOUD=${GCLOUD:-$(which gcloud)}
 $GCLOUD auth activate-service-account --key-file $GCPKMS_KEYFILE

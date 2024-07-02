@@ -14,6 +14,7 @@ bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
 
 export GCPKMS_KEYFILE_CONTENT=$GKE_KEYFILE_CONTENT
+export GCLOUD=$(which gcloud)
 . $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/login.sh
 gcloud container clusters get-credentials  --region $GKE_REGION --project $GKE_PROJECT
 kubectl delete pod ${K8S_POD_NAME}

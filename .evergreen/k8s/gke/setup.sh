@@ -21,7 +21,9 @@ bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 
 # Handle kubectl credentials.
 export GCPKMS_KEYFILE_CONTENT=$GKE_KEYFILE_CONTENT
+export GCLOUD=$(which gcloud)
 . $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/login.sh
+gcloud components install gke-gcloud-auth-plugin
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
