@@ -23,6 +23,7 @@ fi
 
 # Set defaults.
 export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"devprod-drivers"}
+export GCPKMS_GCLOUD=$(which gcloud)
 export GCPKMS_ZONE=${GCPKMS_ZONE:-"us-east1-b"}
 export GCPKMS_IMAGEPROJECT=${GCPKMS_IMAGEPROJECT:-"debian-cloud"}
 export GCPKMS_IMAGEFAMILY=${GCPKMS_IMAGEFAMILY:-"debian-11"}
@@ -38,17 +39,18 @@ bash $SCRIPT_DIR/login.sh
 
 # create-instance.sh sets INSTANCENAME.
 echo "create-instance.sh ... begin"
+export
 . $SCRIPT_DIR/create-instance.sh
 echo "create-instance.sh ... end"
 
 # Echo expansions required for delete-instance.sh. If the remaining setup fails, delete-instance.sh can still clean up resources.
 EXPANSION_FILE="$CURR_DIR/testgcpkms-expansions.yml"
-echo "GCPKMS_GCLOUD: $(which gcloud)" > $EXPANSION_FILE
+echo "GCPKMS_GCLOUD: $GCPKMS_GCLOUD" > $EXPANSION_FILE
 echo "GCPKMS_INSTANCENAME: $GCPKMS_INSTANCENAME" >> $EXPANSION_FILE
 echo "GCPKMS_PROJECT: $GCPKMS_PROJECT" >> $EXPANSION_FILE
 echo "GCPKMS_ZONE: $GCPKMS_ZONE" >> $EXPANSION_FILE
 if [ -f "$GCPKMS_SECRETS_FILE" ]; then
-    echo "export GCPKMS_GCLOUD=$(which gcloud)" >> $GCPKMS_SECRETS_FILE
+    echo "export GCPKMS_GCLOUD=$GCPKMS_GCLOUD" >> $GCPKMS_SECRETS_FILE
     echo "export GCPKMS_INSTANCENAME=$GCPKMS_INSTANCENAME" >> $GCPKMS_SECRETS_FILE
     echo "export GCPKMS_PROJECT=$GCPKMS_PROJECT" >> $GCPKMS_SECRETS_FILE
     echo "export GCPKMS_ZONE=$GCPKMS_ZONE" >> $GCPKMS_SECRETS_FILE
