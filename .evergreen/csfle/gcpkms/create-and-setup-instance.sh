@@ -31,8 +31,7 @@ export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 
 # download-gcloud.sh sets GCPKMS_GCLOUD.
 echo "download-gcloud.sh ... begin"
-bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
-export GCPKMS_GCLOUD=$(which gcloud)
+. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
 echo "download-gcloud.sh ... end"
 
 # Handle login.

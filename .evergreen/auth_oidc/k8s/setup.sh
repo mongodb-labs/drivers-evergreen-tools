@@ -10,9 +10,6 @@ pushd $SCRIPT_DIR
 rm -f secrets-export.sh
 . ./setup-secrets.sh
 
-VARIANT=${VARIANT:-"aks"}
-VARIANT=$(echo "$VARIANT" | tr '[:upper:]' '[:lower:]')
-
 ########################
 # Start an Atlas Cluster
 
