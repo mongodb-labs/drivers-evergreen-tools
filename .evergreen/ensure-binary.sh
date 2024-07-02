@@ -76,6 +76,9 @@ else
   curl -L -s $URL -o /tmp/$NAME.tgz || curl -L $URL -o $TARGET
   tar xfz $NAME.tgz
   mv $TARPATH $TARGET
+  if [ "$NAME" == "gcloud" ]; then
+    mv google-cloud-sdk/lib ${DRIVERS_TOOLS}/.bin/lib
+  fi
   rm -rf $NAME $TARPATH
   popd
 fi
