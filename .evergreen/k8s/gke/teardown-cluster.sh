@@ -15,4 +15,4 @@ else
 fi
 
 gcloud auth login
-gcloud container clusters delete $GKE_CLUSTER_NAME
+gcloud container clusters delete $GKE_CLUSTER_NAME -q --region $GKE_REGION

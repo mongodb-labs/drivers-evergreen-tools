@@ -22,7 +22,7 @@ bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 # Handle kubectl credentials.
 export GCPKMS_KEYFILE_CONTENT=$GKE_KEYFILE_CONTENT
 bash $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/login.sh
-gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region us-central1 --project $GKE_PROJECT
+gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
 set -x
@@ -38,11 +38,6 @@ metadata:
 spec:
   containers:
   - name: debian
-    resources:
-      limits:
-        memory: "61Gi"
-        cpu: "7500m"
-        ephemeral-storage: "2Gi"
     image: debian:11
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent

@@ -13,11 +13,11 @@ if [ -z "$VARIANT" ]; then
 fi
 
 echo "Setting up the $VARIANT pod..."
-bash ./../../k8s/$VARIANT/setup.sh
+bash $DRIVERS_TOOLS/.evergreen/k8s/$VARIANT/setup.sh
 
 echo "Copying the test files to the pod..."
-source ./../../k8s/$VARIANT/secrets-export.sh
-bash ./../../ensure-binary.sh kubectl
+source $DRIVERS_TOOLS/.evergreen/k8s/$VARIANT/secrets-export.sh
+bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 kubectl cp ./remote-scripts/run-self-test.sh ${K8S_POD_NAME}:/tmp/run-self-test.sh
 kubectl cp ./remote-scripts/test.py ${K8S_POD_NAME}:/tmp/test.py
 kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/secrets-export.sh

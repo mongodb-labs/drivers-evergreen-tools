@@ -17,12 +17,12 @@ set -x
 bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
 gcloud auth login
 
-# gcloud beta container --project "$GKE_PROJECT" clusters create-auto "$GKE_CLUSTER_NAME" \
-#   --region "us-central1" --release-channel "regular" \
-#   --network "projects/$GKE_PROJECT/global/networks/default" \
-#   --subnetwork "projects/$GKE_PROJECT/regions/us-central1/subnetworks/default" \
-#   --binauthz-evaluation-mode=DISABLED \
-#   --service-account=$GKE_SERVICE_ACCOUNT --fleet-project=$GKE_PROJECT
+gcloud beta container --project "$GKE_PROJECT" clusters create-auto "$GKE_CLUSTER_NAME" \
+  --region "$GKE_REGION" --release-channel "regular" \
+  --network "projects/$GKE_PROJECT/global/networks/default" \
+  --subnetwork "projects/$GKE_PROJECT/regions/$GKE_REGION/subnetworks/default" \
+  --binauthz-evaluation-mode=DISABLED \
+  --service-account=$GKE_SERVICE_ACCOUNT --fleet-project=$GKE_PROJECT
 
 PROJECT_NUMBER="$(gcloud projects describe ${GKE_PROJECT} --format='get(projectNumber)')"
 gcloud projects add-iam-policy-binding ${PROJECT_NUMBER} \

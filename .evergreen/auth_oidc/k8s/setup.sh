@@ -22,7 +22,7 @@ VARIANT=$(echo "$VARIANT" | tr '[:upper:]' '[:lower:]')
 # Generate a random cluster name.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
 DEPLOYMENT_NAME="$RANDOM-DRIVER-K8S"
-echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "secrets-export.sh"
+echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "$DRIVERS_TOOLS/.evergreen/atlas/secrets-export.sh"
 
 # Set the create cluster configuration.
 export DEPLOYMENT_DATA=$(cat <<EOF

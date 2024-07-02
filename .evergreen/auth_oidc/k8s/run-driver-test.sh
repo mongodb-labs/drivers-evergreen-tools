@@ -19,6 +19,9 @@ for VARNAME in ${VARLIST[*]}; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
+# Set the current K8S_VARIANT.
+echo "K8S_VARIANT=$VARIANT" >> secrects-export.sh
+
 # Read in the secrets.
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 source ./../../k8s/$VARIANT/secrets-export.sh
