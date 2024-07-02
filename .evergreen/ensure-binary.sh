@@ -20,7 +20,7 @@ OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 TARGET=${DRIVERS_TOOLS}/.bin/$NAME
 URL=""
-PATH=""
+SUBPATH=""
 
 case $NAME in
   kubectl)
@@ -67,12 +67,12 @@ fi
 
 echo "Downloading $NAME..."
 mkdir -p ${DRIVERS_TOOLS}/.bin
-if [ -z "$PATH" ]; then
+if [ -z "$SUBPATH" ]; then
   curl -L -s --fail-with-body $URL -o $TARGET
 else
   curl -L -s --fail-with-body $URL -o /tmp/$NAME
   tar xfz /tmp/$NAME
-  mv /tmp/$NAME/$PATH $TARGET
+  mv /tmp/$NAME/$SUBPATH $TARGET
   rm -rf /tmp/$NAME
 fi
 chmod +x $TARGET
