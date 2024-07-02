@@ -20,7 +20,7 @@ OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 TARGET=${DRIVERS_TOOLS}/.bin/$NAME
 URL=""
-SUBPATH=""
+TARPATH=""
 
 case $NAME in
   kubectl)
@@ -42,7 +42,7 @@ case $NAME in
     esac
   ;;
   gcloud)
-    SUBPATH="bin/gcloud"
+    TARPATH="google-cloud-sdk/bin/gcloud"
     BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
     case "$OS_NAME-$MARCH" in
         linux-x86_64)
@@ -67,13 +67,17 @@ fi
 
 echo "Downloading $NAME..."
 mkdir -p ${DRIVERS_TOOLS}/.bin
-if [ -z "$SUBPATH" ]; then
-  curl -L -s --fail-with-body $URL -o $TARGET
+if [ -z "$TARPATH" ]; then
+  curl -L -s $URL -o $TARGET || curl -L $URL -o $TARGET
 else
-  curl -L -s --fail-with-body $URL -o /tmp/$NAME
-  tar xfz /tmp/$NAME
-  mv /tmp/$SUBPATH $TARGET
-  rm -rf /tmp/$NAME
+  BASE_PATH=$(echo $TARPATH | cut -d/ -f1)
+  pushd /tmp
+  rm -rf $BASE_PATH
+  curl -L -s $URL -o /tmp/$NAME.tgz || curl -L $URL -o $TARGET
+  tar xfz $NAME.tgz
+  mv $TARPATH $TARGET
+  rm -rf $NAME $TARPATH
+  popd
 fi
 chmod +x $TARGET
 echo "Downloading $NAME... done."
