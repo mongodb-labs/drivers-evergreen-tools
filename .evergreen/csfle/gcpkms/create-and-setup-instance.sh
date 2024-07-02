@@ -30,7 +30,7 @@ export GCPKMS_MACHINETYPE=${GCPKMS_MACHINETYPE:-"e2-micro"}
 export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 
 echo "ensure gcloud ... begin"
-bash $DRIVERS_TOOLS/ensure-binary.sh gcloud
+bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
 echo "ensure gcloud ... end"
 
 # Login
