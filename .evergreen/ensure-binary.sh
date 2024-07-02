@@ -45,8 +45,9 @@ case $NAME in
     TARPATH="google-cloud-sdk/bin/gcloud"
     BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
     case "$OS_NAME-$MARCH" in
-        linux-x86_64)
-          URL="$BASE/google-cloud-cli-linux-x86_64.tar.gz"
+       linux-x86_64)
+          # Use 393.0.0 for compat with debian 10.
+          URL="$BASE/google-cloud-cli-393.0.0-linux-x86_64.tar.gz"
         ;;
         linux-aarch64)
           URL="$BASE/google-cloud-cli-linux-arm.tar.gz"
