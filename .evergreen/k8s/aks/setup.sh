@@ -16,7 +16,7 @@ if [ -z "${AZUREKMS_TENANTID:-}" ]; then
 fi
 
 # Handle credentials.
-"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+. $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
 
 # Create the pod with a random name.

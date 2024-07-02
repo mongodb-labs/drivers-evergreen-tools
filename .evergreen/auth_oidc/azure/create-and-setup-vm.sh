@@ -32,7 +32,7 @@ export AZUREKMS_SECRET=$AZUREOIDC_SECRET
 export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 
 # Login.
-"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+. "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
 pushd ..

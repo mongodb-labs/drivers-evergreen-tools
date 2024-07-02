@@ -31,7 +31,7 @@ export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 
 # download-gcloud.sh sets GCPKMS_GCLOUD.
 echo "download-gcloud.sh ... begin"
-. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
+bash $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/download-gcloud.sh
 export GCPKMS_GCLOUD=$GCPKMS_GCLOUD
 echo "download-gcloud.sh ... end"
 
