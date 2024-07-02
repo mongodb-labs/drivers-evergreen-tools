@@ -11,7 +11,7 @@ if [ -z ${POD_NAME} ]; then
     exit 1
 fi
 bash ../ensure-binary.sh kubectl
-kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=60s
+kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=120s
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
