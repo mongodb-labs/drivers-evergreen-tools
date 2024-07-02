@@ -23,9 +23,6 @@ done
 echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 
-# Set up the pod.
-bash ./.evergreen/setup-pod.sh $VARIANT
-
 # Read in the secrets.
 source ./../../k8s/$VARIANT/secrets-export.sh
 
