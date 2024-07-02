@@ -2,6 +2,14 @@
 
 set -eu
 
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/../../handle-paths.sh
+
+if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
+  echo "Sourcing secrets"
+  source $SCRIPT_DIR/secrets-export.sh
+fi
+
 # Write the keyfile content to a local JSON path.
 if [ -n "${GCPKMS_KEYFILE_CONTENT:-}" ]; then
     export GCPKMS_KEYFILE=/tmp/testgcpkms_key_file.json
