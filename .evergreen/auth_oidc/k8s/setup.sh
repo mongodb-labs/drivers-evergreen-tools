@@ -86,11 +86,6 @@ export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
-export K8S_VARIANT=$VARIANT
 EOF
-
-########################
-# Set up the pod.
-bash ./setup-pod.sh $VARIANT
 
 popd
