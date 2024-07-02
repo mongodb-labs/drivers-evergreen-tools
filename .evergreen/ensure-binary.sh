@@ -72,7 +72,7 @@ if [ -z "$SUBPATH" ]; then
 else
   curl -L -s --fail-with-body $URL -o /tmp/$NAME
   tar xfz /tmp/$NAME
-  mv /tmp/$NAME/$SUBPATH $TARGET
+  mv /tmp/$SUBPATH $TARGET
   rm -rf /tmp/$NAME
 fi
 chmod +x $TARGET
