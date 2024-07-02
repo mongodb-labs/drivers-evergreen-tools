@@ -20,7 +20,7 @@ for VARNAME in ${VARLIST[*]}; do
 done
 
 # Set the current K8S_VARIANT.
-echo "K8S_VARIANT=$VARIANT" >> secrets-export.sh
+echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
 
 # Read in the secrets.
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
