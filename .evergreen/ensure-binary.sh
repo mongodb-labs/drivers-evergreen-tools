@@ -42,7 +42,7 @@ case $NAME in
     esac
   ;;
   gcloud)
-    PATH="google-cloud-sdk/bin/gcloud"
+    SUBPATH="google-cloud-sdk/bin/gcloud"
     BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
     case "$OS_NAME-$MARCH" in
         linux-x86_64)
