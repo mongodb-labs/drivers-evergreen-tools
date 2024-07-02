@@ -996,7 +996,7 @@ task_groups:
         params:
           binary: bash
           args:
-            - $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
