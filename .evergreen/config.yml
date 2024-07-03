@@ -868,10 +868,10 @@ tasks:
       commands:
         - func: "run oidc k8s test"
           vars:
-            VARIANT: aks
+            VARIANT: gke
         - func: "run oidc k8s test"
           vars:
-            VARIANT: gke
+            VARIANT: aks
 
 # }}}
 
