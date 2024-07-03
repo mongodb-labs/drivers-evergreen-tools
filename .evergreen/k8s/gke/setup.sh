@@ -21,7 +21,7 @@ bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 
 # Handle kubectl credentials.
 GKE_KEYFILE=/tmp/testgke_key_file.json
-echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
+echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
 # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
 chmod 600 $GKE_KEYFILE
 gcloud components install gke-gcloud-auth-plugin
