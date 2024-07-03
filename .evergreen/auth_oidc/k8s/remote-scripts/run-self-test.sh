@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 echo "Installing dependencies ... begin"
 git clone https://github.com/mongodb/mongo-python-driver

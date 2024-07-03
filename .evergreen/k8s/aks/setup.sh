@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -20,10 +20,9 @@ fi
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
 
 # Create the pod with a random name.
-set -x
 POD_NAME="test-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
-bash ../../ensure-binary.sh kubectl
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod

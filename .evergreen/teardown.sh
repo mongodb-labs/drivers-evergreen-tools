@@ -5,7 +5,7 @@
 # Note: To avoid scope creep, any new functionality should be
 # handled in sub-folders with their own setup and teardown scripts.
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh

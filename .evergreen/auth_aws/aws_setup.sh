@@ -7,7 +7,7 @@
 #
 # Handles AWS credential setup and exports relevant environment variables.
 # Assumes you have already set up secrets.
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -13,7 +13,6 @@ if [ -z "${AZUREKMS_TENANTID:-}" ]; then
     . ./../../secrets_handling/setup-secrets.sh drivers/aks
 fi
 
-set -x
 az logout || true
 az login
 
@@ -35,7 +34,7 @@ az identity create --name "${AKS_USER_ASSIGNED_IDENTITY_NAME}" --resource-group 
 export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group "${AKS_RESOURCE_GROUP}" \
   --name "${AKS_USER_ASSIGNED_IDENTITY_NAME}" --query 'clientId' -otsv)"
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
-bash ../../ensure-binary.sh kubectl
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount

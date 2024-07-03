@@ -4,7 +4,7 @@
 #
 # Set up serverless secrets using Drivers AWS Secrets Manager.
 # Writes a secrets-export.sh file to this folder.
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -15,9 +15,9 @@ if [ -z "${AZUREKMS_TENANTID:-}" ]; then
     . $DRIVERS_TOOLS/.evergreen/secrets_handling/setup-secrets.sh drivers/gke
 fi
 
-# Get binaries
-bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
-bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+# Ensure required binaries.
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 
 # Handle kubectl credentials.
 GKE_KEYFILE=/tmp/testgke_key_file.json
@@ -25,11 +25,9 @@ echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
 # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
 chmod 600 $GKE_KEYFILE
 gcloud auth activate-service-account --key-file $GKE_KEYFILE
-gcloud components install gke-gcloud-auth-plugin
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
-set -x
 POD_NAME="test-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 

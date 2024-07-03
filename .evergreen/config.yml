@@ -56,7 +56,6 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           set -x
            if [[ "$(uname -s)" == CYGWIN* ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
@@ -950,7 +949,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
@@ -983,7 +981,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .

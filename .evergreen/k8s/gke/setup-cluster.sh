@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -13,8 +13,7 @@ if [ -z "${GKE_PROJECT:-}" ]; then
     . $DRIVERS_TOOLS/.evergreen/secrets_handling/setup-secrets.sh drivers/gke
 fi
 
-set -x
-bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
 gcloud auth login
 
 gcloud beta container --project "$GKE_PROJECT" clusters create-auto "$GKE_CLUSTER_NAME" \

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 # Clear out files that might interfere.
 rm -f $DRIVERS_TOOLS/results.json
