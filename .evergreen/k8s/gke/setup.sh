@@ -24,6 +24,7 @@ GKE_KEYFILE=/tmp/testgke_key_file.json
 echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
 # Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
 chmod 600 $GKE_KEYFILE
+gcloud auth activate-service-account --key-file $GKE_KEYFILE
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
