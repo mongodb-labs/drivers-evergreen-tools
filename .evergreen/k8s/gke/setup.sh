@@ -20,9 +20,10 @@ bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
 bash $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 
 # Handle kubectl credentials.
-export GCPKMS_KEYFILE_CONTENT=$GKE_KEYFILE_CONTENT
-export GCLOUD=$(which gcloud)
-. $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/login.sh
+GKE_KEYFILE=/tmp/testgke_key_file.json
+echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
+# Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
+chmod 600 $GKE_KEYFILE
 gcloud components install gke-gcloud-auth-plugin
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
@@ -48,6 +49,6 @@ spec:
 EOF
 
 # Set up the pod.
-bash $DRIVERS_TOOLS/.evergreen/k8s/setup-pod.sh ${POD_NAME}
+bash $DRIVERS_TOOLS/.evergreen/k8s/configure-pod.sh ${POD_NAME}
 
 popd

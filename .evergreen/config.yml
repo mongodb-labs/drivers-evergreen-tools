@@ -454,9 +454,7 @@ functions:
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
-          bash ./.evergreen/k8s/${VARIANT}/setup.sh
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
-          bash ./.evergreen/k8s/${VARIANT}/teardown.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test

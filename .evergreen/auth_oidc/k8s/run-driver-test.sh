@@ -23,7 +23,8 @@ done
 echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 
-# Read in the secrets.
+# Start the pod and source the secrets.
+bash ./.evergreen/k8s/${VARIANT}/setup.sh
 source ./../../k8s/$VARIANT/secrets-export.sh
 
 # Extract the tar file to the /tmp/test directory.
@@ -33,5 +34,8 @@ tar cf - ${K8S_DRIVERS_TAR_FILE} | kubectl exec -i ${K8S_POD_NAME} -- /bin/sh -c
 
 # Run the command.
 kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
+
+# Tear down the pod.
+bash ./.evergreen/k8s/${VARIANT}/teardown.sh
 
 popd
