@@ -31,6 +31,7 @@ gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION
 # Create the pod with a random name.
 POD_NAME="test-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
+export K8S_POD_NAME=$K8S_POD_NAME
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
