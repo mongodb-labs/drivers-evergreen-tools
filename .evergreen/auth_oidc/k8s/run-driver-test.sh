@@ -24,10 +24,9 @@ echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 VARIANT_DIR=$DRIVERS_TOOLS/.evergreen/k8s/$VARIANT
 
-# Start the pod and source the secrets.
+# Set up the pod.
 echo "Setting up $VARIANT pod..."
-bash $VARIANT_DIR/setup.sh
-source $VARIANT_DIR/secrets-export.sh
+. $VARIANT_DIR/setup.sh
 echo "Setting up $VARIANT pod... done."
 
 # Extract the tar file to the /tmp/test directory.
@@ -43,7 +42,7 @@ echo "Running the driver test command... done."
 
 # Tear down the pod.
 echo "Tearding down $VARIANT pod..."
-bash $VARIANT_DIR/teardown.sh
+. $VARIANT_DIR/teardown.sh
 echo "Tearding down $VARIANT pod... done."
 
 popd
