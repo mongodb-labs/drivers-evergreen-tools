@@ -116,3 +116,8 @@ pykmip.db
 mo-expansion.sh
 .env
 .bin
+
+# Azure functions.
+.python_packages/
+appsettings.json
+local.settings.json
