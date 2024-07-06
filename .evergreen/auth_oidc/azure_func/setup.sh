@@ -105,12 +105,4 @@ fi
 export MONGODB_URI=$(check_deployment)
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
 
-########################
-# Run the self test.
-pushd self-test
-export FUNC_NAME=oidcselftest
-export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
-bash ../run-driver-test.sh
-popd
-
 popd

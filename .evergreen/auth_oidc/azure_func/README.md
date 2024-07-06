@@ -1,4 +1,3 @@
-
 # Azure Function Code
 
 Scripts to handle testing an OIDC on Azure Functions.
@@ -40,11 +39,75 @@ https://learn.microsoft.com/en-us/azure/azure-functions/
     - Run `func azure functionapp publish <func-name>` and verify that it deploys
     - Run the invoke script and verify that it invokes
 
-The login.sh script will: get the creds and log in to azure
-The setup.sh script will: Launch Atlas cluster and set up cli and login
-The invoke.sh script will: invoke the script.  It takes a FUNC_APP_NAME, FUNC_NAME and optional MONGODB_URI.
-The run-driver-test.sh script will: Publish the app and invoke it in the current directory.  It takes a FUNC_APP_NAME, FUNC_NAME and MONGODB_URI.
 
-TODO: Have two built-in test apps:
-- First one returns a token
-- Second on connects to Atlas
+## Self-Test
+
+There is a self-test that runs during setup that invokes the `oidcselftest` function in the `$AZUREOIDC_FUNC_SELF_TEST` Function App
+that is run durint setup.
+
+You can also manually invoke the `gettoken` function by running the following:
+
+```bash
+source ./secrets-export.sh
+pushd self-test
+export FUNC_NAME=gettoken
+export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
+bash ../run-driver-test.sh
+popd
+```
+
+## Driver Test
+
+Drivers should use a task group to ensure resources are properly torn down.  An example is as follows:
+
+```yaml
+- name: testoidc_azure_func_task_group
+  setup_group_can_fail_task: true
+  setup_group_timeout_secs: 1800
+  teardown_group_can_fail_task: true
+  teardown_group_timeout_secs: 1800
+  setup_group:
+    - func: fetch source
+    - func: other setup function
+    - command: subprocess.exec
+      params:
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/setup.sh
+  teardown_group:
+    - command: subprocess.exec
+      params:
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/teardown.sh
+    - func: other teardown function
+  tasks:
+    - oidc-auth-test-azure-func
+```
+
+Where the test func does something like the following:
+
+```bash
+pushd <driver-oidc-func-dir>
+export FUNC_NAME=<driver-oidc-func-test>
+export FUNC_APP_NAME=${DRIVER_FUNC_FROM_ENVIRONMENT}
+bash ${DRIVERS_TOOLS/.evergreen/auth_oidc/azure_func/run-driver-test.sh
+popd
+```
+
+The <driver-oidc-func-dir> should contain an Azure function that runs a write operation
+on a driver similar to the following:
+
+```python
+@app.route(route='pythonoidctest')
+def oidcselftest(req: func.HttpRequest) -> func.HttpResponse:
+    resource=os.environ['APPSETTING_RESOURCE']
+    client_id= os.environ['APPSETTING_CLIENT_ID']
+    req_body = req.get_json()
+    uri = req_body.get('MONGODB_URI')
+    props = dict(ENVIRONMENT='azure', TOKEN_RESOURCE=resource)
+    client = MongoClient(uri, username=client_id, authMechanism="MONGODB-OIDC", authMechanismProperties=props)
+    c.test.test.insert_one({})
+    c.close()
+    return func.HttpResponse('Success!')
+```

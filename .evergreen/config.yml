@@ -426,6 +426,22 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run oidc azure func test":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/self-test
+          export FUNC_NAME=oidcselftest
+          source ../secrets-export.sh
+          export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
+          bash ../run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
   "run oidc gcp test":
     - command: shell.exec
       type: test
@@ -858,6 +874,11 @@ tasks:
       commands:
         - func: "run oidc azure test"
 
+    - name: "test-oidc-azure"
+      tags: ["oidc", "pr"]
+      commands:
+        - func: "run oidc azure func test"
+
     - name: "test-oidc-gcp"
       tags: ["latest", "oidc", "pr"]
       commands:
@@ -999,6 +1020,29 @@ task_groups:
       - func: "cleanup"
     tasks:
       - test-oidc-gcp
+
+  - name: testoidc_azure_func_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800
+    setup_group:
+      - func: fetch source
+      - func: other setup function
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/teardown.sh
+      - func: other teardown function
+    tasks:
+      - test-oidc-azure-func
 
   - name: testk8soidc_task_group
     setup_group_can_fail_task: true
