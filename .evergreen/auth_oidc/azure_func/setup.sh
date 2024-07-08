@@ -92,12 +92,13 @@ URL=https://github.com/Azure/azure-functions-core-tools/releases/download/4.0.59
 if ! command -v func &> /dev/null; then
   curl -L -o /tmp/azure-functions-cli.zip $URL
   unzip -q -d /tmp/azure-functions-cli /tmp/azure-functions-cli.zip
-  cd /tmp/azure-functions-cli
+  pushd /tmp/azure-functions-cli
   mkdir -p $DRIVERS_TOOLS/.bin
   chmod +x func
   chmod +x gozip
   mv func $DRIVERS_TOOLS/.bin
   mv gozip $DRIVERS_TOOLS/.bin
+  popd
 fi
 
 ########################
