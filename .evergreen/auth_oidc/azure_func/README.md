@@ -52,6 +52,7 @@ source ./secrets-export.sh
 pushd self-test
 export FUNC_NAME=gettoken
 export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
+export FUNC_RUNTIME=python
 bash ../run-driver-test.sh
 popd
 ```
@@ -91,6 +92,7 @@ Where the test func does something like the following:
 pushd <driver-oidc-func-dir>
 export FUNC_NAME=<driver-oidc-func-test>
 export FUNC_APP_NAME=${DRIVER_FUNC_FROM_ENVIRONMENT}
+export FUNC_RUNTIME=<runtime>
 bash ${DRIVERS_TOOLS/.evergreen/auth_oidc/azure_func/run-driver-test.sh
 popd
 ```

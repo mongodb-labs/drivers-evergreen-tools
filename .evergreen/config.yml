@@ -437,6 +437,7 @@ functions:
           export FUNC_NAME=oidcselftest
           source ../secrets-export.sh
           export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
+          export FUNC_RUNTIME=python
           bash ../run-driver-test.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
