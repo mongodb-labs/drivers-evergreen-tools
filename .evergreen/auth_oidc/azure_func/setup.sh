@@ -91,8 +91,8 @@ create_deployment
 URL=https://github.com/Azure/azure-functions-core-tools/releases/download/4.0.5907/Azure.Functions.Cli.linux-x64.4.0.5907.zip
 if ! command -v func &> /dev/null; then
   curl -L -o /tmp/azure-functions-cli.zip $URL
-  unzip -d /tmp/azure-functions-cli /tmp/azure-functions-cli.zip
-  cd azure-functions-cli
+  unzip -q -d /tmp/azure-functions-cli /tmp/azure-functions-cli.zip
+  cd /tmp/azure-functions-cli
   mkdir -p $DRIVERS_TOOLS/.bin
   chmod +x func
   chmod +x gozip
