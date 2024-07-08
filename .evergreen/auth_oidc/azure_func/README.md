@@ -68,7 +68,7 @@ Drivers should use a task group to ensure resources are properly torn down.  An 
   teardown_group_timeout_secs: 1800
   setup_group:
     - func: fetch source
-    - func: other setup function
+    - func: <other setup function>
     - command: subprocess.exec
       params:
         binary: bash
@@ -80,7 +80,7 @@ Drivers should use a task group to ensure resources are properly torn down.  An 
         binary: bash
         args:
           - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/teardown.sh
-    - func: other teardown function
+    - func: <other teardown function>
   tasks:
     - oidc-auth-test-azure-func
 ```
