@@ -19,6 +19,7 @@ kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}} {
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=600s
 
 # Run the setup script and ensure git was installed.
+set -x
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
