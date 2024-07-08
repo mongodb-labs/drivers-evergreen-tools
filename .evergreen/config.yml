@@ -1253,6 +1253,7 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
+    - "testoidc_azure_func_task_group"
     - "testk8soidc_task_group"
 
 - matrix_name: "tests-all"
