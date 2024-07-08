@@ -90,7 +90,7 @@ create_deployment
 # Ensure Azure Functions Core Tools is installed.
 URL=https://github.com/Azure/azure-functions-core-tools/releases/download/4.0.5907/Azure.Functions.Cli.linux-x64.4.0.5907.zip
 if ! command -v func &> /dev/null; then
-  curl -O /tmp/azure-functions-cli.zip $URL
+  curl -L -o /tmp/azure-functions-cli.zip $URL
   unzip -d /tmp/azure-functions-cli /tmp/azure-functions-cli.zip
   cd azure-functions-cli
   mkdir -p $DRIVERS_TOOLS/.bin
