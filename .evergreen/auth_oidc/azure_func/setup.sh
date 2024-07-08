@@ -96,8 +96,7 @@ if ! command -v func &> /dev/null; then
   mkdir -p $DRIVERS_TOOLS/.bin
   chmod +x func
   chmod +x gozip
-  mv func $DRIVERS_TOOLS/.bin
-  mv gozip $DRIVERS_TOOLS/.bin
+  mv * $DRIVERS_TOOLS/.bin
   popd
 fi
 
