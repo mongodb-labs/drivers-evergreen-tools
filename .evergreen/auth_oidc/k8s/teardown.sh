@@ -15,8 +15,4 @@ export DRIVERS_ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
 export DRIVERS_ATLAS_GROUP_ID=$OIDC_ATLAS_GROUP_ID
 bash ../../atlas/teardown-atlas-cluster.sh
 
-# Tear down the pod
-K8S_VARIANT=${K8S_VARIANT:-aks}
-bash ../../k8s/$K8S_VARIANT/teardown.sh
-
 popd

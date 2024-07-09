@@ -10,9 +10,6 @@ pushd $SCRIPT_DIR
 rm -f secrets-export.sh
 . ./setup-secrets.sh
 
-VARIANT=${VARIANT:-"aks"}
-VARIANT=$(echo "$VARIANT" | tr '[:upper:]' '[:lower:]')
-
 ########################
 # Start an Atlas Cluster
 
@@ -22,7 +19,7 @@ VARIANT=$(echo "$VARIANT" | tr '[:upper:]' '[:lower:]')
 # Generate a random cluster name.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
 DEPLOYMENT_NAME="$RANDOM-DRIVER-K8S"
-echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "secrets-export.sh"
+echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "$DRIVERS_TOOLS/.evergreen/atlas/secrets-export.sh"
 
 # Set the create cluster configuration.
 export DEPLOYMENT_DATA=$(cat <<EOF
@@ -86,11 +83,6 @@ export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
-export K8S_VARIANT=$VARIANT
 EOF
-
-########################
-# Set up the pod.
-bash ./setup-pod.sh $VARIANT
 
 popd

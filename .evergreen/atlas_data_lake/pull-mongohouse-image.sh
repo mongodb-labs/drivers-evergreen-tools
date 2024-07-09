@@ -2,7 +2,7 @@
 #
 # This script sets up the local docker image for mongohoused.
 #
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh

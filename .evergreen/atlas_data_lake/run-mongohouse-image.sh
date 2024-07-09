@@ -4,7 +4,7 @@
 #
 # There is no corresponding 'shutdown' script; this project relies
 # on Evergreen to terminate processes and clean up when tasks end.
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh

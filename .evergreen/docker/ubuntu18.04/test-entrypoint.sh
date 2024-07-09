@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 bash /root/base-entrypoint.sh
 source $DRIVERS_TOOLS/.evergreen/mo-expansion.sh
