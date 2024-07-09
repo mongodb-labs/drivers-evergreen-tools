@@ -444,7 +444,7 @@ functions:
   "run oidc k8s test":
     - command: ec2.assume_role
       params:
-        role_arn: aws_arn_123aws_arn_123aws_arn_123aws_arn_123"
+        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -452,7 +452,7 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         script: |-
           set -o errexit
-          if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
             echo "Have AWS_ACCESS_KEY_ID!"
           else
             echo "Found no AWS_ACCESS_KEY_ID!"
