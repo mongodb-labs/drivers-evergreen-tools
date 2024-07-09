@@ -1,16 +1,20 @@
-#
+# EKS Cluster Management
 
-## EKS Cluster Setup
+Scripts to manage a drivers test cluster on AWS.
 
-1. Run setup-cluster.sh
+## Cluster Management
+
+These steps must be done by an admin (one time):
+
+1. Run `setup-cluster.sh`
 2. Set up an [access entry](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) for the
    drivers test secrets role.
+3. Store the secrets in the AWS vault.
 
+## Usage
 
-# TODO: create an eks vault with the credentials
-# set up a trust relationship for this cluster and the profile and devprod
-# Tear down all current assets
+These steps can be run using the drivers test secrets role:
 
-# Set up a new cluster using the vault
-# Set up IdP info in Atlas
-# Run from scratch
+1. Run `setup.sh`
+2. Run the desired tests in the pod.
+3. Run `teardown.sh`

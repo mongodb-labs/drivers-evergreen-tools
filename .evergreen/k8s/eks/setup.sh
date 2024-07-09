@@ -23,6 +23,8 @@ aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 set -x
 POD_NAME="test-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
+export K8S_POD_NAME=$POD_NAME
+
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
