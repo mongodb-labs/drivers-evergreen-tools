@@ -1012,8 +1012,12 @@ task_groups:
     setup_group:
       - func: fetch source
       - func: prepare resources
+      - ec2.assume_role:
+        params:
+          role_arn: ${aws_test_secrets_role}
       - command: subprocess.exec
         params:
+          include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
           binary: bash
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
