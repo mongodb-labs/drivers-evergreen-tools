@@ -452,6 +452,12 @@ functions:
         shell: bash
         script: |-
           set -o errexit
+          if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+            echo "Have AWS_ACCESS_KEY_ID!"
+          else
+            echo "No AWS_ACCESS_KEY_ID!"
+            exit 1
+          fi
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
