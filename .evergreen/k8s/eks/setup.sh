@@ -17,6 +17,12 @@ fi
 
 # Set up kubectl creds.
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
+  echo "Have AWS_ACCESS_KEY_ID!"
+else
+  echo "No AWS_ACCESS_KEY_ID!"
+  exit 1
+fi
 aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 
 # Create the pod with a random name.

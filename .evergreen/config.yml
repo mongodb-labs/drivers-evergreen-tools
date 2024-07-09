@@ -1016,17 +1016,17 @@ task_groups:
     setup_group:
       - func: fetch source
       - func: prepare resources
-      - command: subprocess.exec
-        params:
-          binary: bash
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
+      # - command: subprocess.exec
+      #   params:
+      #     binary: bash
+      #     args:
+      #       - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
-      - command: subprocess.exec
-        params:
-          binary: bash
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown.sh
+      # - command: subprocess.exec
+      #   params:
+      #     binary: bash
+      #     args:
+      #       - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
