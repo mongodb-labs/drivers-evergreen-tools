@@ -56,7 +56,6 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           set -x
            if [[ "$(uname -s)" == CYGWIN* ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
@@ -868,6 +867,9 @@ tasks:
       commands:
         - func: "run oidc k8s test"
           vars:
+            VARIANT: gke
+        - func: "run oidc k8s test"
+          vars:
             VARIANT: aks
 
 # }}}
@@ -947,7 +949,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
@@ -980,7 +981,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
@@ -992,7 +992,7 @@ task_groups:
         params:
           binary: bash
           args:
-            - $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"

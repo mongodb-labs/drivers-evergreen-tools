@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 echo "Installing dependencies ... begin"
 apt-get -qq update

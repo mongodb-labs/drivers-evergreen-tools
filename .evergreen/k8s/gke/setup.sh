@@ -12,35 +12,39 @@ if [ -f ./secrets-export.sh ]; then
   source ./secrets-export.sh
 fi
 if [ -z "${AZUREKMS_TENANTID:-}" ]; then
-    . ./../../secrets_handling/setup-secrets.sh drivers/aks
+    . $DRIVERS_TOOLS/.evergreen/secrets_handling/setup-secrets.sh drivers/gke
 fi
 
-# Handle credentials.
-. $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
-az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+# Ensure required binaries.
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh gcloud
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+
+# Handle kubectl credentials.
+GKE_KEYFILE=/tmp/testgke_key_file.json
+echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
+# Set 600 permissions on private key file. Otherwise ssh / scp may error with permissions "are too open".
+chmod 600 $GKE_KEYFILE
+gcloud auth activate-service-account --key-file $GKE_KEYFILE
+gcloud components install --quiet gke-gcloud-auth-plugin
+gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
 POD_NAME="test-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 
-. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
   name: ${POD_NAME}
-  namespace: ${AKS_SERVICE_ACCOUNT_NAMESPACE}
-  labels:
-    azure.workload.identity/use: "true"
+  namespace: default
 spec:
-  serviceAccountName: ${AKS_SERVICE_ACCOUNT_NAME}
   containers:
   - name: debian
     image: debian:11
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
-
   nodeSelector:
     kubernetes.io/os: linux
 EOF

@@ -17,7 +17,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR/../auth_aws
 . ./activate-authawsvenv.sh
 popd
-set -x
+
 echo "Getting secrets:" "$@"
 python $SCRIPT_DIR/setup_secrets.py "$@"
 source $(pwd)/secrets-export.sh

@@ -48,7 +48,7 @@ done
 export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 
 # Login.
-"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+. "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 # Create VM.
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/create-vm.sh
 export AZUREKMS_VMNAME="$AZUREKMS_VMNAME"
