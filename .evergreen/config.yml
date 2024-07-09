@@ -450,6 +450,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
@@ -865,6 +866,9 @@ tasks:
     - name: "test-oidc-k8s"
       tags: ["latest", "oidc", "pr"]
       commands:
+        - func: "run oidc k8s test"
+          vars:
+            VARIANT: eks
         - func: "run oidc k8s test"
           vars:
             VARIANT: gke
