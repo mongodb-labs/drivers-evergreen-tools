@@ -444,6 +444,7 @@ functions:
   "run oidc k8s test":
     - command: shell.exec
       type: test
+      include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
       params:
         shell: bash
         script: |-
