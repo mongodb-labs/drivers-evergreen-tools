@@ -20,7 +20,7 @@ fi
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
 
 # Create the pod with a random name.
-POD_NAME="test-$RANDOM"
+POD_NAME="test-aks-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 

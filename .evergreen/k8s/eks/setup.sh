@@ -20,8 +20,7 @@ fi
 aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 
 # Create the pod with a random name.
-set -x
-POD_NAME="test-$RANDOM"
+POD_NAME="test-eks-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 

@@ -29,7 +29,7 @@ gcloud components install --quiet gke-gcloud-auth-plugin
 gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
 
 # Create the pod with a random name.
-POD_NAME="test-$RANDOM"
+POD_NAME="test-gke-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 
