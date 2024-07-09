@@ -452,7 +452,7 @@ functions:
           if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
             echo "Have AWS_ACCESS_KEY_ID!"
           else
-            echo "No AWS_ACCESS_KEY_ID!"
+            echo "Founc no AWS_ACCESS_KEY_ID!"
             exit 1
           fi
           cd ${DRIVERS_TOOLS}
