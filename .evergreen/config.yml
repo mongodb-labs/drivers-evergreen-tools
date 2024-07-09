@@ -452,10 +452,11 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         script: |-
           set -o errexit
+          echo "hello ${aws_test_secrets_role}"
           if [ -n "${AWS_ACCESS_KEY_ID:-}" ]; then
             echo "Have AWS_ACCESS_KEY_ID!"
           else
-            echo "Founc no AWS_ACCESS_KEY_ID!"
+            echo "Found no AWS_ACCESS_KEY_ID!"
             exit 1
           fi
           cd ${DRIVERS_TOOLS}
