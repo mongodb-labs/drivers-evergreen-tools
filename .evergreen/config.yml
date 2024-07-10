@@ -442,6 +442,9 @@ functions:
           make test
 
   "run oidc k8s test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -1005,7 +1008,7 @@ task_groups:
     tasks:
       - test-oidc-gcp
 
-  - name: testk8soidc_task_group
+  - name: test_oidc_k8s_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
@@ -1013,9 +1016,6 @@ task_groups:
     setup_group:
       - func: fetch source
       - func: prepare resources
-      - command: ec2.assume_role
-        params:
-          role_arn: ${aws_test_secrets_role}
       - command: subprocess.exec
         params:
           binary: bash

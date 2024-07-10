@@ -21,9 +21,6 @@ The test should use a task group to ensure the resources are cleaned up properly
     setup_group:
       - func: fetch source
       - func: prepare resources
-      - command: ec2.assume_role
-        params:
-          role_arn: ${drivers_test_secrets_role}
       - command: subprocess.exec
         params:
           binary: bash
@@ -64,6 +61,9 @@ Where the test looks something like:
 
 ```yaml
 "run oidc k8s test":
+- command: ec2.assume_role
+params:
+    role_arn: ${drivers_test_secrets_role}
 - command: shell.exec
     type: test
     params:
