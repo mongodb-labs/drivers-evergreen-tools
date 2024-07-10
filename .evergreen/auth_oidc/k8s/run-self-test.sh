@@ -23,12 +23,13 @@ echo "Setting up $VARIANT pod..."
 echo "Setting up $VARIANT pod... done."
 
 # Run the self test.
-echo "Running self test..."
-kubectl cp ./remote-scripts/run-self-test.sh ${POD_NAME}:/tmp/run-self-test.sh
-kubectl cp ./remote-scripts/test.py ${POD_NAME}:/tmp/test.py
-kubectl cp ./secrets-export.sh ${POD_NAME}:/tmp/secrets-export.sh
-kubectl exec ${POD_NAME} -- /tmp/run-self-test.sh
-echo "Running self test... done."
+echo "Running self test on $VARIANT..."
+kubectl exec ${POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
+kubectl cp ./remote-scripts/run-self-test.sh ${POD_NAME}:/tmp/test/run-self-test.sh
+kubectl cp ./remote-scripts/test.py ${POD_NAME}:/tmp/test/test.py
+kubectl cp ./secrets-export.sh ${POD_NAME}:/tmp/test/secrets-export.sh
+kubectl exec ${POD_NAME} -- /tmp/test/run-self-test.sh
+echo "Running self test on $VARIANT... done."
 
 # Tear down the pod.
 echo "Tearding down $VARIANT pod..."
