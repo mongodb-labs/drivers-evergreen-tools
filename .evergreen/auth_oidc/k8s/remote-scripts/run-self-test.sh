@@ -12,6 +12,7 @@ popd
 echo "Installing dependencies ... end"
 
 # Run the Python Driver Self Test
-cd /tmp
+SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
+pushd $SCRIPT_DIR
 source secrets-export.sh
 python test.py
