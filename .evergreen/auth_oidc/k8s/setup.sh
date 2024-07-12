@@ -4,10 +4,24 @@ set -o errexit
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
+
+rm -f $SCRIPT_DIR/secrets-export.sh
+
+# If running locally, just set up the variables and exit.
+if [ "$1" == "local" ]; then
+  URI="mongodb://127.0.0.1"
+  cat <<EOF >> "$SCRIPT_DIR/secrets-export.sh"
+export MONGODB_URI="$URI"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
+export OIDC_ADMIN_USER=bob
+export OIDC_ADMIN_PWD=pwd123
+EOF
+  exit 0
+fi
+
 pushd $SCRIPT_DIR
 
 # Handle secrets from vault.
-rm -f secrets-export.sh
 . ./setup-secrets.sh
 
 ########################

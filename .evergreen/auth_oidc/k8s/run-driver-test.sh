@@ -9,25 +9,11 @@ pushd $SCRIPT_DIR
 
 VARLIST=(
 K8S_DRIVERS_TAR_FILE
-K8S_VARIANT
 K8S_TEST_CMD
 )
 
-# Ensure that all variables required to run the test are set, otherwise throw
-# an error.
-for VARNAME in ${VARLIST[*]}; do
-[[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
-done
-
-# Set the current K8S_VARIANT.
-echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
-VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
-VARIANT_DIR=$DRIVERS_TOOLS/.evergreen/k8s/$VARIANT
-
-# Set up the pod.
-echo "Setting up $VARIANT pod..."
-. $VARIANT_DIR/setup.sh
-echo "Setting up $VARIANT pod... done."
+source secrets-export.sh
+source $K8S_VARIANT_DIR/secrets-export.sh
 
 # Extract the tar file to the /tmp/test directory.
 echo "Setting up driver test files..."
@@ -39,10 +25,5 @@ echo "Setting up driver test files... done."
 echo "Running the driver test command..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
 echo "Running the driver test command... done."
-
-# Tear down the pod.
-echo "Tearding down $VARIANT pod..."
-. $VARIANT_DIR/teardown.sh
-echo "Tearding down $VARIANT pod... done."
 
 popd

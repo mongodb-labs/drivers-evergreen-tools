@@ -454,6 +454,10 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
+          if [ "${LOCAL_SERVER}" == "true" ]; then
+            bash ./.evergreen/auth_oidc/k8s/start-server.sh
+          fi
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
