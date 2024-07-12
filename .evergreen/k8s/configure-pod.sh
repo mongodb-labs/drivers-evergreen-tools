@@ -20,7 +20,7 @@ echo "Deleting old pods... done."
 echo "Configuring pod $POD_NAME..."
 
 # Wait for the new pod to be ready.
-kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=1200s
+kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=20000s
 
 # Run the setup script and ensure git was installed.
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh

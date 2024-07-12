@@ -10,7 +10,26 @@ test on the pod.
 
 ## Local Usage
 
-TODO
+The scripts can be run locally as follows:
+
+```bash
+bash setup.sh local  # needs to be done once to set up variables
+bash setup-pod.sh aks  # or gke, or eks
+bash start-server.sh
+bash run-self-test.sh
+```
+
+Or if running the driver test:
+
+```bash
+bash setup.sh local  # needs to be done once to set up variables
+bash setup-pod.sh aks  # or gke, or eks
+bash start-server.sh
+export K8S_DRIVERS_TAR_FILE=/tmp/driver.tgz
+git archive -o $K8S_DRIVERS_TAR_FILE HEAD
+export K8S_TEST_CMD="OIDC_PROVIDER_NAME=k8s ./.evergreen/run-mongodb-oidc-test.sh"
+bash run-driver-test.sh
+```
 
 ## EVG Usage
 
