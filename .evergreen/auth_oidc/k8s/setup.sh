@@ -11,6 +11,7 @@ rm -f $SCRIPT_DIR/secrets-export.sh
 if [ "$1" == "local" ]; then
   URI="mongodb://127.0.0.1"
   cat <<EOF >> "$SCRIPT_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=local
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=bob
@@ -93,6 +94,7 @@ create_deployment
 URI=$(check_deployment)
 
 cat <<EOF >> "secrets-export.sh"
+export OIDC_SERVER_TYPE=local
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER

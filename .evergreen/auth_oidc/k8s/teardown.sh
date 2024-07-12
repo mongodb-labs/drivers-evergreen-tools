@@ -9,7 +9,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 source $SCRIPT_DIR/secrets-export.sh
 
 # If running locally, just exit
-if [ "$1" == "local" ]; then
+if [ "$OIDC_SERVER_TYPE" == "local" ]; then
   exit 0
 fi
 
