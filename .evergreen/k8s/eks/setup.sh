@@ -35,7 +35,7 @@ spec:
   serviceAccountName: ${EKS_SERVICE_ACCOUNT_NAME}
   containers:
   - name: debian
-    image: debian:11
+    image: debian:12
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
 

@@ -7,10 +7,10 @@ pushd $SCRIPT_DIR
 
 # Set the current K8S_VARIANT.
 K8S_VARIANT=$1
-echo "K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
+echo "export K8S_VARIANT=$K8S_VARIANT" >> secrets-export.sh
 VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
 VARIANT_DIR=$DRIVERS_TOOLS/.evergreen/k8s/$VARIANT
-echo "K8S_VARIANT_DIR=$VARIANT_DIR" >> secrets-export.sh
+echo "export K8S_VARIANT_DIR=$VARIANT_DIR" >> secrets-export.sh
 
 # Set up the pod.
 echo "Setting up $VARIANT pod..."

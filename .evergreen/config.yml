@@ -441,7 +441,7 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run oidc k8s test":
+  "run oidc k8s atlas test":
     - command: ec2.assume_role
       params:
         role_arn: ${aws_test_secrets_role}
@@ -455,14 +455,31 @@ functions:
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
-          if [ "${LOCAL_SERVER}" == "true" ]; then
-            bash ./.evergreen/auth_oidc/k8s/start-server.sh
-          fi
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
+  "run oidc k8s local test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}
+          export K8S_VARIANT=${VARIANT}
+          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
+          bash ./.evergreen/auth_oidc/k8s/start-server.sh
+          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -871,18 +888,31 @@ tasks:
       commands:
         - func: "run oidc gcp test"
 
-    - name: "test-oidc-k8s"
+    - name: "test-oidc-k8s-atlas"
       tags: ["latest", "oidc", "pr"]
       commands:
-        # - func: "run oidc k8s test"
-        #   vars:
-        #     VARIANT: eks
-        # - func: "run oidc k8s test"
-        #   vars:
-        #     VARIANT: gke
-        - func: "run oidc k8s test"
+        - func: "run oidc k8s atlas test"
           vars:
-            VARIANT: aks
+            VARIANT: eks
+        - func: "run oidc k8s atlas test"
+          vars:
+            VARIANT: gke
+        # - func: "run oidc k8s atlas test"
+        #   vars:
+        #     VARIANT: aks
+
+    - name: "test-oidc-k8s-local"
+      tags: ["latest", "oidc", "pr"]
+      commands:
+        - func: "run oidc k8s local test"
+          vars:
+            VARIANT: eks
+        - func: "run oidc k8s local test"
+          vars:
+            VARIANT: gke
+        # - func: "run oidc k8s atlas test"
+        #   vars:
+        #     VARIANT: aks
 
 # }}}
 
@@ -1012,7 +1042,7 @@ task_groups:
     tasks:
       - test-oidc-gcp
 
-  - name: test_oidc_k8s_task_group
+  - name: test_oidc_k8s_atlas_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
@@ -1026,17 +1056,38 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
-      # - command: subprocess.exec
-      #   params:
-      #     binary: bash
-      #     args:
-      #       - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown.sh
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
       - func: "cleanup"
     tasks:
-      - test-oidc-k8s
+      - "test-oidc-k8s-atlas"
+
+  - name: test_oidc_k8s_local_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh local
+    teardown_group:
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - "test-oidc-k8s-local"
 
 axes:
   - id: versions
@@ -1221,7 +1272,8 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
-    - "test_oidc_k8s_task_group"
+    - "test_oidc_k8s_atlas_task_group"
+    - "test_oidc_k8s_local_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }

@@ -18,7 +18,8 @@ source $K8S_VARIANT_DIR/secrets-export.sh
 # Extract the tar file to the /tmp/test directory.
 echo "Setting up driver test files..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
-tar cf - ${K8S_DRIVERS_TAR_FILE} | kubectl exec -i ${K8S_POD_NAME} -- /bin/sh -c 'tar xf - -C /tmp/test'
+kubectl cp ${K8S_DRIVERS_TAR_FILE} ${K8S_POD_NAME}:/tmp/drivers-test.tgz
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && tar -xf drivers-test.tgz -C test"
 echo "Setting up driver test files... done."
 
 # Run the command.

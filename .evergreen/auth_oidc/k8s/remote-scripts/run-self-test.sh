@@ -2,13 +2,10 @@
 set -eu
 
 echo "Installing dependencies ... begin"
-git clone https://github.com/mongodb/mongo-python-driver
-pushd mongo-python-driver
+rm -rf .venv
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -U -q pip
-pip install .
-popd
+pip install -U -q pip pymongo
 echo "Installing dependencies ... end"
 
 # Run the Python Driver Self Test
