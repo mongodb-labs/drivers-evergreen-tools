@@ -1080,7 +1080,8 @@ task_groups:
         params:
           binary: bash
           args:
-            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh local
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
+            - local
     teardown_group:
       - func: "teardown assets"
       - func: "upload logs"
