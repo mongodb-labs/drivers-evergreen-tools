@@ -25,11 +25,19 @@ Or if running the driver test:
 bash setup.sh local  # needs to be done once to set up variables
 bash setup-pod.sh aks  # or gke, or eks
 bash start-server.sh
+pushd $PROJECT_HOME
 export K8S_DRIVERS_TAR_FILE=/tmp/driver.tgz
 git archive -o $K8S_DRIVERS_TAR_FILE HEAD
 export K8S_TEST_CMD="OIDC_PROVIDER_NAME=k8s ./.evergreen/run-mongodb-oidc-test.sh"
+popd
 bash run-driver-test.sh
 ```
+
+### Local EKS Testing
+
+Local EKS testing requires assuming a role to interact with the EKS cluster.
+See the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets) for details.
+
 
 ## EVG Usage
 
