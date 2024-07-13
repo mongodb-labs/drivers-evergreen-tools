@@ -54,7 +54,7 @@ spec:
     kubernetes.io/os: linux
 EOF
 
-# Set up the pod.
+# Set up the pod - run directly so PATH is passed in.
 bash $DRIVERS_TOOLS/.evergreen/k8s/configure-pod.sh ${POD_NAME}
 
 popd
