@@ -541,15 +541,20 @@ get_mongodb_download_url_for ()
              MONGODB_24="http://downloads.10gen.com/linux/mongodb-linux-x86_64-subscription-ubuntu1204${DEBUG}-${VERSION_24}.tgz"
       ;;
       windows32*)
-         EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
-         EXTRACT_MONGOSH="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
+         # Fall-through as this matches cygwin*-i686
+         ;&
+      cygwin*-i686)
+         EXTRACT="/cygdrive/c/Progra~1/7-Zip/7z.exe x"
+         EXTRACT_MONGOSH="/cygdrive/c/Progra~1/7-Zip/7z.exe x"
              MONGODB_32="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_32}.zip"
              MONGODB_30="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_30}.zip"
              MONGODB_26="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_26}.zip"
              MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_24}.zip"
       ;;
       windows64*)
-         # same as cygwin*-86-64
+         # Fall-through as this matches cygwin*-86-64
+         ;&
+      cygwin*-x86_64)
          EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
          EXTRACT_MONGOSH="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
          MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-latest.zip"
@@ -568,34 +573,6 @@ get_mongodb_download_url_for ()
              MONGODB_30="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_30}.zip"
              MONGODB_26="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_26}.zip"
              MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus${DEBUG}-${VERSION_24}.zip"
-      ;;
-      cygwin*-x86_64)
-         EXTRACT="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
-         EXTRACT_MONGOSH="/cygdrive/c/Progra~2/7-Zip/7z.exe x"
-         MONGODB_LATEST="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise-latest.zip"
-         MONGOSH="https://downloads.mongodb.com/compass/mongosh-${VERSION_MONGOSH}-win32-x64.zip"
-             MONGODB_RAPID="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_RAPID}.zip"
-             MONGODB_80="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_80}.zip"
-             MONGODB_70="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_70}.zip"
-             MONGODB_60="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_60}.zip"
-             MONGODB_50="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_50}.zip"
-             MONGODB_44="http://downloads.10gen.com/windows/mongodb-windows-x86_64-enterprise${DEBUG}-${VERSION_44}.zip"
-             MONGODB_42="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_42}.zip"
-             MONGODB_40="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_40}.zip"
-             MONGODB_36="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_36}.zip"
-             MONGODB_34="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_34}.zip"
-             MONGODB_32="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_32}.zip"
-             MONGODB_30="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_30}.zip"
-             MONGODB_26="http://downloads.10gen.com/win32/mongodb-win32-x86_64-enterprise-windows-64${DEBUG}-${VERSION_26}.zip"
-             MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus${DEBUG}-${VERSION_24}.zip"
-      ;;
-      cygwin*-i686)
-         EXTRACT="/cygdrive/c/Progra~1/7-Zip/7z.exe x"
-         EXTRACT_MONGOSH="/cygdrive/c/Progra~1/7-Zip/7z.exe x"
-             MONGODB_32="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_32}.zip"
-             MONGODB_30="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_30}.zip"
-             MONGODB_26="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_26}.zip"
-             MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_24}.zip"
       ;;
    esac
 
