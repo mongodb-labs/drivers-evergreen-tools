@@ -47,7 +47,7 @@ echo "Finding Python3 binary... done."
 
 # Set up the mongo orchestration config.
 mkdir -p $MONGO_ORCHESTRATION_HOME
-echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+printf '%s' $MONGODB_BINARIES | python -c 'import json,sys; print(json.dumps({"releases": {"default": sys.stdin.read() }}))' > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
 # Copy client certificate because symlinks do not work on Windows.
 mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
