@@ -58,7 +58,7 @@ fi
 
 # Forcibly kill the process listening on port 8889, most likely a wild
 # mongo-orchestration left running from a previous task.
-if [[ "${OSTYPE:?}" == cygwin ]]; then
+if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
   OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
     taskkill /F /T /PID "$OLD_MO_PID" || true
@@ -74,7 +74,7 @@ elif [ -x "$(command -v ss)" ]; then
     kill -9 "$OLD_MO_PID" || true
   fi
 else
-  echo "Unable to identify the OS or find necessary utilities (lsof/ss) to kill the process."
+  echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (lsof/ss) to kill the process."
   exit 1
 fi
 
