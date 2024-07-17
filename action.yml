@@ -28,7 +28,10 @@ inputs:
 outputs:
   cluster-uri:
     description: "URI of the cluster"
-    value: ${{ steps.get-cluster-uri.outputs.cluster-uri }}
+    value: ${{ steps.run-orchestration.outputs.cluster-uri }}
+  crypt-shared-lib-path:
+    description: "Path of the crypt_shared library"
+    value: ${{ steps.run-orchestration.outputs.crypt-shared-lib-path }}
 runs:
   using: "composite"
   steps:
@@ -42,7 +45,11 @@ runs:
       shell: bash
     - id: "run-orchestration"
       name: "Download MongoDB"
-      run: ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh
+      run: |
+        ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh
+        [[ -f mo-expansion.sh ]] && source mo-expansion.sh
+        echo "cluster-uri=$(cat ${GITHUB_ACTION_PATH}/uri.txt)" >> $GITHUB_OUTPUT
+        echo "crypt-shared-lib-path=${CRYPT_SHARED_LIB_PATH}" >> $GITHUB_OUTPUT
       env:
         DRIVERS_TOOLS: ${{ github.action_path }}
         MONGODB_BINARIES: ${{ github.action_path }}/mongodb/bin
@@ -56,8 +63,4 @@ runs:
         REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
         SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
         INSTALL_LEGACY_SHELL: ${{ inputs.install-legacy-shell }}
-      shell: bash
-    - id: "get-cluster-uri"
-      name: "Expose Cluster URI"
-      run: echo "cluster-uri=$(cat ${{ github.action_path }}/uri.txt)" >> $GITHUB_OUTPUT
       shell: bash
