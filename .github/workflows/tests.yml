@@ -35,6 +35,7 @@ jobs:
           fetch-depth: 2
 
       - id: setup-mongodb
+        name: "Test GitHub Action"
         uses: ./
         with:
           version: ${{ matrix.mongodb-version }}
