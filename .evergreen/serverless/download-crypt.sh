@@ -2,6 +2,8 @@
 
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
+echo "Download crypt_shared for MongoDB ${MONGODB_VERSION}"
+
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
