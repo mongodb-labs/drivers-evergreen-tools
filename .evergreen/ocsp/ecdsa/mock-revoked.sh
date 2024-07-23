@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Use the CA as the OCSP responder
 python3 ../ocsp_mock.py \
   --ca_file ca.pem \

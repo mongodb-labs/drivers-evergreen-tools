@@ -140,7 +140,7 @@ fi
 
 if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
   # Download binaries and crypt_shared
-  MONGODB_VERSION=rapid bash ./download-crypt.sh
+  MONGODB_VERSION=$(echo $SERVERLESS_MONGODB_VERSION | cut -d '.' -f-2) bash ./download-crypt.sh
 fi
 
 popd

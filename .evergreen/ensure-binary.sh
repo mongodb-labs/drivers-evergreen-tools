@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Ensure the given binary is on the PATH.
 # Should be called as:

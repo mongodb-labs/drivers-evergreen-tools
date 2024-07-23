@@ -90,7 +90,8 @@ venvcreate() {
     # These packages must be upgraded *after* pip, *separately*, as some old
     # versions of pip do not handle their simultaneous installation properly.
     # See: https://github.com/pypa/pip/issues/4253
-    if ! python -m pip install -q -U setuptools wheel; then
+    # Pin to setuptools<71.0 to avoid this bug: https://github.com/pypa/setuptools/issues/4496
+    if ! python -m pip install -q -U 'setuptools<71.0' wheel; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi

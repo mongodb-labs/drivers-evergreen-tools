@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 python3 ../ocsp_mock.py \
   --ca_file ca.pem \
   --ocsp_responder_cert ocsp-responder.crt \

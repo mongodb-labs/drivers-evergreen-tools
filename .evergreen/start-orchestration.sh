@@ -48,7 +48,7 @@ cd -
 
 # Create default config file if it doesn't exist
 if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then
-  echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+  printf '%s' $MONGODB_BINARIES | python -c 'import json,sys; print(json.dumps({"releases": {"default": sys.stdin.read() }}))' > $MONGO_ORCHESTRATION_HOME/orchestration.config
 fi
 
 ORCHESTRATION_ARGUMENTS="-e default -f $MONGO_ORCHESTRATION_HOME/orchestration.config --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
@@ -58,7 +58,7 @@ fi
 
 # Forcibly kill the process listening on port 8889, most likely a wild
 # mongo-orchestration left running from a previous task.
-if [[ "${OSTYPE:?}" == cygwin ]]; then
+if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
   OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
     taskkill /F /T /PID "$OLD_MO_PID" || true
@@ -74,7 +74,7 @@ elif [ -x "$(command -v ss)" ]; then
     kill -9 "$OLD_MO_PID" || true
   fi
 else
-  echo "Unable to identify the OS or find necessary utilities (lsof/ss) to kill the process."
+  echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (lsof/ss) to kill the process."
   exit 1
 fi
 
