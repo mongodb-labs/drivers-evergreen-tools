@@ -48,7 +48,7 @@ spec:
     resources:
       limits:
         memory: "61Gi"
-        cpu: "7500m"
+        cpu: "4"
         ephemeral-storage: "2Gi"
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
