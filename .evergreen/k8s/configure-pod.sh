@@ -15,9 +15,9 @@ fi
 # Delete pods over one hour old in case they were not torn down.
 echo "Deleting old pods..."
 # Delete successful pods more than an hour old.
-kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | awk '$2 <= "'$(date -d'now-1 hours' -Ins --utc | sed 's/+0000/Z/')'" { print $1 }' | xargs --no-run-if-empty kubectl delete pod
+kubectl get pods -l app=test-pod -o go-template --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | awk '$2 <= "'$(date -d'now-1 hours' -Ins --utc | sed 's/+0000/Z/')'" { print $1 }' | xargs --no-run-if-empty kubectl delete pod
 # Delete pending (stuck) pods more than 5 minutes old.
-kubectl get pods --all-namespaces --field-selector=status.phase=Pending -o json | jq '.items[] | select((now - (.metadata.creationTimestamp | fromdateiso8601)) > 600) | .metadata.name' | xargs -I{} kubectl delete pod {} --force --grace-period=0
+kubectl get pods --all-namespaces -l app=test-pod --field-selector=status.phase=Pending -o json | jq '.items[] | select((now - (.metadata.creationTimestamp | fromdateiso8601)) > 600) | .metadata.name' | xargs -I{} kubectl delete pod {} --force --grace-period=0
 echo "Deleting old pods... done."
 
 echo "Configuring pod $POD_NAME..."

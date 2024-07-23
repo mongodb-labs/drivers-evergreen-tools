@@ -33,6 +33,7 @@ metadata:
   namespace: ${AKS_SERVICE_ACCOUNT_NAMESPACE}
   labels:
     azure.workload.identity/use: "true"
+    app: test-pod
 spec:
   serviceAccountName: ${AKS_SERVICE_ACCOUNT_NAME}
   containers:
