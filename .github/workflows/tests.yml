@@ -11,12 +11,15 @@ on:
 jobs:
   tests:
     name: "Tests"
-    runs-on: "ubuntu-20.04"
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os:
+          - "ubuntu-latest"
+          - "windows-latest"
         mongodb-version:
-          - "4.4"
+          - "7.0"
         topology:
           - "server"
           - "replica_set"
