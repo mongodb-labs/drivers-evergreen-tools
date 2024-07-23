@@ -39,7 +39,8 @@ kind: Pod
 metadata:
   name: ${POD_NAME}
   namespace: default
-  app: test-pod
+  labels:
+    app: test-pod
 spec:
   containers:
   - name: debian

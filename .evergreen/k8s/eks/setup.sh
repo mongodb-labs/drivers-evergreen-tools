@@ -31,7 +31,8 @@ kind: Pod
 metadata:
   name: ${POD_NAME}
   namespace: default
-  app: test-pod
+  labels:
+    app: test-pod
 spec:
   serviceAccountName: ${EKS_SERVICE_ACCOUNT_NAME}
   containers:
