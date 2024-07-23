@@ -118,7 +118,7 @@ fi
 echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
 # Handle absolute path.
-perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
+perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|$(echo $DRIVERS_TOOLS | sed 's/\\/\\\\\\\\/g')|g" $ORCHESTRATION_FILE
 
 # If running on Docker, update the orchestration file to be docker-friendly.
 if [ -n "$DOCKER_RUNNING" ]; then
