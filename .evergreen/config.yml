@@ -881,24 +881,24 @@ tasks:
         - func: "run oidc docker test"
 
     - name: "test-oidc-azure"
-      tags: ["oidc", "pr"]
+      tags: ["latest", "oidc", "pr"]
       commands:
         - func: "run oidc azure test"
 
     - name: "test-oidc-gcp"
-      tags: ["latest", "oidc", "pr"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc gcp test"
 
     - name: "test-oidc-k8s-atlas"
-      tags: ["latest", "oidc", "pr"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc k8s atlas test"
           vars:
             VARIANT: eks
-        - func: "run oidc k8s atlas test"
-          vars:
-            VARIANT: gke
+        # - func: "run oidc k8s atlas test"
+        #   vars:
+        #     VARIANT: gke
         # - func: "run oidc k8s atlas test"
         #   vars:
         #     VARIANT: aks
@@ -909,12 +909,12 @@ tasks:
         - func: "run oidc k8s local test"
           vars:
             VARIANT: eks
-        # - func: "run oidc k8s local test"
-        #   vars:
-        #     VARIANT: gke
-        # - func: "run oidc k8s atlas test"
-        #   vars:
-        #     VARIANT: aks
+        - func: "run oidc k8s local test"
+          vars:
+            VARIANT: gke
+        - func: "run oidc k8s atlas test"
+          vars:
+            VARIANT: aks
 
 # }}}
 
