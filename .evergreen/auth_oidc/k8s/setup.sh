@@ -55,7 +55,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
   "clusterType" : "REPLICASET",
   "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
-  "mongoDBMajorVersion" : "7.0",
+  "mongoDBMajorVersion" : "8.0",
   "name" : "${DEPLOYMENT_NAME}",
   "numShards" : 1,
   "paused" : false,
