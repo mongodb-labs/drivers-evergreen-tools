@@ -26,7 +26,7 @@ echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
 chmod 600 $GKE_KEYFILE
 gcloud auth activate-service-account --key-file $GKE_KEYFILE
 gcloud components install --quiet gke-gcloud-auth-plugin
-gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
+gcloud container clusters get-credentials $GKE_CLUSTER_NAME --location ${GKE_LOCATION} --project $GKE_PROJECT
 
 # Create the pod with a random name.
 POD_NAME="test-gke-$RANDOM"
