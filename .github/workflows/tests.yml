@@ -18,6 +18,7 @@ jobs:
         os:
           - "ubuntu-latest"
           - "windows-latest"
+          - "macos-latest"
         mongodb-version:
           - "7.0"
         topology:
