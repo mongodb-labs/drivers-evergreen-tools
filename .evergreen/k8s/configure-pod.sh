@@ -28,9 +28,11 @@ echo "Waiting for pod to be ready... done."
 
 # Run the setup script and ensure git was installed.
 echo "Configuring pod $POD_NAME..."
+set -x
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
+set +x
 echo "Configuring pod $POD_NAME... done."
 
 popd
