@@ -23,6 +23,7 @@ echo "Deleting old pods... done."
 # Wait for the new pod to be ready.
 echo "Waiting for pod to be ready..."
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=2000s
+kubectl get pods
 echo "Waiting for pod to be ready... done."
 
 # Run the setup script and ensure git was installed.
