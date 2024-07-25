@@ -4,7 +4,7 @@ Scripts to manage a drivers test cluster on Azure.
 
 ## Cluster Management
 
-These steps must be done by an admin (one time):
+These steps must be done by an account with admin access (one time):
 
 1. Create an App Registration
 2. Store the secrets in the AWS vault
