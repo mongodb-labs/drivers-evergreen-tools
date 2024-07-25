@@ -5,7 +5,7 @@ Scripts to manage OIDC integration tests on kubernetes: eks, aks, and gke.
 ## Background
 
 Uses the scripts in `$DRIVERS_TOOLS/.evergreen/k8s` to launch and configure
-a kubernetes pod in the given cloud provider, and allow you to run a driver
+a kubernetes pod in the given cloud provider, and allows you to run a driver
 test on the pod.
 
 ## Local Usage
