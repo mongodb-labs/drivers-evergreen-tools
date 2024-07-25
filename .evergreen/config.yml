@@ -912,7 +912,7 @@ tasks:
         - func: "run oidc k8s local test"
           vars:
             VARIANT: gke
-        - func: "run oidc k8s atlas test"
+        - func: "run oidc k8s local test"
           vars:
             VARIANT: aks
 
