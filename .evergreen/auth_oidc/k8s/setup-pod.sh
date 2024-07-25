@@ -16,3 +16,5 @@ echo "export K8S_VARIANT_DIR=$VARIANT_DIR" >> secrets-export.sh
 echo "Setting up $VARIANT pod..."
 . $VARIANT_DIR/setup.sh
 echo "Setting up $VARIANT pod... done."
+
+popd

@@ -19,7 +19,7 @@ bash start-server.sh
 bash run-self-test.sh
 ```
 
-Or if running the driver test:
+Or if running tests for a specific driver:
 
 ```bash
 bash setup.sh local  # needs to be done once to set up variables
