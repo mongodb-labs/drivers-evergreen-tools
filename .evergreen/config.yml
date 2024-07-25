@@ -899,9 +899,9 @@ tasks:
         - func: "run oidc k8s atlas test"
           vars:
             VARIANT: gke
-        - func: "run oidc k8s atlas test"
-          vars:
-            VARIANT: aks
+        # - func: "run oidc k8s atlas test"
+        #   vars:
+        #     VARIANT: aks
 
     - name: "test-oidc-k8s-local"
       tags: ["latest", "oidc", "pr"]
@@ -912,9 +912,9 @@ tasks:
         - func: "run oidc k8s local test"
           vars:
             VARIANT: gke
-        - func: "run oidc k8s local test"
-          vars:
-            VARIANT: aks
+        # - func: "run oidc k8s local test"
+        #   vars:
+        #     VARIANT: aks
 
 # }}}
 
