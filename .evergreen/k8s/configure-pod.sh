@@ -20,16 +20,16 @@ kubectl get pods -l app=test-pod -o go-template --template '{{range .items}}{{.m
 kubectl get pods --all-namespaces -l app=test-pod --field-selector=status.phase=Pending -o json | jq '.items[] | select((now - (.metadata.creationTimestamp | fromdateiso8601)) > 600) | .metadata.name' | xargs -I{} kubectl delete pod {} --force --grace-period=0
 echo "Deleting old pods... done."
 
-echo "Configuring pod $POD_NAME..."
-
 # Wait for the new pod to be ready.
+echo "Waiting for pod to be ready..."
 kubectl wait --for=condition=Ready pod/${POD_NAME} --timeout=2000s
+echo "Waiting for pod to be ready... done."
 
 # Run the setup script and ensure git was installed.
+echo "Configuring pod $POD_NAME..."
 kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
-
 echo "Configuring pod $POD_NAME... done."
 
 popd
