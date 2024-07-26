@@ -15,11 +15,6 @@ if [ -z "$DRIVERS_TOOLS" ]; then
   return 1
 fi
 
-# Google cloud gets special handling.
-if [ "$NAME" == "gcloud" ]; then
-  PATH="$PATH:/tmp/google-cloud-sdk/bin"
-fi
-
 if command -v $NAME &> /dev/null; then
   echo "$NAME found in PATH!"
   return 0
@@ -80,14 +75,14 @@ if [ "$NAME" != "gcloud" ]; then
   chmod +x $TARGET
 
 else
-  # Google Cloud needs special handling: the bin dir must be added to PATH.
+  # Google Cloud needs special handling: we need a symlink to the source location.
   pushd /tmp
   rm -rf google-cloud-sdk
   FNAME=/tmp/google-cloud-sdk.tgz
   curl -L -s $URL -o $FNAME || curl -L $URL -o $FNAME
   tar xfz $FNAME
-  PATH="$PATH:/tmp/google-cloud-sdk/bin"
   popd
+  ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
 fi
 
 echo "Installing $NAME... done."

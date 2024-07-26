@@ -26,10 +26,10 @@ echo ${GKE_KEYFILE_CONTENT} | base64 --decode > $GKE_KEYFILE
 chmod 600 $GKE_KEYFILE
 gcloud auth activate-service-account --key-file $GKE_KEYFILE
 gcloud components install --quiet gke-gcloud-auth-plugin
-gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region $GKE_REGION --project $GKE_PROJECT
+gcloud container clusters get-credentials $GKE_CLUSTER_NAME --region ${GKE_REGION} --project $GKE_PROJECT
 
 # Create the pod with a random name.
-POD_NAME="test-$RANDOM"
+POD_NAME="test-gke-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 
@@ -39,17 +39,24 @@ kind: Pod
 metadata:
   name: ${POD_NAME}
   namespace: default
+  labels:
+    app: test-pod
 spec:
   containers:
   - name: debian
-    image: debian:11
+    image: debian:12
+    resources:
+      limits:
+        memory: "2Gi"
+        cpu: "1"
+        ephemeral-storage: "2Gi"
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
   nodeSelector:
     kubernetes.io/os: linux
 EOF
 
-# Set up the pod.
+# Set up the pod - run directly so PATH is passed in.
 bash $DRIVERS_TOOLS/.evergreen/k8s/configure-pod.sh ${POD_NAME}
 
 popd

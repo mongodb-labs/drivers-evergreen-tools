@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eux
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -11,16 +11,16 @@ if [ -f ./secrets-export.sh ]; then
   echo "Sourcing secrets"
   source ./secrets-export.sh
 fi
-if [ -z "${AZUREKMS_TENANTID:-}" ]; then
-    . ./../../secrets_handling/setup-secrets.sh drivers/aks
+if [ -z "${EKS_CLUSTER_NAME:-}" ]; then
+    . ./../../secrets_handling/setup-secrets.sh drivers/eks
 fi
 
-# Handle credentials.
-. $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
-az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+# Set up kubectl creds.
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 
 # Create the pod with a random name.
-POD_NAME="test-aks-$RANDOM"
+POD_NAME="test-eks-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
 export K8S_POD_NAME=$POD_NAME
 
@@ -30,12 +30,11 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: ${POD_NAME}
-  namespace: ${AKS_SERVICE_ACCOUNT_NAMESPACE}
+  namespace: default
   labels:
-    azure.workload.identity/use: "true"
     app: test-pod
 spec:
-  serviceAccountName: ${AKS_SERVICE_ACCOUNT_NAME}
+  serviceAccountName: ${EKS_SERVICE_ACCOUNT_NAME}
   containers:
   - name: debian
     image: debian:12

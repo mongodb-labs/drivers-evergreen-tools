@@ -4,10 +4,25 @@ set -o errexit
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
+
+rm -f $SCRIPT_DIR/secrets-export.sh
+
+# If running locally, just set up the variables and exit.
+if [ "$1" == "local" ]; then
+  URI="mongodb://127.0.0.1"
+  cat <<EOF >> "$SCRIPT_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=local
+export MONGODB_URI="$URI"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
+export OIDC_ADMIN_USER=bob
+export OIDC_ADMIN_PWD=pwd123
+EOF
+  exit 0
+fi
+
 pushd $SCRIPT_DIR
 
 # Handle secrets from vault.
-rm -f secrets-export.sh
 . ./setup-secrets.sh
 
 ########################
@@ -40,7 +55,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
   "clusterType" : "REPLICASET",
   "diskSizeGB" : 10.0,
   "encryptionAtRestProvider" : "NONE",
-  "mongoDBMajorVersion" : "7.0",
+  "mongoDBMajorVersion" : "8.0",
   "name" : "${DEPLOYMENT_NAME}",
   "numShards" : 1,
   "paused" : false,
@@ -79,6 +94,7 @@ create_deployment
 URI=$(check_deployment)
 
 cat <<EOF >> "secrets-export.sh"
+export OIDC_SERVER_TYPE=local
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
