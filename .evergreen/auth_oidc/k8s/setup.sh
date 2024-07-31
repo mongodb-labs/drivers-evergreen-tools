@@ -94,7 +94,7 @@ create_deployment
 URI=$(check_deployment)
 
 cat <<EOF >> "secrets-export.sh"
-export OIDC_SERVER_TYPE=local
+export OIDC_SERVER_TYPE=atlas
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER

@@ -24,7 +24,8 @@ echo "Setting up driver test files... done."
 
 # Run the command.
 echo "Running the driver test command..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
+kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/test/secrets-export.sh
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && ${K8S_TEST_CMD}"
 echo "Running the driver test command... done."
 
 popd
