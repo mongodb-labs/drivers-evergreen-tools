@@ -903,7 +903,7 @@ tasks:
         - func: "run oidc azure test"
 
     - name: "test-oidc-azure-func"
-      tags: ["oidc", "pr"]
+      tags: ["oidc"]
       commands:
         - func: "run oidc azure func test"
 
