@@ -116,6 +116,7 @@ pykmip.db
 mo-expansion.sh
 .env
 .bin
+.kube
 
 # Azure functions.
 .python_packages/

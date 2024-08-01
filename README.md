@@ -66,8 +66,9 @@ The following inputs exist:
 
 These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
 
-After the cluster is started, its URI is exposed via the `cluster-uri` output.
-This configuration snippet sets an environment variable with the cluster URI
+After the cluster is started, its URI is exposed via the `cluster-uri` output. In addition, the action also exposes the
+path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
+This configuration snippet environment variables with the cluster URI and `crypt_shared` lib path
 returned from the `setup-mongodb` workflow step when running tests:
 ```yaml
     steps:
@@ -76,6 +77,7 @@ returned from the `setup-mongodb` workflow step when running tests:
         run: "run-tests.sh"
         env:
           MONGODB_URI: ${{ steps.setup-mongodb.outputs.cluster-uri }}
+          CRYPT_SHARED_LIB_PATH: ${{ steps.setup-mongodb.outputs.crypt-shared-lib-path }}
 ```
 
 ## Linters and Formatters

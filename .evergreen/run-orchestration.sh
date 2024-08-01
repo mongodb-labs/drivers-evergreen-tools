@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -o errexit  # Exit the script with error if any of the commands fail
 
 # Supported environment variables:
@@ -47,7 +47,7 @@ echo "Finding Python3 binary... done."
 
 # Set up the mongo orchestration config.
 mkdir -p $MONGO_ORCHESTRATION_HOME
-echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config
+printf '%s' $MONGODB_BINARIES | $PYTHON -c 'import json,sys; print(json.dumps({"releases": {"default": sys.stdin.read() }}))' > $MONGO_ORCHESTRATION_HOME/orchestration.config
 
 # Copy client certificate because symlinks do not work on Windows.
 mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
@@ -118,7 +118,7 @@ fi
 echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
 # Handle absolute path.
-perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|${DRIVERS_TOOLS}|g" $ORCHESTRATION_FILE
+perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|$(echo $DRIVERS_TOOLS | sed 's/\\/\\\\\\\\/g')|g" $ORCHESTRATION_FILE
 
 # If running on Docker, update the orchestration file to be docker-friendly.
 if [ -n "$DOCKER_RUNNING" ]; then

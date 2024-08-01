@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
@@ -16,14 +16,15 @@ if [ -z "${AZUREKMS_TENANTID:-}" ]; then
 fi
 
 # Handle credentials.
-"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
+. $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
 
 # Create the pod with a random name.
-set -x
-POD_NAME="test-$RANDOM"
+POD_NAME="test-aks-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
-bash ../../ensure-binary.sh kubectl
+export K8S_POD_NAME=$POD_NAME
+
+. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
@@ -32,11 +33,12 @@ metadata:
   namespace: ${AKS_SERVICE_ACCOUNT_NAMESPACE}
   labels:
     azure.workload.identity/use: "true"
+    app: test-pod
 spec:
   serviceAccountName: ${AKS_SERVICE_ACCOUNT_NAME}
   containers:
   - name: debian
-    image: debian:11
+    image: debian:12
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
 
@@ -45,6 +47,6 @@ spec:
 EOF
 
 # Set up the pod.
-bash $DRIVERS_TOOLS/.evergreen/k8s/setup-pod.sh ${POD_NAME}
+bash $DRIVERS_TOOLS/.evergreen/k8s/configure-pod.sh ${POD_NAME}
 
 popd

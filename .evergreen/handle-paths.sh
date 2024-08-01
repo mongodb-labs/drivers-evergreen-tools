@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This script will handle the correct cross-platform absolute
 # paths for a script directory and DRIVERS_TOOLS.
@@ -57,5 +57,5 @@ MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen
 
 # Add the local .bin dir to the path.
 if [[ $PATH != *"$DRIVERS_TOOLS/.bin"* ]]; then
-  PATH="$PATH:$DRIVERS_TOOLS/.bin"
+  PATH=$PATH:$DRIVERS_TOOLS/.bin
 fi

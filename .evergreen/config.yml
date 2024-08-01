@@ -56,7 +56,6 @@ functions:
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           set -x
            if [[ "$(uname -s)" == CYGWIN* ]]; then
               export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
               export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
@@ -459,19 +458,47 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run oidc k8s test":
+  "run oidc k8s atlas test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
         shell: bash
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
+          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
           git archive -o $K8S_DRIVERS_TAR_FILE HEAD
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
+          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
+  "run oidc k8s local test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}
+          export K8S_VARIANT=${VARIANT}
+          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
+          bash ./.evergreen/auth_oidc/k8s/start-server.sh
+          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
+          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -837,12 +864,12 @@ tasks:
         - func: "run tests"
 
     - name: "test-serverless"
-      tags: ["serverless", "pr"]
+      tags: ["serverless"]
       commands:
         - func: "run tests"
 
     - name: "test-atlas"
-      tags: ["atlas", "pr"]
+      tags: ["atlas"]
       commands:
         - func: "run tests"
 
@@ -871,7 +898,7 @@ tasks:
         - func: "run oidc docker test"
 
     - name: "test-oidc-azure"
-      tags: ["oidc", "pr"]
+      tags: ["latest", "oidc", "pr"]
       commands:
         - func: "run oidc azure test"
 
@@ -881,16 +908,35 @@ tasks:
         - func: "run oidc azure func test"
 
     - name: "test-oidc-gcp"
-      tags: ["latest", "oidc", "pr"]
+      tags: ["latest", "oidc"]
       commands:
         - func: "run oidc gcp test"
 
-    - name: "test-oidc-k8s"
+    - name: "test-oidc-k8s-atlas"
+      tags: ["latest", "oidc"]
+      commands:
+        - func: "run oidc k8s atlas test"
+          vars:
+            VARIANT: eks
+        - func: "run oidc k8s atlas test"
+          vars:
+            VARIANT: gke
+        # - func: "run oidc k8s atlas test"
+        #   vars:
+        #     VARIANT: aks
+
+    - name: "test-oidc-k8s-local"
       tags: ["latest", "oidc", "pr"]
       commands:
-        - func: "run oidc k8s test"
+        - func: "run oidc k8s local test"
           vars:
-            VARIANT: aks
+            VARIANT: eks
+        - func: "run oidc k8s local test"
+          vars:
+            VARIANT: gke
+        # - func: "run oidc k8s local test"
+        #   vars:
+        #     VARIANT: aks
 
 # }}}
 
@@ -969,7 +1015,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
@@ -1002,7 +1047,6 @@ task_groups:
           shell: bash
           script: |
             set -o errexit
-            set -x
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
@@ -1014,7 +1058,7 @@ task_groups:
         params:
           binary: bash
           args:
-            - $DRIVERS_TOOLS/.evergreen/auth_oidc/gcp/teardown.sh
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/teardown.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
@@ -1022,7 +1066,7 @@ task_groups:
     tasks:
       - test-oidc-gcp
 
-  - name: testoidc_azure_func_task_group
+  - name: test_oidc_azure_func_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_group_can_fail_task: true
@@ -1048,7 +1092,7 @@ task_groups:
     tasks:
       - test-oidc-azure-func
 
-  - name: testk8soidc_task_group
+  - name: test_oidc_k8s_atlas_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
@@ -1072,7 +1116,29 @@ task_groups:
       - func: "upload test results"
       - func: "cleanup"
     tasks:
-      - test-oidc-k8s
+      - "test-oidc-k8s-atlas"
+
+  - name: test_oidc_k8s_local_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 1800 # 30 minutes
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
+            - local
+    teardown_group:
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - "test-oidc-k8s-local"
 
 axes:
   - id: versions
@@ -1257,8 +1323,9 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
-    - "testoidc_azure_func_task_group"
-    - "testk8soidc_task_group"
+    - "test_oidc_azure_func_task_group"
+    - "test_oidc_k8s_atlas_task_group"
+    - "test_oidc_k8s_local_task_group"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }

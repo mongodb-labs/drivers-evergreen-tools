@@ -11,12 +11,16 @@ on:
 jobs:
   tests:
     name: "Tests"
-    runs-on: "ubuntu-20.04"
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os:
+          - "ubuntu-latest"
+          - "windows-latest"
+          - "macos-latest"
         mongodb-version:
-          - "4.4"
+          - "7.0"
         topology:
           - "server"
           - "replica_set"
@@ -35,6 +39,7 @@ jobs:
           fetch-depth: 2
 
       - id: setup-mongodb
+        name: "Test GitHub Action"
         uses: ./
         with:
           version: ${{ matrix.mongodb-version }}

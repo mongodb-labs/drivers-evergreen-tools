@@ -9,26 +9,22 @@ pushd $SCRIPT_DIR
 
 VARLIST=(
 K8S_DRIVERS_TAR_FILE
-K8S_VARIANT
 K8S_TEST_CMD
 )
 
-# Ensure that all variables required to run the test are set, otherwise throw
-# an error.
-for VARNAME in ${VARLIST[*]}; do
-[[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
-done
-
-# Read in the secrets.
-VARIANT=$(echo "$K8S_VARIANT" | tr '[:upper:]' '[:lower:]')
-source ./../../k8s/$VARIANT/secrets-export.sh
+source secrets-export.sh
+source $K8S_VARIANT_DIR/secrets-export.sh
 
 # Extract the tar file to the /tmp/test directory.
-bash ./../../ensure-binary.sh kubectl
+echo "Setting up driver test files..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
-tar cf - ${K8S_DRIVERS_TAR_FILE} | kubectl exec -i ${K8S_POD_NAME} -- /bin/sh -c 'tar xf - -C /tmp/test'
+kubectl cp ${K8S_DRIVERS_TAR_FILE} ${K8S_POD_NAME}:/tmp/drivers-test.tgz
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && tar -xf drivers-test.tgz -C test"
+echo "Setting up driver test files... done."
 
 # Run the command.
+echo "Running the driver test command..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && ${K8S_TEST_CMD}"
+echo "Running the driver test command... done."
 
 popd
