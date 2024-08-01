@@ -425,6 +425,23 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run oidc azure func test":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/self-test
+          export FUNC_NAME=oidcselftest
+          source ../secrets-export.sh
+          export FUNC_APP_NAME=$AZUREOIDC_FUNC_SELF_TEST
+          export FUNC_RUNTIME=python
+          bash ../run-driver-test.sh
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
   "run oidc gcp test":
     - command: shell.exec
       type: test
@@ -885,6 +902,11 @@ tasks:
       commands:
         - func: "run oidc azure test"
 
+    - name: "test-oidc-azure-func"
+      tags: ["oidc"]
+      commands:
+        - func: "run oidc azure func test"
+
     - name: "test-oidc-gcp"
       tags: ["latest", "oidc"]
       commands:
@@ -1043,6 +1065,32 @@ task_groups:
       - func: "cleanup"
     tasks:
       - test-oidc-gcp
+
+  - name: test_oidc_azure_func_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800
+    teardown_group_can_fail_task: true
+    teardown_group_timeout_secs: 1800
+    setup_group:
+      - func: fetch source
+      - func: prepare resources
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-oidc-azure-func
 
   - name: test_oidc_k8s_atlas_task_group
     setup_group_can_fail_task: true
@@ -1275,6 +1323,7 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
+    - "test_oidc_azure_func_task_group"
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
 

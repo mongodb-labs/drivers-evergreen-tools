@@ -117,3 +117,8 @@ mo-expansion.sh
 .env
 .bin
 .kube
+
+# Azure functions.
+.python_packages/
+appsettings.json
+local.settings.json
