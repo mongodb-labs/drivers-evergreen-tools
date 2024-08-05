@@ -69,7 +69,13 @@ fi
 test -t 1 && ARGS+=" -t"
 
 # Map in the DRIVERS_TOOLS directory.
-ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
+HOSTPATH="$(pwd)"
+if [[ "$(uname -s)" == CYGWIN* ]]; then
+  # Convert to Windows-style path when run in Cygwin.
+  HOSTPATH=$(cygpath -w "$HOSTPATH")
+fi
+
+ARGS+=" -v $HOSTPATH:/root/drivers-evergreen-tools"
 
 # Launch server docker container.
 docker run $ARGS $NAME $ENTRYPOINT
