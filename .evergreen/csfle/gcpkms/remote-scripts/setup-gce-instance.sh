@@ -6,7 +6,8 @@ set -o errexit # Exit on first command error.
 
 echo "Installing dependencies ... begin"
 # Skip the "Processing triggers for man-db" step.
-echo "set man-db/auto-update false" | sudo debconf-communicate; sudo dpkg-reconfigure -f noninteractive man-db
+echo "set man-db/auto-update false" | sudo debconf-communicate
+sudo dpkg-reconfigure -o DPkg::Lock::Timeout=-1 -f noninteractive man-db
 sudo apt-get -qq update
 OPTIONS="-y -qq -o DPkg::Lock::Timeout=-1"
 # Dependencies for mongod: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-enterprise-on-debian-tarball/
