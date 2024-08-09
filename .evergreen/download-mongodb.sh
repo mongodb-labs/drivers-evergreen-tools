@@ -186,10 +186,10 @@ get_mongodb_download_url_for ()
              # SERVER-48282 Added support for RHEL 8 ARM in 4.4.2.
       ;;
       linux-rhel-8*)
-         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-latest.tgz"
+         MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel88${DEBUG}-latest.tgz"
          MONGOSH="https://downloads.mongodb.com/compass/mongosh-${VERSION_MONGOSH}-linux-x64.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-${VERSION_RAPID}.tgz"
-             MONGODB_80="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-${VERSION_80}.tgz"
+             MONGODB_80="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel88${DEBUG}-${VERSION_80}.tgz"
              MONGODB_70="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-${VERSION_70}.tgz"
              MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-${VERSION_60}.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel80${DEBUG}-${VERSION_50}.tgz"
