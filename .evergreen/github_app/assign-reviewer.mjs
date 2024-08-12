@@ -1,17 +1,10 @@
 /**
- * Create or modify a GitHub comment using the mongodb-drivers-comment-bot.
+ * Create or modify a GitHub comment using the mongodb-drivers-pr-bot.
  */
 import * as fs from "fs";
 import * as process from "process";
 import { program } from 'commander';
-import { App } from "octokit";
-
-const appId = process.env.GITHUB_APP_ID;
-const privateKey = process.env.GITHUB_SECRET_KEY.replace(/\\n/g, '\n');
-if (appId == '' || privateKey == '') {
-    console.error("Missing GitHub App auth information");
-    process.exit(1)
-}
+import { getOctokit } from './utils.mjs';
 
 // Handle cli.
 program
@@ -32,13 +25,7 @@ const {
  } = options;
 
 // Set up the app.
-const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
-if (installId == '') {
-    console.error(`Missing install id for ${owner}`)
-    process.exit(1)
-}
-const app = new App({ appId, privateKey });
-const octokit = await app.getInstallationOctokit(installId);
+const octokit = await getOctokit(owner);
 const headers =  {
     "x-github-api-version": "2022-11-28",
 };

@@ -5,14 +5,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
-# Bootstrap the secrets.
-. ../secrets_handling/setup-secrets.sh drivers/comment-bot
+# Bootstrap the app.
+source utils.sh
+bootstrap
 
-# Install node and activate it.
-bash ../install-node.sh
-source ../init-node-and-npm-env.sh
-
-# Install and run the app.
-npm install
-node apply-labels.mjs "$@"
+# Run the app.
+node assign-reviewer.mjs "$@"
 popd

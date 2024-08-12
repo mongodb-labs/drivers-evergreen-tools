@@ -1,19 +1,12 @@
 /**
- * Apply default GitHub PR labels using the mongodb-drivers-comment-bot.
+ * Apply default GitHub PR labels using the mongodb-drivers-pr-bot.
  */
 import * as fs from "fs";
 import { parse } from 'yaml';
 import * as process from "process";
 import { program } from 'commander';
-import { App } from "octokit";
+import { getOctokit } from './utils.mjs';
 import { minimatch } from 'minimatch';
-
-const appId = process.env.GITHUB_APP_ID;
-const privateKey = process.env.GITHUB_SECRET_KEY.replace(/\\n/g, '\n');
-if (appId == '' || privateKey == '') {
-    console.error("Missing GitHub App auth information");
-    process.exit(1)
-}
 
 // Handle cli.
 program
@@ -34,13 +27,7 @@ const {
 } = options;
 
 // Set up the app.
-const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
-if (installId == '') {
-    console.error(`Missing install id for ${owner}`)
-    process.exit(1)
-}
-const app = new App({ appId, privateKey });
-const octokit = await app.getInstallationOctokit(installId);
+const octokit = await getOctokit(owner);
 const headers =  {
     "x-github-api-version": "2022-11-28",
 };
