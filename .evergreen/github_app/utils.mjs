@@ -24,7 +24,7 @@ async function getOctokit(owner) {
 
 async function findComment(octokit, owner, repo, targetSha, bodyMatch, state) {
     /**
-     * Find a matching PR comment for a given merged sha and match text.
+     * Find a matching PR comment for a given target sha and match text.
      */
     const headers =  {
         "x-github-api-version": "2022-11-28",
