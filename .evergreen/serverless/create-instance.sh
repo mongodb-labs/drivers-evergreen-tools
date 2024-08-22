@@ -52,14 +52,6 @@ for VARNAME in ${VARLIST[*]}; do
   [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Historically, this script accepted LOADBALANCED=ON to opt in to testing load
-# balanced serverless instances. Since all serverless instances now use a load
-# balancer, prohibit opting out (i.e. defining LOADBALANCED != ON).
-if [ -n "${LOADBALANCED:-}" -a "${LOADBALANCED:-}" != "ON" ]; then
-    echo "Cannot opt out of testing load balanced serverless instances"
-    exit 1
-fi
-
 # Generate a random instance name if one was not provided.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
 if [ -z "${SERVERLESS_INSTANCE_NAME:-}" ]; then
