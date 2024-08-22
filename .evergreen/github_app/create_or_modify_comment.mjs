@@ -1,17 +1,10 @@
 /**
- * Create or modify a GitHub comment using the mongodb-drivers-comment-bot.
+ * Create or modify a GitHub comment using the mongodb-drivers-pr-bot.
  */
 import * as fs from "fs";
 import * as process from "process";
 import { program } from 'commander';
-import { App } from "octokit";
-
-const appId = process.env.GITHUB_APP_ID;
-const privateKey = process.env.GITHUB_SECRET_KEY.replace(/\\n/g, '\n');
-if (appId == '' || privateKey == '') {
-    console.error("Missing GitHub App auth information");
-    process.exit(1)
-}
+import { getOctokit, findComment } from './utils.mjs';
 
 // Handle cli.
 program
@@ -35,38 +28,13 @@ const {
 const bodyText = fs.readFileSync(commentPath, { encoding: 'utf8' });
 
 // Set up the app.
-const installId = process.env['GITHUB_APP_INSTALL_ID_' + owner.toUpperCase()];
-if (installId == '') {
-    console.error(`Missing install id for ${owner}`)
-    process.exit(1)
-}
-const app = new App({ appId, privateKey });
-const octokit = await app.getInstallationOctokit(installId);
+const octokit = await getOctokit(owner);
 const headers =  {
     "x-github-api-version": "2022-11-28",
 };
 
-// Find the matching pull request.
-let resp = await octokit.request("GET /repos/{owner}/{repo}/pulls?state=open&per_page=100", {
-    owner,
-    repo,
-    headers
-});
-const issue = resp.data.find(pr => pr.head.sha === targetSha);
-if (issue == null) {
-    console.error(`ERROR: Could not find matching pull request for sha ${targetSha}`)
-    process.exit(1)
-}
-const { number: issueNumber } = issue
-
-// Find a matching comment if it exists, and update it.
-resp = await octokit.request("GET /repos/{owner}/{repo}/issues/{issue_number}/comments", {
-    owner,
-    repo,
-    issue_number: issueNumber,
-    headers
-});
-const comment = resp.data.find(comment => comment.body.includes(bodyMatch));
+// Find a matching comment.
+const comment = await findComment(octokit, owner, repo, targetSha, bodyMatch, "open");
 if (!comment) {
     // create comment.
     await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
