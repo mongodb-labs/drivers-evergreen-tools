@@ -10,5 +10,5 @@ source utils.sh
 bootstrap
 
 # Run the app.
-node assign-reviewer.mjs "$@"
+node apply-labels.mjs "$@"
 popd
