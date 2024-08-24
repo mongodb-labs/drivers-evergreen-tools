@@ -34,13 +34,13 @@ const headers =  {
 };
 
 // Find a matching comment.
-const comment = await findComment(octokit, owner, repo, targetSha, bodyMatch, "open");
+const {comment, issue_number } = await findComment(octokit, owner, repo, targetSha, bodyMatch, "open");
 if (!comment) {
     // create comment.
     await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
         owner,
         repo,
-        issue_number: issueNumber,
+        issue_number,
         body: bodyText,
         headers
     });

@@ -4,6 +4,7 @@
     "description": "Tools for working with DBX GitHub Apps",
     "main": "index.js",
     "scripts": {
+        "lint": "eslint",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -23,5 +24,10 @@
         "minimatch": "^9.0.3",
         "octokit": "^3.1.2",
         "yaml": "^2.4.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.9.1",
+        "eslint": "^9.9.1",
+        "globals": "^15.9.0"
     }
 }
