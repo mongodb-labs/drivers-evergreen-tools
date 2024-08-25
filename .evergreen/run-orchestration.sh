@@ -14,6 +14,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
 #   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
 #   MONGODB_BINARIES       Set to a non-empty string to set the path to the MONGODB_BINARIES for mongo orchestration.
+#   PYTHON                 Set to a non-empty string to set the Python binary to use.
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
@@ -33,6 +34,7 @@ MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
 MONGODB_BINARIES=${MONGODB_BINARIES:-}
 INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
+PYTHON=${PYTHON:-}
 
 DL_START=$(date +%s)
 
@@ -41,9 +43,11 @@ DL_START=$(date +%s)
 
 # To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
 # explicitly invoke Bash as a subshell here when running `find_python3`.
-echo "Finding Python3 binary..."
-PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
-echo "Finding Python3 binary... done."
+if [ -z "$PYTHON" ]; then
+  echo "Finding Python3 binary..."
+  PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
+  echo "Finding Python3 binary... done."
+fi
 
 # Set up the mongo orchestration config.
 mkdir -p $MONGO_ORCHESTRATION_HOME

@@ -64,9 +64,11 @@ check_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
 
-  echo "Finding Python3 binary..." 1>&2
-  PYTHON="$(find_python3 2>/dev/null)"
-  echo "Finding Python3 binary... done." 1>&2
+  if [ -z "${PYTHON:-}" ]; then
+    echo "Finding Python3 binary..." 1>&2
+    PYTHON="$(find_python3 2>/dev/null)"
+    echo "Finding Python3 binary... done." 1>&2
+  fi
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2

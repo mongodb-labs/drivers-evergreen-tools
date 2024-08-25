@@ -31,11 +31,13 @@ activate_authawsvenv() {
     venvactivate authawsvenv || return
   else
     # shellcheck source=.evergreen/find-python3.sh
-    . ../find-python3.sh || return
+    if [ -z "${PYTHON:-}" ]; then
+      . ../find-python3.sh || return
 
-    echo "Finding Python3 binary..."
-    PYTHON="$(find_python3 2>/dev/null)" || return
-    echo "Finding Python3 binary... done."
+      echo "Finding Python3 binary..."
+      PYTHON="$(find_python3 2>/dev/null)" || return
+      echo "Finding Python3 binary... done."
+    fi
 
     echo "Creating virtual environment 'authawsvenv'..."
     venvcreate "${PYTHON:?}" authawsvenv || return

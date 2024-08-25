@@ -3,6 +3,12 @@
 all:
 	@echo "Project successfully compiled"
 
+start:
+	bash .evergreen/run-orchestration.sh
+
+stop:
+	bash .evergreen/stop-orchestration.sh
+
 test:
 	@echo "Running tests..."
 	@echo "All done, thank you and please come again"

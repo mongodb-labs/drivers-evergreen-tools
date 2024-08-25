@@ -44,7 +44,7 @@ echo "Creating virtual environment 'venv'... done."
 # Install from github to get the latest mongo-orchestration.
 python -m pip install -q --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
 python -m pip list
-cd -
+cd $DRIVERS_TOOLS
 
 # Create default config file if it doesn't exist
 if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then

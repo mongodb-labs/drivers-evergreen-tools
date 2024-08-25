@@ -80,6 +80,18 @@ returned from the `setup-mongodb` workflow step when running tests:
           CRYPT_SHARED_LIB_PATH: ${{ steps.setup-mongodb.outputs.crypt-shared-lib-path }}
 ```
 
+### Starting and Stopping Servers Locally or on an Evergreen Host
+
+There are two options for running a MongoDB server configuration.
+One is to use [docker](./.evergreen/docker/README.md).
+The other is to run `./evergreen/run-orchestration.sh` locally.
+For convenience, you can run `make start` and `make stop` to start and stop the server(s).
+For example:
+
+```bash
+TOPOLOGY=replica_set MONGODB_VERSION=7.0 make start
+```
+
 ## Linters and Formatters
 
 This repo uses [pre-commit](https://pre-commit.com/) for managing linting and formatting of the codebase.
