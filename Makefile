@@ -3,10 +3,10 @@
 all:
 	@echo "Project successfully compiled"
 
-start:
+run-server:
 	bash .evergreen/run-orchestration.sh
 
-stop:
+stop-server:
 	bash .evergreen/stop-orchestration.sh
 
 test:

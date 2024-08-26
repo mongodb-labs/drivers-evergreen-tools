@@ -85,12 +85,14 @@ returned from the `setup-mongodb` workflow step when running tests:
 There are two options for running a MongoDB server configuration.
 One is to use [docker](./.evergreen/docker/README.md).
 The other is to run `./evergreen/run-orchestration.sh` locally.
-For convenience, you can run `make start` and `make stop` to start and stop the server(s).
+For convenience, you can run `make run-server` and `make stop-server` to start and stop the server(s).
 For example:
 
 ```bash
-TOPOLOGY=replica_set MONGODB_VERSION=7.0 make start
+TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 ```
+
+See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
 
 ## Linters and Formatters
 
