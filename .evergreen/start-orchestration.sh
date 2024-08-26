@@ -28,7 +28,14 @@ det_evergreen_dir=$SCRIPT_DIR
 
 cd "$MONGO_ORCHESTRATION_HOME"
 
-PYTHON=$(ensure_python3)
+if [[ -z "${PYTHON:-}" ]]; then
+  echo "Finding Python3 binary..."
+  PYTHON="$(find_python3 2>/dev/null)"
+  echo "Finding Python3 binary... done."
+else
+  # May have already been found by run-orchestration.sh. Avoid redundant lookup.
+  echo "Using Python3 binary: $PYTHON"
+fi
 
 echo "Creating virtual environment 'venv'..."
 venvcreate "${PYTHON:?}" venv
@@ -37,7 +44,7 @@ echo "Creating virtual environment 'venv'... done."
 # Install from github to get the latest mongo-orchestration.
 python -m pip install -q --upgrade 'https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz'
 python -m pip list
-cd $DRIVERS_TOOLS
+cd -
 
 # Create default config file if it doesn't exist
 if [ ! -f $MONGO_ORCHESTRATION_HOME/orchestration.config ]; then

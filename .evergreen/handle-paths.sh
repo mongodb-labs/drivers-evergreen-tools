@@ -22,10 +22,6 @@ else
 fi
 if [[ "$(uname -s)" == CYGWIN* ]]; then
   SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
-  # USERPROFILE is required by Python for Pathlib.Path().expanduser().
-  if [ -z "${USERPROFILE:-}" ]; then
-    export USERPROFILE=$(cygpath -m $HOME)
-  fi
 fi
 
 # Find the DRIVERS_TOOLS by walking up the folder tree until there
