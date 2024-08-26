@@ -4,18 +4,17 @@ set -o errexit  # Exit the script with error if any of the commands fail
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
-pushd "$MONGO_ORCHESTRATION_HOME" > /dev/null
+pushd ${DRIVERS_TOOLS} > /dev/null
+
 # source the mongo-orchestration virtualenv if it exists
 if [ -f venv/bin/activate ]; then
-    . venv/bin/activate
+    . $MONGO_ORCHESTRATION_HOME/venv/bin/activate
+    mongo-orchestration stop
 elif [ -f venv/Scripts/activate ]; then
-    . venv/Scripts/activate
+    . $MONGO_ORCHESTRATION_HOME/venv/Scripts/activate
+    mongo-orchestration stop
 else
     echo "No virtualenv found!"
-    exit 1
 fi
-popd > /dev/null
 
-pushd ${DRIVERS_TOOLS} > /dev/null
-mongo-orchestration stop
 popd > /dev/null
