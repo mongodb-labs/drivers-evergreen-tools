@@ -48,6 +48,7 @@ ARG GROUP_ID
 ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
 ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/mongodb/bin
+ENV MONGODB_BINARY_ROOT=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/
 ENV MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu18.04/orchestration
 ENV DOCKER_RUNNING=true
 

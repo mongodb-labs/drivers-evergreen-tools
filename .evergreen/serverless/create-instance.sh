@@ -106,7 +106,9 @@ if [ $SERVERLESS_URI = "null" ]; then
   exit 1
 fi
 
-PYTHON=$(ensure_python3)
+echo "Finding Python3 binary..." 1>&2
+PYTHON="$(find_python3 2>/dev/null)"
+echo "Finding Python3 binary... done." 1>&2
 
 RESP=$(curl -sS \
   --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
