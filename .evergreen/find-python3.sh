@@ -291,3 +291,30 @@ find_python3() (
 
   return 0
 )
+
+#
+# Usage:
+#   ensure_python3
+#   PYTHON_BINARY=$(ensure_python3)
+#   PYTHON_BINARY=$(ensure_python3 2>/dev/null)
+#
+# If successful, print the name of the binary stdout (pipe 1).
+# Otherwise, no output is printed to stdout (pipe 1).
+#
+# Diagnostic messages may be printed to stderr (pipe 2). Redirect to /dev/null
+# with `2>/dev/null` to silence these messages.
+#
+# If PYTHON or PYTHON_BINARY are set, it will return that value.  Otherwise
+# it will use find_python3 to return a suitable value.
+#
+ensure_python3() {
+  PYTHON=${PYTHON:-${PYTHON_BINARY:-""}}
+  if [ -z "${PYTHON}" ]; then
+    echo "Finding Python3 binary..." 1>&2
+    echo $(find_python3 2>/dev/null)
+    echo "Finding Python3 binary... done." 1>&2
+  else
+    echo "Using Python binary $PYTHON" 1>&2
+    echo $PYTHON
+  fi
+}
