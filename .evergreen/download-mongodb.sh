@@ -699,6 +699,9 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
+   # Ensure MONGODB_BINARIES is set.
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
    pushd $(dirname $(dirname ${MONGODB_BINARIES}))
    rm -rf mongodb
 
@@ -725,6 +728,9 @@ download_and_extract_mongosh ()
       get_mongodb_download_url_for $(get_distro) latest false
    fi
 
+   # Ensure MONGODB_BINARIES is set.
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
    pushd $(dirname $(dirname ${MONGODB_BINARIES}))
    rm -rf mongosh
 
