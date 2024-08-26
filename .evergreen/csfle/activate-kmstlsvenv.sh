@@ -30,14 +30,9 @@ activate_kmstlsvenv() {
   if [[ -d kmstlsvenv ]]; then
     venvactivate kmstlsvenv || return
   else
-    if [ -z "${PYTHON:-}" ]; then
-      # shellcheck source=.evergreen/find-python3.sh
-      . ../find-python3.sh || return
-
-      echo "Finding Python3 binary..."
-      PYTHON="$(find_python3 2>/dev/null)" || return
-      echo "Finding Python3 binary... done."
-    fi
+    # shellcheck source=.evergreen/find-python3.sh
+    . ../find-python3.sh || return
+    PYTHON=$(ensure_python3)
 
     echo "Creating virtual environment 'kmstlsvenv'..."
     venvcreate "${PYTHON:?}" kmstlsvenv || return

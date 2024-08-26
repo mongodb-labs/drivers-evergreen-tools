@@ -42,12 +42,8 @@ DL_START=$(date +%s)
 . $SCRIPT_DIR/download-mongodb.sh
 
 # To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
-# explicitly invoke Bash as a subshell here when running `find_python3`.
-if [ -z "$PYTHON" ]; then
-  echo "Finding Python3 binary..."
-  PYTHON="$(bash -c ". $SCRIPT_DIR/find-python3.sh && find_python3 2>/dev/null")"
-  echo "Finding Python3 binary... done."
-fi
+# explicitly invoke Bash as a subshell here when running `ensure_python3`.
+PYTHON=$(bash -c ". $SCRIPT_DIR/find-python3.sh && ensure_python3 2>/dev/null")
 
 # Set up the mongo orchestration config.
 mkdir -p $MONGO_ORCHESTRATION_HOME
