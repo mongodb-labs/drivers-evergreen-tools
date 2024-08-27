@@ -14,18 +14,11 @@ if [ -z "$SCRIPT_DIR" ]; then
   exit 1
 fi
 
-if command -v realpath &> /dev/null
+if command -v realpath > /dev/null 2/&1
 then
     SCRIPT_DIR=$(realpath $SCRIPT_DIR)
 else
-  SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" &> /dev/null && pwd )"
-fi
-if [[ "$(uname -s)" == CYGWIN* ]]; then
-  SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
-  # USERPROFILE is required by Python for Pathlib.Path().expanduser().
-  if [ -z "${USERPROFILE:-}" ]; then
-    export USERPROFILE=$(cygpath -m $HOME)
-  fi
+  SCRIPT_DIR="$( cd -- "$SCRIPT_DIR" > /dev/null 2>&1 && pwd )"
 fi
 
 # Find the DRIVERS_TOOLS by walking up the folder tree until there
@@ -41,9 +34,16 @@ if [ -z "${DRIVERS_TOOLS:-}" ]; then
   done
 fi
 
-if [[ "$(uname -s)" == CYGWIN* ]]; then
+case "$(uname -s)" in
+  CYGWIN*)
+    SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
-fi
+    # USERPROFILE is required by Python for pathlib.Path().expanduser(~).
+    if [ -z "${USERPROFILE:-}" ]; then
+      USERPROFILE=$(cygpath -m $HOME)
+    fi
+  ;;
+esac
 
 # Handle .env files
 if [ -f "$DRIVERS_TOOLS/.env" ]; then
@@ -60,6 +60,8 @@ MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}
 
 # Add the local .bin dir to the path.
-if [[ $PATH != *"$DRIVERS_TOOLS/.bin"* ]]; then
-  PATH=$PATH:$DRIVERS_TOOLS/.bin
-fi
+case "$PATH" in
+  *"$DRIVERS_TOOLS/.bin"*)
+    PATH=$PATH:$DRIVERS_TOOLS/.bin
+  ;;
+esac
