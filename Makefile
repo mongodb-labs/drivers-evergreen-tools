@@ -4,7 +4,7 @@ all:
 	@echo "Project successfully compiled"
 
 run-server:
-	bash .evergreen/run-orchestration.sh
+	.evergreen/run-orchestration.sh
 
 stop-server:
 	bash .evergreen/stop-orchestration.sh
