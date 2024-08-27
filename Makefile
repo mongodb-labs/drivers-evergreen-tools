@@ -4,6 +4,7 @@ all:
 	@echo "Project successfully compiled"
 
 run-server:
+	rm -rf mongodb
 	.evergreen/run-orchestration.sh
 
 stop-server:
