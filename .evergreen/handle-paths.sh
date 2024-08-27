@@ -14,7 +14,7 @@ if [ -z "$SCRIPT_DIR" ]; then
   exit 1
 fi
 
-if command -v realpath > /dev/null 2/&1
+if command -v realpath >/dev/null 2>&1
 then
     SCRIPT_DIR=$(realpath $SCRIPT_DIR)
 else
