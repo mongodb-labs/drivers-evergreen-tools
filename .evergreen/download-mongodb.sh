@@ -700,7 +700,6 @@ download_and_extract_package ()
    EXTRACT=$2
 
    cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
-   rm -rf mongodb
 
    echo "Installing server binaries..."
    curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
