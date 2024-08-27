@@ -62,6 +62,8 @@ MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen
 # Add the local .bin dir to the path.
 case "$PATH" in
   *"$DRIVERS_TOOLS/.bin"*)
+  ;;
+  *)
     PATH=$PATH:$DRIVERS_TOOLS/.bin
   ;;
 esac
