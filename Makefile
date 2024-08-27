@@ -3,8 +3,10 @@
 all:
 	@echo "Project successfully compiled"
 
-run-server:
+clean:
 	rm -rf mongodb
+
+run-server: clean
 	.evergreen/run-orchestration.sh
 
 stop-server:
