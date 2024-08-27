@@ -310,13 +310,14 @@ find_python3() (
 ensure_python3() {
   declare python_binary
   python_binary="${PYTHON:-"${PYTHON_BINARY:-""}"}"
-  if [ -z "${python_binary}" ]; then
-    echo "Finding Python3 binary..." 1>&2
-    python_binary="$(find_python3 2>/dev/null)" || return
-    echo "$python_binary"
-    echo "Finding Python3 binary... done." 1>&2
-  else
-    echo "Using Python binary $PYTHON" 1>&2
-    echo "$python_binary"
-  fi
+  {
+    if [ -z "${python_binary}" ]; then
+      echo "Finding Python3 binary..."
+      python_binary="$(find_python3 2>/dev/null)" || return
+      echo "Finding Python3 binary... done."
+    else
+      echo "Using Python binary $PYTHON"
+    fi
+  } 1>&2
+  echo "${python_binary:?}"
 }
