@@ -36,7 +36,7 @@ fi
 
 case "$(uname -s)" in
   CYGWIN*)
-    SCRIPT_DIR=$(cygpath -m $SCRIPT_DIR)
+    SCRIPT_DIR=$(cygpath -m "$SCRIPT_DIR")
     DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
     # USERPROFILE is required by Python for pathlib.Path().expanduser(~).
     if [ -z "${USERPROFILE:-}" ]; then
