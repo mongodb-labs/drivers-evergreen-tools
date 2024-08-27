@@ -699,7 +699,7 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   pushd $(dirname $(dirname ${MONGODB_BINARIES}))
+   cd $(dirname $(dirname ${MONGODB_BINARIES}))
    rm -rf mongodb
 
    echo "Installing server binaries..."
@@ -713,7 +713,7 @@ download_and_extract_package ()
    chmod -R +x mongodb
    find . -name vcredist_x64.exe -exec {} /install /quiet \;
    echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
-   popd
+   cd -
 }
 
 download_and_extract_mongosh ()
@@ -725,7 +725,7 @@ download_and_extract_mongosh ()
       get_mongodb_download_url_for $(get_distro) latest false
    fi
 
-   pushd $(dirname $(dirname ${MONGODB_BINARIES}))
+   cd $(dirname $(dirname ${MONGODB_BINARIES}))
    rm -rf mongosh
 
    echo "Installing MongoDB shell..."
