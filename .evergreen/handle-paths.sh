@@ -37,10 +37,10 @@ fi
 case "$(uname -s)" in
   CYGWIN*)
     SCRIPT_DIR=$(cygpath -m "$SCRIPT_DIR")
-    DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
+    DRIVERS_TOOLS=$(cygpath -m "$DRIVERS_TOOLS")
     # USERPROFILE is required by Python for pathlib.Path().expanduser(~).
     if [ -z "${USERPROFILE:-}" ]; then
-      USERPROFILE=$(cygpath -m $HOME)
+      USERPROFILE=$(cygpath -m "$HOME")
     fi
   ;;
 esac
@@ -48,12 +48,12 @@ esac
 # Handle .env files
 if [ -f "$DRIVERS_TOOLS/.env" ]; then
   echo "Reading $DRIVERS_TOOLS/.env file"
-  export $(grep -v '^#' $DRIVERS_TOOLS/.env | xargs)
+  export $(grep -v '^#' "$DRIVERS_TOOLS/.env" | xargs)
 fi
 
 if [ -f "$SCRIPT_DIR/.env" ]; then
   echo "Reading $SCRIPT_DIR/.env file"
-  export $(grep -v '^#' $SCRIPT_DIR/.env | xargs)
+  export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
 fi
 
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
@@ -64,6 +64,6 @@ case "$PATH" in
   *"$DRIVERS_TOOLS/.bin"*)
   ;;
   *)
-    PATH=$PATH:$DRIVERS_TOOLS/.bin
+    PATH="$PATH:$DRIVERS_TOOLS/.bin"
   ;;
 esac

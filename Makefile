@@ -7,7 +7,7 @@ run-server:
 	.evergreen/run-orchestration.sh
 
 stop-server:
-	bash .evergreen/stop-orchestration.sh
+	.evergreen/stop-orchestration.sh
 
 test:
 	@echo "Running tests..."
