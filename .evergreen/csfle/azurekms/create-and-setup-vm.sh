@@ -62,6 +62,7 @@ if [ -f secrets-export.sh ]; then
     echo "export AZUREKMS_VMNAME=\"$AZUREKMS_VMNAME\"" >> secrets-export.sh
     echo "export AZUREKMS_RESOURCEGROUP=\"$AZUREKMS_RESOURCEGROUP\"" >> secrets-export.sh
     echo "export AZUREKMS_SCOPE=\"$AZUREKMS_SCOPE\"" >> secrets-export.sh
+    echo "export AZUREKMS_PRIVATEKEYPATH=\"$AZUREKMS_PRIVATEKEYPATH\"" >> secrets-export.sh
 fi
 # Assign role.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
