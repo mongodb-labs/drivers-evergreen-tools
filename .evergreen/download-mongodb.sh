@@ -699,7 +699,13 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
+   if [ -n "${MONGODB_BINARIES:-}" ]; then
+      cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
+   else
+      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+      . $SCRIPT_DIR/handle-paths.sh
+      cd $DRIVERS_TOOLS
+   fi
 
    echo "Installing server binaries..."
    curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
@@ -724,7 +730,13 @@ download_and_extract_mongosh ()
       get_mongodb_download_url_for $(get_distro) latest false
    fi
 
-   cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
+   if [ -n "${MONGODB_BINARIES:-}" ]; then
+      cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
+   else
+      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+      . $SCRIPT_DIR/handle-paths.sh
+      cd $DRIVERS_TOOLS
+   fi
 
    echo "Installing MongoDB shell..."
    curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
