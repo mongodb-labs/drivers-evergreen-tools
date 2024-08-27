@@ -699,7 +699,7 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   cd $(dirname $(dirname ${MONGODB_BINARIES}))
+   cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
    rm -rf mongodb
 
    echo "Installing server binaries..."
