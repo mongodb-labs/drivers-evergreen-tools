@@ -725,7 +725,7 @@ download_and_extract_mongosh ()
       get_mongodb_download_url_for $(get_distro) latest false
    fi
 
-   cd $(dirname $(dirname ${MONGODB_BINARIES}))
+   cd $(dirname $(dirname ${MONGODB_BINARIES:?}))
    rm -rf mongosh
 
    echo "Installing MongoDB shell..."
