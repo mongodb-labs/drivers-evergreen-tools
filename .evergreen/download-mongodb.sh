@@ -725,7 +725,6 @@ download_and_extract_mongosh ()
    fi
 
    cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
-   rm -rf mongosh
 
    echo "Installing MongoDB shell..."
    curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
