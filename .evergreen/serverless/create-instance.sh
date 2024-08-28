@@ -110,9 +110,7 @@ RESP=$(curl -sS \
 SERVERLESS_MONGODB_VERSION=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d['mongoDBVersion'])")
 echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"
 
-cat << EOF >> $CURRENT_DIR/serverless-expansion.yml
-SERVERLESS_URI: "$SERVERLESS_URI"
-EOF
+echo "SERVERLESS_URI: \"$SERVERLESS_URI\"" >> $CURRENT_DIR/serverless-expansion.yml
 
 # Add the uri to the secrets file.
 if [ -f "./secrets-export.sh" ]; then
