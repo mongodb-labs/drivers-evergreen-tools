@@ -1,7 +1,6 @@
 /**
  * Look for a cherry-pick target based on a comment in a PR.
  */
-import * as fs from "fs";
 import * as process from "process";
 import { program } from 'commander';
 import { getOctokit, findComment } from './utils.mjs';
@@ -26,12 +25,9 @@ const {
 
 // Set up the app.
 const octokit = await getOctokit(owner);
-const headers =  {
-    "x-github-api-version": "2022-11-28",
-};
 
 // Find a matching comment.
-const comment = await findComment(octokit, owner, repo, targetSha, BODY_MATCH, "closed");
+const { comment } = await findComment(octokit, owner, repo, targetSha, BODY_MATCH, "closed");
 if (!comment) {
     process.exit(0);
 }

@@ -53,3 +53,21 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
     - uses: pre-commit/action@v3.0.1
+
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v2
+      - id: cache-restore
+        uses: actions/cache@v3
+        with:
+          path: ./.evergreen/github_app/node_modules
+          key: npm-${{ hashFiles('./.evergreen/github_app/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        working-directory: .evergreen/github_app
+        run: npm ci - ignore-scripts
+      - name: Lint
+        working-directory: .evergreen/github_app
+        run: npm run lint
