@@ -54,7 +54,7 @@ async function findComment(octokit, owner, repo, targetSha, bodyMatch, state) {
         issue_number: issue.number,
         headers
     });
-    return { comment: resp.data.find(comment => comment.body.includes(bodyMatch)), number: issue.number}
+    return { comment: resp.data.find(comment => comment.body.includes(bodyMatch)), issue_number: issue.number}
 }
 
 
