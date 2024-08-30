@@ -61,7 +61,7 @@ old_title=$(git --no-pager log $target_sha --pretty=%B | head -n 1)
 title="${old_title} [${target_branch}]"
 body="Cherry-pick of $target_sha to $target_branch"
 status=0
-git cherry-pick -x -m1 $target_sha || {
+git cherry-pick -x -m1 $target_sha > /dev/null 2>&1 || {
     status=$?
 }
 if [ $status == 0 ]; then
@@ -78,10 +78,12 @@ if [ $status == 0 ]; then
         --url https://api.github.com/repos/$owner/$repo/pulls)
     echo $resp | jq '.html_url'
     echo "Creating the PR... done."
+    popd
 else
     # If the cherry-pick fails, make a comment.
     echo "Creating the cherry-pick... failed!"
     echo "Creating the PR comment..."
+    popd
     message="Sorry, unable to cherry-pick to $target_branch"
     cat << EOF >> comment.txt
 $message, please backport manually. Here are approximate instructions:
@@ -114,11 +116,10 @@ git push origin ${target_branch}:{remote_submit_branch}
 
 > "$title"
 EOF
-    node create_or_modify_comment.sh -o $owner -n $repo -m $message -c comment.txt -h $target_sha
+    node create_or_modify_comment.mjs -o $owner -n $repo -m $message -c comment.txt -h $target_sha
     rm comment.txt
     echo "Creating the PR comment... done."
 fi
 
-popd
 rm -rf $dirname
 popd
