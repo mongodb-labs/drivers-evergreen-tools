@@ -7,11 +7,12 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE:-"$0"}")
 cd ${DRIVERS_TOOLS}
 
 # source the mongo-orchestration virtualenv if it exists
-if [ -f venv/bin/activate ]; then
-    . "$MONGO_ORCHESTRATION_HOME/venv/bin/activate"
+VENV="$MONGO_ORCHESTRATION_HOME/venv"
+if [ -f "$VENV/bin/activate" ]; then
+    . "$VENV/bin/activate"
     mongo-orchestration stop
-elif [ -f venv/Scripts/activate ]; then
-    . "$MONGO_ORCHESTRATION_HOME/venv/Scripts/activate"
+elif [ -f "$VENV/Scripts/activate" ]; then
+    . "$VENV/Scripts/activate"
     mongo-orchestration stop
 else
     echo "No virtualenv found!"
