@@ -60,7 +60,11 @@ echo "Creating the cherry-pick..."
 old_title=$(git --no-pager log $target_sha --pretty=%B | head -n 1)
 title="${old_title} [${target_branch}]"
 body="Cherry-pick of $target_sha to $target_branch"
-if git cherry-pick -x -m1 $target_sha; then
+status=0
+git cherry-pick -x -m1 $target_sha || {
+    status=$?
+}
+if [ $status == 0 ]; then
     # If the cherry-pick succeeds, push the branch and make a PR.
     echo "Creating the cherry-pick..."
     echo "Creating the PR..."
