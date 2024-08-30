@@ -85,38 +85,39 @@ else
     echo "Creating the PR comment..."
     popd
     message="Sorry, unable to cherry-pick to $target_branch"
-    cat << EOF >> comment.txt
+    cat << EOF > comment.txt
 $message, please backport manually. Here are approximate instructions:
 
 1. Checkout backport branch and update it.
 
-```
-git checkout ${target_branch}
-git pull
-```
+\`\`\`
+git checkout -b ${branch} ${target_branch}
+
+git fetch origin ${target_sha}
+\`\`\`
 
 2. Cherry pick the first parent branch of the this PR on top of the older branch:
-```
+\`\`\`
 git cherry-pick -x -m1 ${target_sha}
-```
+\`\`\`
 
 3. You will likely have some merge/cherry-pick conflicts here, fix them and commit:
 
-```
+\`\`\`
 git commit -am {message}
-```
+\`\`\`
 
 4. Push to a named branch:
 
-```
-git push origin ${target_branch}:{remote_submit_branch}
-```
+\`\`\`
+git push origin ${branch}
+\`\`\`
 
 5. Create a PR against branch ${target_branch}. I would have named this PR:
 
 > "$title"
 EOF
-    node create_or_modify_comment.mjs -o $owner -n $repo -m $message -c comment.txt -h $target_sha
+    node create_or_modify_comment.mjs -o $owner -n $repo -m $message -c comment.txt -h $target_sha -s "closed"
     rm comment.txt
     echo "Creating the PR comment... done."
 fi
