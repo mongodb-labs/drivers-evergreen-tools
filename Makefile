@@ -5,7 +5,7 @@ all:
 
 clean:
 	@echo "Cleaning files..."
-	git clean -fx --exclude .evergreen --exclude .venv .
+	git -c safe-directory='*' clean -fx --exclude .evergreen --exclude .venv .
 	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
 
 run-server: clean
