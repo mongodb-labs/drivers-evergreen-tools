@@ -8,8 +8,10 @@ clean:
 	git clean -fx --exclude .evergreen --exclude .venv .
 	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
 
-run-server: clean
+run-server:
 	@echo "Running server..."
+	make stop-server
+	make clean
 	.evergreen/run-orchestration.sh
 
 stop-server:
