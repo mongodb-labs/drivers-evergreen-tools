@@ -40,6 +40,7 @@ case "$(uname -s)" in
     DRIVERS_TOOLS=$(cygpath -m "$DRIVERS_TOOLS")
     # USERPROFILE is required by Python for pathlib.Path().expanduser(~).
     if [ -z "${USERPROFILE:-}" ]; then
+      export USERPROFILE
       USERPROFILE=$(cygpath -m "$HOME")
     fi
   ;;
