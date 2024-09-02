@@ -58,9 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v4
       - id: cache-restore
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./.evergreen/github_app/node_modules
           key: npm-${{ hashFiles('./.evergreen/github_app/package-lock.json') }}
