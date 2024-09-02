@@ -1311,7 +1311,7 @@ buildvariants:
 - name: tests-docker
   display_name: Docker
   run_on:
-    - ubuntu2204-large
+    - ubuntu2204-small
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
