@@ -10,7 +10,7 @@ clean:
 
 run-server:
 	@echo "Running server..."
-	make stop-orchestration
+	make stop-server
 	make clean
 	.evergreen/run-orchestration.sh
 
