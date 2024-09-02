@@ -8,10 +8,8 @@ clean:
 	rm -rf ./mongodb .env results.json mo-expansion*
 	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
 
-run-server:
+run-server: clean
 	@echo "Running server..."
-	make clean
-	make stop-server
 	.evergreen/run-orchestration.sh
 
 stop-server:
