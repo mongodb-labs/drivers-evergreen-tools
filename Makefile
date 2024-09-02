@@ -5,11 +5,13 @@ all:
 
 clean:
 	@echo "Cleaning files..."
-	git clean -fx --exclude .evergreen --exclude .venv .
+	rm -rf ./mongodb .env results.json mo-expansion*
 	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
 
-run-server: clean
+run-server:
 	@echo "Running server..."
+	make stop-orchestration
+	make clean
 	.evergreen/run-orchestration.sh
 
 stop-server:

@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-# Handle git ownership issues for the mounted volume.
-git config --global safe.directory '*'
-
 # Start the server.
 cd $DRIVERS_TOOLS
 make run-server
