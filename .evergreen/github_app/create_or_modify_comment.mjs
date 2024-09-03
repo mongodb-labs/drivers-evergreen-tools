@@ -15,6 +15,7 @@ program
   .requiredOption('-m, --body-match <string>', 'The comment body to match')
   .requiredOption('-c, --comment-path <path>', 'The path to the comment body file')
   .requiredOption('-h, --head-sha <sha>', 'The sha of the head commit')
+  .option('-s, --status <status>', 'The PR status (defaults to "open")', 'open')
   .parse(process.argv);
 
 const options = program.opts();
@@ -23,7 +24,8 @@ const {
   repoName: repo,
   bodyMatch,
   commentPath,
-  headSha: targetSha
+  headSha: targetSha,
+  status
  } = options;
 const bodyText = fs.readFileSync(commentPath, { encoding: 'utf8' });
 
@@ -34,10 +36,10 @@ const headers =  {
 };
 
 // Find a matching comment.
-const {comment, issue_number } = await findComment(octokit, owner, repo, targetSha, bodyMatch, "open");
+const {comment, issue_number } = await findComment(octokit, owner, repo, targetSha, bodyMatch, status);
 if (!comment) {
     // create comment.
-    await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
+   var resp = await octokit.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
         owner,
         repo,
         issue_number,
@@ -46,7 +48,7 @@ if (!comment) {
     });
 } else {
     // update comment.
-    await octokit.request("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {
+    resp = await octokit.request("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {
         owner,
         repo,
         body: bodyText,
@@ -55,3 +57,4 @@ if (!comment) {
     });
 
 }
+console.log(resp.data.html_url)
