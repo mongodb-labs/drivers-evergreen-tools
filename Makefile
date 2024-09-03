@@ -4,12 +4,16 @@ all:
 	@echo "Project successfully compiled"
 
 clean:
-	rm -rf mongodb
+	@echo "Cleaning files..."
+	rm -rf ./mongodb .env results.json mo-expansion*
+	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
 
 run-server: clean
+	@echo "Running server..."
 	.evergreen/run-orchestration.sh
 
 stop-server:
+	@echo "Stopping server..."
 	.evergreen/stop-orchestration.sh
 
 test:

@@ -7,6 +7,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     curl \
     wget \
     sudo \
+    make \
     gnupg \
     python \
     lsof \

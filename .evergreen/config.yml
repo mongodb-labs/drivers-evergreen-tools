@@ -1303,7 +1303,7 @@ buildvariants:
 - name: releng-release-archive-creator
   display_name: "** Release Archive Creator"
   run_on:
-    - ubuntu2004-large
+    - ubuntu2004-small
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
@@ -1311,7 +1311,7 @@ buildvariants:
 - name: tests-docker
   display_name: Docker
   run_on:
-    - ubuntu2204-large
+    - ubuntu2204-small
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 

@@ -6,6 +6,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   ca-certificates \
   curl \
   wget \
+  make \
   sudo \
   gnupg \
   python \
