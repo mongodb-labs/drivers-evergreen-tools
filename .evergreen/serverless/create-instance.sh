@@ -52,14 +52,6 @@ for VARNAME in ${VARLIST[*]}; do
   [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Historically, this script accepted LOADBALANCED=ON to opt in to testing load
-# balanced serverless instances. Since all serverless instances now use a load
-# balancer, prohibit opting out (i.e. defining LOADBALANCED != ON).
-if [ -n "${LOADBALANCED:-}" -a "${LOADBALANCED:-}" != "ON" ]; then
-    echo "Cannot opt out of testing load balanced serverless instances"
-    exit 1
-fi
-
 # Generate a random instance name if one was not provided.
 # See: https://docs.atlas.mongodb.com/reference/atlas-limits/#label-limits
 if [ -z "${SERVERLESS_INSTANCE_NAME:-}" ]; then
@@ -116,20 +108,7 @@ RESP=$(curl -sS \
 SERVERLESS_MONGODB_VERSION=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d['mongoDBVersion'])")
 echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"
 
-cat << EOF >> $CURRENT_DIR/serverless-expansion.yml
-SERVERLESS_URI: "$SERVERLESS_URI"
-
-# Define original variables for backwards compatibility
-MONGODB_URI: "$SERVERLESS_URI"
-MONGODB_SRV_URI: "$SERVERLESS_URI"
-SSL: "ssl"
-AUTH: "auth"
-TOPOLOGY: "sharded_cluster"
-SERVERLESS: "serverless"
-SINGLE_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
-MULTI_ATLASPROXY_SERVERLESS_URI: "$SERVERLESS_URI"
-SERVERLESS_MONGODB_VERSION: "$SERVERLESS_MONGODB_VERSION"
-EOF
+echo "SERVERLESS_URI: \"$SERVERLESS_URI\"" >> $CURRENT_DIR/serverless-expansion.yml
 
 # Add the uri to the secrets file.
 if [ -f "./secrets-export.sh" ]; then
