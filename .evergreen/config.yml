@@ -1236,6 +1236,10 @@ axes:
         display_name: "Ubuntu 20.04 (ARM64)"
         run_on: ubuntu2004-arm64-small
 
+      - id: rhel70-small
+        display_name: "RHEL 7"
+        run_on: rhel70-small
+
       - id: rhel87-power8
         display_name: "RHEL 8 (POWER8)"
         run_on: rhel81-power8-small
