@@ -5,7 +5,6 @@
 # . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh <binary-name>
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-SCRIPT_DIR=.
 . $SCRIPT_DIR/handle-paths.sh
 
 NAME=$1
