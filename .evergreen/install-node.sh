@@ -11,6 +11,7 @@ NODE_LTS_VERSION=${NODE_LTS_VERSION:-18}
 NPM_VERSION=${NPM_VERSION:-latest}
 
 source "./init-node-and-npm-env.sh"
+source "./retry-with-backoff.sh"
 
 if [[ -z "${npm_global_prefix}" ]]; then echo "npm_global_prefix is unset" && exit 1; fi
 if [[ -z "${NODE_ARTIFACTS_PATH}" ]]; then echo "NODE_ARTIFACTS_PATH is unset" && exit 1; fi
@@ -33,7 +34,7 @@ shopt -s nocasematch
 # index.tab is a sorted tab separated values file with the following headers
 # 0       1    2     3   4  5  6    7       8       9   10
 # version date files npm v8 uv zlib openssl modules lts security
-curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab
+retry_with_backoff curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab
 
 while IFS=$'\t' read -r -a row; do
   node_index_version="${row[0]}"
@@ -46,7 +47,7 @@ while IFS=$'\t' read -r -a row; do
   [[ "$NODE_LTS_VERSION" = "$node_index_major_version" ]] && break # case insensitive compare
 done < node_index.tab
 
-if [[ "$OS" = "Windows_NT" ]]; then
+if [[ "${OS:-}" = "Windows_NT" ]]; then
   operating_system="win"
 elif [[ $(uname) = "darwin" ]]; then
   operating_system="darwin"
@@ -74,7 +75,7 @@ else
 fi
 
 file_extension="tar.gz"
-if [[ "$OS" = "Windows_NT" ]]; then file_extension="zip"; fi
+if [[ "${OS:-}" = "Windows_NT" ]]; then file_extension="zip"; fi
 
 node_directory="node-${node_index_version}-${operating_system}-${architecture}"
 node_archive="${node_directory}.${file_extension}"
@@ -89,7 +90,7 @@ if [[ "$file_extension" = "zip" ]]; then
   if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
     echo "Node.js already installed!"
   else
-    curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
+    retry_with_backoff curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
     unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
     mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
     # Windows "bins" are at the top level
@@ -102,7 +103,7 @@ else
   if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/${node_directory}" ]]; then
     echo "Node.js already installed!"
   else
-    curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
+    retry_with_backoff curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
     tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
     mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
   fi

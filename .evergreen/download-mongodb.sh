@@ -3,6 +3,8 @@
 #For future use the feed to get full list of distros : http://downloads.mongodb.org/full.json
 
 set -o errexit  # Exit the script with error if any of the commands fail
+SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+. $SCRIPT_DIR/handle-paths.sh
 
 get_distro ()
 {
@@ -685,12 +687,6 @@ set_url_win32 ()
   MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_24}.zip"
 }
 
-# curl_retry runs curl with up to three retries, retrying any error.
-curl_retry ()
-{
-  for i in 1 2 3; do curl --fail -sS --max-time 300 "$@" && break || sleep 5;
-  done
-}
 
 # download_and_extract_package downloads a MongoDB server package.
 download_and_extract_package ()
@@ -707,7 +703,8 @@ download_and_extract_package ()
    fi
 
    echo "Installing server binaries..."
-   curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+   . "$SCRIPT_DIR/retry-with-backoff.sh"
+   retry_with_backoff curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
@@ -738,7 +735,8 @@ download_and_extract_mongosh ()
    fi
 
    echo "Installing MongoDB shell..."
-   curl_retry $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
+   . "$SCRIPT_DIR/retry-with-backoff.sh"
+   retry_with_backoff curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
@@ -823,7 +821,9 @@ download_and_extract_crypt_shared ()
    rm -rf crypt_shared_download
    mkdir crypt_shared_download
    cd crypt_shared_download
-   curl_retry $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
+
+   . "$SCRIPT_DIR/retry-with-backoff.sh"
+   retry_with_backoff curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
 
    LIBRARY_NAME="mongo_crypt_v1"
