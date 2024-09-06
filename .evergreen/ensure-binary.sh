@@ -5,6 +5,7 @@
 # . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh <binary-name>
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+SCRIPT_DIR=.
 . $SCRIPT_DIR/handle-paths.sh
 
 NAME=$1
@@ -18,10 +19,10 @@ if [ -z "$DRIVERS_TOOLS" ]; then
   return 1
 fi
 
-if command -v $NAME &> /dev/null; then
-  echo "$NAME found in PATH!"
-  return 0
-fi
+# if command -v $NAME &> /dev/null; then
+#   echo "$NAME found in PATH!"
+#   return 0
+# fi
 
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
@@ -31,7 +32,7 @@ URL=""
 
 case $NAME in
   kubectl)
-    VERSION=$(retry_with_backoff curl -L -s https://dl.k8s.io/release/stable.txt)
+    VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
     BASE="https://dl.k8s.io/release/$VERSION/bin"
     case "$OS_NAME-$MARCH" in
         linux-x86_64)
@@ -76,7 +77,7 @@ echo "Installing $NAME..."
 if [ "$NAME" != "gcloud" ]; then
   mkdir -p ${DRIVERS_TOOLS}/.bin
   TARGET=${DRIVERS_TOOLS}/.bin/$NAME
-  retry_with_backoff curl -L -s $URL -o $TARGET || curl -L $URL -o $TARGET
+  retry_with_backoff curl -L -s $URL -o $TARGET
   chmod +x $TARGET
 
 else
@@ -84,7 +85,7 @@ else
   pushd /tmp
   rm -rf google-cloud-sdk
   FNAME=/tmp/google-cloud-sdk.tgz
-  retry_with_backoff curl -L -s $URL -o $FNAME || curl -L $URL -o $FNAME
+  retry_with_backoff curl -L -s $URL -o $FNAME
   tar xfz $FNAME
   popd
   ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
