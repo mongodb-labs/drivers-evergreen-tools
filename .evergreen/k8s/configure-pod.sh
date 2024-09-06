@@ -30,7 +30,7 @@ echo "Waiting for pod to be ready... done."
 echo "Configuring pod $POD_NAME..."
 set -x
 # Account for initial error in connecting to pod.
-. "$SCRIPT_DIR/../retry-with-backoff.sh"
+. "../retry-with-backoff.sh"
 retry_with_backoff kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
