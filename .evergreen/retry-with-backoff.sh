@@ -9,9 +9,6 @@
 #
 # Successive backoffs double the timeout.
 #
-#
-# Note: set -e would kill the entire script before retrying
-#
 function retry_with_backoff {
   local max_attempts=${ATTEMPTS-5}
   local timeout=${TIMEOUT-1}
