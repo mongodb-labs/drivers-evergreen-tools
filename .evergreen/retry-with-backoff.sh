@@ -19,16 +19,15 @@ function retry_with_backoff {
   local exitCode=0
 
   command="$@"
-  while [[ $attempt -lt $max_attempts ]]
-  do
+  while [[ $attempt -lt $max_attempts ]]; do
     attempt_prompt=$(( attempt + 1 ))
     echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..."
 
-    "$@"
-    exitCode=$?
-
-    if [[ $exitCode == 0 ]]
-    then
+    exitCode=0
+    "$@" || {
+        exitCode=$?
+    }
+    if [[ $exitCode == 0 ]]; then
       break
     fi
 
@@ -38,8 +37,7 @@ function retry_with_backoff {
     timeout=$(( timeout * 2 ))
   done
 
-  if [[ $exitCode != 0 ]]
-  then
+  if [[ $exitCode != 0 ]]; then
     echo "retry_with_backoff: All attempts failed" 1>&2
   fi
 
