@@ -115,9 +115,9 @@ if [ -f "./secrets-export.sh" ]; then
   echo "export SERVERLESS_URI=$SERVERLESS_URI" >> ./secrets-export.sh
 fi
 
+popd
+
 if [ "${SERVERLESS_SKIP_CRYPT:-}" != "OFF" ]; then
   # Download binaries and crypt_shared
-  MONGODB_VERSION=$(echo $SERVERLESS_MONGODB_VERSION | cut -d '.' -f-2) bash ./download-crypt.sh
+  MONGODB_VERSION=$(echo $SERVERLESS_MONGODB_VERSION | cut -d '.' -f-2) bash $SCRIPT_DIR/download-crypt.sh
 fi
-
-popd
