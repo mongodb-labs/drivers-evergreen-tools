@@ -9,7 +9,7 @@
 #
 # Successive backoffs double the timeout.
 #
-function retry_with_backoff {
+retry_with_backoff() {
   local max_attempts=${ATTEMPTS-5}
   local timeout=${TIMEOUT-1}
   local attempt=0
