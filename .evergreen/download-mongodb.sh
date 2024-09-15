@@ -714,7 +714,7 @@ download_and_extract_package ()
    rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb
-   find . -name vcredist_x64.exe -exec {} /install /quiet \;
+   find . -name vcredist_x64.exe -exec bash -c 'x="$1"; $x /install /quiet' \;
    echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
