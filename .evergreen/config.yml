@@ -1188,15 +1188,15 @@ axes:
 
       - id: rhel8
         display_name: "RHEL 8"
-        run_on: rhel87-small
+        run_on: rhel88-small
 
-      - id: macos-1100
-        display_name: "macOS 11.00"
-        run_on: macos-1100
+      - id: macos-11
+        display_name: "macOS 11"
+        run_on: macos-11
 
-      - id: windows-64-vsMulti-small
+      - id: windows-2022
         display_name: "Windows 64"
-        run_on: windows-64-vsMulti-small
+        run_on: windows-2022-small
 
   # OSes that support versions of MongoDB>=7.0 with SSL.
   - id: os-requires-70
@@ -1215,9 +1215,13 @@ axes:
         display_name: "Amazon Linux 2023 x64"
         run_on: amazon2023.0-small
 
+      - id: macos-14-arm64
+        display_name: "macOS 14 arm64"
+        run_on: macos-14-arm64
+
       - id: rhel9
-        display_name: "RHEL 9.0 x64"
-        run_on: rhel91-small
+        display_name: "RHEL 9 x64"
+        run_on: rhel94-small
 
   # OSes that support versions of MongoDB>=5.0 with SSL.
   - id: os-requires-50
@@ -1232,21 +1236,21 @@ axes:
         display_name: "Ubuntu 20.04"
         run_on: ubuntu2004-test
 
-      - id: ubuntu2004-arm64-small
+      - id: ubuntu2004-arm64
         display_name: "Ubuntu 20.04 (ARM64)"
         run_on: ubuntu2004-arm64-small
 
-      - id: rhel70-small
+      - id: rhel7
         display_name: "RHEL 7"
         run_on: rhel70-small
 
-      - id: rhel87-power8
+      - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
-        run_on: rhel81-power8-small
+        run_on: rhel8-power-small
 
-      - id: rhel83-zseries-small
+      - id: rhel8-zseries
         display_name: "RHEL8 (zSeries)"
-        run_on: rhel83-zseries-small
+        run_on: rhel8-zseries-small
 
   - id: topology
     display_name: Topology
