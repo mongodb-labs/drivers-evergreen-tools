@@ -37,7 +37,8 @@ case "$CC" in
    ;;
 esac
 
-export PATH=$PATH:`pwd`/tests:`pwd`/Debug:`pwd`/src/libbson/Debug
+PATH=$PATH:`pwd`/tests:`pwd`/Debug:`pwd`/src/libbson/Debug
+export PATH
 CMAKE="/cygdrive/c/cmake/bin/cmake"
 INSTALL_DIR="C:/install-dir"
 

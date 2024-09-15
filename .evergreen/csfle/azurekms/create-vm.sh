@@ -39,7 +39,7 @@ az vm create \
     --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
 
-if [ $(uname -s) = "Darwin" ]; then
+if [ "$(uname -s)" = "Darwin" ]; then
     SHUTDOWN_TIME=$(date -u -v+1H +"%H%M")
 else
     SHUTDOWN_TIME=$(date -u -d "$(date) + 1 hours" +"%H%M")

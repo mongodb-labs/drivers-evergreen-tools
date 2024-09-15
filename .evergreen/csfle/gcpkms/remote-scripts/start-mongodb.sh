@@ -5,7 +5,8 @@ set -o pipefail
 
 echo "Starting MongoDB server ... begin"
 git clone https://github.com/mongodb-labs/drivers-evergreen-tools
-export DRIVERS_TOOLS=$(pwd)/drivers-evergreen-tools
+DRIVERS_TOOLS="$(pwd)/drivers-evergreen-tools"
+export DRIVERS_TOOLS
 export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
 export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
 echo "{ \"releases\": { \"default\": \"$MONGODB_BINARIES\" }}" > $MONGO_ORCHESTRATION_HOME/orchestration.config

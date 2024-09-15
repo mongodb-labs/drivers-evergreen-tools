@@ -48,7 +48,7 @@ SERVERLESS_DRIVERS_GROUP
 
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
-for VARNAME in ${VARLIST[*]}; do
+for VARNAME in "${VARLIST[@]}"; do
   [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
@@ -70,7 +70,7 @@ export DEPLOYMENT_TYPE=serverless
 
 # Note: backingProviderName and regionName below should correspond to the
 # multi-tenant MongoDB (MTM) associated with $SERVERLESS_DRIVERS_GROUP.
-export DEPLOYMENT_DATA=$(cat <<EOF
+DEPLOYMENT_DATA=$(cat <<EOF
 {
   "name" : "$SERVERLESS_INSTANCE_NAME",
   "providerSettings" : {
@@ -82,6 +82,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 }
 EOF
 )
+export DEPLOYMENT_DATA
 
 # Get the utility functions
 . $SCRIPT_DIR/../atlas/atlas-utils.sh
@@ -92,7 +93,9 @@ create_deployment
 echo "export SERVERLESS_INSTANCE_NAME=$SERVERLESS_INSTANCE_NAME" >> ./secrets-export.sh
 echo "SERVERLESS_INSTANCE_NAME: \"$SERVERLESS_INSTANCE_NAME\"" > $CURRENT_DIR/serverless-expansion.yml
 
-export SERVERLESS_URI=$(check_deployment)
+SERVERLESS_URI=$(check_deployment)
+export SERVERLESS_URI
+
 echo "SERVERLESS_URI=$SERVERLESS_URI"
 if [ $SERVERLESS_URI = "null" ]; then
   exit 1

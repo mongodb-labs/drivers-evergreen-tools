@@ -37,6 +37,7 @@ fi
 
 # Backwards compatibility: map old names to new names.
 if [ -n "${LAMBDA_STACK_NAME:-}" ]; then
+  # shellcheck disable=SC2034
   CLUSTER_PREFIX=$LAMBDA_STACK_NAME
 fi
 if [ -n "${DRIVERS_ATLAS_LAMBDA_USER:-}" ]; then
@@ -57,7 +58,7 @@ CLUSTER_PREFIX
 
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
-for VARNAME in ${VARLIST[*]}; do
+for VARNAME in "${VARLIST[@]}"; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
@@ -71,7 +72,7 @@ done
 export VERSION="${MONGODB_VERSION:-6.0}"
 
 # Set the create cluster configuration.
-export DEPLOYMENT_DATA=$(cat <<EOF
+DEPLOYMENT_DATA=$(cat <<EOF
 {
   "autoScaling" : {
     "autoIndexingEnabled" : false,
@@ -116,6 +117,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 }
 EOF
 )
+export DEPLOYMENT_DATA
 
 export ATLAS_PUBLIC_API_KEY=$DRIVERS_ATLAS_PUBLIC_API_KEY
 export ATLAS_PRIVATE_API_KEY=$DRIVERS_ATLAS_PRIVATE_API_KEY

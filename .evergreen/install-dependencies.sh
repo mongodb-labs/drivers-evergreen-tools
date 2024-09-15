@@ -6,7 +6,6 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 # Functions to fetch MongoDB binaries
 . $SCRIPT_DIR/download-mongodb.sh
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 get_distro
 

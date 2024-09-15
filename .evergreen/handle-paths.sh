@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck shell=sh
 #
 # This script will handle the correct cross-platform absolute
 # paths for a script directory and DRIVERS_TOOLS.
@@ -47,15 +48,10 @@ case "$(uname -s)" in
 esac
 
 # Handle .env files
-if [ -f "$DRIVERS_TOOLS/.env" ]; then
-  echo "Reading $DRIVERS_TOOLS/.env file"
-  export $(grep -v '^#' "$DRIVERS_TOOLS/.env" | xargs)
-fi
-
-if [ -f "$SCRIPT_DIR/.env" ]; then
-  echo "Reading $SCRIPT_DIR/.env file"
-  export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
-fi
+set +a
+[ -f "$DRIVERS_TOOLS/.env" ] && . "$DRIVERS_TOOLS/.env"
+[ -f "$SCRIPT_DIR/.env" ] && . "$SCRIPT_DIR/.env"
+set -a
 
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}

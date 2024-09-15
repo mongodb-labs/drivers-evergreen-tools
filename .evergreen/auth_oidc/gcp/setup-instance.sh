@@ -5,14 +5,18 @@ set -o errexit # Exit on first command error.
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
-if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then
-    echo "Please set the following required environment variables"
-    echo " GCPKMS_GCLOUD to the path of the gcloud binary"
-    echo " GCPKMS_PROJECT to the GCP project"
-    echo " GCPKMS_ZONE to the GCP zone"
-    echo " GCPKMS_INSTANCENAME to the GCE instance name"
-    exit 1
-fi
+VARLIST=(
+GCPKMS_GCLOUD
+GCPKMS_PROJECT
+GCPKMS_ZONE
+GCPKMS_INSTANCENAME
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 echo "Copying setup-gce-instance.sh to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
