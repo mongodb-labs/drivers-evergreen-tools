@@ -1242,7 +1242,7 @@ axes:
 
       - id: rhel87-power8
         display_name: "RHEL 8 (POWER8)"
-        run_on: rhel8-power-small
+        run_on: rhel8-power-large
 
       - id: rhel83-zseries-small
         display_name: "RHEL8 (zSeries)"
