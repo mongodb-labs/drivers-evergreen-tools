@@ -715,7 +715,9 @@ download_and_extract_package ()
    rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb
-   bash -c 'find . -name vcredist_x64.exe -exec {} /install /quiet \;'
+   # Clear the environment to avoid "find: The environment is too large for exec()"
+   # error on Windows.
+   env -i find . -name vcredist_x64.exe -exec {} /install /quiet \;
    echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
