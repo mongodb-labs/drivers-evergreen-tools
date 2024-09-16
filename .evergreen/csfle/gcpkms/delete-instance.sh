@@ -10,7 +10,7 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
   source $SCRIPT_DIR/secrets-export.sh
 fi
 
-if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" ]; then
+if [ -z "$GCPKMS_GCLOUD" ] || [ -z "$GCPKMS_PROJECT" ] || [ -z "$GCPKMS_ZONE" ] || [ -z "$GCPKMS_INSTANCENAME" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"
     echo " GCPKMS_PROJECT to the GCP project"

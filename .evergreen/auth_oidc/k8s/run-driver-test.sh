@@ -12,6 +12,12 @@ K8S_DRIVERS_TAR_FILE
 K8S_TEST_CMD
 )
 
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
+
 source secrets-export.sh
 source $K8S_VARIANT_DIR/secrets-export.sh
 

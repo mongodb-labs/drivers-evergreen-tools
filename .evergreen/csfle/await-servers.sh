@@ -9,7 +9,7 @@ pushd $SCRIPT_DIR
 # Wait until the pids file has been created.
 echo "Waiting for servers to start..."
 await_pidfile() {
-    for i in $(seq 300); do
+    for _ in $(seq 300); do
         if [ -f ./kmip_pids.pid ]; then
             return 0
         fi
@@ -25,7 +25,7 @@ echo "Waiting for servers to start...done"
  # Ensure servers are running.
 await_server() {
     echo "Waiting on $1 server on port $2"
-    for i in $(seq 10); do
+    for _ in $(seq 10); do
         # Exit code 7: "Failed to connect to host".
         if curl -s "localhost:$2"; test $? -ne 7; then
             echo "Waiting on $1 server on port $2...done"

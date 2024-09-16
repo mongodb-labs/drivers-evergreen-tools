@@ -34,12 +34,13 @@ SECRETS_FILE=$SCRIPT_DIR/../atlas/secrets-export.sh
 
 if [ -f $SECRETS_FILE ]; then
   echo "Sourcing secrets"
+  # shellcheck source=../atlas/secrets-export.sh
   source $SECRETS_FILE
 fi
 
 # Ensure that all variables required to run the test are set, otherwise throw
 # an error.
-for VARNAME in ${VARLIST[*]}; do
+for VARNAME in "${VARLIST[@]}"; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 

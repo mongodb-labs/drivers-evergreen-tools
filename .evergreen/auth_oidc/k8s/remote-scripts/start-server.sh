@@ -2,7 +2,7 @@
 set -eu
 
 # Start an OIDC-enabled server.
-SCRIPT_DIR=$(realpath $(dirname ${BASH_SOURCE[0]}))
+SCRIPT_DIR=$(realpath "$(dirname ${BASH_SOURCE[0]})")
 cd $SCRIPT_DIR
 source secrets-export.sh
 

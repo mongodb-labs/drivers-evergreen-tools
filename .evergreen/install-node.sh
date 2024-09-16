@@ -11,7 +11,6 @@ NODE_LTS_VERSION=${NODE_LTS_VERSION:-18}
 NPM_VERSION=${NPM_VERSION:-latest}
 
 source "./init-node-and-npm-env.sh"
-source "./retry-with-backoff.sh"
 
 if [[ -z "${npm_global_prefix}" ]]; then echo "npm_global_prefix is unset" && exit 1; fi
 if [[ -z "${NODE_ARTIFACTS_PATH}" ]]; then echo "NODE_ARTIFACTS_PATH is unset" && exit 1; fi
@@ -34,13 +33,12 @@ shopt -s nocasematch
 # index.tab is a sorted tab separated values file with the following headers
 # 0       1    2     3   4  5  6    7       8       9   10
 # version date files npm v8 uv zlib openssl modules lts security
-retry_with_backoff curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab
+"$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab
 
 while IFS=$'\t' read -r -a row; do
   node_index_version="${row[0]}"
   node_index_major_version=$(echo $node_index_version | sed -E 's/^v([0-9]+).*$/\1/')
   node_index_date="${row[1]}"
-  node_index_lts="${row[9]}"
   [[ "$node_index_version" = "version" ]] && continue # skip tsv header
   [[ "$NODE_LTS_VERSION" = "latest" ]] && break # first line is latest
   [[ "$NODE_LTS_VERSION" = "$node_index_version" ]] && break # match full version if specified
@@ -90,7 +88,7 @@ if [[ "$file_extension" = "zip" ]]; then
   if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
     echo "Node.js already installed!"
   else
-    retry_with_backoff curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
+    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
     unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
     mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
     # Windows "bins" are at the top level
@@ -103,7 +101,7 @@ else
   if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/${node_directory}" ]]; then
     echo "Node.js already installed!"
   else
-    retry_with_backoff curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
+    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
     tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
     mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
   fi

@@ -35,7 +35,7 @@ DEPLOYMENT_NAME="$RANDOM-DRIVERGCP"
 echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "secrets-export.sh"
 
 # Set the create cluster configuration.
-export DEPLOYMENT_DATA=$(cat <<EOF
+DEPLOYMENT_DATA=$(cat <<EOF
 {
   "autoScaling" : {
     "autoIndexingEnabled" : false,
@@ -80,6 +80,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 }
 EOF
 )
+export DEPLOYMENT_DATA
 
 export ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
 export ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
@@ -102,7 +103,8 @@ fi
 
 ########################
 # Wait for the Atlas Cluster
-export MONGODB_URI=$(check_deployment)
+MONGODB_URI=$(check_deployment)
+export MONGODB_URI
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
 
 popd

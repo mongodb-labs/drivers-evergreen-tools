@@ -3,15 +3,17 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ -z "$AZUREKMS_CLIENTID" -o \
-     -z "$AZUREKMS_SECRET" -o \
-     -z "$AZUREKMS_TENANTID" ]; then
-    echo "Please set the following required environment variables"
-    echo " AZUREKMS_CLIENTID"
-    echo " AZUREKMS_SECRET"
-    echo " AZUREKMS_TENANTID"
-    exit 1
-fi
+VARLIST=(
+AZUREKMS_CLIENTID
+AZUREKMS_SECRET
+AZUREKMS_TENANTID
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 # Check for Azure Command-Line Interface (`az`) version 2.25.0 or newer.
 if ! command -v az &> /dev/null; then

@@ -7,11 +7,12 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
 if [ -z "${OIDC_TOKEN_DIR:-}" ]; then
-    export OIDC_TOKEN_DIR=/tmp/tokens
+    OIDC_TOKEN_DIR=/tmp/tokens
 fi
 if [ "Windows_NT" = "${OS:-}" ]; then
-    export OIDC_TOKEN_DIR=$(cygpath -m $OIDC_TOKEN_DIR)
+    OIDC_TOKEN_DIR=$(cygpath -m $OIDC_TOKEN_DIR)
 fi
+export OIDC_TOKEN_DIR
 mkdir -p $OIDC_TOKEN_DIR
 
 pushd $SCRIPT_DIR

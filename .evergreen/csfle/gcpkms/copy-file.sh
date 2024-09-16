@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # Copy a file to or from a GCE instance.
 set -o errexit # Exit on first command error.
-if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_SRC" -o -z "$GCPKMS_DST" ]; then
-    echo "Please set the following required environment variables"
-    echo " GCPKMS_GCLOUD to the path of the gcloud binary"
-    echo " GCPKMS_PROJECT to the GCP project"
-    echo " GCPKMS_ZONE to the GCP zone"
-    echo " GCPKMS_SRC to the source file"
-    echo " GCPKMS_DST to the destination file"
-    echo "To copy from or to a GCE host, use the host instance name"
-    echo "Example: GCPKMS_SRC=$GCPKMS_INSTANCENAME:src.txt GCPKMS_DST=. ./copy-file.sh"
-    exit 1
-fi
+
+VARLIST=(
+GCPKMS_GCLOUD
+GCPKMS_PROJECT
+GCPKMS_ZONE
+GCPKMS_SRC
+GCPKMS_DST
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 echo "Copying $GCPKMS_SRC to $GCPKMS_DST ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.

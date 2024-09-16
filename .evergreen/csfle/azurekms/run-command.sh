@@ -3,17 +3,18 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ -z "$AZUREKMS_RESOURCEGROUP" -o \
-     -z "$AZUREKMS_VMNAME" -o \
-     -z "$AZUREKMS_PRIVATEKEYPATH" -o \
-     -z "$AZUREKMS_CMD" ]; then
-    echo "Please set the following required environment variables"
-    echo " AZUREKMS_RESOURCEGROUP"
-    echo " AZUREKMS_VMNAME"
-    echo " AZUREKMS_PRIVATEKEYPATH"
-    echo " AZUREKMS_CMD"
-    exit 1
-fi
+VARLIST=(
+AZUREKMS_RESOURCEGROUP
+AZUREKMS_VMNAME
+AZUREKMS_PRIVATEKEYPATH
+AZUREKMS_CMD
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
 
 echo "Running '$AZUREKMS_CMD' on Azure Virtual Machine ... begin"
 IP=$(az vm show --show-details --resource-group $AZUREKMS_RESOURCEGROUP --name $AZUREKMS_VMNAME --query publicIps -o tsv)
