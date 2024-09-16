@@ -13,3 +13,4 @@ else
     GCPKMS_GCLOUD=$(pwd)/google-cloud-sdk/bin/gcloud
     echo "Download gcloud ... end"
 fi
+export GCPKMS_GCLOUD

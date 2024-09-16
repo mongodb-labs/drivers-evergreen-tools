@@ -24,7 +24,7 @@ if [ -z "$MONGODB_URI" ]; then
 fi
 
 CODE=$(az functionapp function keys list -g $AZUREOIDC_FUNC_RESOURCE_GROUP -n $FUNC_APP_NAME --function-name $FUNC_NAME | jq -r '.default')
-URL=https://$FUNC_APP_NAME.azurewebsites.net/api/$FUNC_NAME?code=$CODE
+URL="https://$FUNC_APP_NAME.azurewebsites.net/api/$FUNC_NAME?code=$CODE"
 DATA="{\"MONGODB_URI\": \"$MONGODB_URI\" }"
 
 curl -i \

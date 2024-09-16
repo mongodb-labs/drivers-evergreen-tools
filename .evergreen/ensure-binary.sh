@@ -3,6 +3,7 @@
 # Ensure the given binary is on the PATH.
 # Should be called as:
 # . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh <binary-name>
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
@@ -26,8 +27,6 @@ fi
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 URL=""
-
-. "$SCRIPT_DIR/retry-with-backoff.sh"
 
 case $NAME in
   kubectl)
@@ -76,7 +75,7 @@ echo "Installing $NAME..."
 if [ "$NAME" != "gcloud" ]; then
   mkdir -p ${DRIVERS_TOOLS}/.bin
   TARGET=${DRIVERS_TOOLS}/.bin/$NAME
-  retry_with_backoff curl -L -s $URL -o $TARGET
+  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $URL -o $TARGET
   chmod +x $TARGET
 
 else
@@ -84,7 +83,7 @@ else
   pushd /tmp
   rm -rf google-cloud-sdk
   FNAME=/tmp/google-cloud-sdk.tgz
-  retry_with_backoff curl -L -s $URL -o $FNAME
+  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $URL -o $FNAME
   tar xfz $FNAME
   popd
   ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud

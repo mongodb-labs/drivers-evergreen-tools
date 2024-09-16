@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
 # Create a GCE instance.
 set -o errexit # Exit on first command error.
-if [ -z "$GCPKMS_GCLOUD" -o \
-     -z "$GCPKMS_PROJECT" -o \
-     -z "$GCPKMS_ZONE" -o \
-     -z "$GCPKMS_SERVICEACCOUNT" -o \
-     -z "$GCPKMS_IMAGEPROJECT" -o \
-     -z "$GCPKMS_IMAGEFAMILY" -o \
-     -z "$GCPKMS_MACHINETYPE" -o \
-     -z "$GCPKMS_DISKSIZE" ]; then
-    echo "Please set the following required environment variables"
-    echo " GCPKMS_GCLOUD to the path of the gcloud binary"
-    echo " GCPKMS_PROJECT to the GCP project"
-    echo " GCPKMS_ZONE to the GCP zone"
-    echo " GCPKMS_SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
-    echo " GCPKMS_IMAGEPROJECT to the GCE image project (e.g. debian-cloud)"
-    echo " GCPKMS_IMAGEFAMILY to the GCE image family (e.g. debian-11)"
-    echo " GCPKMS_MACHINETYPE to the GCE machine type (e.g. e2-micro)"
-    echo " GCPKMS_DISKSIZE to the GCE disk size (e.g. 20gb)"
-    exit 1
-fi
+
+VARLIST=(
+GCPKMS_GCLOUD
+GCPKMS_PROJECT
+GCPKMS_ZONE
+GCPKMS_SERVICEACCOUNT
+GCPKMS_IMAGEPROJECT
+GCPKMS_IMAGEFAMILY
+GCPKMS_MACHINETYPE
+GCPKMS_DISKSIZE
+)
+
+# Ensure that all variables required to run the test are set, otherwise throw
+# an error.
+for VARNAME in "${VARLIST[@]}"; do
+  [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
+done
+
 GCPKMS_INSTANCENAME="instancename-$RANDOM"
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})

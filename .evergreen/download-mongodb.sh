@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
+# shellcheck shell=sh
 
 #For future use the feed to get full list of distros : http://downloads.mongodb.org/full.json
 
 set -o errexit  # Exit the script with error if any of the commands fail
-SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-. $SCRIPT_DIR/handle-paths.sh
 
 get_distro ()
 {
@@ -23,12 +22,14 @@ get_distro ()
       DISTRO="${name}-${version}"
    elif [ -f /etc/redhat-release ]; then
       release=$(cat /etc/redhat-release)
-
-      if [[ "$release" =~ "Red Hat" ]]; then
-         name="rhel"
-      elif [[ "$release" =~ "Fedora" ]]; then
-         name="fedora"
-      fi
+      case $release in
+         *Red\ Hat*)
+            name="rhel"
+         ;;
+         Fedora*)
+            name="fedora"
+         ;;
+      esac
       version=$(echo $release | sed 's/.*\([[:digit:]]\).*/\1/g')
       DISTRO="${name}-${version}"
    elif [ -f /etc/lsb-release ]; then
@@ -694,25 +695,29 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
+   # shellcheck disable=SC3028
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
+
    if [ -n "${MONGODB_BINARIES:-}" ]; then
       cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
    else
-      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-      . $SCRIPT_DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
 
    echo "Installing server binaries..."
-   . "$SCRIPT_DIR/retry-with-backoff.sh"
-   retry_with_backoff curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
 
+   set -x
    rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb
-   find . -name vcredist_x64.exe -exec {} /install /quiet \;
+   # Clear the environment to avoid "find: The environment is too large for exec()"
+   # error on Windows.
+   env -i PATH="$PATH" find . -name vcredist_x64.exe -exec {} /install /quiet \;
    echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
@@ -722,21 +727,22 @@ download_and_extract_mongosh ()
    MONGOSH_DOWNLOAD_URL=$1
    EXTRACT_MONGOSH=${2:-"tar zxf"}
 
+   # shellcheck disable=SC3028
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
+
    if [ -z "$MONGOSH_DOWNLOAD_URL" ]; then
-      get_mongodb_download_url_for $(get_distro) latest false
+      get_mongodb_download_url_for "$(get_distro)" latest false
    fi
 
    if [ -n "${MONGODB_BINARIES:-}" ]; then
       cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
    else
-      SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-      . $SCRIPT_DIR/handle-paths.sh
       cd $DRIVERS_TOOLS
    fi
 
    echo "Installing MongoDB shell..."
-   . "$SCRIPT_DIR/retry-with-backoff.sh"
-   retry_with_backoff curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
+   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
@@ -765,10 +771,11 @@ download_and_extract ()
       download_and_extract_mongosh "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
    fi
 
+   # shellcheck disable=SC3028
    SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
    . $SCRIPT_DIR/handle-paths.sh
 
-   if [ ! -z "${INSTALL_LEGACY_SHELL:-}" -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo -a ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
+   if [ ! -z "${INSTALL_LEGACY_SHELL:-}" ] && [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo ] && [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
       # Some test scripts use the mongo shell for setup.
       # Download 5.0 package to get the legacy mongo shell as a workaround until DRIVERS-2328 is addressed.
@@ -822,8 +829,10 @@ download_and_extract_crypt_shared ()
    mkdir crypt_shared_download
    cd crypt_shared_download
 
-   . "$SCRIPT_DIR/retry-with-backoff.sh"
-   retry_with_backoff curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
+   # shellcheck disable=SC3028
+   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   . $SCRIPT_DIR/handle-paths.sh
+   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
 
    LIBRARY_NAME="mongo_crypt_v1"

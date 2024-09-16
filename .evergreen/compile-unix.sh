@@ -49,6 +49,7 @@ case "$OS" in
       # Make linux builds a tad faster by parallelise the build
       cpus=$(grep -c '^processor' /proc/cpuinfo)
       MAKEFLAGS="-j${cpus}"
+      echo $MAKEFLAGS $TAR
    ;;
 
    sunos)

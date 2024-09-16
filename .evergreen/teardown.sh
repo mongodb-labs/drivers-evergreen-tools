@@ -28,9 +28,9 @@ fi
 # Clean up docker.
 if command -v docker &> /dev/null; then
     # Kill all containers.
-    docker rm $(docker ps -a -q) &> /dev/null || true
+    docker rm "$(docker ps -a -q)" &> /dev/null || true
     # Remove all images.
-    docker rmi -f $(docker images -a -q) &> /dev/null || true
+    docker rmi -f "$(docker images -a -q)" &> /dev/null || true
     # Remove all generated docker files
     pushd docker
     if command -v sudo &> /dev/null; then
@@ -44,13 +44,13 @@ fi
 # Move all child log files into $DRIVERS_TOOLS/.evergreen/test_logs.tar.gz.
 LOG_DIR="$(mktemp -d)"
 # Prepend the parent directory name to the file name.
-find "$(pwd -P)" -name \*.log -exec bash -c 'x="{}"; cp $x '"${LOG_DIR}"'/$(basename $(dirname $x))_$(basename $x)' \;
+find "$(pwd -P)" -name \*.log -exec bash -c 'x="$1"; cp $x '"${LOG_DIR}"'/$(basename $(dirname $x))_$(basename $x)' shell {} \;
 # Handle files from the .evergreen directory.
 pushd $LOG_DIR
 find . -name .evergreen_\* -exec bash -c 'mv $0 ${0/.evergreen_/}' {} \;
 popd
 # Slurp into a tar file.
-tar zcvf $(pwd -P)/test_logs.tar.gz -C $LOG_DIR/ .
+tar zcvf "$(pwd -P)/test_logs.tar.gz" -C $LOG_DIR/ .
 rm -rf $LOG_DIR
 
 popd

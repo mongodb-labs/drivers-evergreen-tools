@@ -15,6 +15,7 @@ GCPKMS_SECRETS_FILE=${GCPKMS_SECRETS_FILE:-./secrets-export.sh}
 # Handle secrets from vault.
 if [ -f "$GCPKMS_SECRETS_FILE" ]; then
   echo "Sourcing secrets"
+  # shellcheck source=secrets-export.sh
   source $GCPKMS_SECRETS_FILE
 fi
 if [ -z "${GCPKMS_SERVICEACCOUNT:-}" ]; then
@@ -28,7 +29,7 @@ if [ -n "$GCPKMS_KEYFILE_CONTENT" ]; then
     echo ${GCPKMS_KEYFILE_CONTENT} | base64 --decode > $GCPKMS_KEYFILE
 fi
 
-if [ -z "$GCPKMS_KEYFILE" -o -z "$GCPKMS_SERVICEACCOUNT" ]; then
+if [ -z "$GCPKMS_KEYFILE" ] || [ -z "$GCPKMS_SERVICEACCOUNT" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_KEYFILE to the JSON file for the service account"
     echo " GCPKMS_SERVICEACCOUNT to a GCP service account used to create and attach to the GCE instance"
@@ -74,7 +75,7 @@ fi
 # Wait for a maximum of five minutes for VM to finish booting.
 # Otherwise SSH may fail. See https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-ssh.
 wait_for_server () {
-    for i in $(seq 300); do
+    for _ in $(seq 300); do
         # The first `gcloud compute ssh` creates an SSH key pair and stores the public key in the Google Account.
         # The public key is deleted from the Google Account in delete-instance.sh.
         if SSHOUTPUT=$($GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" --zone $GCPKMS_ZONE --project $GCPKMS_PROJECT --command "echo 'ping' --ssh-flag='-o ConnectTimeout=10'" 2>&1); then
@@ -98,5 +99,6 @@ echo "Adding expiration time to SSH key ... end"
 
 SETUP_INSTANCE=${GCPKMS_SETUP_INSTANCE:-$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/setup-instance.sh}
 echo "setup-instance.sh ... begin"
+# shellcheck source=setup-instance.sh
 . $SETUP_INSTANCE
 echo "setup-instance.sh ... end"

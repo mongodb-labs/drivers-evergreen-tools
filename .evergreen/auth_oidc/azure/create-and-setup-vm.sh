@@ -39,6 +39,7 @@ pushd ..
 . ./activate-authoidcvenv.sh
 popd
 python ./handle_secrets.py
+# shellcheck source=env.sh
 source $AZUREOIDC_ENVPATH
 
 # Create VM.

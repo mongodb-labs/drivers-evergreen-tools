@@ -16,7 +16,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 
 MONGO_ORCHESTRATION_HOME="$1"
 
-echo From shell `date` > $MONGO_ORCHESTRATION_HOME/server.log
+echo "From shell `date`" > $MONGO_ORCHESTRATION_HOME/server.log
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh

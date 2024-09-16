@@ -26,6 +26,7 @@ export AZUREKMS_PRIVATEKEYPATH=$SCRIPT_DIR/keyfile
 
 # Set up the remote driver checkout.
 DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
+# shellcheck disable=SC2088
 AZUREKMS_SRC=${AZUREOIDC_DRIVERS_TAR_FILE} \
 AZUREKMS_DST="~/" \
   $SCRIPT_DIR/../../csfle/azurekms/copy-file.sh

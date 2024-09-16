@@ -1,4 +1,4 @@
-# shellcheck shell=sh
+#!/usr/bin/env bash
 #
 # (Copied over from Compass - https://github.com/mongodb-js/compass/blob/b6fec9cbbb2c6949e9ece3fffe861c3f52e30a4f/.evergreen/retry-with-backoff.sh)
 # Retries a command a with backoff.
@@ -15,7 +15,7 @@ retry_with_backoff() {
   local attempt=0
   local exitCode=0
 
-  command="$@"
+  command="$*"
   while [[ $attempt -lt $max_attempts ]]; do
     attempt_prompt=$(( attempt + 1 ))
     echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..."
@@ -40,3 +40,4 @@ retry_with_backoff() {
 
   return $exitCode
 }
+retry_with_backoff "$@"

@@ -24,7 +24,7 @@
 set +o xtrace # Disable tracing.
 
 get_creds() {
-    $PYTHON - "$@" << 'EOF'
+    $PYTHON - << 'EOF'
 import sys
 import boto3
 
@@ -37,6 +37,9 @@ EOF
 PYTHON=${PYTHON:-python}
 CREDS=$(get_creds)
 
-export CSFLE_AWS_TEMP_ACCESS_KEY_ID=$(echo $CREDS | awk '{print $1}')
-export CSFLE_AWS_TEMP_SECRET_ACCESS_KEY=$(echo $CREDS | awk '{print $2}')
-export CSFLE_AWS_TEMP_SESSION_TOKEN=$(echo $CREDS | awk '{print $3}')
+CSFLE_AWS_TEMP_ACCESS_KEY_ID=$(echo $CREDS | awk '{print $1}')
+CSFLE_AWS_TEMP_SECRET_ACCESS_KEY=$(echo $CREDS | awk '{print $2}')
+CSFLE_AWS_TEMP_SESSION_TOKEN=$(echo $CREDS | awk '{print $3}')
+export CSFLE_AWS_TEMP_ACCESS_KEY_ID
+export CSFLE_AWS_TEMP_SECRET_ACCESS_KEY
+export CSFLE_AWS_TEMP_SESSION_TOKEN

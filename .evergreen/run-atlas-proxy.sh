@@ -67,7 +67,8 @@ cd atlasproxy
 # This section copied from atlasproxy's .evergreen.yml: <<<
 export PATH="/opt/golang/go1.11/bin:$PATH"
 export GOROOT="/opt/golang/go1.11"
-export GOPATH=`pwd`/.gopath
+GOPATH=`pwd`/.gopath
+export GOPATH
 go version
 ./gpm
 export MONGO_DIR="$DRIVERS_TOOLS/mongodb/bin"

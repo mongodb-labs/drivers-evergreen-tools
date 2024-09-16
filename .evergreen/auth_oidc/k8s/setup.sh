@@ -37,7 +37,7 @@ DEPLOYMENT_NAME="$RANDOM-DRIVER-K8S"
 echo "export CLUSTER_NAME=$DEPLOYMENT_NAME" >> "$DRIVERS_TOOLS/.evergreen/atlas/secrets-export.sh"
 
 # Set the create cluster configuration.
-export DEPLOYMENT_DATA=$(cat <<EOF
+DEPLOYMENT_DATA=$(cat <<EOF
 {
   "autoScaling" : {
     "autoIndexingEnabled" : false,
@@ -82,6 +82,7 @@ export DEPLOYMENT_DATA=$(cat <<EOF
 }
 EOF
 )
+export DEPLOYMENT_DATA
 
 export ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
 export ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY

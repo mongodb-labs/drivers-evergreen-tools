@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run a command on a remote GCE instance.
 set -o errexit # Exit on first command error.
-if [ -z "$GCPKMS_GCLOUD" -o -z "$GCPKMS_PROJECT" -o -z "$GCPKMS_ZONE" -o -z "$GCPKMS_INSTANCENAME" -o -z "$GCPKMS_CMD" ]; then
+if [ -z "$GCPKMS_GCLOUD" ] || [ -z "$GCPKMS_PROJECT" ] || [ -z "$GCPKMS_ZONE" ] || [ -z "$GCPKMS_INSTANCENAME" ] || [ -z "$GCPKMS_CMD" ]; then
     echo "Please set the following required environment variables"
     echo " GCPKMS_GCLOUD to the path of the gcloud binary"
     echo " GCPKMS_PROJECT to the GCP project"

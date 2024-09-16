@@ -18,10 +18,10 @@ pushd $SCRIPT_DIR/../auth_aws > /dev/null
 . ./activate-authawsvenv.sh
 popd > /dev/null
 
-ALL_ARGS="$@"
+ALL_ARGS="$*"
 echo "Getting secrets: ${ALL_ARGS}..."
 python $SCRIPT_DIR/setup_secrets.py $ALL_ARGS
-source $(pwd)/secrets-export.sh
+source "$(pwd)/secrets-export.sh"
 echo "Getting secrets: $ALL_ARGS... done."
 
 # Restore the script dir if we've overridden it.
