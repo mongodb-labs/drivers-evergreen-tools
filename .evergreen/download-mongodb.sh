@@ -717,7 +717,7 @@ download_and_extract_package ()
    chmod -R +x mongodb
    # Clear the environment to avoid "find: The environment is too large for exec()"
    # error on Windows.
-   env -i PATH=$PATH find . -name vcredist_x64.exe -exec {} /install /quiet \;
+   env -i PATH="$PATH" find . -name vcredist_x64.exe -exec {} /install /quiet \;
    echo "MongoDB server version: $(./mongodb/bin/mongod --version)"
    cd -
 }
