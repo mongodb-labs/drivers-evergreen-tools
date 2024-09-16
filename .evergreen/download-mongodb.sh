@@ -156,7 +156,7 @@ get_mongodb_download_url_for ()
              MONGODB_60_PERF="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90${DEBUG}-${VERSION_60_PERF}.tgz"
              MONGODB_60="http://downloads.10gen.com/linux/mongodb-linux-x86_64-enterprise-rhel90${DEBUG}-${VERSION_60}.tgz"
       ;;
-      linux-rhel-8.1-ppc64le)
+      linux-rhel-8*-ppc64le)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81${DEBUG}-latest.tgz"
          MONGOSH="https://downloads.mongodb.com/compass/mongosh-${VERSION_MONGOSH}-linux-ppc64le.tgz"
              MONGODB_RAPID="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel81${DEBUG}-${VERSION_RAPID}.tgz"
@@ -214,7 +214,7 @@ get_mongodb_download_url_for ()
              MONGODB_36="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72${DEBUG}-3.6.4.tgz"
              MONGODB_34="http://downloads.10gen.com/linux/mongodb-linux-s390x-enterprise-rhel72${DEBUG}-3.4.14.tgz"
       ;;
-      linux-rhel-7.1-ppc64le)
+      linux-rhel-7*-ppc64le)
          MONGODB_LATEST="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel71${DEBUG}-latest.tgz"
          MONGOSH="https://downloads.mongodb.com/compass/mongosh-${VERSION_MONGOSH}-linux-ppc64le.tgz"
              MONGODB_50="http://downloads.10gen.com/linux/mongodb-linux-ppc64le-enterprise-rhel71${DEBUG}-${VERSION_50}.tgz"
