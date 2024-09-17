@@ -702,7 +702,7 @@ download_and_extract_package ()
    fi
 
    echo "Installing server binaries..."
-   "$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+   curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
@@ -734,7 +734,7 @@ download_and_extract_mongosh ()
    fi
 
    echo "Installing MongoDB shell..."
-   "$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
+   curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
@@ -817,7 +817,7 @@ download_and_extract_crypt_shared ()
    mkdir crypt_shared_download
    cd crypt_shared_download
 
-   "$DRIVERS_TOOLS/.evergreen//retry-with-backoff.sh" curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
+   curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
 
    LIBRARY_NAME="mongo_crypt_v1"
