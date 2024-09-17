@@ -947,6 +947,8 @@ tasks:
             script: |
               . ${DRIVERS_TOOLS}/.evergreen/download-mongodb.sh
               rm -rf ${DRIVERS_TOOLS}/mongodb
+              export MONGODB_VERSION
+              MONGODB_VERSION="latest"
               export MONGODB_BINARIES
               DIR=$(pwd)
               case "$OS" in
