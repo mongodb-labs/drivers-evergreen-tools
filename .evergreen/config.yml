@@ -945,6 +945,12 @@ tasks:
           shell: bash
           params:
             script: |
+              ls
+              pwd
+              cd ..
+              ls
+              pwd
+              exit 1
               git clone https://github.com/mongodb/mongo-c-driver.git
               cd mongo-c-driver
               bash -c  .evergreen/scripts/integration-tests.sh
