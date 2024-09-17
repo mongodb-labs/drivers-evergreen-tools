@@ -52,7 +52,7 @@ functions:
               CURRENT_VERSION=latest
            fi
 
-           export DRIVERS_TOOLS="$(pwd)/../drivers-evergreen-tools"
+           export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
@@ -938,18 +938,6 @@ tasks:
         #   vars:
         #     VARIANT: aks
 
-    - name: "test-download-mongodb"
-      commands:
-        - command: shell.exec
-          type: test
-          shell: bash
-          params:
-            script: |
-              git clone https://github.com/mongodb/mongo-c-driver.git
-              cd mongo-c-driver
-              bash -c  .evergreen/scripts/integration-tests.sh
-
-
 # }}}
 
 task_groups:
@@ -1396,7 +1384,6 @@ buildvariants:
      - name: "test-5.0-replica_set"
      - name: "test-5.0-sharded_cluster"
      - name: "test-5.0-standalone"
-     - name: "test-download-mongodb"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
