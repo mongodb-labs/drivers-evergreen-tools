@@ -688,7 +688,7 @@ set_url_win32 ()
   MONGODB_24="https://fastdl.mongodb.org/win32/mongodb-win32-i386${DEBUG}-${VERSION_24}.zip"
 }
 
-# curl_retry runs curl with up to three retries, retrying any error.
+# curl_retry emulates running curl with `--retry 5` and `--retry-all-errors`.
 curl_retry ()
 {
   for i in 1 2 4 8 16; do
