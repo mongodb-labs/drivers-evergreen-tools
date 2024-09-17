@@ -695,9 +695,6 @@ download_and_extract_package ()
    MONGODB_DOWNLOAD_URL=$1
    EXTRACT=$2
 
-   # shellcheck disable=SC3028
-   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-
    if [ -n "${MONGODB_BINARIES:-}" ]; then
       cd "$(dirname "$(dirname "${MONGODB_BINARIES:?}")")"
    else
@@ -705,7 +702,7 @@ download_and_extract_package ()
    fi
 
    echo "Installing server binaries..."
-   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+   "$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
@@ -726,9 +723,6 @@ download_and_extract_mongosh ()
    MONGOSH_DOWNLOAD_URL=$1
    EXTRACT_MONGOSH=${2:-"tar zxf"}
 
-   # shellcheck disable=SC3028
-   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-
    if [ -z "$MONGOSH_DOWNLOAD_URL" ]; then
       get_mongodb_download_url_for "$(get_distro)" latest false
    fi
@@ -740,7 +734,7 @@ download_and_extract_mongosh ()
    fi
 
    echo "Installing MongoDB shell..."
-   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
+   "$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl $MONGOSH_DOWNLOAD_URL --output mongosh.tgz
    $EXTRACT_MONGOSH mongosh.tgz
 
    rm -f mongosh.tgz
@@ -768,10 +762,6 @@ download_and_extract ()
    if [ "$MONGOSH_DOWNLOAD_URL" ]; then
       download_and_extract_mongosh "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
    fi
-
-   # shellcheck disable=SC3028
-   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-   . $SCRIPT_DIR/handle-paths.sh
 
    if [ ! -z "${INSTALL_LEGACY_SHELL:-}" ] && [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo ] && [ ! -e $DRIVERS_TOOLS/mongodb/bin/mongo.exe ]; then
       # The legacy mongo shell is not included in server downloads of 6.0.0-rc6 or later. Refer: SERVER-64352.
@@ -827,13 +817,7 @@ download_and_extract_crypt_shared ()
    mkdir crypt_shared_download
    cd crypt_shared_download
 
-   echo "HI HI $(pwd)"
-   # shellcheck disable=SC3028
-   echo "HELLO $0"
-   echo "HELLO $(realpath $0)"
-   # shellcheck disable=SC3028
-   SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
-   "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
+   "$DRIVERS_TOOLS/.evergreen//retry-with-backoff.sh" curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
 
    LIBRARY_NAME="mongo_crypt_v1"
