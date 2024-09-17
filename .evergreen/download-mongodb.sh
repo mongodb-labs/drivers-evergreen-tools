@@ -691,7 +691,10 @@ set_url_win32 ()
 # curl_retry runs curl with up to three retries, retrying any error.
 curl_retry ()
 {
-  for i in 2 4 8; do curl --fail -sS --max-time 300 "$@" && break || sleep $i;
+  for i in 1 2 4 8 16; do
+    { curl --fail -sS --max-time 300 "$@" && return 0; } || sleep $i
+  done
+  return 1
   done
 }
 
