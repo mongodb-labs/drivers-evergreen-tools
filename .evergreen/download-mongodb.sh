@@ -695,7 +695,6 @@ curl_retry ()
     { curl --fail -sS --max-time 300 "$@" && return 0; } || sleep $i
   done
   return 1
-  done
 }
 
 # download_and_extract_package downloads a MongoDB server package.
