@@ -831,6 +831,7 @@ download_and_extract_crypt_shared ()
 
    # shellcheck disable=SC3028
    SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+   echo "hello, $SCRIPT_DIR"
    . $SCRIPT_DIR/handle-paths.sh
    "$SCRIPT_DIR/retry-with-backoff.sh" curl $MONGO_CRYPT_SHARED_DOWNLOAD_URL --output crypt_shared-binaries.tgz
    $EXTRACT crypt_shared-binaries.tgz
