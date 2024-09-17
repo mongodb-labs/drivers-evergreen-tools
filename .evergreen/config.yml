@@ -52,7 +52,7 @@ functions:
               CURRENT_VERSION=latest
            fi
 
-           export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
+           export DRIVERS_TOOLS="$(pwd)/../drivers-evergreen-tools"
            export PROJECT_DIRECTORY="$(pwd)"
 
            # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
@@ -945,24 +945,10 @@ tasks:
           shell: bash
           params:
             script: |
-              . ${DRIVERS_TOOLS}/.evergreen/download-mongodb.sh
-              rm -rf ${DRIVERS_TOOLS}/mongodb
-              export MONGODB_VERSION
-              MONGODB_VERSION="latest"
-              export MONGODB_BINARIES
-              DIR=$(pwd)
-              case "$OS" in
-                cygwin*)
-                    MONGODB_BINARIES=$(cygpath -m -a "$DIR/../../mongodb/bin")
-                    ;;
-                *)
-                    MONGODB_BINARIES="$DIR/../../mongodb/bin"
-                    ;;
-              esac
+              git clone https://github.com/mongodb/mongo-c-driver.git
+              cd mongo-c-driver
+              bash -c  .evergreen/scripts/integration-tests.sh
 
-              get_distro
-              get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
-              DRIVERS_TOOLS=./ download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
 
 # }}}
 
