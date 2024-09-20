@@ -118,6 +118,8 @@ mo-expansion.sh
 .env
 .bin
 .kube
+.cargo
+.rustup
 
 # Azure functions.
 .python_packages/
