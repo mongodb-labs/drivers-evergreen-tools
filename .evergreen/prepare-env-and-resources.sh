@@ -2,25 +2,28 @@
 
 # PREPARE EVERGREEN ENVINROMENT
 # Get the current unique version of this checkout
+# shellcheck disable=SC2154
 if [ "${is_patch}" = "true" ]; then
+    # shellcheck disable=SC2154
     CURRENT_VERSION=$(git describe)-patch-${version_id}
 else
     CURRENT_VERSION=latest
 fi
 
-export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
-export PROJECT_DIRECTORY="$(pwd)"
+DRIVERS_TOOLS="$(pwd)/../drivers-tools"
+PROJECT_DIRECTORY="$(pwd)"
 
 # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
 if [[ "$(uname -s)" == CYGWIN* ]]; then
-    export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
-    export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
+    DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
+    PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
 fi
 
-export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
-export PROJECT_ORCHESTRATION_HOME="$PROJECT_DIRECTORY/.evergreen/orchestration"
-export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
-export UPLOAD_BUCKET="${project}"
+MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
+PROJECT_ORCHESTRATION_HOME="$PROJECT_DIRECTORY/.evergreen/orchestration"
+MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
+# shellcheck disable=SC2154
+UPLOAD_BUCKET="${project}"
 
 cat <<EOT >expansion.yml
 CURRENT_VERSION: "$CURRENT_VERSION"
@@ -46,11 +49,12 @@ EOT
 cat expansion.yml
 
 # PREPARE RESOURCES
-rm -rf ${DRIVERS_TOOLS}
+rm -rf $DRIVERS_TOOLS
 if [ "${project}" = "drivers-tools" ]; then
     # If this was a patch build, doing a fresh clone would not actually test the patch
-    cp -R ${PROJECT_DIRECTORY}/ ${DRIVERS_TOOLS}
+    cp -R $PROJECT_DIRECTORY/ $DRIVERS_TOOLS
 else
-    git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git ${DRIVERS_TOOLS}
+    git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git $DRIVERS_TOOLS
 fi
-${DRIVERS_TOOLS}/.evergreen/setup.sh
+
+$DRIVERS_TOOLS/.evergreen/setup.sh
