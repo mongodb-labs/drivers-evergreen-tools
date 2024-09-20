@@ -86,6 +86,7 @@ else
   "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $URL -o $FNAME
   tar xfz $FNAME
   popd
+  mkdir -p ${DRIVERS_TOOLS}/.bin
   ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
 fi
 
