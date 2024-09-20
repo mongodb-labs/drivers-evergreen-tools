@@ -15,12 +15,15 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   # rustup/cargo need the native Windows paths
   RUSTUP_HOME=$(cygpath ${RUSTUP_HOME} --windows)
   CARGO_HOME=$(cygpath ${CARGO_HOME} --windows)
+fi
+
+"$SCRIPT_DIR/retry-with-backoff.sh" curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
+
+if [ "Windows_NT" == "${OS:-}" ]; then
   # This file is not created by default on Windows
   echo 'export PATH="$PATH:${CARGO_HOME}/bin"' >>${CARGO_HOME}/env
   echo "export CARGO_NET_GIT_FETCH_WITH_CLI=true" >>${CARGO_HOME}/env
 fi
-
-"$SCRIPT_DIR/retry-with-backoff.sh" curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
 
 echo "cargo location: $(which cargo)"
 echo "cargo version: $(cargo --version)"
