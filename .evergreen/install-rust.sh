@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ue
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
@@ -17,7 +17,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   CARGO_HOME=$(cygpath ${CARGO_HOME} --windows)
 fi
 
-"$SCRIPT_DIR/retry-with-backoff.sh" curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
+curl --retry 8 https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
 
 if [ "Windows_NT" == "${OS:-}" ]; then
   # This file is not created by default on Windows
