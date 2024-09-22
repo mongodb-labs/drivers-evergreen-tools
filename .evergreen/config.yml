@@ -666,7 +666,7 @@ tasks:
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-8.0-standalone-requirea-api"
+    - name: "test-8.0-standalone-require-api"
       tags: ["8.0", "sharded_cluster"]
       commands:
         - func: "bootstrap mongo-orchestration"
@@ -1453,7 +1453,7 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-8.0-sharded_cluster-require-api"
+     - name: "test-8.0-standalone-require-api"
      - name: "test-8.0-replica_set"
      - name: "test-8.0-sharded_cluster"
      - name: "test-8.0-standalone"
