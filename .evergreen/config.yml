@@ -106,7 +106,7 @@ functions:
             git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git ${DRIVERS_TOOLS}
           fi
           ${DRIVERS_TOOLS}/.evergreen/setup.sh
-          bash .evergreen/install-dependencies.sh
+          bash ${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh
 
   "upload release":
     - command: s3.put
