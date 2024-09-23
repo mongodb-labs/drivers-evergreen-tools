@@ -10,7 +10,6 @@
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
-
 if [ -z "$SCRIPT_DIR" ]; then
   echo "Please set $SCRIPT_DIR first"
   exit 1
