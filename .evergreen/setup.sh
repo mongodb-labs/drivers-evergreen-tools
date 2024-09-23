@@ -18,11 +18,6 @@ echo '{"results": [{ "status": "FAIL", "test_file": "Build", "log_raw": "No test
 # Create a stub mongo-orchestration results file.
 echo '{"results": [{ "status": "PASS", "test_file": "Build", "log_raw": "Stub file for mongo-orchestration results"  } ]}' > ${DRIVERS_TOOLS}/results.json
 
-# Install project dependencies.
-if [[ -f "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh" ]]; then
-    bash "$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh"
-fi
-
 # Ensure there is at least one log file.
 cat << EOF > ${DRIVERS_TOOLS}/.evergreen/inputs.log
 PROJECT_DIRECTORY=$PROJECT_DIRECTORY

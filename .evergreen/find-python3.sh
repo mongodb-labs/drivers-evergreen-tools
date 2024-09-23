@@ -317,7 +317,7 @@ ensure_python3() {
       python_binary="$(find_python3 2>/dev/null)" || return
       echo "Finding Python3 binary... done."
     else
-      echo "Using Python binary $PYTHON"
+      echo "Using Python binary $python_binary"
     fi
   } 1>&2
   echo "${python_binary:?}"

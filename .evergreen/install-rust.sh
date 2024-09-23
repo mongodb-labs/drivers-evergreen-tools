@@ -7,7 +7,7 @@ pushd $SCRIPT_DIR
 
 export RUSTUP_HOME="${RUSTUP_HOME:-"${DRIVERS_TOOLS}/.rustup"}"
 export CARGO_HOME="${CARGO_HOME:-"${DRIVERS_TOOLS}/.cargo"}"
-export PATH="${RUSTUP_HOME}/bin:${CARGO_HOME}/bin:$PATH"
+export PATH="${CARGO_HOME}/bin:$PATH"
 
 # Make sure to use msvc toolchain rather than gnu, which is the default for cygwin
 if [ "Windows_NT" == "${OS:-}" ]; then
