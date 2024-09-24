@@ -98,7 +98,7 @@ URI=$(check_deployment)
 
 cat <<EOF >> "secrets-export.sh"
 export MONGODB_URI="$URI"
-export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:gcp,TOKEN_RESOURCE:$GCPOIDC_AUDIENCE"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authSource=%24external&authMechanismProperties=ENVIRONMENT:gcp,TOKEN_RESOURCE:$GCPOIDC_AUDIENCE"
 export OIDC_ADMIN_USER=$GCPOIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$GCPOIDC_ATLAS_PASSWORD
 EOF
