@@ -36,6 +36,7 @@ az vm create \
     --os-disk-delete-option "Delete" \
     --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
     --nsg "$AZUREKMS_VMNAME-NSG" \
+    --nsg-rule "NONE" \
     --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
 
