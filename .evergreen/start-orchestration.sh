@@ -34,9 +34,6 @@ echo "Creating virtual environment 'venv'..."
 venvcreate "${PYTHON:?}" venv
 echo "Creating virtual environment 'venv'... done."
 
-# DRIVERS-2991 bottle 0.13 causes "[Errno 98] Address already in use" errors on some hosts.
-# Fallback to bottle >=0.13 only for Python >=3.13.
-python -m pip install --upgrade 'bottle<0.13' && python -c 'import bottle' || python -m pip install --upgrade bottle
 # Install from github to get the latest mongo-orchestration, fall back on published wheel.
 # The fallback was added to accommodate versions of Python 3 for which there is no compatible version
 # of the hatchling backend used by mongo-orchestration.
@@ -61,6 +58,8 @@ if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
   if [ ! -z "$OLD_MO_PID" ]; then
     taskkill /F /T /PID "$OLD_MO_PID" || true
   fi
+elif [ -x "$(command -v fuser)" ]; then
+  fuser --kill 8889/tcp || true
 elif [ -x "$(command -v lsof)" ]; then
   OLD_MO_PID=$(lsof -t -i:8889 || true)
   if [ ! -z "$OLD_MO_PID" ]; then
