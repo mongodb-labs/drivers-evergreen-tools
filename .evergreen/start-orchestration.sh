@@ -58,13 +58,13 @@ if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
   if [ ! -z "$OLD_MO_PID" ]; then
     taskkill /F /T /PID "$OLD_MO_PID" || true
   fi
-elif [ -x "$(command -v fuser)" ]; then
-  fuser --kill 8889/tcp || true
 elif [ -x "$(command -v lsof)" ]; then
   OLD_MO_PID=$(lsof -t -i:8889 || true)
   if [ ! -z "$OLD_MO_PID" ]; then
     kill -9 "$OLD_MO_PID" || true
   fi
+elif [ -x "$(command -v fuser)" ]; then
+  fuser --kill 8889/tcp || true
 elif [ -x "$(command -v ss)" ]; then
   OLD_MO_PID=$(ss -tlnp 'sport = :8889' | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]')
   if [ ! -z "$OLD_MO_PID" ]; then
