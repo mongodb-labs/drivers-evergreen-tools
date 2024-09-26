@@ -632,7 +632,7 @@ get_mongodb_download_url_for ()
    case "$_VERSION" in
       latest)
          # If latest is not at least 6.0 on this OS, the crypt_shared package will not be available.
-         if [ -n "$MONGODB_60" ]; then
+         if [ -n "$MONGODB_60" ] && [ -n "$MONGODB_70" ] && [ -n "$MONGODB_80" ]; then
            MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_LATEST
          fi ;;
       rapid) MONGO_CRYPT_SHARED_DOWNLOAD_URL=$MONGODB_RAPID ;;
