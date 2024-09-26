@@ -11,7 +11,9 @@ cd ${DRIVERS_TOOLS}
 
 # source the mongo-orchestration virtualenv if it exists
 VENV="$MONGO_ORCHESTRATION_HOME/venv"
-if [ -f "$VENV/bin/activate" ]; then
+if [ -x "$(command -v mongo-orchestration)" ]; then
+    mongo-orchestration stop
+elif [ -f "$VENV/bin/activate" ]; then
     . "$VENV/bin/activate"
     mongo-orchestration stop
 elif [ -f "$VENV/Scripts/activate" ]; then
