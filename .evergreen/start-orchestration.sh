@@ -73,14 +73,14 @@ killport() {
   elif [ -x "$(command -v lsof)" ]; then
     pid=$(lsof -t "-i:$port" || true)
     if [ -n "$pid" ]; then
-      kill -9 "$pid" || true
+      kill "$pid" || true
     fi
   elif [ -x "$(command -v fuser)" ]; then
-    fuser --kill "$port/tcp" || true
+    fuser --kill -SIGTERM "$port/tcp" || true
   elif [ -x "$(command -v ss)" ]; then
     pid=$(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]')
     if [ -n "$pid" ]; then
-      kill -9 "$pid" || true
+      kill "$pid" || true
     fi
   else
     echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
@@ -90,10 +90,9 @@ killport() {
 
 # Forcibly kill the process listening on port 8889, most likely a wild
 # mongo-orchestration left running from a previous task.
-# Also kill any leftover mongod/s processes.
-for port in 8889 27017 27018 27019 27217 27218 27219 1026; do
-  killport $port
-done
+# NOTE: Killing mongo-orchestration with SIGTERM gives it a chance to
+# cleanup any running mongo servers.
+killport 8889
 
 mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2>&1 < /dev/null &
 
