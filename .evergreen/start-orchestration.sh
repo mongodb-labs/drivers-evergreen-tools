@@ -71,7 +71,7 @@ elif [ -x "$(command -v ss)" ]; then
     kill -9 "$OLD_MO_PID" || true
   fi
 else
-  echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (lsof/ss) to kill the process."
+  echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
   exit 1
 fi
 
