@@ -63,7 +63,7 @@ fi
 # Kill the process listening on the given port.
 killport() {
   local -r port="${1:?'killport requires a port'}"
-  local -r pid=""
+  local pid=""
 
   if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
     pid=$(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]')
