@@ -92,7 +92,11 @@ killport() {
 # mongo-orchestration left running from a previous task.
 # NOTE: Killing mongo-orchestration with SIGTERM gives it a chance to
 # cleanup any running mongo servers.
-killport 8889
+# Also kill any leftover mongo processes on common ports as a backup.
+for port in 8889 27017 27018 27019 27217 27218 27219 1026; do
+  killport $port
+done
+
 
 mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2>&1 < /dev/null &
 
