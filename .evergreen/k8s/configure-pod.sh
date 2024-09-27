@@ -31,8 +31,7 @@ echo "Waiting for pod to be ready... done."
 echo "Configuring pod $POD_NAME..."
 set -x
 # Account for initial error in connecting to pod.
-sleep 60
-../retry-with-backoff.sh kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
+TIMEOUT=5 ../retry-with-backoff.sh kubectl cp ./remote-scripts/setup-pod.sh ${POD_NAME}:/tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- /tmp/setup-pod.sh
 kubectl exec ${POD_NAME} -- git --version
 set +x
