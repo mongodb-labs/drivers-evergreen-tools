@@ -76,7 +76,8 @@ for (let line of reviewersSource.split('\n')) {
 }
 // Use the Github PR number to select the next reviewer in round-robin order. We
 // assume that Github PR numbers are sequential and that the order of reviewer
-// names is consistent across runs.
+// names is consistent across runs. Note that Github Issues must be disabled
+// because they share the same number sequence with Github PRs.
 const reviewer = reviewers[number % reviewers.length];
 
 console.log("Assigning reviewer to PR...");
