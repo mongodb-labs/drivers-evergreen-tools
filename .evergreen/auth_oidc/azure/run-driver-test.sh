@@ -24,6 +24,9 @@ export AZUREKMS_RESOURCEGROUP=$AZUREOIDC_RESOURCEGROUP
 export AZUREKMS_VMNAME=$AZUREOIDC_VMNAME
 export AZUREKMS_PRIVATEKEYPATH=$SCRIPT_DIR/keyfile
 
+# Permit SSH access from current IP.
+"$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/set-ssh-ip.sh
+
 # Set up the remote driver checkout.
 DRIVER_TARFILE_BASE=$(basename ${AZUREOIDC_DRIVERS_TAR_FILE})
 # shellcheck disable=SC2088
