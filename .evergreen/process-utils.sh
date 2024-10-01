@@ -27,16 +27,20 @@ killport() {
 
   if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
     for pid in $(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]'); do
+      echo "Killing pid $pid for port $port with signal $signal using taskkill" 1>&2
       taskkill /F /T /PID "$pid" || true
     done
   elif [ -x "$(command -v lsof)" ]; then
     for pid in $(lsof -t "-i:$port" || true); do
+      echo "Killing pid $pid for port $port with signal $signal using kill" 1>&2
       kill "$pid" -${signal} || true
     done
   elif [ -x "$(command -v fuser)" ]; then
+    echo "Killing pid $pid for port $port with signal $signal using fuser" 1>&2
     fuser --kill -${signal} "$port/tcp" || true
   elif [ -x "$(command -v ss)" ]; then
     for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
+       echo "Killing pid $pid for port $port with signal $signal using kill" 1>&2
       kill "$pid" -${signal} || true
     done
   else
