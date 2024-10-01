@@ -71,13 +71,13 @@ killport() {
     done
   elif [ -x "$(command -v lsof)" ]; then
     for pid in $(lsof -t "-i:$port" || true); do
-      kill "$pid" || true
+      kill -SIGKILL "$pid" || true
     done
   elif [ -x "$(command -v fuser)" ]; then
-    fuser --kill -SIGTERM "$port/tcp" || true
+    fuser --kill "$port/tcp" || true
   elif [ -x "$(command -v ss)" ]; then
     for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
-      kill "$pid" || true
+      kill -SIGKILL "$pid" || true
     done
   else
     echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
