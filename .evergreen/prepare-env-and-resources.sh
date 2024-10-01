@@ -3,9 +3,9 @@
 # PREPARE EVERGREEN ENVINROMENT
 # Get the current unique version of this checkout
 # shellcheck disable=SC2154
-if [ "${is_patch}" = "true" ]; then
+if [ "$is_patch" = "true" ]; then
     # shellcheck disable=SC2154
-    CURRENT_VERSION=$(git describe)-patch-${version_id}
+    CURRENT_VERSION=$(git describe)-patch-$version_id
 else
     CURRENT_VERSION=latest
 fi
@@ -23,7 +23,7 @@ MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
 PROJECT_ORCHESTRATION_HOME="$PROJECT_DIRECTORY/.evergreen/orchestration"
 MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
 # shellcheck disable=SC2154
-UPLOAD_BUCKET="${project}"
+UPLOAD_BUCKET="$project"
 
 cat <<EOT >expansion.yml
 CURRENT_VERSION: "$CURRENT_VERSION"
@@ -50,7 +50,7 @@ cat expansion.yml
 
 # PREPARE RESOURCES
 rm -rf $DRIVERS_TOOLS
-if [ "${project}" = "drivers-tools" ]; then
+if [ "$project" = "drivers-tools" ]; then
     # If this was a patch build, doing a fresh clone would not actually test the patch
     cp -R $PROJECT_DIRECTORY/ $DRIVERS_TOOLS
 else
