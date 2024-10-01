@@ -55,6 +55,7 @@ set -a
 
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}
+PATH="${MONGODB_BINARIES}:$PATH"
 
 # Add the local .bin dir to the path.
 case "$PATH" in

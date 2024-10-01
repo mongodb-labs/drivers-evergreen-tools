@@ -51,27 +51,49 @@ if [[ "${OSTYPE:?}" == cygwin ]]; then
   ORCHESTRATION_ARGUMENTS="$ORCHESTRATION_ARGUMENTS -s wsgiref"
 fi
 
+
+# killport
+#
+# Usage:
+#   killport 8889
+#
+# Parameters:
+#   "$1": The port of the process to kill.
+#
+# Kill the process listening on the given port.
+killport() {
+  local -r port="${1:?'killport requires a port'}"
+  local pid=""
+
+  if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
+    for pid in $(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]'); do
+      taskkill /F /T /PID "$pid" || true
+    done
+  elif [ -x "$(command -v lsof)" ]; then
+    for pid in $(lsof -t "-i:$port" || true); do
+      kill "$pid" || true
+    done
+  elif [ -x "$(command -v fuser)" ]; then
+    fuser --kill -SIGTERM "$port/tcp" || true
+  elif [ -x "$(command -v ss)" ]; then
+    for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
+      kill "$pid" || true
+    done
+  else
+    echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
+    exit 1
+  fi
+}
+
 # Forcibly kill the process listening on port 8889, most likely a wild
 # mongo-orchestration left running from a previous task.
-if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
-  OLD_MO_PID=$(netstat -ano | grep ':8889 .* LISTENING' | awk '{print $5}' | tr -d '[:space:]')
-  if [ ! -z "$OLD_MO_PID" ]; then
-    taskkill /F /T /PID "$OLD_MO_PID" || true
-  fi
-elif [ -x "$(command -v lsof)" ]; then
-  OLD_MO_PID=$(lsof -t -i:8889 || true)
-  if [ ! -z "$OLD_MO_PID" ]; then
-    kill -9 "$OLD_MO_PID" || true
-  fi
-elif [ -x "$(command -v ss)" ]; then
-  OLD_MO_PID=$(ss -tlnp 'sport = :8889' | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]')
-  if [ ! -z "$OLD_MO_PID" ]; then
-    kill -9 "$OLD_MO_PID" || true
-  fi
-else
-  echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (lsof/ss) to kill the process."
-  exit 1
-fi
+# NOTE: Killing mongo-orchestration with SIGTERM gives it a chance to
+# cleanup any running mongo servers.
+# Also kill any leftover mongo processes on common ports as a backup.
+for port in 8889 27017 27018 27019 27217 27218 27219 1026; do
+  killport $port
+done
+
 
 mongo-orchestration $ORCHESTRATION_ARGUMENTS start > $MONGO_ORCHESTRATION_HOME/out.log 2>&1 < /dev/null &
 

@@ -97,7 +97,7 @@ EOF
   URI=$(check_deployment)
   cat <<EOF >> "secrets-export.sh"
 export MONGODB_URI="$URI"
-export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authSource=%24external"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF

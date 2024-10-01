@@ -449,6 +449,34 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run install binaries test":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}
+          if [ -z "${SKIP_NODE}" ]; then
+            .evergreen/install-node.sh
+          fi
+          .evergreen/install-rust.sh
+          PATH=.bin:$PATH
+          if [ $OS == "Windows_NT" ]; then
+            exit 0
+          fi
+          case $(uname -m) in
+            aarch64 | x86_64 | arm64)
+              . ./.evergreen/ensure-binary.sh gcloud
+              gcloud --version
+              . ./.evergreen/ensure-binary.sh kubectl
+              which kubectl
+              ;;
+          esac
+          # Generate a test results file
+          cd ${PROJECT_DIRECTORY}
+          make test
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -580,6 +608,16 @@ tasks:
           vars:
             VERSION: "8.0"
             TOPOLOGY: "sharded_cluster"
+        - func: "run tests"
+
+    - name: "test-8.0-standalone-require-api"
+      tags: ["8.0", "sharded_cluster"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            TOPOLOGY: "server"
+            REQUIRE_API_VERSION: "1"
         - func: "run tests"
 
     - name: "test-7.0-standalone"
@@ -883,6 +921,11 @@ tasks:
         #   vars:
         #     VARIANT: aks
 
+    - name: "test-install-binaries"
+      tags: ["pr"]
+      commands:
+        - func: "run install binaries test"
+
 # }}}
 
 task_groups:
@@ -1184,6 +1227,8 @@ axes:
       - id: rhel7
         display_name: "RHEL 7"
         run_on: rhel70-small
+        variables:
+          SKIP_NODE: 1
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
@@ -1308,6 +1353,15 @@ buildvariants:
      - name: "test-3.6-replica_set"
      - name: "test-3.6-sharded_cluster"
      - name: "test-3.6-standalone"
+  rules:
+    - if:
+        auth: "auth"
+        ssl: "nossl"
+        os-fully-featured: "*"
+      then:
+        add_tasks:
+          - "test-install-binaries"
+          - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
   matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
@@ -1325,6 +1379,13 @@ buildvariants:
      - name: "test-5.0-replica_set"
      - name: "test-5.0-sharded_cluster"
      - name: "test-5.0-standalone"
+  rules:
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-50: "*"
+      then:
+        add_tasks: ["test-install-binaries"]
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1339,6 +1400,13 @@ buildvariants:
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
+  rules:
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-70: "*"
+      then:
+        add_tasks: ["test-install-binaries"]
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
