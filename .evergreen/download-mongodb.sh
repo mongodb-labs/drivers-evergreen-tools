@@ -60,8 +60,8 @@ get_mongodb_download_url_for ()
    # Set VERSION_RAPID to the latest rapid release each quarter.
    VERSION_RAPID="7.3.1"
    VERSION_80="8.0.0"
-   VERSION_70="7.0.14"
-   VERSION_60="6.0.18"
+   VERSION_70="7.0.9"
+   VERSION_60="6.0.15"
    VERSION_50="5.0.29"
 
    # This version is used for performance benchmarking. Do not update to a newer version
