@@ -26,11 +26,10 @@ EXTERNAL_IP=$(curl -s http://whatismyip.akamai.com/)
 
 echo "Adding current IP ($EXTERNAL_IP) to Azure Virtual Machine ... begin"
 az network nsg rule update \
-    --only-show-errors \
     --name "$AZUREKMS_VMNAME-nsg-rule" \
     --nsg-name "$AZUREKMS_VMNAME-nsg" \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
-    --source-address-prefixes "$EXTERNAL_IP"
+    --source-address-prefixes "$EXTERNAL_IP" > /dev/null
 
 IP=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query publicIps -o tsv)
 
