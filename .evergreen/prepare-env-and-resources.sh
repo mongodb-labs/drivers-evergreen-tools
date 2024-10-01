@@ -66,3 +66,4 @@ else
 fi
 
 $DRIVERS_TOOLS/.evergreen/setup.sh
+$PROJECT_DIRECTORY/.evergreen/install-dependencies.sh"
