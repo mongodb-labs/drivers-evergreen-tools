@@ -67,21 +67,17 @@ killport() {
 
   if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
     for pid in $(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]'); do
-      kill "$pid" || true
-      timeout 60s bash -c "while kill -0 \"$pid\" 2>/dev/null; do sleep 1; done" || kill -9 "$pid" || true
+      kill -SIGKILL "$pid" || true
     done
   elif [ -x "$(command -v lsof)" ]; then
     for pid in $(lsof -t "-i:$port" || true); do
-      kill "$pid" || true
-      timeout 60s bash -c "while kill -0 \"$pid\" 2>/dev/null; do sleep 1; done" || kill -9 "$pid" || true
+      kill -SIGKILL "$pid" || true
     done
   elif [ -x "$(command -v fuser)" ]; then
-    fuser --kill -SIGTERM "$port/tcp" || true
-    timeout 60s bash -c "while fuser -s \"$port/tcp\"; do sleep 1; done" || fuser --kill -SIGKILL "$port/tcp" || true
+    fuser --kill "$port/tcp" || true
   elif [ -x "$(command -v ss)" ]; then
     for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
-      kill "$pid" || true
-      timeout 60s bash -c "while kill -0 \"$pid\" 2>/dev/null; do sleep 1; done" || kill -9 "$pid" || true
+      kill -SIGKILL "$pid" || true
     done
   else
     echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
