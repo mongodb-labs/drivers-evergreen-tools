@@ -40,7 +40,7 @@ killport() {
     fuser --kill -${signal} "$port/tcp" || true
   elif [ -x "$(command -v ss)" ]; then
     for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
-       echo "Killing pid $pid for port $port with signal $signal using kill" 1>&2
+      echo "Killing pid $pid for port $port with signal $signal using kill" 1>&2
       kill "$pid" -${signal} || true
     done
   else
