@@ -67,7 +67,7 @@ killport() {
 
   if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
     for pid in $(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]'); do
-      kill -SIGKILL "$pid" || true
+      taskkill /F /T /PID "$pid" || true
     done
   elif [ -x "$(command -v lsof)" ]; then
     for pid in $(lsof -t "-i:$port" || true); do
