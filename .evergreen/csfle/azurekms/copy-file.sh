@@ -18,6 +18,10 @@ if [ -z "${AZUREKMS_RESOURCEGROUP:-}" ] || \
     exit 1
 fi
 
+# Permit SSH access from current IP.
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+"$SCRIPT_DIR"/set-ssh-ip.sh
+
 echo "Copying file $AZUREKMS_SRC to Virtual Machine $AZUREKMS_DST ... begin"
 IP=$(az vm show --show-details --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" --query publicIps -o tsv)
 # Use -o StrictHostKeyChecking=no to skip the prompt for known hosts.
