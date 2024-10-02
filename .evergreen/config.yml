@@ -31,7 +31,7 @@ timeout:
         ls -la
 
 functions:
-  "fetch source":
+  "fetch and prepare resources":
     # Executes git clone and applies the submitted patch, if any
     - command: git.get_project
       params:
@@ -40,73 +40,18 @@ functions:
     # Deprecated. Should be removed. But still needed for certain agents (ZAP)
     - command: git.apply_patch
     # Make an evergreen exapanstion file with dynamic values
-    - command: shell.exec
+    - command: subprocess.exec
       params:
+        include_expansions_in_env: ["is_patch", "version_id", "project"]
         working_dir: "src"
-        shell: bash
-        script: |
-           # Get the current unique version of this checkout
-           if [ "${is_patch}" = "true" ]; then
-              CURRENT_VERSION=$(git describe)-patch-${version_id}
-           else
-              CURRENT_VERSION=latest
-           fi
-
-           export DRIVERS_TOOLS="$(pwd)/../drivers-tools"
-           export PROJECT_DIRECTORY="$(pwd)"
-
-           # Python has cygwin path problems on Windows. Detect prospective mongo-orchestration home directory
-           if [[ "$(uname -s)" == CYGWIN* ]]; then
-              export DRIVERS_TOOLS=$(cygpath -m $DRIVERS_TOOLS)
-              export PROJECT_DIRECTORY=$(cygpath -m $PROJECT_DIRECTORY)
-           fi
-
-           export MONGO_ORCHESTRATION_HOME="$DRIVERS_TOOLS/.evergreen/orchestration"
-           export PROJECT_ORCHESTRATION_HOME="$PROJECT_DIRECTORY/.evergreen/orchestration"
-           export MONGODB_BINARIES="$DRIVERS_TOOLS/mongodb/bin"
-           export UPLOAD_BUCKET="${project}"
-
-           cat <<EOT > expansion.yml
-           CURRENT_VERSION: "$CURRENT_VERSION"
-           DRIVERS_TOOLS: "$DRIVERS_TOOLS"
-           MONGO_ORCHESTRATION_HOME: "$MONGO_ORCHESTRATION_HOME"
-           PROJECT_ORCHESTRATION_HOME: "$PROJECT_ORCHESTRATION_HOME"
-           MONGODB_BINARIES: "$MONGODB_BINARIES"
-           UPLOAD_BUCKET: "$UPLOAD_BUCKET"
-           PROJECT_DIRECTORY: "$PROJECT_DIRECTORY"
-           EOT
-
-           cat <<EOT > .env
-           CURRENT_VERSION="$CURRENT_VERSION"
-           DRIVERS_TOOLS="$DRIVERS_TOOLS"
-           MONGO_ORCHESTRATION_HOME="$MONGO_ORCHESTRATION_HOME"
-           PROJECT_ORCHESTRATION_HOME="$PROJECT_ORCHESTRATION_HOME"
-           MONGODB_BINARIES="$MONGODB_BINARIES"
-           UPLOAD_BUCKET="$UPLOAD_BUCKET"
-           PROJECT_DIRECTORY="$PROJECT_DIRECTORY"
-           EOT
-
-           # See what we've done
-           cat expansion.yml
+        binary: bash
+        args:
+          - .evergreen/prepare-env-and-resources.sh
 
     # Load the expansion file to make an evergreen variable with the current unique version
     - command: expansions.update
       params:
         file: src/expansion.yml
-
-  "prepare resources":
-    - command: shell.exec
-      params:
-        script: |
-          rm -rf ${DRIVERS_TOOLS}
-          if [ "${project}" = "drivers-tools" ]; then
-            # If this was a patch build, doing a fresh clone would not actually test the patch
-            cp -R ${PROJECT_DIRECTORY}/ ${DRIVERS_TOOLS}
-          else
-            git clone https://github.com/mongodb-labs/drivers-evergreen-tools.git ${DRIVERS_TOOLS}
-          fi
-          ${DRIVERS_TOOLS}/.evergreen/setup.sh
-          "${PROJECT_DIRECTORY}/.evergreen/install-dependencies.sh"
 
   "upload release":
     - command: s3.put
@@ -546,8 +491,7 @@ functions:
           rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
-  - func: "fetch source"
-  - func: "prepare resources"
+  - func: "fetch and prepare resources"
 
 post:
   # Skip: uploading the full working directory is not needed by drivers-evergreen-tools.
@@ -992,8 +936,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: "fetch source"
-      - func: "prepare resources"
+      - func: "fetch and prepare resources"
       - command: subprocess.exec
         params:
           binary: "bash"
@@ -1019,8 +962,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1052,8 +994,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: shell.exec
         params:
           shell: bash
@@ -1084,8 +1025,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: shell.exec
         params:
           shell: bash
@@ -1116,8 +1056,7 @@ task_groups:
     teardown_group_can_fail_task: true
     teardown_group_timeout_secs: 1800
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1142,8 +1081,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1168,8 +1106,7 @@ task_groups:
     teardown_task_can_fail_task: true
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
-      - func: fetch source
-      - func: prepare resources
+      - func: "fetch and prepare resources"
       - command: subprocess.exec
         params:
           binary: bash
