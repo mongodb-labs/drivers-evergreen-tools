@@ -1057,7 +1057,6 @@ task_groups:
     teardown_group_timeout_secs: 1800
     setup_group:
       - func: "fetch and prepare resources"
-      - func: prepare resources
       - command: subprocess.exec
         params:
           binary: bash
@@ -1083,7 +1082,6 @@ task_groups:
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: "fetch and prepare resources"
-      - func: prepare resources
       - command: subprocess.exec
         params:
           binary: bash
@@ -1109,7 +1107,6 @@ task_groups:
     teardown_group_timeout_secs: 1800 # 30 minutes
     setup_group:
       - func: "fetch and prepare resources"
-      - func: prepare resources
       - command: subprocess.exec
         params:
           binary: bash
