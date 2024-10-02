@@ -62,7 +62,7 @@ get_mongodb_download_url_for ()
    VERSION_80="8.0.0"
    VERSION_70="7.0.9"
    VERSION_60="6.0.15"
-   VERSION_50="5.0.29"
+   VERSION_50="5.0.26"
 
    # This version is used for performance benchmarking. Do not update to a newer version
    VERSION_60_PERF="6.0.6"
