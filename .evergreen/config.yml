@@ -41,8 +41,8 @@ functions:
     - command: git.apply_patch
     # Make an evergreen exapanstion file with dynamic values
     - command: subprocess.exec
-      include_expansions_in_env: ["is_patch", "version_id", "project"]
       params:
+        include_expansions_in_env: ["is_patch", "version_id", "project"]
         working_dir: "src"
         binary: bash
         args:
