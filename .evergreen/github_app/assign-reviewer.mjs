@@ -74,7 +74,11 @@ for (let line of reviewersSource.split('\n')) {
     }
     reviewers.push(line);
 }
-const reviewer = reviewers[Math.floor(Math.random() * reviewers.length)]
+// Use the Github PR number to select the next reviewer in round-robin order. We
+// assume that Github PR numbers are sequential and that the order of reviewer
+// names is consistent across runs. Note that Github Issues must be disabled
+// because they share the same number sequence with Github PRs.
+const reviewer = reviewers[number % reviewers.length];
 
 console.log("Assigning reviewer to PR...");
 resp = await octokit.request("POST /repos/{owner}/{repo}/pulls/{number}/requested_reviewers", {
