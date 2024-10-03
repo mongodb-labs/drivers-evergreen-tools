@@ -41,7 +41,12 @@ def main():
 
     mock_ocsp_responder.init(port=args.port, debug=args.verbose, host=args.bind_ip)
 
+    # Write the pid file.
+    with open(os.path.join(os.getcwd(), 'ocsp.pid'), 'w') as fid:
+        fid.write(os.getpid())
+
     print('Mock OCSP Responder is running on port %s' % (str(args.port)))
+
 
 if __name__ == '__main__':
     main()
