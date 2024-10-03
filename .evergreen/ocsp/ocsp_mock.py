@@ -43,7 +43,7 @@ def main():
 
     # Write the pid file.
     with open(os.path.join(os.getcwd(), 'ocsp.pid'), 'w') as fid:
-        fid.write(os.getpid())
+        fid.write(str(os.getpid()))
 
     print('Mock OCSP Responder is running on port %s' % (str(args.port)))
 
