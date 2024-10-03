@@ -43,6 +43,7 @@ except FileNotFoundError:
 
 def run(args, env):
     """Run a python command in a subprocess."""
+    env.update(os.environ.copy())
     return subprocess.run([sys.executable] + args, env=env).returncode
 
 
@@ -147,6 +148,8 @@ def setup_web_identity():
         raise RuntimeError("Failed to unassign an instance profile from the current machine")
 
     token_file = os.environ.get('AWS_WEB_IDENTITY_TOKEN_FILE', CONFIG[get_key('iam_web_identity_token_file')])
+    if os.name == "nt" and token_file.startswith('/tmp'):
+        token_file = token_file.replace("/tmp", "C:/cygwin/tmp/")
 
     # Handle the OIDC credentials.
     env = dict(
