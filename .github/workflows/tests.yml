@@ -61,7 +61,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
     - run: |
-        python scripts/update-monogodb-download.py
+        python scripts/update_mongodb_download.py
 
   eslint:
     runs-on: ubuntu-latest
