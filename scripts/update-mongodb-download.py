@@ -77,14 +77,16 @@ if missing_links:
     print("-" * 25)
     print("Missing or incorrect links:")
     print("-" * 25)
-    pprint.pprint(missing_links)
+    for link in missing_links:
+        print(link)
 
 # Print a summary of missing versions.
 if missing_versions:
     print("-" * 25)
     print("Missing or out of date versions:")
     print("-" * 25)
-    pprint.pprint(missing_versions)
+    for version in missing_versions:
+        print(version)
 
 if missing_versions or missing_links:
     sys.exit(1)
