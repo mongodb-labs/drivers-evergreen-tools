@@ -120,7 +120,7 @@ fi
 echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
 # Copy the orchestration file so we can override it.
-cp $ORCHESTRATION_FILE $MONGO_ORCHESTRATION_HOME/config.json
+cp -f "$ORCHESTRATION_FILE" "$MONGO_ORCHESTRATION_HOME/config.json"
 ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/config.json"
 
 # Handle absolute path.
