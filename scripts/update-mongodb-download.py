@@ -2,7 +2,6 @@ import json
 import urllib.error
 import re
 import urllib.request
-import pprint
 import sys
 
 # Download a copy of full.json into memory.
