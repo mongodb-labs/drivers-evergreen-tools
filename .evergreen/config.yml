@@ -487,8 +487,11 @@ functions:
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
           PYTHON=$(find_python3 2>/dev/null)
+          echo "Using PYTHON: $PYTHON"
           $PYTHON mongodl.py --list
-          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
+          if [ "$OS" != "Windows_NT"" ]; then
+            $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
+          fi
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
 
   "run mongodl test full":
@@ -501,6 +504,7 @@ functions:
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
           PYTHON=$(find_python3 2>/dev/null)
+          echo "Using PYTHON: $PYTHON"
           $PYTHON mongodl.py --list
           $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
           $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
