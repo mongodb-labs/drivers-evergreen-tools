@@ -486,7 +486,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
-          PYTHON=$(find_python3 2>/dev/null)
+          PYTHON=$(ensure_python3 2>/dev/null)
           echo "Using PYTHON: $PYTHON"
           $PYTHON mongodl.py --list
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
@@ -501,7 +501,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
-          PYTHON=$(find_python3 2>/dev/null)
+          PYTHON=$(ensure_python3 2>/dev/null)
           echo "Using PYTHON: $PYTHON"
           # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
           export VALIDATE_DISTROS=1
