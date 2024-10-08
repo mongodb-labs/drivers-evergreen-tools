@@ -120,6 +120,7 @@ mo-expansion.sh
 .kube
 .cargo
 .rustup
+.evergreen/orchestration/config.json
 
 # Azure functions.
 .python_packages/

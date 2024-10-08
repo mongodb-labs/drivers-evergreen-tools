@@ -53,7 +53,7 @@ printf '%s' $MONGODB_BINARIES | $PYTHON -c 'import json,sys; print(json.dumps({"
 
 # Copy client certificate because symlinks do not work on Windows.
 mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
-cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem || true
+cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem 2> /dev/null || true
 
 get_distro
 if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
@@ -119,13 +119,15 @@ else
 fi
 echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 
+# Copy the orchestration file so we can override it.
+cp -f "$ORCHESTRATION_FILE" "$MONGO_ORCHESTRATION_HOME/config.json"
+ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/config.json"
+
 # Handle absolute path.
 perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|$(echo $DRIVERS_TOOLS | sed 's/\\/\\\\\\\\/g')|g" $ORCHESTRATION_FILE
 
 # If running on Docker, update the orchestration file to be docker-friendly.
 if [ -n "$DOCKER_RUNNING" ]; then
-  cp $ORCHESTRATION_FILE /root/config.json
-  export ORCHESTRATION_FILE=/root/config.json
   $PYTHON $SCRIPT_DIR/docker/overwrite_orchestration.py
 fi
 
