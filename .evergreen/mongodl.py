@@ -80,6 +80,7 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     'ubuntu': {
+        '24.*': 'ubuntu2404',
         '22.*': 'ubuntu2204',
         '20.*': 'ubuntu2004',
         '18.*': 'ubuntu1804',
@@ -110,6 +111,7 @@ DISTRO_ID_TO_TARGET = {
         '15.*': 'suse15',
     },
     'amzn': {
+        '2023': 'amazon2023',
         '2018.*': 'amzn64',
         '2': 'amazon2',
     },

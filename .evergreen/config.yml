@@ -485,12 +485,13 @@ functions:
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
-          python3 mongodl.py --list
-          python3 mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
-          python3 mongodl.py --edition enterprise --version 6.0 --component archive --test
-          python3 mongodl.py --edition enterprise --version 7.0 --component crypt_shared --test
-          python3 mongodl.py --edition enterprise --version 8.0 --component cryptd --test
-          python3 mongodl.py --edition enterprise --version latest --component shell --out $(pwd)
+          PYTHON=/opt/mongodbtoolchain/v3/bin/python3
+          $PYTHON mongodl.py --list
+          $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component crypt_shared --test
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+          $PYTHON mongodl.py --edition enterprise --version latest --component shell --out $(pwd)
 
   "teardown assets":
     - command: subprocess.exec
