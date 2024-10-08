@@ -482,9 +482,11 @@ functions:
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["PYTHON_BINARY"]
         script: |-
           set -o errexit
+          if [ -n "${SKIP_MONGODL}"]; then
+            exit 0
+          fi
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
           PYTHON=$(ensure_python3 2>/dev/null)
@@ -498,9 +500,11 @@ functions:
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["PYTHON_BINARY"]
         script: |-
           set -o errexit
+          if [ -n "${SKIP_MONGODL}"]; then
+            exit 0
+          fi
           cd ${DRIVERS_TOOLS}/.evergreen
           . find-python3.sh
           PYTHON=$(ensure_python3 2>/dev/null)
@@ -1276,7 +1280,7 @@ axes:
         run_on: rhel70-small
         variables:
           SKIP_NODE: 1
-          PYTHON_BINARY: /opt/python/3.8/bin/python
+          SKIP_MONGODL: 1
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
