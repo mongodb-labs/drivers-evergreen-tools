@@ -1373,7 +1373,7 @@ buildvariants:
         os-fully-featured: "*"
       then:
         add_tasks:
-          - "test-install-binaries"
+          - "test-binaries"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1398,7 +1398,7 @@ buildvariants:
         ssl: "ssl"
         os-requires-50: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks: ["test-binaries"]
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
