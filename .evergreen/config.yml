@@ -477,7 +477,21 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run mongodl test":
+  "run mongodl test partial":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen
+          . find-python3.sh
+          PYTHON=$(find_python3 2>/dev/null)
+          $PYTHON mongodl.py --list
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+
+  "run mongodl test full":
     - command: shell.exec
       type: test
       params:
@@ -944,11 +958,15 @@ tasks:
       commands:
         - func: "run install binaries test"
 
-    - name: "test-mongodl"
+    - name: "test-mongodl-full"
       tags: ["pr"]
       commands:
-        - func: "run mongodl test"
+        - func: "run mongodl test full"
 
+    - name: "test-mongodl-partial"
+      tags: ["pr"]
+      commands:
+        - func: "run mongodl test partial"
 
 # }}}
 
@@ -1382,7 +1400,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
-          - "test-mongodl"
+          - "test-mongodl-full"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1407,7 +1425,9 @@ buildvariants:
         ssl: "ssl"
         os-requires-50: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks:
+          - "test-install-binaries"
+          - "test-mongodl-partial"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1428,7 +1448,9 @@ buildvariants:
         ssl: "ssl"
         os-requires-70: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks:
+          - "test-install-binaries"
+          - "test-mongodl-partial"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
