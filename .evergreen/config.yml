@@ -1274,6 +1274,7 @@ axes:
         run_on: rhel70-small
         variables:
           SKIP_NODE: 1
+          PYTHON_BINARY: /opt/python/3.8/bin/python
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
