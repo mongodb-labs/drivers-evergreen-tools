@@ -1373,7 +1373,7 @@ buildvariants:
         os-fully-featured: "*"
       then:
         add_tasks:
-          - "test-binaries"
+          - "test-installs"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1398,7 +1398,7 @@ buildvariants:
         ssl: "ssl"
         os-requires-50: "*"
       then:
-        add_tasks: ["test-binaries"]
+        add_tasks: ["test-installs"]
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1419,7 +1419,7 @@ buildvariants:
         ssl: "ssl"
         os-requires-70: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks: ["test-installs"]
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
