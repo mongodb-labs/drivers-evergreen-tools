@@ -477,7 +477,7 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run mongodl test":
+  "mongodl test":
     - command: shell.exec
       type: test
       params:
@@ -485,12 +485,14 @@ functions:
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
-          PYTHON=/opt/mongodbtoolchain/v3/bin/python3
+          . find-python3.sh
+          PYTHON=$(find_python3 2>/dev/null)
           $PYTHON mongodl.py --list
           $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
-          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component crypt_shared --test
+          $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 6.0.1 --component crypt_shared --test
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+          $PYTHON mongodl.py --edition enterprise --version 8.0 --component archive --test
           $PYTHON mongodl.py --edition enterprise --version latest --component shell --out $(pwd)
 
   "teardown assets":
@@ -937,11 +939,16 @@ tasks:
         #   vars:
         #     VARIANT: aks
 
-    - name: "test-installs"
+    - name: "test-install-binaries"
       tags: ["pr"]
       commands:
         - func: "run install binaries test"
+
+    - name: "test-mongodl"
+      tags: ["pr"]
+      commands:
         - func: "run mongodl test"
+
 
 # }}}
 
@@ -1374,7 +1381,8 @@ buildvariants:
         os-fully-featured: "*"
       then:
         add_tasks:
-          - "test-installs"
+          - "test-install-binaries"
+          - "test-mongodl"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1399,7 +1407,7 @@ buildvariants:
         ssl: "ssl"
         os-requires-50: "*"
       then:
-        add_tasks: ["test-installs"]
+        add_tasks: ["test-install-binaries"]
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1420,7 +1428,7 @@ buildvariants:
         ssl: "ssl"
         os-requires-70: "*"
       then:
-        add_tasks: ["test-installs"]
+        add_tasks: ["test-install-binaries"]
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
