@@ -477,7 +477,7 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "mongodl test":
+  "run mongodl test":
     - command: shell.exec
       type: test
       params:
