@@ -482,6 +482,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: ["PYTHON_BINARY"]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
@@ -497,6 +498,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: ["PYTHON_BINARY"]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen
