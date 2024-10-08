@@ -489,9 +489,7 @@ functions:
           PYTHON=$(find_python3 2>/dev/null)
           echo "Using PYTHON: $PYTHON"
           $PYTHON mongodl.py --list
-          if [ "$OS" != "Windows_NT"" ]; then
-            $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
-          fi
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
 
   "run mongodl test full":
@@ -505,8 +503,12 @@ functions:
           . find-python3.sh
           PYTHON=$(find_python3 2>/dev/null)
           echo "Using PYTHON: $PYTHON"
+          # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
+          export VALIDATE_DISTROS=1
           $PYTHON mongodl.py --list
-          $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
+          if [ "$OS" != "Windows_NT" ]; then
+            $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
+          fi
           $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
           $PYTHON mongodl.py --edition enterprise --version 6.0.1 --component crypt_shared --test
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test

@@ -401,12 +401,19 @@ class CacheDB:
                 githash=githash,
             )
             version_id = self._cursor.lastrowid
+            missing = set()
             for dl in ver['downloads']:
                 arch = dl.get('arch', 'null')
                 target = dl.get('target', 'null')
                 # Normalize RHEL target names to include just the major version.
                 if target.startswith('rhel') and len(target) == 6:
                     target = target[:-1]
+                found = False
+                for distro in DISTRO_ID_TO_TARGET.values():
+                    if target in list(distro.values()):
+                        found = True
+                if not found and target not in ['macos', 'windows']:
+                    missing.add(target)
                 edition = dl['edition']
                 ar_url = dl['archive']['url']
                 ar_debug_url = dl['archive'].get('debug_symbols')
@@ -449,6 +456,12 @@ class CacheDB:
                         dl_id=dl_id,
                         data=json.dumps(data),
                     )
+        if missing:
+            print("Missing targets in DISTRO_ID_TO_TARGET:")
+            for item in missing:
+                print(item)
+            if os.environ.get("VALIDATE_DISTROS") == "1":
+                sys.exit(1)
 
     def iter_available(
             self,
