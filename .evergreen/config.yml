@@ -477,6 +477,21 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run mongodl test":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen
+          python3 mongodl.py --list
+          python3 mongodl.py --edition enterprise --version 8.0 --component archive-debug --no-download
+          python3 mongodl.py --edition enterprise --version 7.0 --component archive --test
+          python3 mongodl.py --edition enterprise --version 6.0 --component crypt_shared --test
+          python3 mongodl.py --edition enterprise --version latest --component cryptd --test
+          python3 mongodl.py --edition enterprise --version rapid --component shell --out $(pwd)
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -921,10 +936,11 @@ tasks:
         #   vars:
         #     VARIANT: aks
 
-    - name: "test-install-binaries"
+    - name: "test-installs"
       tags: ["pr"]
       commands:
         - func: "run install binaries test"
+        - func: "run mongodl test"
 
 # }}}
 
