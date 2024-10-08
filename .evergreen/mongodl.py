@@ -381,7 +381,7 @@ class CacheDB:
         for ver in data['versions']:
             version = ver['version']
             key = version[:3]
-            if key in versions and versions[key] is None:
+            if mdb_version_not_rc(version) and key in versions and versions[key] is None:
                 ver = ver.copy()
                 ver['version'] = key
                 versions[key] = ver
