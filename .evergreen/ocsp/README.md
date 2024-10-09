@@ -14,7 +14,7 @@ The server should typically be run in the background, e.g.
 
 ```yaml
 run-revoked-delegate-ocsp-server:
-  - command: subrocess.exec
+  - command: subprocess.exec
     params:
       binary: bash
       background: true
