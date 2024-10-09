@@ -1,3 +1,30 @@
+# Usage
+
+We provide convenience setup and teardown scripts to manage the OSCP server.
+
+```bash
+OCSP_ALGORITHM=rsa SERVER_TYPE=valid bash ${DRIVERS_TOOLS}/.evergreen/ocsp/setup.sh
+```
+
+```bash
+bash ${DRIVERS_TOOLS}/.evergreen/ocsp/teardown.sh
+```
+
+The server should typically be run in the background, e.g.
+
+```yaml
+run-revoked-delegate-ocsp-server:
+  - command: subprocess.exec
+    params:
+      binary: bash
+      background: true
+      env:
+        SERVER_TYPE: revoked-delegate
+      include_expansions_in_env: [OCSP_ALGORITHM]
+      args:
+        - ${DRIVERS_TOOLS}/.evergreen/ocsp/setup.sh
+```
+
 # Generating Test Certificates
 
 The test certificates here were generating using a fork of the server
