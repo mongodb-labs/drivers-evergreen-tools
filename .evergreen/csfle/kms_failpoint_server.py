@@ -99,7 +99,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 {"message": "failpoint set for type: '{}'".format(failpoint_type)}
             )
             return
-        
+
         if path.match("/reset"):
             remaining_http_fails = 0
             remaining_network_fails = 0
