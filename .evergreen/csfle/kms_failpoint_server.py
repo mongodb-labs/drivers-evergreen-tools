@@ -28,7 +28,7 @@ import os
 from pathlib import PurePosixPath
 
 # A new instance of Handler is created for every request, so these have to be global variables
-remaining_decrypt_fails = 0
+remaining_http_fails = 0
 remaining_network_fails = 0
 
 fake_ciphertext = 'a' * 96
@@ -70,12 +70,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(msg)
 
-    def _decrypt_fail(self):
-        global remaining_decrypt_fails
-        remaining_decrypt_fails -= 1
+    def _http_fail(self):
+        global remaining_http_fails
+        remaining_http_fails -= 1
         self.send_response(429)
+
     def do_POST(self):
-        global remaining_decrypt_fails
+        global remaining_http_fails
         global remaining_network_fails
         parts = urllib.parse.urlsplit(self.path)
         path = PurePosixPath(parts.path)
@@ -89,7 +90,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if failpoint_type == 'network':
                 remaining_network_fails = data['count']
             elif failpoint_type == 'http':
-                remaining_decrypt_fails = data['count']
+                remaining_http_fails = data['count']
             else:
                 self._send_not_found()
                 return
@@ -97,6 +98,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._send_json(
                 {"message": "failpoint set for type: '{}'".format(failpoint_type)}
             )
+            return
+
+        if path.match("/reset"):
+            remaining_http_fails = 0
+            remaining_network_fails = 0
+            self._send_json({"message": "failpoints reset"})
             return
 
         # If a failpoint was set, fail the request.
@@ -111,8 +118,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_json({"CiphertextBlob": base64.b64encode(fake_ciphertext.encode()).decode()})
                 return
             elif aws_op == "TrentService.Decrypt":
-                if remaining_decrypt_fails > 0:
-                    self._decrypt_fail()
+                if remaining_http_fails > 0:
+                    self._http_fail()
                     return
                 self._send_json({"Plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
                 return
@@ -120,22 +127,25 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_not_found()
                 return
 
-        # Azure auth path: /c01df00d-cafe-g00d-dea1-decea5sedbeef/oauth2/v2.0/token
+        # GCP or Azure auth path: /c01df00d-cafe-g00d-dea1-decea5sedbeef/oauth2/v2.0/token
         if path.match("*token"):
+            if remaining_http_fails > 0:
+                self._http_fail()
+                return
             return self._send_json({"access_token": "foo", "expires_in": 99999})
         # GCP encrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:encrypt
         elif path.match("*encrypt"):
             return self._send_json({"ciphertext": base64.b64encode(fake_ciphertext.encode()).decode()})
         # GCP decrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:decrypt
         elif path.match("*decrypt"):
-            if remaining_decrypt_fails > 0:
-                self._decrypt_fail()
+            if remaining_http_fails > 0:
+                self._http_fail()
                 return
             return self._send_json({"plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
         # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey
         elif path.match("*unwrapkey"):
-            if remaining_decrypt_fails > 0:
-                self._decrypt_fail()
+            if remaining_http_fails > 0:
+                self._http_fail()
                 return
             return self._send_json({"value": base64.b64encode(fake_plaintext.encode()).decode()})
         # Azure encrypt path: /keys/{key-name}/{key-version}/wrapkey
