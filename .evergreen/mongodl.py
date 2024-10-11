@@ -36,6 +36,9 @@ from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator,
                         NamedTuple, Sequence, cast)
 
 
+# This version is used for performance benchmarking. Do not update to a newer version
+VERSION_60_PERF="6.0.6"
+
 #: Map common distribution names to the distribution named used in the MongoDB download list
 DISTRO_ID_MAP = {
     'elementary': 'ubuntu',
@@ -1074,6 +1077,8 @@ def main(argv: 'Sequence[str]'):
     edition = args.edition or 'enterprise'
     out = args.out or Path.cwd()
     out = out.absolute()
+    if args.version == "v6.0-perf":
+        args.version = VERSION_60_PERF
     result = _dl_component(cache,
                            out,
                            version=args.version,
