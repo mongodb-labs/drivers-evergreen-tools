@@ -509,8 +509,8 @@ functions:
             $PYTHON mongodl.py --edition enterprise --version rapid --component archive-debug --no-download
           fi
           $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 6.0.1 --component crypt_shared --test
-          $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+          $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component crypt_shared --test
+          $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
           $PYTHON mongodl.py --edition enterprise --version 8.0 --component archive --test
           $PYTHON mongodl.py --edition enterprise --version latest --component shell --out $(pwd)
 

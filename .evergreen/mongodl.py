@@ -36,8 +36,11 @@ from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator,
                         NamedTuple, Sequence, cast)
 
 
-# This version is used for performance benchmarking. Do not update to a newer version
-VERSION_60_PERF="6.0.6"
+# These versions are used for performance benchmarking. Do not update to a newer version.
+PERF_VERSIONS = {
+    "v6.0-perf": "6.0.6",
+    "v8.0-perf": "8.0.1"
+}
 
 #: Map common distribution names to the distribution named used in the MongoDB download list
 DISTRO_ID_MAP = {
@@ -1068,6 +1071,9 @@ def main(argv: 'Sequence[str]'):
         raise argparse.ArgumentError(None,
                                      'A "--out" directory should be provided')
 
+    version = args.version
+    if version in PERF_VERSIONS:
+        version = PERF_VERSIONS[version]
     target = args.target
     if target in (None, 'auto'):
         target = infer_target()
@@ -1077,11 +1083,10 @@ def main(argv: 'Sequence[str]'):
     edition = args.edition or 'enterprise'
     out = args.out or Path.cwd()
     out = out.absolute()
-    if args.version == "v6.0-perf":
-        args.version = VERSION_60_PERF
+
     result = _dl_component(cache,
                            out,
-                           version=args.version,
+                           version=version,
                            target=target,
                            arch=arch,
                            edition=edition,
