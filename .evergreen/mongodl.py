@@ -32,7 +32,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
-from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator,
+from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator, Optional,
                         NamedTuple, Sequence, cast)
 
 # The named supported minor and major versions.
@@ -126,13 +126,17 @@ DISTRO_ID_TO_TARGET = {
 }
 
 
-def infer_target() -> str:
+def infer_target(version: Optional[str] = None) -> str:
     """
     Infer the download target of the current host system.
     """
     if sys.platform == 'win32':
         return 'windows'
     if sys.platform == 'darwin':
+        # Older versions of the server used 'osx' as the target.
+        if version is not None:
+            if version.startswith("4.0") or version[0] == "3":
+                return 'osx'
         return 'macos'
     # Now the tricky bit
     cands = (Path(p) for p in ['/etc/os-release', '/usr/lib/os-release'])
@@ -1077,7 +1081,7 @@ def main(argv: 'Sequence[str]'):
         version = PERF_VERSIONS[version]
     target = args.target
     if target in (None, 'auto'):
-        target = infer_target()
+        target = infer_target(version)
     arch = args.arch
     if arch in (None, 'auto'):
         arch = infer_arch()
