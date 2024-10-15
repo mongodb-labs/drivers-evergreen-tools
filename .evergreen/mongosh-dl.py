@@ -9,20 +9,32 @@ import json
 import sys
 import tempfile
 import urllib.request
+from urllib.error import HTTPError
 from pathlib import Path
 from typing import Sequence
+import time
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import _expand_archive, infer_arch
 
 
-def _get_latest_version():
+def _get_latest_version(try_number=0):
     headers = { "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28" }
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
-    resp = urllib.request.urlopen(req)
+    try:
+        resp = urllib.request.urlopen(req)
+    except HTTPError as e:
+        if e.reason != "rate limit exceeded":
+            raise e
+        try_number += 1
+        if try_number == 5:
+            raise e
+        time.sleep(2 ** try_number)
+        return _get_latest_version(try_number)
+
     data = json.loads(resp.read().decode('utf-8'))
     for item in data:
         if item['prerelease']:
