@@ -490,6 +490,8 @@ functions:
           echo "Using PYTHON: $PYTHON"
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+          $PYTHON monogosh-dl.py --no-download
+          $PYTHON monogosh-dl.py --version 2.1.1 --no-download
 
   "run mongodl test full":
     - command: shell.exec
@@ -519,6 +521,8 @@ functions:
           $PYTHON mongodl.py --edition enterprise --version latest --component archive --out $(pwd)
           $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
           $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
+          $PYTHON monogosh-dl.py --no-download
+          $PYTHON monogosh-dl.py --version 2.1.1 --no-download
 
   "teardown assets":
     - command: subprocess.exec
