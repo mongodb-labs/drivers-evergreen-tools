@@ -477,6 +477,49 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run mongodl test partial":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen
+          . find-python3.sh
+          PYTHON=$(ensure_python3)
+          echo "Using PYTHON: $PYTHON"
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
+          $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
+
+  "run mongodl test full":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen
+          . find-python3.sh
+          PYTHON=$(ensure_python3 2>/dev/null)
+          echo "Using PYTHON: $PYTHON"
+          # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
+          export VALIDATE_DISTROS=1
+          $PYTHON mongodl.py --list
+          if [ "$OS" != "Windows_NT" ]; then
+            $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component archive-debug --test
+          fi
+          $PYTHON mongodl.py --edition enterprise --version 3.6 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 4.0 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 4.2 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 4.4 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version 6.0 --component crypt_shared --test
+          $PYTHON mongodl.py --edition enterprise --version 8.0 --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version rapid --component archive --test
+          $PYTHON mongodl.py --edition enterprise --version latest --component archive --out $(pwd)
+          $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
+          $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -926,6 +969,16 @@ tasks:
       commands:
         - func: "run install binaries test"
 
+    - name: "test-mongodl-full"
+      tags: ["pr"]
+      commands:
+        - func: "run mongodl test full"
+
+    - name: "test-mongodl-partial"
+      tags: ["pr"]
+      commands:
+        - func: "run mongodl test partial"
+
 # }}}
 
 task_groups:
@@ -1358,6 +1411,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
+          - "test-mongodl-full"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1382,7 +1436,9 @@ buildvariants:
         ssl: "ssl"
         os-requires-50: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks:
+          - "test-install-binaries"
+          - "test-mongodl-partial"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1403,7 +1459,9 @@ buildvariants:
         ssl: "ssl"
         os-requires-70: "*"
       then:
-        add_tasks: ["test-install-binaries"]
+        add_tasks:
+          - "test-install-binaries"
+          - "test-mongodl-partial"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"

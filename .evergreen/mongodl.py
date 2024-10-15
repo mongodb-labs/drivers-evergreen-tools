@@ -32,19 +32,17 @@ from collections import namedtuple
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from pathlib import Path, PurePath, PurePosixPath
-
-try:
-    # We want to support Python3.4 for now, which does not have a 'typing' module
-    from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator,
+from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator, Optional,
                         NamedTuple, Sequence, cast)
-except ImportError:
-    TYPE_CHECKING = False
 
-    if not TYPE_CHECKING:
+# The named supported minor and major versions.
+SUPPORTED_VERSIONS = ["3.6", "4.0", "4.2", "4.4", "5.0", "6.0", "7.0", "8.0"]
 
-        def cast(t, x):
-            return x
-
+# These versions are used for performance benchmarking. Do not update to a newer version.
+PERF_VERSIONS = {
+    "v6.0-perf": "6.0.6",
+    "v8.0-perf": "8.0.1"
+}
 
 #: Map common distribution names to the distribution named used in the MongoDB download list
 DISTRO_ID_MAP = {
@@ -90,6 +88,7 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     'ubuntu': {
+        '24.*': 'ubuntu2404',
         '22.*': 'ubuntu2204',
         '20.*': 'ubuntu2004',
         '18.*': 'ubuntu1804',
@@ -103,12 +102,14 @@ DISTRO_ID_TO_TARGET = {
         '12': 'debian12',
     },
     'rhel': {
-        '6': 'rhel60',
-        '6.*': 'rhel60',
-        '7': 'rhel70',
-        '7.*': 'rhel70',
-        '8': 'rhel80',
-        '8.*': 'rhel80',
+        '6': 'rhel6',
+        '6.*': 'rhel6',
+        '7': 'rhel7',
+        '7.*': 'rhel7',
+        '8': 'rhel8',
+        '8.*': 'rhel8',
+        '9': 'rhel9',
+        '9.*': 'rhel9',
     },
     'sles': {
         '10.*': 'suse10',
@@ -118,19 +119,24 @@ DISTRO_ID_TO_TARGET = {
         '15.*': 'suse15',
     },
     'amzn': {
+        '2023': 'amazon2023',
         '2018.*': 'amzn64',
         '2': 'amazon2',
     },
 }
 
 
-def infer_target() -> str:
+def infer_target(version: Optional[str] = None) -> str:
     """
     Infer the download target of the current host system.
     """
     if sys.platform == 'win32':
         return 'windows'
     if sys.platform == 'darwin':
+        # Older versions of the server used 'osx' as the target.
+        if version is not None:
+            if version.startswith("4.0") or version[0] == "3":
+                return 'osx'
         return 'macos'
     # Now the tricky bit
     cands = (Path(p) for p in ['/etc/os-release', '/usr/lib/os-release'])
@@ -237,10 +243,15 @@ else:
 
 #: Regular expression that matches the version numbers from 'full.json'
 VERSION_RE = re.compile(r'(\d+)\.(\d+)\.(\d+)(?:-([a-z]+)(\d+))?')
+MAJOR_VERSION_RE = re.compile(r'(\d+)\.(\d+)$')
 STABLE_MAX_RC = 9999
 
 
 def version_tup(version: str) -> 'tuple[int, int, int, int, int]':
+    if MAJOR_VERSION_RE.match(version):
+        maj, min = version.split('.')
+        return tuple([int(maj), int(min), 0, 0, 0])
+
     mat = VERSION_RE.match(version)
     assert mat, ('Failed to parse "{}" as a version number'.format(version))
     major, minor, patch, tag, tagnum = list(mat.groups())
@@ -272,6 +283,11 @@ def mdb_version_not_rc(version: str) -> bool:
     return tup[-1] == STABLE_MAX_RC
 
 
+def mdb_version_rapid(version: str) -> bool:
+    tup = version_tup(version)
+    return tup[1] > 0
+
+
 class CacheDB:
     """
     Abstract a mongodl cache SQLite database.
@@ -296,6 +312,7 @@ class CacheDB:
         )''')
         db.create_collation('mdb_version', collate_mdb_version)
         db.create_function('mdb_version_not_rc', 1, mdb_version_not_rc)
+        db.create_function('mdb_version_rapid', 1, mdb_version_rapid)
         return CacheDB(db)
 
     def __call__(
@@ -357,6 +374,7 @@ class CacheDB:
                 arch TEXT NOT NULL,
                 edition TEXT NOT NULL,
                 ar_url TEXT NOT NULL,
+                ar_debug_url TEXT,
                 data TEXT NOT NULL
             )
         ''')
@@ -369,6 +387,17 @@ class CacheDB:
                 UNIQUE(key, download_id)
             )
         ''')
+        # Inject supported versions
+        versions = dict(zip(SUPPORTED_VERSIONS, [None for _ in SUPPORTED_VERSIONS]))
+        for ver in data['versions']:
+            version = ver['version']
+            key = version[:3]
+            if key in versions and versions[key] is None:
+                ver = ver.copy()
+                ver['version'] = key
+                versions[key] = ver
+        data['versions'].extend(versions.values())
+
         for ver in data['versions']:
             version = ver['version']
             githash = ver['githash']
@@ -383,11 +412,22 @@ class CacheDB:
                 githash=githash,
             )
             version_id = self._cursor.lastrowid
+            missing = set()
             for dl in ver['downloads']:
                 arch = dl.get('arch', 'null')
                 target = dl.get('target', 'null')
+                # Normalize RHEL target names to include just the major version.
+                if target.startswith('rhel') and len(target) == 6:
+                    target = target[:-1]
+                found = False
+                for distro in DISTRO_ID_TO_TARGET.values():
+                    if target in list(distro.values()):
+                        found = True
+                if not found and target not in ['macos', 'windows']:
+                    missing.add(target)
                 edition = dl['edition']
                 ar_url = dl['archive']['url']
+                ar_debug_url = dl['archive'].get('debug_symbols')
                 self(
                     r'''
                     INSERT INTO mdl_downloads (version_id,
@@ -395,12 +435,14 @@ class CacheDB:
                                                arch,
                                                edition,
                                                ar_url,
+                                               ar_debug_url,
                                                data)
                     VALUES (:version_id,
                             :target,
                             :arch,
                             :edition,
                             :ar_url,
+                            :ar_debug_url,
                             :data)
                     ''',
                     version_id=version_id,
@@ -408,6 +450,7 @@ class CacheDB:
                     arch=arch,
                     edition=edition,
                     ar_url=ar_url,
+                    ar_debug_url=ar_debug_url,
                     data=json.dumps(dl),
                 )
                 dl_id = self._cursor.lastrowid
@@ -424,6 +467,12 @@ class CacheDB:
                         dl_id=dl_id,
                         data=json.dumps(data),
                     )
+        if missing:
+            print("Missing targets in DISTRO_ID_TO_TARGET:")
+            for item in missing:
+                print(item)
+            if os.environ.get("VALIDATE_DISTROS") == "1":
+                sys.exit(1)
 
     def iter_available(
             self,
@@ -454,6 +503,8 @@ class CacheDB:
                         THEN 1
                     WHEN :version='latest-stable'
                         THEN mdb_version_not_rc(version)
+                    WHEN :version='rapid'
+                        THEN mdb_version_rapid(version)
                     WHEN :version IS NULL
                         THEN 1
                     ELSE version=:version
@@ -619,6 +670,10 @@ def _print_list(db: CacheDB, version: 'str | None', target: 'str | None',
         )
         ''')))  # type: tuple[str, str, str, str, str]
     arches, targets, editions, versions, components = tup
+    if "archive" in components:
+        components = components.split(', ')
+        components.append("archive-debug")
+        components = ", ".join(sorted(components))
     versions = '\n'.join(
         textwrap.wrap(versions,
                       width=78,
@@ -661,6 +716,10 @@ def _published_build_url(cache: Cache, version: str, target: str, arch: str,
     """
     Get the URL for a "published" build (that is: a build that was published in full.json)
     """
+    value = "url"
+    if component == "archive-debug":
+        component = "archive"
+        value = "debug_symbols"
     matching = cache.db.iter_available(version=version,
                                        target=target,
                                        arch=arch,
@@ -673,7 +732,7 @@ def _published_build_url(cache: Cache, version: str, target: str, arch: str,
             'version="{}" target="{}" arch="{}" edition="{}" component="{}"'.format(
                 version, target, arch, edition, component))
     data = json.loads(tup.data_json)
-    return data['url']
+    return data[value]
 
 
 def _latest_build_url(target: str, arch: str, edition: str, component: str,
@@ -727,15 +786,19 @@ def _latest_build_url(target: str, arch: str, edition: str, component: str,
 def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
                   arch: str, edition: str, component: str,
                   pattern: 'str | None', strip_components: int, test: bool,
+                  no_download: bool,
                   latest_build_branch: 'str|None') -> ExpandResult:
     print('Download {} {}-{} for {}-{}'.format(component, version, edition,
-                                               target, arch))
+                                               target, arch), file=sys.stderr)
     if version == 'latest-build':
         dl_url = _latest_build_url(target, arch, edition, component,
                                    latest_build_branch)
     else:
         dl_url = _published_build_url(cache, version, target, arch, edition,
                                       component)
+    if no_download:
+        print(dl_url)
+        return
     cached = cache.download_file(dl_url).path
     return _expand_archive(cached,
                            out_dir,
@@ -789,8 +852,8 @@ def _expand_archive(ar: Path, dest: Path, pattern: 'str | None',
     Expand the archive members from 'ar' into 'dest'. If 'pattern' is not-None,
     only extracts members that match the pattern.
     '''
-    print('Extract from: [{}]'.format(ar.name))
-    print('        into: [{}]'.format(dest))
+    print('Extract from: [{}]'.format(ar.name), file=sys.stderr)
+    print('        into: [{}]'.format(dest), file=sys.stderr)
     if ar.suffix == '.zip':
         n_extracted = _expand_zip(ar,
                                   dest,
@@ -810,24 +873,24 @@ def _expand_archive(ar: Path, dest: Path, pattern: 'str | None',
         if pattern and strip_components:
             print('NOTE: No files {verb} extracted. Likely all files {verb} '
                   'excluded by "--only={p}" and/or "--strip-components={s}"'.
-                  format(p=pattern, s=strip_components, verb=verb))
+                  format(p=pattern, s=strip_components, verb=verb), file=sys.stderr)
         elif pattern:
             print('NOTE: No files {verb} extracted. Likely all files {verb} '
                   'excluded by the "--only={p}" filter'.format(p=pattern,
-                                                               verb=verb))
+                                                               verb=verb), file=sys.stderr)
         elif strip_components:
             print('NOTE: No files {verb} extracted. Likely all files {verb} '
                   'excluded by "--strip-components={s}"'.format(
-                      s=strip_components, verb=verb))
+                      s=strip_components, verb=verb), file=sys.stderr)
         else:
             print('NOTE: No files {verb} extracted. Empty archive?'.format(
-                verb=verb))
+                verb=verb), file=sys.stderr)
         return ExpandResult.Empty
     elif n_extracted == 1:
-        print('One file {v} extracted'.format(v='would be' if test else 'was'))
+        print('One file {v} extracted'.format(v='would be' if test else 'was'), file=sys.stderr)
         return ExpandResult.Okay
     else:
-        print('{n} files {verb} extracted'.format(n=n_extracted, verb=verb))
+        print('{n} files {verb} extracted'.format(n=n_extracted, verb=verb), file=sys.stderr)
         return ExpandResult.Okay
 
 
@@ -879,10 +942,10 @@ def _maybe_extract_member(out: Path, relpath: PurePath, pattern: 'str | None',
     :return: Zero if the file was excluded by filters, one otherwise.
     """
     relpath = PurePath(relpath)
-    print('  | {:-<65} |'.format(str(relpath) + ' '), end='')
+    print('  | {:-<65} |'.format(str(relpath) + ' '), end='', file=sys.stderr)
     if len(relpath.parts) <= strip:
         # Not enough path components
-        print(' (Excluded by --strip-components)')
+        print(' (Excluded by --strip-components)', file=sys.stderr)
         return 0
     if not _test_pattern(relpath, PurePath(pattern) if pattern else None):
         # Doesn't match our pattern
@@ -890,7 +953,7 @@ def _maybe_extract_member(out: Path, relpath: PurePath, pattern: 'str | None',
         return 0
     stripped = _pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
-    print('\n    -> [{}]'.format(dest))
+    print('\n    -> [{}]'.format(dest), file=sys.stderr)
     if test:
         # We are running in test-only mode: Do not do anything
         return 1
@@ -948,7 +1011,8 @@ def main(argv: 'Sequence[str]'):
         'The product version to download (Required). Use "latest" to download '
         'the newest available version (including release candidates). Use '
         '"latest-stable" to download the newest version, excluding release '
-        'candidates. Use "latest-build" to download the most recent build of '
+        'candidates. Use "rapid" to download the latest rapid release. '
+        ' Use "latest-build" to download the most recent build of '
         'the named component. Use "--list" to list available versions.')
     dl_grp.add_argument('--component',
                         '-C',
@@ -978,6 +1042,10 @@ def main(argv: 'Sequence[str]'):
         'such an item to [<out>/mongod.exe]. If the path has fewer than N components, '
         'that archive member will be ignored.')
     dl_grp.add_argument(
+        '--no-download',
+        action='store_true',
+        help='Do not download the file, only print its url.')
+    dl_grp.add_argument(
         '--test',
         action='store_true',
         help='Do not extract or place any files/directories. '
@@ -1004,22 +1072,26 @@ def main(argv: 'Sequence[str]'):
     if args.component is None:
         raise argparse.ArgumentError(
             None, 'A "--component" name should be provided')
-    if args.out is None:
+    if args.out is None and args.test is None and args.no_download is None:
         raise argparse.ArgumentError(None,
                                      'A "--out" directory should be provided')
 
+    version = args.version
+    if version in PERF_VERSIONS:
+        version = PERF_VERSIONS[version]
     target = args.target
     if target in (None, 'auto'):
-        target = infer_target()
+        target = infer_target(version)
     arch = args.arch
     if arch in (None, 'auto'):
         arch = infer_arch()
     edition = args.edition or 'enterprise'
     out = args.out or Path.cwd()
     out = out.absolute()
+
     result = _dl_component(cache,
                            out,
-                           version=args.version,
+                           version=version,
                            target=target,
                            arch=arch,
                            edition=edition,
@@ -1027,6 +1099,7 @@ def main(argv: 'Sequence[str]'):
                            pattern=args.only,
                            strip_components=args.strip_components,
                            test=args.test,
+                           no_download=args.no_download,
                            latest_build_branch=args.latest_build_branch)
     if result is ExpandResult.Empty and args.empty_is_error:
         return 1
