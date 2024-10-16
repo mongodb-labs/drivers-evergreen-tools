@@ -568,7 +568,7 @@ class Cache:
         if modtime:
             headers['If-Modified-Since'] = modtime
         req = urllib.request.Request(url, headers=headers)
-        digest = hashlib.md5(url.encode("utf-8")).hexdigest()[:4]
+        digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
         dest = self._dirpath / 'files' / digest / PurePosixPath(url).name
 
         try:
