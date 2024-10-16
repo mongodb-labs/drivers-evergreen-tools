@@ -35,7 +35,7 @@ def _get_latest_version():
     for item in data:
         if item['prerelease']:
             continue
-        return item['tag_name'].replace('v', '')
+        return item['tag_name'].replace('v', '').strip()
 
 
 def _get_latest_version_git():
