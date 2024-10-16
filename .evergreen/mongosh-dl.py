@@ -62,6 +62,8 @@ def _download(out_dir: Path, version: str, target: str,
         version = _get_latest_version()
     if arch == "x86_64":
         arch = "x64"
+    elif arch == "aarch64":
+        arch = "arm64"
     if target == "linux":
         suffix = ".tgz"
     else:
