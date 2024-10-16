@@ -50,7 +50,7 @@ def _get_latest_version_git():
         for line in reversed(output.decode('utf-8').splitlines()):
             if re.match('^v\d+\.\d+\.\d+$', line):
                 print('Found version', line, file=sys.stderr)
-                return line
+                return line.replace('v', '')
 
 
 def _download(out_dir: Path, version: str, target: str,
