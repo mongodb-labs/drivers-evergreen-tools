@@ -81,6 +81,7 @@ def _download(out_dir: Path, version: str, target: str,
         while buf:
             fp.write(buf)
             buf = resp.read(1024 * 1024 * 4)
+        fp.close()
         resp = _expand_archive(Path(fp.name),
                             out_dir, pattern,
                             strip_components,
