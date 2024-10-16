@@ -76,7 +76,7 @@ def _download(out_dir: Path, version: str, target: str,
     req = urllib.request.Request(dl_url)
     resp = urllib.request.urlopen(req)
 
-    with tempfile.NamedTemporaryFile(suffix=suffix) as fp:
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
         buf = resp.read(1024 * 1024 * 4)
         while buf:
             fp.write(buf)
@@ -86,6 +86,7 @@ def _download(out_dir: Path, version: str, target: str,
                             out_dir, pattern,
                             strip_components,
                             test=test)
+        os.remove(fp.name)
     return resp
 
 
