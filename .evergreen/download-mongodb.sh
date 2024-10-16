@@ -581,7 +581,7 @@ get_mongodb_download_url_for ()
    _script_dir="$(dirname ${BASH_SOURCE:-$0})"
    . ${_script_dir}/find-python3.sh
    _python3=$(ensure_python3 2>/dev/null)
-   MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh-dl.py" --no-download)
+   MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh-dl.py" --no-download | tr -d '\r')
 
    case "$_VERSION" in
       latest) MONGODB_DOWNLOAD_URL=$MONGODB_LATEST ;;
