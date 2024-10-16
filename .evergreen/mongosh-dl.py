@@ -8,32 +8,28 @@ import argparse
 import json
 import sys
 import tempfile
-import urllib.request
-from urllib.error import HTTPError
+import subprocess
+import shlex
+import os
 from pathlib import Path
 from typing import Sequence
-import time
+import urllib.request
+import re
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import _expand_archive, infer_arch
 
 
-def _get_latest_version(try_number=0):
+def _get_latest_version():
     headers = { "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28" }
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
     try:
         resp = urllib.request.urlopen(req)
-    except HTTPError as e:
-        if e.reason != "rate limit exceeded":
-            raise e
-        try_number += 1
-        if try_number == 5:
-            raise e
-        time.sleep(2 ** try_number)
-        return _get_latest_version(try_number)
+    except Exception:
+        return _get_latest_version_git()
 
     data = json.loads(resp.read().decode('utf-8'))
     for item in data:
@@ -41,11 +37,27 @@ def _get_latest_version(try_number=0):
             continue
         return item['tag_name'].replace('v', '')
 
+
+def _get_latest_version_git():
+    with tempfile.TemporaryDirectory() as td:
+        cmd = 'git clone --depth 1 https://github.com/mongodb-js/mongosh.git'
+        subprocess.check_call(shlex.split(cmd), cwd=td, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = 'git fetch origin --tags'
+        path = os.path.join(td, 'mongosh')
+        subprocess.check_call(shlex.split(cmd), cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = 'git --no-pager tag'
+        output = subprocess.check_output(shlex.split(cmd), cwd=path, stderr=subprocess.PIPE)
+        for line in reversed(output.decode('utf-8').splitlines()):
+            if re.match('^v\d+\.\d+\.\d+$', line):
+                print('Found version', line, file=sys.stderr)
+                return line
+
+
 def _download(out_dir: Path, version: str, target: str,
                   arch: str,
                   pattern: 'str | None', strip_components: int, test: bool,
                   no_download: bool,) -> int:
-    print('Download {} for {}-{}'.format(version, target, arch), file=sys.stderr)
+    print('Download {} mongosh for {}-{}'.format(version, target, arch), file=sys.stderr)
     if version == "latest":
         version = _get_latest_version()
     if arch == "x86_64":

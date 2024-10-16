@@ -492,6 +492,7 @@ functions:
           $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
           $PYTHON mongosh-dl.py --no-download
           $PYTHON mongosh-dl.py --version 2.1.1 --no-download
+          $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)
 
   "run mongodl test full":
     - command: shell.exec
@@ -522,7 +523,7 @@ functions:
           $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
           $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
           $PYTHON mongosh-dl.py --no-download
-          $PYTHON mongosh-dl.py --version 2.1.1 --no-download
+          $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)
 
   "teardown assets":
     - command: subprocess.exec
