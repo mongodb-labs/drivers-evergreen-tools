@@ -18,7 +18,7 @@ import re
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
-from mongodl import _expand_archive, infer_arch
+from mongodl import _expand_archive, infer_arch, ExpandResult
 
 
 def _get_latest_version():
@@ -70,7 +70,7 @@ def _download(out_dir: Path, version: str, target: str,
 
     if no_download:
         print(dl_url)
-        return
+        return ExpandResult.Okay
     req = urllib.request.Request(dl_url)
     resp = urllib.request.urlopen(req)
 
@@ -160,7 +160,7 @@ def main(argv: 'Sequence[str]'):
         arch = infer_arch()
     out = args.out or Path.cwd()
     out = out.absolute()
-    return _download(out,
+    result = _download(out,
         version=args.version,
         target=target,
         arch=arch,
@@ -168,7 +168,9 @@ def main(argv: 'Sequence[str]'):
         strip_components=args.strip_components,
         test=args.test,
         no_download=args.no_download)
-
+    if result is ExpandResult.Empty:
+        return 1
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
