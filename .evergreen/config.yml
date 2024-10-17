@@ -992,7 +992,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: subprocess.exec
@@ -1018,7 +1018,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: subprocess.exec
@@ -1050,7 +1050,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: shell.exec
@@ -1079,9 +1079,9 @@ task_groups:
 
   - name: testgcpoidc_task_group
     setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800
+    setup_group_timeout_secs: 1800  # 30 minutes
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: shell.exec
@@ -1111,8 +1111,8 @@ task_groups:
   - name: test_oidc_azure_func_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
-    teardown_group_can_fail_task: true
-    teardown_group_timeout_secs: 1800
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: subprocess.exec
@@ -1137,7 +1137,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: subprocess.exec
@@ -1162,7 +1162,7 @@ task_groups:
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
       - command: subprocess.exec
