@@ -35,7 +35,7 @@ bash run-driver-test.sh
 
 ### Local EKS Testing
 
-Local EKS testing requires assuming a role to interact with the EKS cluster.
+Local EKS testing requires assuming the drivers test secrets role to interact with the EKS cluster.
 See the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+Manager+to+Store+Testing+Secrets) for details.
 
 
