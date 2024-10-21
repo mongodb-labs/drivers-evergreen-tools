@@ -19,10 +19,10 @@ if [ -z "$DRIVERS_TOOLS" ]; then
   return 1
 fi
 
-# if command -v $NAME &> /dev/null; then
-#   echo "$NAME found in PATH!"
-#   return 0
-# fi
+if command -v $NAME &> /dev/null; then
+  echo "$NAME found in PATH!"
+  return 0
+fi
 
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')

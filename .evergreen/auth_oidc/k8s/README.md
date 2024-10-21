@@ -43,18 +43,22 @@ See the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+M
 
 The test should use a task group to ensure the resources are cleaned up properly.
 
+Note: The EKS test relies on assuming the drivers test secrets role, so ensure you are assuming that
+role prior to the EKS test and that `duration_seconds` is set to account for the full duration of the tests.
+
 ```yaml
   - name: test_oidc_k8s_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
     teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 1800 # 30 minutes
+    teardown_group_timeout_secs: 180 # 3 minutes (max allowed time)
     setup_group:
       - func: fetch source
       - func: prepare resources
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
@@ -77,6 +81,10 @@ And should be run for all three variants:
 - name: "test-oidc-k8s"
     tags: ["latest", "oidc", "pr"]
     commands:
+    - command: ec2.assume_role
+      params:
+          role_arn: ${drivers_test_secrets_role}
+          duration_seconds: 1800
     - func: "run oidc k8s test"
         vars:
         VARIANT: eks
@@ -92,9 +100,6 @@ Where the test looks something like:
 
 ```yaml
 "run oidc k8s test":
-- command: ec2.assume_role
-params:
-    role_arn: ${drivers_test_secrets_role}
 - command: shell.exec
     type: test
     params:
