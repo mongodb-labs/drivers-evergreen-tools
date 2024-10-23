@@ -17,6 +17,7 @@ These steps must be done by an account with admin access (one time):
    - When re-creating the cluster, you must update `K8S_OIDC_ISSUER` in the eks vault
      with the new issuer which can be found in IAM > Identity Providers
      (prepending the Provider with `https://`).
+     You must also update the issuer in Atlas cloud-dev.
 
 ## Usage
 
