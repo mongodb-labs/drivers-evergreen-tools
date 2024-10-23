@@ -15,7 +15,7 @@ The scripts can be run locally as follows:
 ```bash
 bash setup.sh local  # needs to be done once to set up variables
 bash setup-pod.sh aks  # or gke, or eks
-bash start-server.sh
+bash start-server.sh  # start a server on the pod
 bash run-self-test.sh
 ```
 
@@ -24,7 +24,7 @@ Or if running tests for a specific driver:
 ```bash
 bash setup.sh local  # needs to be done once to set up variables
 bash setup-pod.sh aks  # or gke, or eks
-bash start-server.sh
+bash start-server.sh  # start a server on the pod
 pushd $PROJECT_HOME
 export K8S_DRIVERS_TAR_FILE=/tmp/driver.tgz
 git archive -o $K8S_DRIVERS_TAR_FILE HEAD
