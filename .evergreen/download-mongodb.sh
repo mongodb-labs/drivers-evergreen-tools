@@ -94,7 +94,7 @@ get_mongodb_download_url_for ()
    MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh-dl.py" --no-download | tr -d '\r')
 
    # Get the download url for MongoDB for the given version.
-   MONGODB_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')
+   MONGODB_DOWNLOAD_URL="$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
 
    if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
      echo "Unknown version: $_VERSION for $_DISTRO"
