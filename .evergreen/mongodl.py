@@ -457,7 +457,7 @@ class CacheDB:
         if missing:
             print("Missing targets in DISTRO_ID_TO_TARGET:", file=sys.stderr)
             for item in missing:
-                print(item, file=sys.stderr)
+                print(f" - {item}", file=sys.stderr)
             if os.environ.get("VALIDATE_DISTROS") == "1":
                 sys.exit(1)
 
