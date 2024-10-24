@@ -455,9 +455,9 @@ class CacheDB:
                         data=json.dumps(data),
                     )
         if missing:
-            print("Missing targets in DISTRO_ID_TO_TARGET:")
+            print("Missing targets in DISTRO_ID_TO_TARGET:", file=sys.stderr)
             for item in missing:
-                print(item)
+                print(item, file=sys.stderr)
             if os.environ.get("VALIDATE_DISTROS") == "1":
                 sys.exit(1)
 
@@ -939,7 +939,7 @@ def _maybe_extract_member(out: Path, relpath: PurePath, pattern: 'str | None',
         return 0
     if not _test_pattern(relpath, PurePath(pattern) if pattern else None):
         # Doesn't match our pattern
-        print(' (excluded by pattern)')
+        print(' (excluded by pattern)', file=sys.stderr)
         return 0
     stripped = _pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
