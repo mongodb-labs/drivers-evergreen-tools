@@ -35,9 +35,6 @@ from pathlib import Path, PurePath, PurePosixPath
 from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator, Optional,
                         NamedTuple, Sequence, cast)
 
-# The named supported minor and major versions.
-SUPPORTED_VERSIONS = ["3.6", "4.0", "4.2", "4.4", "5.0", "6.0", "7.0", "8.0"]
-
 # These versions are used for performance benchmarking. Do not update to a newer version.
 PERF_VERSIONS = {
     "v6.0-perf": "6.0.6",
@@ -387,16 +384,6 @@ class CacheDB:
                 UNIQUE(key, download_id)
             )
         ''')
-        # Inject supported versions
-        versions = dict(zip(SUPPORTED_VERSIONS, [None for _ in SUPPORTED_VERSIONS]))
-        for ver in data['versions']:
-            version = ver['version']
-            key = version[:3]
-            if key in versions and versions[key] is None:
-                ver = ver.copy()
-                ver['version'] = key
-                versions[key] = ver
-        data['versions'].extend(versions.values())
 
         for ver in data['versions']:
             version = ver['version']
