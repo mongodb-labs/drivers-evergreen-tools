@@ -116,7 +116,7 @@ get_mongodb_download_url_for ()
    esac
    MONGO_CRYPT_SHARED_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongodl.py" --version $_crypt_shared_version --component crypt_shared --no-download | tr -d '\r')
 
-   echo $MONGODB_DOWNLOAD_URL
+   echo "$MONGODB_DOWNLOAD_URL"
 }
 
 # curl_retry emulates running curl with `--retry 5` and `--retry-all-errors`.
@@ -141,7 +141,7 @@ download_and_extract_package ()
    fi
 
    echo "Installing server binaries..."
-   curl_retry $MONGODB_DOWNLOAD_URL --output mongodb-binaries.tgz
+   curl_retry "$MONGODB_DOWNLOAD_URL" --output mongodb-binaries.tgz
 
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
@@ -211,7 +211,7 @@ download_and_extract ()
       # Use a subshell to avoid overwriting MONGODB_DOWNLOAD_URL and MONGO_CRYPT_SHARED_DOWNLOAD_URL.
       MONGODB50_DOWNLOAD_URL=$(
          get_mongodb_download_url_for "$DISTRO" "5.0" > /dev/null
-         echo $MONGODB_DOWNLOAD_URL
+         echo "$MONGODB_DOWNLOAD_URL"
       )
 
       SAVED_DRIVERS_TOOLS=$DRIVERS_TOOLS
