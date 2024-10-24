@@ -35,9 +35,6 @@ from pathlib import Path, PurePath, PurePosixPath
 from typing import (IO, TYPE_CHECKING, Any, Callable, Iterable, Iterator, Optional,
                         NamedTuple, Sequence, cast)
 
-# The named supported minor and major versions.
-SUPPORTED_VERSIONS = ["3.6", "4.0", "4.2", "4.4", "5.0", "6.0", "7.0", "8.0"]
-
 # These versions are used for performance benchmarking. Do not update to a newer version.
 PERF_VERSIONS = {
     "v6.0-perf": "6.0.6",
@@ -387,16 +384,6 @@ class CacheDB:
                 UNIQUE(key, download_id)
             )
         ''')
-        # Inject supported versions
-        versions = dict(zip(SUPPORTED_VERSIONS, [None for _ in SUPPORTED_VERSIONS]))
-        for ver in data['versions']:
-            version = ver['version']
-            key = version[:3]
-            if key in versions and versions[key] is None:
-                ver = ver.copy()
-                ver['version'] = key
-                versions[key] = ver
-        data['versions'].extend(versions.values())
 
         for ver in data['versions']:
             version = ver['version']
@@ -468,9 +455,9 @@ class CacheDB:
                         data=json.dumps(data),
                     )
         if missing:
-            print("Missing targets in DISTRO_ID_TO_TARGET:")
+            print("Missing targets in DISTRO_ID_TO_TARGET:", file=sys.stderr)
             for item in missing:
-                print(item)
+                print(f" - {item}", file=sys.stderr)
             if os.environ.get("VALIDATE_DISTROS") == "1":
                 sys.exit(1)
 
@@ -507,11 +494,12 @@ class CacheDB:
                         THEN mdb_version_rapid(version)
                     WHEN :version IS NULL
                         THEN 1
-                    ELSE version=:version
+                    ELSE version=:version OR version LIKE :version_pattern
                   END)
             ORDER BY version COLLATE mdb_version DESC
             ''',
             version=version,
+            version_pattern=f'{version}.%',
             target=target,
             arch=arch,
             edition=edition,
@@ -567,9 +555,11 @@ class Cache:
             headers['If-None-Match'] = etag
         if modtime:
             headers['If-Modified-Since'] = modtime
-        req = urllib.request.Request(url, headers=headers)
-        digest = hashlib.md5(url.encode("utf-8")).hexdigest()[:4]
+        digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
         dest = self._dirpath / 'files' / digest / PurePosixPath(url).name
+        if not dest.exists():
+            headers = {}
+        req = urllib.request.Request(url, headers=headers)
 
         try:
             resp = urllib.request.urlopen(req)
@@ -949,7 +939,7 @@ def _maybe_extract_member(out: Path, relpath: PurePath, pattern: 'str | None',
         return 0
     if not _test_pattern(relpath, PurePath(pattern) if pattern else None):
         # Doesn't match our pattern
-        print(' (excluded by pattern)')
+        print(' (excluded by pattern)', file=sys.stderr)
         return 0
     stripped = _pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
