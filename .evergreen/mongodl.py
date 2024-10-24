@@ -555,9 +555,11 @@ class Cache:
             headers['If-None-Match'] = etag
         if modtime:
             headers['If-Modified-Since'] = modtime
-        req = urllib.request.Request(url, headers=headers)
-        digest = hashlib.md5(url.encode("utf-8")).hexdigest()[:4]
+        digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
         dest = self._dirpath / 'files' / digest / PurePosixPath(url).name
+        if not dest.exists():
+            headers = {}
+        req = urllib.request.Request(url, headers=headers)
 
         try:
             resp = urllib.request.urlopen(req)
