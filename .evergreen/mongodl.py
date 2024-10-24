@@ -507,11 +507,12 @@ class CacheDB:
                         THEN mdb_version_rapid(version)
                     WHEN :version IS NULL
                         THEN 1
-                    ELSE version=:version
+                    ELSE version=:version OR version LIKE :version_pattern
                   END)
             ORDER BY version COLLATE mdb_version DESC
             ''',
             version=version,
+            version_pattern=f'{version}.%',
             target=target,
             arch=arch,
             edition=edition,
