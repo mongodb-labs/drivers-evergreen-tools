@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import socketserver
-import socket
-import select
-import re
 import argparse
+import re
+import select
+import socket
+import socketserver
 
 # Usage: python3 socks5srv.py --port port [--auth username:password] [--map 'host:port to host:port' ...]
 
@@ -34,7 +34,7 @@ class AddressRemapper:
 
     match = re.match(full_re, string)
     if match is None:
-      raise Exception("Mapping {} does not match format '{{host}}:{{port}} to {{host}}:{{port}}'".format(string))
+      raise Exception(f"Mapping {string} does not match format '{{host}}:{{port}} to {{host}}:{{port}}'")
 
     src = ((match.group('src_ipv6') or match.group('src_host')).encode('utf8'), int(match.group('src_port')))
     dst = ((match.group('dst_ipv6') or match.group('dst_host')).encode('utf8'), int(match.group('dst_port')))
@@ -109,7 +109,7 @@ class Socks5Handler(socketserver.BaseRequestHandler):
     while bytes_read < n:
         try:
             chunk_length = self.request.recv_into(mv[bytes_read:])
-        except OSError as exc:
+        except OSError:
             return None
         if chunk_length == 0:
             return None
@@ -125,11 +125,11 @@ class Socks5Handler(socketserver.BaseRequestHandler):
       af, socktype, proto, canonname, sa = res
       try:
         outgoing = socket.socket(af, socktype, proto)
-      except OSError as msg:
+      except OSError:
         continue
       try:
         outgoing.connect(sa)
-      except OSError as msg:
+      except OSError:
         outgoing.close()
         continue
       break
@@ -228,7 +228,7 @@ class Socks5Handler(socketserver.BaseRequestHandler):
       while True:
         try:
           (readable, _, _) = select.select([a, b], [], [])
-        except (select.error, ValueError):
+        except (OSError, ValueError):
           return
 
         if not readable:

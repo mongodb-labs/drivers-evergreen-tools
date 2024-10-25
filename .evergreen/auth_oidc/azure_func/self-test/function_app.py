@@ -1,8 +1,9 @@
-import azure.functions as func
+import json
 import logging
 import os
-from urllib.request import urlopen, Request
-import json
+from urllib.request import Request, urlopen
+
+import azure.functions as func
 from pymongo import MongoClient
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
 

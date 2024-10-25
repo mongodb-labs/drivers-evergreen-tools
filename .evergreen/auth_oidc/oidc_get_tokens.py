@@ -3,7 +3,8 @@ import sys
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, HERE)
-from utils import get_secrets, get_id_token, DEFAULT_CLIENT, join
+from utils import DEFAULT_CLIENT, get_id_token, get_secrets, join
+
 TOKEN_DIR = os.environ['OIDC_TOKEN_DIR'].replace(os.sep, '/')
 
 def generate_tokens(config, base_name):

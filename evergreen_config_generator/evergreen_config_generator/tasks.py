@@ -18,7 +18,7 @@ from types import NoneType
 
 try:
     # Python 3 abstract base classes.
-    import collections.abc as abc
+    from collections import abc
 except ImportError:
     import collections as abc
 

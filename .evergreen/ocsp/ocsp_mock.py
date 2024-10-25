@@ -5,12 +5,13 @@ Python script to interface as a mock OCSP responder.
 
 import argparse
 import logging
-import sys
 import os
+import sys
 
 sys.path.append(os.path.join(os.getcwd() ,'src', 'third_party', 'mock_ocsp_responder'))
 
 import mock_ocsp_responder
+
 
 def main():
     """Main entry point"""

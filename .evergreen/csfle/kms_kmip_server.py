@@ -1,13 +1,13 @@
-#! /usr/bin/env python3
 """
 KMS KMIP test server.
 """
 
-from kmip.services.server import KmipServer
-import os
-import logging
 import argparse
+import logging
+import os
 import shutil
+
+from kmip.services.server import KmipServer
 
 HOSTNAME = "localhost"
 PORT = 5698

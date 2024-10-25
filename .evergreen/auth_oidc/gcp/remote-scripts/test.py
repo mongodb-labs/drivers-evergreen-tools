@@ -1,7 +1,7 @@
-from pymongo import MongoClient
 import os
-import json
-from urllib.request import urlopen, Request
+from urllib.request import Request, urlopen
+
+from pymongo import MongoClient
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
 
 audience = os.environ['GCPOIDC_AUDIENCE']
@@ -20,7 +20,7 @@ class MyCallback(OIDCCallback):
                 body = response.read().decode('utf8')
         except Exception as e:
             msg = "Failed to acquire IMDS access token: %s" % e
-            raise ValueError(msg)
+            raise ValueError(msg) from e
 
         if status != 200:
             print(body)

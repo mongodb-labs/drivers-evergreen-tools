@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
 Mock AWS KMS Endpoint.
 
@@ -15,11 +14,10 @@ import logging
 import sys
 import urllib.parse
 
+import kms_http_common
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-
-import kms_http_common
 
 SECRET_PREFIX = "00SECRET"
 
@@ -56,7 +54,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         else:
             self.send_response(http.HTTPStatus.NOT_FOUND)
             self.end_headers()
-            self.wfile.write("Unknown URL".encode())
+            self.wfile.write(b"Unknown URL")
 
     def _do_post(self):
         c_len = int(self.headers.get('content-length'))
@@ -65,7 +63,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
 
         print("RAW INPUT: " + str(raw_input))
 
-        if not self.headers["Host"] == "localhost":
+        if self.headers["Host"] != "localhost":
             data = "Unexpected host"
             self._send_reply(data.encode("utf-8"))
 
@@ -135,9 +133,9 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         kms_http_common.stats.fault_calls += 1
 
         if kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT:
-            self._send_reply("Internal Error of some sort.".encode(), http.HTTPStatus.INTERNAL_SERVER_ERROR)
+            self._send_reply(b"Internal Error of some sort.", http.HTTPStatus.INTERNAL_SERVER_ERROR)
             return
-        elif kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_WRONG_FIELDS:
+        if kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_WRONG_FIELDS:
             response = {
                 "SomeBlob" : raw_ciphertext,
                 "KeyId" : "foo",
@@ -145,7 +143,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
 
             self._send_reply(json.dumps(response).encode('utf-8'))
             return
-        elif kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_BAD_BASE64:
+        if kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_BAD_BASE64:
             response = {
                 "CiphertextBlob" : "foo",
                 "KeyId" : "foo",
@@ -153,7 +151,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
 
             self._send_reply(json.dumps(response).encode('utf-8'))
             return
-        elif kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_CORRECT_FORMAT:
+        if kms_http_common.fault_type == kms_http_common.FAULT_ENCRYPT_CORRECT_FORMAT:
             response = {
                 "__type" : "NotFoundException",
                 "Message" : "Error encrypting message",
@@ -191,9 +189,9 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         kms_http_common.stats.fault_calls += 1
 
         if kms_http_common.fault_type == kms_http_common.FAULT_DECRYPT:
-            self._send_reply("Internal Error of some sort.".encode(), http.HTTPStatus.INTERNAL_SERVER_ERROR)
+            self._send_reply(b"Internal Error of some sort.", http.HTTPStatus.INTERNAL_SERVER_ERROR)
             return
-        elif kms_http_common.fault_type == kms_http_common.FAULT_DECRYPT_WRONG_KEY:
+        if kms_http_common.fault_type == kms_http_common.FAULT_DECRYPT_WRONG_KEY:
             response = {
                 "Plaintext" : "ta7DXE7J0OiCRw03dYMJSeb8nVF5qxTmZ9zWmjuX4zW/SOorSCaY8VMTWG+cRInMx/rr/+QeVw2WjU2IpOSvMg==",
                 "KeyId" : "Not a clue",
@@ -201,7 +199,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
 
             self._send_reply(json.dumps(response).encode('utf-8'))
             return
-        elif kms_http_common.fault_type == kms_http_common.FAULT_DECRYPT_CORRECT_FORMAT:
+        if kms_http_common.fault_type == kms_http_common.FAULT_DECRYPT_CORRECT_FORMAT:
             response = {
                 "__type" : "NotFoundException",
                 "Message" : "Error decrypting message",

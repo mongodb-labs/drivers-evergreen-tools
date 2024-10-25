@@ -1,7 +1,8 @@
-from pymongo import MongoClient
-import os
 import json
-from urllib.request import urlopen, Request
+import os
+from urllib.request import Request, urlopen
+
+from pymongo import MongoClient
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
 
 app_id = os.environ['AZUREOIDC_APPID']
@@ -22,7 +23,7 @@ class MyCallback(OIDCCallback):
                 body = response.read().decode('utf8')
         except Exception as e:
             msg = "Failed to acquire IMDS access token: %s" % e
-            raise ValueError(msg)
+            raise ValueError(msg) from e
 
         if status != 200:
             print(body)
@@ -30,8 +31,8 @@ class MyCallback(OIDCCallback):
             raise ValueError(msg)
         try:
             data = json.loads(body)
-        except Exception:
-            raise ValueError("Azure IMDS response must be in JSON format.")
+        except Exception as e:
+            raise ValueError("Azure IMDS response must be in JSON format.") from e
 
         for key in ["access_token", "expires_in"]:
             if not data.get(key):
