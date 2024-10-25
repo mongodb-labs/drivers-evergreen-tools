@@ -7,9 +7,17 @@ Scripts to manage a drivers test cluster on AWS.
 These steps must be done by an account with admin access (one time):
 
 1. Run `setup-cluster.sh`
-2. Set up an [access entry](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) for the
-   drivers test secrets role.
+2. Set up an Access entry for the drivers test secrets role.
+   - Go to the cluster on the AWS Console.
+   - Click "Access".
+   - Click "Create access entry".
+   - Use the drivers test secrets role.
+   - Give it admin access to the cluster.
 3. Store the secrets in the AWS vault.
+   - When re-creating the cluster, you must update `K8S_OIDC_ISSUER` in the eks vault
+     with the new issuer which can be found in IAM > Identity Providers
+     (prepending the Provider with `https://`).
+     You must also update the issuer in Atlas cloud-dev.
 
 ## Usage
 
