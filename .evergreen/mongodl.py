@@ -410,7 +410,7 @@ class CacheDB:
                 for distro in DISTRO_ID_TO_TARGET.values():
                     if target in list(distro.values()):
                         found = True
-                if not found and target not in ['macos', 'windows']:
+                if not found and target not in ['linux_i686', 'linux_x86_64', 'osx', 'macos', 'windows']:
                     missing.add(target)
                 edition = dl['edition']
                 ar_url = dl['archive']['url']
