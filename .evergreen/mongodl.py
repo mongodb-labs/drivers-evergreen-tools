@@ -122,6 +122,9 @@ DISTRO_ID_TO_TARGET = {
     },
 }
 
+# The list of valid targets that are not related to a specific Linux distro.
+TARGETS_THAT_ARE_NOT_DISTROS = ['linux_i686', 'linux_x86_64', 'osx', 'macos', 'windows']
+
 
 def infer_target(version: Optional[str] = None) -> str:
     """
@@ -410,7 +413,7 @@ class CacheDB:
                 for distro in DISTRO_ID_TO_TARGET.values():
                     if target in list(distro.values()):
                         found = True
-                if not found and target not in ['macos', 'windows']:
+                if not found and target not in TARGETS_THAT_ARE_NOT_DISTROS:
                     missing.add(target)
                 edition = dl['edition']
                 ar_url = dl['archive']['url']
