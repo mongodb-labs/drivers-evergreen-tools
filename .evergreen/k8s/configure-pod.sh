@@ -16,9 +16,9 @@ fi
 echo "Deleting old pods..."
 # Delete successful pods more than an hour old.
 if [ "$(uname -s)" = "Darwin" ]; then
-    DATE=gdate
+    DATE="gdate"
 else
-    DATE=date
+    DATE="date"
 fi
 # shellcheck disable=SC2046
 kubectl get pods -l app=test-pod -o go-template --template '{{range .items}}{{.metadata.name}} {{.metadata.creationTimestamp}}{{"\n"}}{{end}}' | awk '$2 <= "'$($DATE -d'now-1 hours' -Ins --utc | sed 's/+0000/Z/')'" { print $1 }' | xargs --no-run-if-empty kubectl delete pod
