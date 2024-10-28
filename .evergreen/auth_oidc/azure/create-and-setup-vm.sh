@@ -17,6 +17,7 @@ pushd $SCRIPT_DIR
 # Set defaults.
 export AZUREKMS_PUBLICKEYPATH="$SCRIPT_DIR/keyfile.pub"
 export AZUREKMS_PRIVATEKEYPATH="$SCRIPT_DIR/keyfile"
+export AZUREKMS_CERTFILE="$SCRIPT_DIR/cert.pem"
 export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
 export AZUREOIDC_ENVPATH="$SCRIPT_DIR/env.sh"
 export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
@@ -27,8 +28,12 @@ if [ ! -f ./secrets-export.sh ]; then
 fi
 source ./secrets-export.sh
 
+echo "${AZUREOIDC_CERT}" | base64 --decode > $AZUREKMS_CERTFILE
+# Set 600 permissions on cert file. Otherwise ssh / scp may error with permissions "are too open".
+chmod 600 $AZUREKMS_CERTFILE
+
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
-export AZUREKMS_SECRET=$AZUREOIDC_SECRET
+export AZUREKMS_SECRET=$AZUREKMS_CERTFILE
 export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 
 # Login.
