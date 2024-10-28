@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script for handling OIDC credentials.
 """
@@ -13,7 +12,6 @@ from pyop.authz_state import AuthorizationState
 from pyop.provider import Provider
 from pyop.subject_identifier import HashBasedSubjectIdentifierFactory
 from pyop.userinfo import Userinfo
-
 
 
 class CustomSubjectIdentifierFactory(HashBasedSubjectIdentifierFactory):
@@ -33,7 +31,7 @@ MOCK_ENDPOINT = "https://example.com"
 
 
 def get_default_config():
-    config = {
+    return {
         "issuer": os.getenv('IDP_ISSUER', ''),
         "jwks_uri": os.getenv('IDP_JWKS_URI', ''),
         'rsa_key': os.getenv('IDP_RSA_KEY', ''),
@@ -42,7 +40,6 @@ def get_default_config():
         'username': os.getenv("IDP_USERNAME", 'test_user'),
         'token_file': os.getenv('AWS_WEB_IDENTITY_TOKEN_FILE')
     }
-    return config
 
 
 def get_provider(config=None, expires=None):

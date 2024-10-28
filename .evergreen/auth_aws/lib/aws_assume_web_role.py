@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
 """
 Script for assuming an aws role using AssumeRoleWithWebIdentity.
 """
 
 import argparse
+import logging
 import os
 import uuid
-import logging
 
 import boto3
 
