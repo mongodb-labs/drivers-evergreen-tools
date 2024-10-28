@@ -5,4 +5,4 @@ itsdangerous==2.1.2
 Jinja2==3.1.4
 MarkupSafe==2.1.4
 git+https://github.com/wbond/oscrypto.git@d5f3437
-Werkzeug==3.0.3
+Werkzeug==3.0.6
