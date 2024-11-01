@@ -53,7 +53,7 @@ from asn1crypto.ocsp import OCSPRequest, OCSPResponse
 from flask import Flask, Response, request
 from oscrypto import asymmetric
 
-__version__ = '0.10.2'
+__version__ = "0.10.2"
 __version_info__ = (0, 10, 2)
 
 logger = logging.getLogger(__name__)
@@ -77,8 +77,8 @@ def _pretty_message(string, *params):
 
     # Unwrap lines, taking into account bulleted lists, ordered lists and
     # underlines consisting of = signs
-    if output.find('\n') != -1:
-        output = re.sub('(?<=\\S)\n(?=[^ \n\t\\d\\*\\-=])', ' ', output)
+    if output.find("\n") != -1:
+        output = re.sub("(?<=\\S)\n(?=[^ \n\t\\d\\*\\-=])", " ", output)
 
     if params:
         output = output % params
@@ -98,9 +98,10 @@ def _type_name(value):
         cls = value
     else:
         cls = value.__class__
-    if cls.__module__ in set(['builtins', '__builtin__']):
+    if cls.__module__ in set(["builtins", "__builtin__"]):
         return cls.__name__
-    return '%s.%s' % (cls.__module__, cls.__name__)
+    return "%s.%s" % (cls.__module__, cls.__name__)
+
 
 def _writer(func):
     """
@@ -108,11 +109,10 @@ def _writer(func):
     """
 
     name = func.__name__
-    return property(fget=lambda self: getattr(self, '_%s' % name), fset=func)
+    return property(fget=lambda self: getattr(self, "_%s" % name), fset=func)
 
 
 class OCSPResponseBuilder:
-
     _response_status = None
     _certificate = None
     _certificate_status = None
@@ -126,7 +126,9 @@ class OCSPResponseBuilder:
     _response_data_extensions = None
     _single_response_extensions = None
 
-    def __init__(self, response_status, certificate_status_list=None, revocation_date=None):
+    def __init__(
+        self, response_status, certificate_status_list=None, revocation_date=None
+    ):
         """
         Unless changed, responses will use SHA-256 for the signature,
         and will be valid from the moment created for one week.
@@ -163,8 +165,8 @@ class OCSPResponseBuilder:
         self._certificate_status_list = certificate_status_list or []
         self._revocation_date = revocation_date
 
-        self._key_hash_algo = 'sha1'
-        self._hash_algo = 'sha256'
+        self._key_hash_algo = "sha1"
+        self._hash_algo = "sha256"
         self._response_data_extensions = {}
         self._single_response_extensions = {}
 
@@ -175,12 +177,14 @@ class OCSPResponseBuilder:
         """
 
         if not isinstance(value, bytes):
-            raise TypeError(_pretty_message(
-                '''
+            raise TypeError(
+                _pretty_message(
+                    """
                 nonce must be a byte string, not %s
-                ''',
-                _type_name(value)
-            ))
+                """,
+                    _type_name(value),
+                )
+            )
 
         self._nonce = value
 
@@ -196,14 +200,16 @@ class OCSPResponseBuilder:
         if value is not None:
             is_oscrypto = isinstance(value, asymmetric.Certificate)
             if not is_oscrypto and not isinstance(value, x509.Certificate):
-                raise TypeError(_pretty_message(
-                    '''
+                raise TypeError(
+                    _pretty_message(
+                        """
                     certificate_issuer must be an instance of
                     asn1crypto.x509.Certificate or
                     oscrypto.asymmetric.Certificate, not %s
-                    ''',
-                    _type_name(value)
-                ))
+                    """,
+                        _type_name(value),
+                    )
+                )
 
             if is_oscrypto:
                 value = value.asn1
@@ -219,12 +225,14 @@ class OCSPResponseBuilder:
         """
 
         if not isinstance(value, datetime):
-            raise TypeError(_pretty_message(
-                '''
+            raise TypeError(
+                _pretty_message(
+                    """
                 next_update must be an instance of datetime.datetime, not %s
-                ''',
-                _type_name(value)
-            ))
+                """,
+                    _type_name(value),
+                )
+            )
 
         self._next_update = value
 
@@ -243,50 +251,56 @@ class OCSPResponseBuilder:
         :return:
             An asn1crypto.ocsp.OCSPResponse object of the response
         """
-        if self._response_status != 'successful':
-            return ocsp.OCSPResponse({
-                'response_status': self._response_status
-            })
+        if self._response_status != "successful":
+            return ocsp.OCSPResponse({"response_status": self._response_status})
 
         is_oscrypto = isinstance(responder_private_key, asymmetric.PrivateKey)
-        if not isinstance(responder_private_key, keys.PrivateKeyInfo) and not is_oscrypto:
-            raise TypeError(_pretty_message(
-                '''
+        if (
+            not isinstance(responder_private_key, keys.PrivateKeyInfo)
+            and not is_oscrypto
+        ):
+            raise TypeError(
+                _pretty_message(
+                    """
                 responder_private_key must be an instance of the c
                 asn1crypto.keys.PrivateKeyInfo or
                 oscrypto.asymmetric.PrivateKey, not %s
-                ''',
-                _type_name(responder_private_key)
-            ))
+                """,
+                    _type_name(responder_private_key),
+                )
+            )
 
         cert_is_oscrypto = isinstance(responder_certificate, asymmetric.Certificate)
-        if not isinstance(responder_certificate, x509.Certificate) and not cert_is_oscrypto:
-            raise TypeError(_pretty_message(
-                '''
+        if (
+            not isinstance(responder_certificate, x509.Certificate)
+            and not cert_is_oscrypto
+        ):
+            raise TypeError(
+                _pretty_message(
+                    """
                 responder_certificate must be an instance of
                 asn1crypto.x509.Certificate or
                 oscrypto.asymmetric.Certificate, not %s
-                ''',
-                _type_name(responder_certificate)
-            ))
+                """,
+                    _type_name(responder_certificate),
+                )
+            )
 
         if cert_is_oscrypto:
             responder_certificate = responder_certificate.asn1
 
         if self._certificate_status_list is None:
-            raise ValueError(_pretty_message(
-                '''
+            raise ValueError(
+                _pretty_message(
+                    """
                 certificate_status_list must be set if the response_status is
                 "successful"
-                '''
-            ))
+                """
+                )
+            )
 
         def _make_extension(name, value):
-            return {
-                'extn_id': name,
-                'critical': False,
-                'extn_value': value
-            }
+            return {"extn_id": name, "critical": False, "extn_value": value}
 
         responses = []
         for serial, status in self._certificate_status_list:
@@ -295,9 +309,7 @@ class OCSPResponseBuilder:
             for name, value in self._response_data_extensions.items():
                 response_data_extensions.append(_make_extension(name, value))
             if self._nonce:
-                response_data_extensions.append(
-                    _make_extension('nonce', self._nonce)
-                )
+                response_data_extensions.append(_make_extension("nonce", self._nonce))
 
             if not response_data_extensions:
                 response_data_extensions = None
@@ -308,42 +320,42 @@ class OCSPResponseBuilder:
             if self._certificate_issuer:
                 single_response_extensions.append(
                     _make_extension(
-                        'certificate_issuer',
+                        "certificate_issuer",
                         [
                             x509.GeneralName(
-                                name='directory_name',
-                                value=self._certificate_issuer.subject
+                                name="directory_name",
+                                value=self._certificate_issuer.subject,
                             )
-                        ]
+                        ],
                     )
                 )
 
             if not single_response_extensions:
                 single_response_extensions = None
 
-            responder_key_hash = getattr(responder_certificate.public_key, self._key_hash_algo)
+            responder_key_hash = getattr(
+                responder_certificate.public_key, self._key_hash_algo
+            )
 
-            if status == 'good':
-                cert_status = ocsp.CertStatus(
-                    name='good',
-                    value=core.Null()
-                )
-            elif status == 'unknown':
-                cert_status = ocsp.CertStatus(
-                    name='unknown',
-                    value=core.Null()
-                )
+            if status == "good":
+                cert_status = ocsp.CertStatus(name="good", value=core.Null())
+            elif status == "unknown":
+                cert_status = ocsp.CertStatus(name="unknown", value=core.Null())
             else:
-                reason = status if status != 'revoked' else 'unspecified'
+                reason = status if status != "revoked" else "unspecified"
                 cert_status = ocsp.CertStatus(
-                    name='revoked',
+                    name="revoked",
                     value={
-                        'revocation_time': self._revocation_date,
-                        'revocation_reason': reason,
-                    }
+                        "revocation_time": self._revocation_date,
+                        "revocation_reason": reason,
+                    },
                 )
 
-            issuer = self._certificate_issuer if self._certificate_issuer else responder_certificate
+            issuer = (
+                self._certificate_issuer
+                if self._certificate_issuer
+                else responder_certificate
+            )
 
             produced_at = datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -351,88 +363,102 @@ class OCSPResponseBuilder:
                 self._this_update = produced_at
 
             if self._next_update is None:
-                self._next_update = (self._this_update + timedelta(days=7)).replace(microsecond=0)
+                self._next_update = (self._this_update + timedelta(days=7)).replace(
+                    microsecond=0
+                )
 
             response = {
-                    'cert_id': {
-                        'hash_algorithm': {
-                            'algorithm': self._key_hash_algo
-                        },
-                        'issuer_name_hash': getattr(issuer.subject, self._key_hash_algo),
-                        'issuer_key_hash': getattr(issuer.public_key, self._key_hash_algo),
-                        'serial_number': serial,
-                    },
-                    'cert_status': cert_status,
-                    'this_update': self._this_update,
-                    'next_update': self._next_update,
-                    'single_extensions': single_response_extensions
-                }
+                "cert_id": {
+                    "hash_algorithm": {"algorithm": self._key_hash_algo},
+                    "issuer_name_hash": getattr(issuer.subject, self._key_hash_algo),
+                    "issuer_key_hash": getattr(issuer.public_key, self._key_hash_algo),
+                    "serial_number": serial,
+                },
+                "cert_status": cert_status,
+                "this_update": self._this_update,
+                "next_update": self._next_update,
+                "single_extensions": single_response_extensions,
+            }
             responses.append(response)
 
-        response_data = ocsp.ResponseData({
-            'responder_id': ocsp.ResponderId(name='by_key', value=responder_key_hash),
-            'produced_at': produced_at,
-            'responses': responses,
-            'response_extensions': response_data_extensions
-        })
+        response_data = ocsp.ResponseData(
+            {
+                "responder_id": ocsp.ResponderId(
+                    name="by_key", value=responder_key_hash
+                ),
+                "produced_at": produced_at,
+                "responses": responses,
+                "response_extensions": response_data_extensions,
+            }
+        )
 
         signature_algo = responder_private_key.algorithm
-        if signature_algo == 'ec':
-            signature_algo = 'ecdsa'
+        if signature_algo == "ec":
+            signature_algo = "ecdsa"
 
-        signature_algorithm_id = '%s_%s' % (self._hash_algo, signature_algo)
+        signature_algorithm_id = "%s_%s" % (self._hash_algo, signature_algo)
 
-        if responder_private_key.algorithm == 'rsa':
+        if responder_private_key.algorithm == "rsa":
             sign_func = asymmetric.rsa_pkcs1v15_sign
-        elif responder_private_key.algorithm == 'dsa':
+        elif responder_private_key.algorithm == "dsa":
             sign_func = asymmetric.dsa_sign
-        elif responder_private_key.algorithm == 'ec':
+        elif responder_private_key.algorithm == "ec":
             sign_func = asymmetric.ecdsa_sign
 
         if not is_oscrypto:
             responder_private_key = asymmetric.load_private_key(responder_private_key)
-        signature_bytes = sign_func(responder_private_key, response_data.dump(), self._hash_algo)
+        signature_bytes = sign_func(
+            responder_private_key, response_data.dump(), self._hash_algo
+        )
 
         certs = None
-        if self._certificate_issuer and getattr(self._certificate_issuer.public_key, self._key_hash_algo) != responder_key_hash:
+        if (
+            self._certificate_issuer
+            and getattr(self._certificate_issuer.public_key, self._key_hash_algo)
+            != responder_key_hash
+        ):
             certs = [responder_certificate]
 
-        return ocsp.OCSPResponse({
-            'response_status': self._response_status,
-            'response_bytes': {
-                'response_type': 'basic_ocsp_response',
-                'response': {
-                    'tbs_response_data': response_data,
-                    'signature_algorithm': {'algorithm': signature_algorithm_id},
-                    'signature': signature_bytes,
-                    'certs': certs,
-                }
+        return ocsp.OCSPResponse(
+            {
+                "response_status": self._response_status,
+                "response_bytes": {
+                    "response_type": "basic_ocsp_response",
+                    "response": {
+                        "tbs_response_data": response_data,
+                        "signature_algorithm": {"algorithm": signature_algorithm_id},
+                        "signature": signature_bytes,
+                        "certs": certs,
+                    },
+                },
             }
-        })
+        )
+
 
 # Enums
 
+
 class ResponseStatus(enum.Enum):
-    successful = 'successful'
-    malformed_request = 'malformed_request'
-    internal_error = 'internal_error'
-    try_later = 'try_later'
-    sign_required = 'sign_required'
-    unauthorized = 'unauthorized'
+    successful = "successful"
+    malformed_request = "malformed_request"
+    internal_error = "internal_error"
+    try_later = "try_later"
+    sign_required = "sign_required"
+    unauthorized = "unauthorized"
 
 
 class CertificateStatus(enum.Enum):
-    good = 'good'
-    revoked = 'revoked'
-    key_compromise = 'key_compromise'
-    ca_compromise = 'ca_compromise'
-    affiliation_changed = 'affiliation_changed'
-    superseded = 'superseded'
-    cessation_of_operation = 'cessation_of_operation'
-    certificate_hold = 'certificate_hold'
-    remove_from_crl = 'remove_from_crl'
-    privilege_withdrawn = 'privilege_withdrawn'
-    unknown = 'unknown'
+    good = "good"
+    revoked = "revoked"
+    key_compromise = "key_compromise"
+    ca_compromise = "ca_compromise"
+    affiliation_changed = "affiliation_changed"
+    superseded = "superseded"
+    cessation_of_operation = "cessation_of_operation"
+    certificate_hold = "certificate_hold"
+    remove_from_crl = "remove_from_crl"
+    privilege_withdrawn = "privilege_withdrawn"
+    unknown = "unknown"
 
 
 # API endpoints
@@ -440,10 +466,17 @@ FAULT_REVOKED = "revoked"
 FAULT_UNKNOWN = "unknown"
 
 app = Flask(__name__)
-class OCSPResponder:
 
-    def __init__(self, issuer_cert: str, responder_cert: str, responder_key: str,
-                       fault: str, next_update_seconds: int):
+
+class OCSPResponder:
+    def __init__(
+        self,
+        issuer_cert: str,
+        responder_cert: str,
+        responder_key: str,
+        fault: str,
+        next_update_seconds: int,
+    ):
         """
         Create a new OCSPResponder instance.
 
@@ -488,7 +521,7 @@ class OCSPResponder:
         if self._fault == FAULT_UNKNOWN:
             return (CertificateStatus.unknown, None)
         if self._fault is not None:
-            raise NotImplementedError('Fault type could not be found')
+            raise NotImplementedError("Fault type could not be found")
         return (CertificateStatus.good, time)
 
     def _build_ocsp_response(self, ocsp_request: OCSPRequest) -> OCSPResponse:
@@ -496,39 +529,43 @@ class OCSPResponder:
         Create and return an OCSP response from an OCSP request.
         """
         # Get the certificate serial
-        tbs_request = ocsp_request['tbs_request']
-        request_list = tbs_request['request_list']
+        tbs_request = ocsp_request["tbs_request"]
+        request_list = tbs_request["request_list"]
         if len(request_list) < 1:
-            logger.warning('Received OCSP request with no requests')
-            raise NotImplementedError('Empty requests not supported')
+            logger.warning("Received OCSP request with no requests")
+            raise NotImplementedError("Empty requests not supported")
 
         single_request = request_list[0]  # TODO: Support more than one request
-        req_cert = single_request['req_cert']
-        serial = req_cert['serial_number'].native
+        req_cert = single_request["req_cert"]
+        serial = req_cert["serial_number"].native
 
         # Check certificate status
         try:
             certificate_status, revocation_date = self.validate()
         except Exception as e:
-            logger.exception('Could not determine certificate status: %s', e)
+            logger.exception("Could not determine certificate status: %s", e)
             return self._fail(ResponseStatus.internal_error)
 
         certificate_status_list = [(serial, certificate_status.value)]
 
         # Build the response
-        builder = OCSPResponseBuilder(response_status=ResponseStatus.successful.value, certificate_status_list=certificate_status_list, revocation_date=revocation_date)
+        builder = OCSPResponseBuilder(
+            response_status=ResponseStatus.successful.value,
+            certificate_status_list=certificate_status_list,
+            revocation_date=revocation_date,
+        )
 
         # Parse extensions
-        for extension in tbs_request['request_extensions']:
-            extn_id = extension['extn_id'].native
-            critical = extension['critical'].native
-            value = extension['extn_value'].parsed
+        for extension in tbs_request["request_extensions"]:
+            extn_id = extension["extn_id"].native
+            critical = extension["critical"].native
+            value = extension["extn_value"].parsed
 
             # This variable tracks whether any unknown extensions were encountered
             unknown = False
 
             # Handle nonce extension
-            if extn_id == 'nonce':
+            if extn_id == "nonce":
                 builder.nonce = value.native
 
             # That's all we know
@@ -539,20 +576,26 @@ class OCSPResponder:
             # usually happen, according to RFC 6960 4.1.2), we should throw our
             # hands up in despair and run.
             if unknown is True and critical is True:
-                logger.warning('Could not parse unknown critical extension: %r',
-                        dict(extension.native))
+                logger.warning(
+                    "Could not parse unknown critical extension: %r",
+                    dict(extension.native),
+                )
                 return self._fail(ResponseStatus.internal_error)
 
             # If it's an unknown non-critical extension, we can safely ignore it.
             if unknown is True:
-                logger.info('Ignored unknown non-critical extension: %r', dict(extension.native))
+                logger.info(
+                    "Ignored unknown non-critical extension: %r", dict(extension.native)
+                )
 
         # Set certificate issuer
         builder.certificate_issuer = self._issuer_cert
 
         # Set next update date
         now = datetime.now(timezone.utc)
-        builder.next_update = (now + timedelta(seconds=self._next_update_seconds)).replace(microsecond=0)
+        builder.next_update = (
+            now + timedelta(seconds=self._next_update_seconds)
+        ).replace(microsecond=0)
 
         return builder.build(self._responder_key, self._responder_cert)
 
@@ -560,26 +603,42 @@ class OCSPResponder:
         global app
         response_der = self._build_ocsp_response(request_der).dump()
         resp = app.make_response((response_der, 200))
-        resp.headers['content_type'] = 'application/ocsp-response'
+        resp.headers["content_type"] = "application/ocsp-response"
         return resp
 
 
 responder = None
 
-def init_responder(issuer_cert: str, responder_cert: str, responder_key: str, fault: str, next_update_seconds: int):
+
+def init_responder(
+    issuer_cert: str,
+    responder_cert: str,
+    responder_key: str,
+    fault: str,
+    next_update_seconds: int,
+):
     global responder
-    responder = OCSPResponder(issuer_cert=issuer_cert, responder_cert=responder_cert, responder_key=responder_key, fault=fault, next_update_seconds=next_update_seconds)
+    responder = OCSPResponder(
+        issuer_cert=issuer_cert,
+        responder_cert=responder_cert,
+        responder_key=responder_key,
+        fault=fault,
+        next_update_seconds=next_update_seconds,
+    )
+
 
 def init(port=8080, debug=False, host=None):
-    logger.info('Launching %sserver on port %d', 'debug' if debug else '', port)
+    logger.info("Launching %sserver on port %d", "debug" if debug else "", port)
     app.run(port=port, debug=debug, host=host)
 
-@app.route('/', methods=['GET'])
-def _handle_root():
-    return 'ocsp-responder'
 
-@app.route('/status/', defaults={'u_path': ''}, methods=['GET'])
-@app.route('/status/<path:u_path>', methods=['GET'])
+@app.route("/", methods=["GET"])
+def _handle_root():
+    return "ocsp-responder"
+
+
+@app.route("/status/", defaults={"u_path": ""}, methods=["GET"])
+@app.route("/status/<path:u_path>", methods=["GET"])
 def _handle_get(u_path):
     global responder
     """
@@ -587,12 +646,13 @@ def _handle_get(u_path):
     HTTP request URL.
     """
     if "Host" not in request.headers:
-        raise ValueError ("Required 'Host' header not present")
+        raise ValueError("Required 'Host' header not present")
     der = base64.b64decode(u_path)
     ocsp_request = responder.parse_ocsp_request(der)
     return responder.build_http_response(ocsp_request)
 
-@app.route('/status', methods=['POST'])
+
+@app.route("/status", methods=["POST"])
 def _handle_post():
     global responder
     """
@@ -600,6 +660,6 @@ def _handle_post():
     request body.
     """
     if "Host" not in request.headers:
-        raise ValueError ("Required 'Host' header not present")
+        raise ValueError("Required 'Host' header not present")
     ocsp_request = responder.parse_ocsp_request(request.data)
     return responder.build_http_response(ocsp_request)

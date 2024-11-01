@@ -15,15 +15,15 @@
 import setuptools
 
 setuptools.setup(
-    name='evergreen_config_generator',
-    version='0.0.1',
-    author='A. Jesse Jiryu Davis',
-    author_email='jesse@mongodb.com',
-    description='Helpers for Python scripts that generate Evergreen configs',
-    url='https://github.com/mongodb-labs/drivers-evergreen-tools',
-    packages=['evergreen_config_generator'],
-    install_requires=['PyYAML', 'yamlordereddictloader'],
+    name="evergreen_config_generator",
+    version="0.0.1",
+    author="A. Jesse Jiryu Davis",
+    author_email="jesse@mongodb.com",
+    description="Helpers for Python scripts that generate Evergreen configs",
+    url="https://github.com/mongodb-labs/drivers-evergreen-tools",
+    packages=["evergreen_config_generator"],
+    install_requires=["PyYAML", "yamlordereddictloader"],
     classifiers=[
-        'License :: OSI Approved :: Apache Software License',
+        "License :: OSI Approved :: Apache Software License",
     ],
 )

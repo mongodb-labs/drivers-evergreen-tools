@@ -16,8 +16,9 @@ from evergreen_config_generator import ConfigObject
 
 
 class Variant(ConfigObject):
-    def __init__(self, name, display_name, run_on, tasks, expansions=None,
-                 batchtime=None):
+    def __init__(
+        self, name, display_name, run_on, tasks, expansions=None, batchtime=None
+    ):
         super(Variant, self).__init__()
         self._variant_name = name
         self.display_name = display_name
@@ -32,7 +33,7 @@ class Variant(ConfigObject):
 
     def to_dict(self):
         v = super(Variant, self).to_dict()
-        for i in 'display_name', 'expansions', 'run_on', 'tasks', 'batchtime':
+        for i in "display_name", "expansions", "run_on", "tasks", "batchtime":
             if getattr(self, i):
                 v[i] = getattr(self, i)
         return v
