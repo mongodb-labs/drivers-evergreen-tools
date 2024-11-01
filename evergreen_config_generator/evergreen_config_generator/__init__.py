@@ -21,8 +21,7 @@ try:
     import yamlordereddictloader
 except ImportError:
     sys.stderr.write(
-        "try 'pip install -r evergreen_config_generator/requirements.txt'\n"
-    )
+        "try 'pip install -r evergreen_config_generator/requirements.txt'\n")
     raise
 
 
@@ -32,10 +31,10 @@ class ConfigObject:
 
     @property
     def name(self):
-        return "UNSET"
+        return 'UNSET'
 
     def to_dict(self):
-        return OD([("name", self.name)])
+        return OD([('name', self.name)])
 
 
 # We want legible YAML tasks:
@@ -52,17 +51,17 @@ class ConfigObject:
 # Write values compactly except multiline strings, which use "|" style. Write
 # tag sets as lists.
 
-
 class _Dumper(yamlordereddictloader.Dumper):
     def __init__(self, *args, **kwargs):
         super(_Dumper, self).__init__(*args, **kwargs)
         self.add_representer(set, type(self).represent_set)
         # Use "multi_representer" to represent all subclasses of ConfigObject.
-        self.add_multi_representer(ConfigObject, type(self).represent_config_object)
+        self.add_multi_representer(ConfigObject,
+                                   type(self).represent_config_object)
 
     def represent_scalar(self, tag, value, style=None):
-        if isinstance(value, str) and "\n" in value:
-            style = "|"
+        if isinstance(value, str) and '\n' in value:
+            style = '|'
         return super(_Dumper, self).represent_scalar(tag, value, style)
 
     def represent_set(self, data):
@@ -81,8 +80,8 @@ def generate(config, path):
 
     config is a dict, preferably an OrderedDict. path is a file path.
     """
-    f = open(path, "w+")
-    f.write("""####################################
+    f = open(path, 'w+')
+    f.write('''####################################
 # Evergreen configuration
 #
 # Generated with evergreen_config_generator from
@@ -92,5 +91,5 @@ def generate(config, path):
 #
 ####################################
 
-""")
+''')
     f.write(yaml_dump(config))
