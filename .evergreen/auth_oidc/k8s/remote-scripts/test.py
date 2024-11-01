@@ -1,6 +1,5 @@
-import os
-
 from pymongo import MongoClient
+import os
 from pymongo.auth_oidc import OIDCCallback, OIDCCallbackContext, OIDCCallbackResult
 
 atlas_uri = os.environ["MONGODB_URI"]

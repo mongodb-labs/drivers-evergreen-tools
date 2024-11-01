@@ -1,5 +1,6 @@
 import itertools
 
+
 TASK_TEMPLATE = '''
     - name: "test-{version}-{topology}"
       tags: ["{version}", "{topology}"]

@@ -71,11 +71,12 @@ class KmsHandlerBase(http.server.BaseHTTPRequestHandler):
         else:
             self.send_response(http.HTTPStatus.NOT_FOUND)
             self.end_headers()
-            self.wfile.write(b"Unknown URL")
+            self.wfile.write("Unknown URL".encode())
 
     @abstractmethod
     def do_POST(self):
         """Serve a POST request."""
+        pass
 
     def _send_reply(self, data, status=http.HTTPStatus.OK):
         print("Sending Response: " + data.decode())

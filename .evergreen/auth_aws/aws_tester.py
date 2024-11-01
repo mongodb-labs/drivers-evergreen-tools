@@ -1,16 +1,17 @@
+#!/usr/bin/env python3
 """
 Script for testing MONGDOB-AWS authentication.
 """
 import argparse
-import json
 import os
-import subprocess
+import json
 import sys
+import subprocess
 from functools import partial
-from urllib.parse import quote_plus
 
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
+from urllib.parse import quote_plus
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,10 +20,10 @@ def join(*parts):
 
 
 sys.path.insert(0, join(HERE, 'lib'))
-from aws_assign_instance_profile import _assign_instance_policy
+from util import get_key as _get_key
 from aws_assume_role import _assume_role
 from aws_assume_web_role import _assume_role_with_web_identity
-from util import get_key as _get_key
+from aws_assign_instance_profile import _assign_instance_policy
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
 ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
@@ -43,7 +44,7 @@ except FileNotFoundError:
 def run(args, env):
     """Run a python command in a subprocess."""
     env.update(os.environ.copy())
-    return subprocess.run([sys.executable, *args], env=env, check=False).returncode
+    return subprocess.run([sys.executable] + args, env=env).returncode
 
 
 def create_user(user, kwargs):

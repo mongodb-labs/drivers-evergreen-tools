@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script for fetching AWS Secrets Vault secrets for use in testing.
 """
@@ -27,7 +28,7 @@ def get_secrets(vaults, region, profile):
             resp = client.assume_role(RoleArn=AWS_ROLE_ARN, RoleSessionName=str(uuid.uuid4()))
         except Exception as e:
             print(e)
-            raise ValueError("Please provide a profile (typically using AWS_PROFILE)") from e
+            raise ValueError("Please provide a profile (typically using AWS_PROFILE)")
 
         creds = resp['Credentials']
 
