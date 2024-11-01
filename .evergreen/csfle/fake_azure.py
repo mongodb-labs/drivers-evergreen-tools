@@ -11,7 +11,8 @@ from bottle import Bottle, HTTPResponse
 imds = Bottle(autojson=True)
 """An Azure IMDS server"""
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable, cast, overload
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Callable, cast, overload
 
 if not TYPE_CHECKING:
     from bottle import request
@@ -115,7 +116,7 @@ def get_oauth2_token():
     if case == 'slow':
         return _slow()
 
-    assert case in (None, ''), 'Unknown HTTP test case "{}"'.format(case)
+    assert case in (None, ''), f'Unknown HTTP test case "{case}"'
 
     return {
         'access_token': 'magic-cookie',
@@ -148,7 +149,6 @@ def _slow() -> Iterable[bytes]:
 
 if __name__ == '__main__':
     print(
-        'RECOMMENDED: Run this script using bottle.py (e.g. [{} {}/bottle.py fake_azure:imds])'
-        .format(sys.executable,
-                Path(__file__).resolve().parent))
+        f'RECOMMENDED: Run this script using bottle.py (e.g. [{sys.executable} {Path(__file__).resolve().parent}/bottle.py fake_azure:imds])'
+        )
     imds.run()

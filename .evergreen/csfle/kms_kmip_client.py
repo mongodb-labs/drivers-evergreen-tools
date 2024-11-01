@@ -1,14 +1,14 @@
-#! /usr/bin/env python3
 """
 Ensures a SecretData is registered with the unique identifier "1" on the KMS KMIP test server.
 This is a utility, and not meant for CI testing.
 """
 
-import kmip.pie.client
-import kmip.pie.objects
-import kmip.pie.exceptions
-import kmip.core.enums
 import os
+
+import kmip.core.enums
+import kmip.pie.client
+import kmip.pie.exceptions
+import kmip.pie.objects
 
 HOSTNAME = "localhost"
 PORT = 5698

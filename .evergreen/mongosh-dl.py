@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Download and extract MongoSH.
 
@@ -6,19 +5,19 @@ Use '--help' for more information.
 """
 import argparse
 import json
+import os
+import re
+import shlex
+import subprocess
 import sys
 import tempfile
-import subprocess
-import shlex
-import os
-from pathlib import Path
-from typing import Sequence
 import urllib.request
-import re
+from collections.abc import Sequence
+from pathlib import Path
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
-from mongodl import _expand_archive, infer_arch, ExpandResult
+from mongodl import ExpandResult, _expand_archive, infer_arch
 
 
 def _get_latest_version():
@@ -57,7 +56,7 @@ def _download(out_dir: Path, version: str, target: str,
                   arch: str,
                   pattern: 'str | None', strip_components: int, test: bool,
                   no_download: bool,) -> int:
-    print('Download {} mongosh for {}-{}'.format(version, target, arch), file=sys.stderr)
+    print(f'Download {version} mongosh for {target}-{arch}', file=sys.stderr)
     if version == "latest":
         version = _get_latest_version()
     if arch == "x86_64":

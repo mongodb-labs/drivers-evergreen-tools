@@ -2,8 +2,8 @@ import logging
 import os
 from base64 import b64decode
 
-from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 
 
 def main():

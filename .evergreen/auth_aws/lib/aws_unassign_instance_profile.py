@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
 """
 Script for unassigning an instance policy from the current machine.
 """
 
 import argparse
-import urllib.error
-import urllib.request
 import logging
 import sys
 import time
+import urllib.error
+import urllib.request
 
 import boto3
 import botocore
@@ -32,7 +31,7 @@ def _has_instance_profile():
     try:
         url = base_url + iam_role
         print("Reading: " + url)
-        req = urllib.request.urlopen(url)
+        urllib.request.urlopen(url)
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:

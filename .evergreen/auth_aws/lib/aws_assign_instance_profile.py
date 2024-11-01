@@ -1,20 +1,18 @@
-#!/usr/bin/env python3
 """
 Script for assign an instance policy to the current machine.
 """
 
 import argparse
-import urllib.request
-import logging
 import json
+import logging
 import os
 import sys
 import time
+import urllib.request
 from functools import partial
 
 import boto3
 import botocore
-
 from util import get_key as _get_key
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -41,7 +39,7 @@ def _has_instance_profile():
     try:
         url = base_url + iam_role
         print("Reading: " + url)
-        req = urllib.request.urlopen(url)
+        urllib.request.urlopen(url)
         print("Assigned " + iam_role)
     except urllib.error.HTTPError as e:
         print(e)
