@@ -2,15 +2,14 @@
 Mock a GCP Metadata Server. Returns a valid access_token.
 """
 
-import base64
 import http.server
-import json
-import os
-import textwrap
 import time
-
+import base64
+import json
 import jwt
 import requests
+import textwrap
+import os
 
 
 def b64_to_b64url(b64):
@@ -20,7 +19,8 @@ def b64_to_b64url(b64):
 def dict_to_b64url(arg):
     as_json = json.dumps(arg).encode("utf8")
     as_b64 = base64.b64encode(as_json).decode("utf8")
-    return  b64_to_b64url(as_b64)
+    as_b64url = b64_to_b64url(as_b64)
+    return as_b64url
 
 
 def get_access_token():
@@ -34,7 +34,7 @@ def get_access_token():
     if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
         raise Exception(
             "please set GOOGLE_APPLICATION_CREDENTIALS environment variable to a JSON Service account key")
-    creds = json.load(open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"]))
+    creds = json.load(open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"], "r"))
     private_key = creds["private_key"].encode("utf8")
     client_email = creds["client_email"]
 
@@ -82,7 +82,7 @@ def main():
     global private_key
     port = 5000
     server = http.server.HTTPServer(("localhost", port), Handler)
-    print (f"Listening on port {port}")
+    print ("Listening on port {}".format(port))
     server.serve_forever()
 
 

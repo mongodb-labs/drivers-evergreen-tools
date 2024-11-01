@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script for testing mongodb in containers.
 
@@ -40,7 +41,7 @@ DEFAULT_GARBAGE_COLLECTION_THRESHOLD = datetime.timedelta(hours=1)
 
 def _run_process(params, cwd=None):
     LOGGER.info("RUNNING COMMAND: %s", params)
-    ret = subprocess.run(params, cwd=cwd, check=False)
+    ret = subprocess.run(params, cwd=cwd)
     return ret.returncode
 
 def _userandhostandport(endpoint):
@@ -136,7 +137,7 @@ def remote_ps_container(cluster):
         assert private_ip_address
 
         eni = ec2_client.describe_network_interfaces(NetworkInterfaceIds=enis)
-        public_ip = next(iter(n["Association"]["PublicIp"] for n in eni["NetworkInterfaces"]))
+        public_ip = [n["Association"]["PublicIp"] for n in eni["NetworkInterfaces"]][0]
 
         for container in task['containers']:
             taskArn = container['taskArn']
@@ -145,7 +146,7 @@ def remote_ps_container(cluster):
             task_id = task_id + "/" + name
             lastStatus = container['lastStatus']
 
-        print(f"{task_id:<43}{lastStatus:<9}{public_ip:<25}{private_ip_address:<25}{taskDefinition_short:<16}")
+        print("{:<43}{:<9}{:<25}{:<25}{:<16}".format(task_id, lastStatus, public_ip, private_ip_address, taskDefinition_short ))
 
 def _remote_create_container_args(args):
     remote_create_container(args.cluster, args.task_definition, args.service, args.subnets, args.security_group)
@@ -246,7 +247,7 @@ def remote_get_public_endpoint_str(cluster, service_name):
         assert enis
 
         eni = ec2_client.describe_network_interfaces(NetworkInterfaceIds=enis)
-        public_ip = next(iter(n["Association"]["PublicIp"] for n in eni["NetworkInterfaces"]))
+        public_ip = [n["Association"]["PublicIp"] for n in eni["NetworkInterfaces"]][0]
         break
 
     return f"root@{public_ip}:22"

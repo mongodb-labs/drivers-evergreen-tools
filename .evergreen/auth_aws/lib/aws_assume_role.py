@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 """
 Script for assuming an aws role.
 """
 
 import argparse
-import logging
 import uuid
+import logging
 
 import boto3
 

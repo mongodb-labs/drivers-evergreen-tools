@@ -1,13 +1,15 @@
+#!/usr/bin/env python3
 """
 Script for managing OIDC.
 """
-import json
 import os
+import json
 import sys
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, HERE)
-from utils import DEFAULT_CLIENT, get_secrets
+from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
 
 
 def azure():

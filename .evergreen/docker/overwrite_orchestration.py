@@ -1,5 +1,5 @@
-import json
 import os
+import json
 
 orch_file = os.environ['ORCHESTRATION_FILE']
 
