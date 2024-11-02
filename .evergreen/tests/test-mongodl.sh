@@ -24,7 +24,7 @@ chmod +x ./mongodl_test/bin/mongosh
 
 if [ ${1:-} == "partial" ]; then
   popd
-  make test
+  make -C ${DRIVERS_TOOLS} test
   exit 0
 fi
 
@@ -44,4 +44,4 @@ $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd -
 $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
 
 popd
-make test
+make -C ${DRIVERS_TOOLS} test
