@@ -76,8 +76,8 @@ def _download(out_dir: Path, version: str, target: str,
         suffix = ".zip"
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
     print(dl_url)
+
     if no_download:
-        print(dl_url)
         return ExpandResult.Okay
 
     req = urllib.request.Request(dl_url)
