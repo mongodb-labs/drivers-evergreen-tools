@@ -15,6 +15,7 @@ if [ "${OS:-}" != "Windows_NT" ]; then
   $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
 fi
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test --strip-path-components 1
+rm -rf $(pwd)/mongodl_test 
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
@@ -23,9 +24,7 @@ if [ "${OS:-}" != "Windows_NT" ]; then
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
-  ls ./mongodl_test
-  ls ./mongodl_test/bin
-  . ./mongodl_test/bin/mongosh.exe --version
+  mongosh.exe --version
 fi
 
 if [ ${1:-} == "partial" ]; then
