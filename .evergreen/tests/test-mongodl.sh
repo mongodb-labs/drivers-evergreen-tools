@@ -10,7 +10,7 @@ pushd $SCRIPT_DIR/..
 PYTHON=$(ensure_python3)
 echo "Using PYTHON: $PYTHON"
 mkdir mongodl_test
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --no-download
+$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --test
 if [ "${OS:-}" != "Windows_NT" ]; then
   $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --test
 fi
