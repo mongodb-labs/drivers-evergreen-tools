@@ -516,14 +516,14 @@ functions:
       type: test
       params:
         binary: bash
-        args: [.evergreen/tests/test-mongodl.sh, partial]
+        args: [src/.evergreen/tests/test-mongodl.sh, partial]
 
   "run mongodl test full":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
-        args: [.evergreen/tests/test-mongodl.sh]
+        args: [src/.evergreen/tests/test-mongodl.sh]
 
   "teardown assets":
     - command: subprocess.exec
