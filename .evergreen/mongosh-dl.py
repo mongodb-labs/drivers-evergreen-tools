@@ -69,7 +69,7 @@ def _download(out_dir: Path, version: str, target: str,
         suffix = '.tgz'
         if sys.platform == 'linux' and arch in ["x64", "arm64"]:
             openssl = subprocess.check_output(["openssl", "version"])
-            if "3.0" in openssl:
+            if "3.0" in openssl.decode('utf-8'):
                 suffix = "-openssl3.tgz"
             else:
                 suffix = "-openssl11.tgz"
