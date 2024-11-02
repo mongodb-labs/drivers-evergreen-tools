@@ -67,6 +67,7 @@ def _download(out_dir: Path, version: str, target: str,
         arch = "arm64"
     if target == "linux":
         suffix = '.tgz'
+        print('hello', sys.platform, arch, repr(ssl.OPENSSL_VERSION_INFO[0]))
         if sys.platform == 'linux' and arch in ["x64", "arm64"]:
             if ssl.OPENSSL_VERSION_INFO[0] == 3:
                 suffix = "-openssl3.tgz"
