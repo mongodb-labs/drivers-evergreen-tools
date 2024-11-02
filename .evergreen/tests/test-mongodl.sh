@@ -23,6 +23,8 @@ if [ "${OS:-}" != "Windows_NT" ]; then
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
+  ls ./mongodl_test
+  ls ./mongodl_test/bin
   . ./mongodl_test/bin/mongosh.exe --version
 fi
 
