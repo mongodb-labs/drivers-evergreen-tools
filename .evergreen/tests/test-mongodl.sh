@@ -9,25 +9,26 @@ pushd $SCRIPT_DIR/..
 . find-python3.sh
 PYTHON=$(ensure_python3)
 echo "Using PYTHON: $PYTHON"
-mkdir mongodl_test
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --test
+DOWNLOAD_DIR=mongodl_test
+
 if [ "${OS:-}" != "Windows_NT" ]; then
   $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
+else:
+  DOWNLOAD_DIR=$(cygpath -m $DOWNLOAD_DIR)
 fi
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test --strip-path-components 1
-rm -rf $(pwd)/mongodl_test 
+
+$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --test
+$PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out ${DOWNLOAD_DIR} --strip-path-components 1
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
-$PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
-export PATH="$(pwd)/mongodl_test/bin:$PATH"
+
+export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then
+  $PYTHON mongosh-dl.py --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
-  echo $(pwd)
-  ls ./mongodl_test
-  echo "hello?"
-  exit 1
+  $PYTHON mongosh-dl.py --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1
 fi
 
 if [ ${1:-} == "partial" ]; then
@@ -48,7 +49,7 @@ $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version 6.0 --component crypt_shared --test
 $PYTHON mongodl.py --edition enterprise --version 8.0 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version rapid --component archive --test
-$PYTHON mongodl.py --edition enterprise --version latest --component archive --out $(pwd)/mongodl_test
+$PYTHON mongodl.py --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR}
 $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
 $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
 

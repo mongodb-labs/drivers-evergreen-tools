@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Sequence
 import urllib.request
 import re
-import ssl
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
