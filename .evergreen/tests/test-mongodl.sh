@@ -17,6 +17,7 @@ fi
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test --strip-path-components 1
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
+exit 1
 $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
 export PATH="$(pwd)/mongodl_test/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then

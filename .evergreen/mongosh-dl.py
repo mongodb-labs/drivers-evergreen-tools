@@ -78,6 +78,7 @@ def _download(out_dir: Path, version: str, target: str,
     if no_download:
         print(dl_url)
         return ExpandResult.Okay
+    sys.exit(1)
     req = urllib.request.Request(dl_url)
     resp = urllib.request.urlopen(req)
 
