@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Sequence
 import urllib.request
 import re
+import ssl
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
@@ -65,7 +66,13 @@ def _download(out_dir: Path, version: str, target: str,
     elif arch == "aarch64":
         arch = "arm64"
     if target == "linux":
-        suffix = ".tgz"
+        if sys.platform == 'linux':
+            if ssl.OPENSSL_VERSION_INFO[0] == '1':
+                suffix = "-openssl11.tgz"
+            else:
+                suffix = "-openssl3.tgz"
+        else:
+            suffix = '.tgz'
     else:
         suffix = ".zip"
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
