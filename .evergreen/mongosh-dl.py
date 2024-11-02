@@ -70,7 +70,7 @@ def _download(out_dir: Path, version: str, target: str,
             openssl = subprocess.check_output(["openssl", "version"])
             if "3.0" in openssl.decode('utf-8'):
                 suffix = "-openssl3.tgz"
-            else:
+            elif "1.1" in openssl.decode('utf-8'):
                 suffix = "-openssl11.tgz"
     else:
         suffix = ".zip"
