@@ -37,7 +37,7 @@ fi
 # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
 export VALIDATE_DISTROS=1
 $PYTHON mongodl.py --list
-$PYTHON mongodl.py --edition enterprise --version 7.0.10 --component archive --no-download
+$PYTHON mongodl.py --edition enterprise --version 7.0.6 --component archive --no-download
 $PYTHON mongodl.py --edition enterprise --version 3.6 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version 4.0 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version 4.2 --component archive --test
