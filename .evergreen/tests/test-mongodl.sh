@@ -19,7 +19,7 @@ export PATH="$(pwd)/mongodl_test/bin:$PATH"
 chmod +x ./mongodl_test/bin/mongosh
 ./mongodl_test/bin/mongosh --version
 
-if [ ${1:-} == "partial" ];
+if [ ${1:-} == "partial" ]; then
   popd
   make test
   exit 0
