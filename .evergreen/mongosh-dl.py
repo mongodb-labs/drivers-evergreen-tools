@@ -72,7 +72,7 @@ def _download(out_dir: Path, version: str, target: str,
                 suffix = "-openssl3.tgz"
     else:
         suffix = ".zip"
-    print(target, suffix, arch, sys.OPENSSL_VERSION_INFO)
+    print(target, suffix, arch, ssl.OPENSSL_VERSION_INFO)
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
 
     if no_download:
