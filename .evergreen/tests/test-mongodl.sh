@@ -11,10 +11,11 @@ PYTHON=$(ensure_python3)
 echo "Using PYTHON: $PYTHON"
 mkdir mongodl_test
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test
+$PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test --strip-path-components 1
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
+export PATH="$(pwd)/mongodl_test/bin:$PATH"
 chmod +x ./mongodl_test/bin/mongosh
 ./mongodl_test/bin/mongosh --version
 
