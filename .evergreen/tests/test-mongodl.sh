@@ -10,7 +10,7 @@ pushd $SCRIPT_DIR/..
 PYTHON=$(ensure_python3)
 echo "Using PYTHON: $PYTHON"
 mkdir mongodl_test
-$PYTHON mongodl.py --edition enterprise --version 7.0.10 --component archive --no-download
+$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --no-download
 if [ "${OS:-}" != "Windows_NT" ]; then
   $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --test
 fi
@@ -35,6 +35,7 @@ fi
 # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
 export VALIDATE_DISTROS=1
 $PYTHON mongodl.py --list
+$PYTHON mongodl.py --edition enterprise --version 7.0.10 --component archive --no-download
 $PYTHON mongodl.py --edition enterprise --version 3.6 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version 4.0 --component archive --test
 $PYTHON mongodl.py --edition enterprise --version 4.2 --component archive --test
