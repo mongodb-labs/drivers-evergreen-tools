@@ -24,7 +24,10 @@ if [ "${OS:-}" != "Windows_NT" ]; then
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
-  mongosh.exe --version
+  echo $pwd
+  ls ./mongodl_test
+  echo "hello?"
+  exit 1
 fi
 
 if [ ${1:-} == "partial" ]; then
