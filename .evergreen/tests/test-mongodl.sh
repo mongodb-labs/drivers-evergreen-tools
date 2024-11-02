@@ -19,6 +19,8 @@ rm -rf $(pwd)/mongodl_test
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
+openssl version
+exit 1
 export PATH="$(pwd)/mongodl_test/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then
   chmod +x ./mongodl_test/bin/mongosh
