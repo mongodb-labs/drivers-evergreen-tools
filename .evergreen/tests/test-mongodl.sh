@@ -13,7 +13,7 @@ DOWNLOAD_DIR=mongodl_test
 
 if [ "${OS:-}" != "Windows_NT" ]; then
   $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
-else:
+else
   DOWNLOAD_DIR=$(cygpath -m $DOWNLOAD_DIR)
 fi
 
