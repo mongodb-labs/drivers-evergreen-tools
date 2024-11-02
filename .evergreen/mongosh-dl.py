@@ -73,7 +73,7 @@ def _download(out_dir: Path, version: str, target: str,
     else:
         suffix = ".zip"
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
-
+    print(dl_url)
     if no_download:
         print(dl_url)
         return ExpandResult.Okay
