@@ -24,7 +24,7 @@ if [ "${OS:-}" != "Windows_NT" ]; then
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
-  echo $pwd
+  echo $(pwd)
   ls ./mongodl_test
   echo "hello?"
   exit 1
