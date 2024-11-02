@@ -12,15 +12,19 @@ echo "Using PYTHON: $PYTHON"
 mkdir mongodl_test
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --no-download
 if [ "${OS:-}" != "Windows_NT" ]; then
-  $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component archive-debug --test
+  $PYTHON mongodl.py --edition enterprise --version 7.0.5 --component archive-debug --test
 fi
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --out $(pwd)/mongodl_test --strip-path-components 1
 $PYTHON mongosh-dl.py --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --no-download
 $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)/mongodl_test --strip-path-components 1
 export PATH="$(pwd)/mongodl_test/bin:$PATH"
-chmod +x ./mongodl_test/bin/mongosh
-./mongodl_test/bin/mongosh --version
+if [ "${OS:-}" != "Windows_NT" ]; then
+  chmod +x ./mongodl_test/bin/mongosh
+  ./mongodl_test/bin/mongosh --version
+else
+  ./mongodl_test/bin/mongosh.exe --version
+fi
 
 if [ ${1:-} == "partial" ]; then
   popd
