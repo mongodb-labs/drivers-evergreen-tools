@@ -65,14 +65,21 @@ def _download(out_dir: Path, version: str, target: str,
     elif arch == "aarch64":
         arch = "arm64"
     if target == "linux":
-        suffix = ".tgz"
+        suffix = '.tgz'
+        if sys.platform == 'linux' and arch in ["x64", "arm64"]:
+            openssl = subprocess.check_output(["openssl", "version"])
+            if "3.0" in openssl.decode('utf-8'):
+                suffix = "-openssl3.tgz"
+            elif "1.1" in openssl.decode('utf-8'):
+                suffix = "-openssl11.tgz"
     else:
         suffix = ".zip"
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
+    print(dl_url)
 
     if no_download:
-        print(dl_url)
         return ExpandResult.Okay
+
     req = urllib.request.Request(dl_url)
     resp = urllib.request.urlopen(req)
 

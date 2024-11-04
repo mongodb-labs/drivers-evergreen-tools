@@ -512,52 +512,18 @@ functions:
           make test
 
   "run mongodl test partial":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}/.evergreen
-          . find-python3.sh
-          PYTHON=$(ensure_python3)
-          echo "Using PYTHON: $PYTHON"
-          $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive-debug --no-download
-          $PYTHON mongodl.py --edition enterprise --version 7.0 --component cryptd --test
-          $PYTHON mongosh-dl.py --no-download
-          $PYTHON mongosh-dl.py --version 2.1.1 --no-download
-          $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)
+        binary: bash
+        args: [src/.evergreen/tests/test-mongodl.sh, partial]
 
   "run mongodl test full":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}/.evergreen
-          . find-python3.sh
-          PYTHON=$(ensure_python3 2>/dev/null)
-          echo "Using PYTHON: $PYTHON"
-          # Ensure that all distros are accounted for in DISTRO_ID_TO_TARGET
-          export VALIDATE_DISTROS=1
-          $PYTHON mongodl.py --list
-          if [ "$OS" != "Windows_NT" ]; then
-            $PYTHON mongodl.py --edition enterprise --version 7.0.1 --component archive-debug --test
-          fi
-          $PYTHON mongodl.py --edition enterprise --version 3.6 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 4.0 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 4.2 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 4.4 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 5.0 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version 6.0 --component crypt_shared --test
-          $PYTHON mongodl.py --edition enterprise --version 8.0 --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version rapid --component archive --test
-          $PYTHON mongodl.py --edition enterprise --version latest --component archive --out $(pwd)
-          $PYTHON mongodl.py --edition enterprise --version v6.0-perf --component cryptd --test
-          $PYTHON mongodl.py --edition enterprise --version v8.0-perf --component cryptd --test
-          $PYTHON mongosh-dl.py --no-download
-          $PYTHON mongosh-dl.py --version 2.1.1 --out $(pwd)
+        binary: bash
+        args: [src/.evergreen/tests/test-mongodl.sh]
 
   "teardown assets":
     - command: subprocess.exec
@@ -1287,7 +1253,7 @@ axes:
 
       - id: amazon-2023-x64
         display_name: "Amazon Linux 2023 x64"
-        run_on: amazon2023.0-small
+        run_on: amazon2023.3-small
 
       - id: macos-14-arm64
         display_name: "macOS 14 arm64"
