@@ -68,10 +68,12 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         if not self.headers["Host"] == "localhost":
             data = "Unexpected host"
             self._send_reply(data.encode("utf-8"))
+            return
 
         if not self._validate_signature(self.headers, raw_input):
             data = "Bad Signature"
             self._send_reply(data.encode("utf-8"))
+            return
 
         # X-Amz-Target: TrentService.Encrypt
         aws_operation = self.headers['X-Amz-Target']
