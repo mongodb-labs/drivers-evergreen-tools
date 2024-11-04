@@ -965,10 +965,9 @@ tasks:
         - func: "run oidc k8s local test"
           vars:
             VARIANT: gke
-        # TODO: This still has to be implemented.
-        # - func: "run oidc k8s local test"
-        #   vars:
-        #     VARIANT: aks
+        - func: "run oidc k8s local test"
+          vars:
+            VARIANT: aks
 
     - name: "test-install-binaries"
       tags: ["pr"]
