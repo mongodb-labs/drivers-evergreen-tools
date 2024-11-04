@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Test mongodl and mongosh-dl.
 set -eux
 
