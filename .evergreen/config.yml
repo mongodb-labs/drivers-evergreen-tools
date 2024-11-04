@@ -965,9 +965,10 @@ tasks:
         - func: "run oidc k8s local test"
           vars:
             VARIANT: gke
-        - func: "run oidc k8s local test"
-          vars:
-            VARIANT: aks
+        # TODO: This still has to be implemented.
+        # - func: "run oidc k8s local test"
+        #   vars:
+        #     VARIANT: aks
 
     - name: "test-install-binaries"
       tags: ["pr"]
@@ -1257,6 +1258,10 @@ axes:
       - id: macos-14-arm64
         display_name: "macOS 14 arm64"
         run_on: macos-14-arm64
+
+      - id: rhel8
+        display_name: "RHEL 80"
+        run_on: rhel80-small
 
       - id: rhel9
         display_name: "RHEL 9 x64"
