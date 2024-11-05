@@ -68,10 +68,12 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         if not self.headers["Host"] == "localhost":
             data = "Unexpected host"
             self._send_reply(data.encode("utf-8"))
+            return
 
         if not self._validate_signature(self.headers, raw_input):
             data = "Bad Signature"
             self._send_reply(data.encode("utf-8"))
+            return
 
         # X-Amz-Target: TrentService.Encrypt
         aws_operation = self.headers['X-Amz-Target']
@@ -85,6 +87,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         else:
             data = "Unknown AWS Operation"
             self._send_reply(data.encode("utf-8"))
+            return
 
     def _validate_signature(self, headers, raw_input):
         auth_header = headers["Authorization"]
@@ -130,6 +133,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         }
 
         self._send_reply(json.dumps(response).encode('utf-8'))
+        return
 
     def _do_encrypt_faults(self, raw_ciphertext):
         kms_http_common.stats.fault_calls += 1
@@ -186,6 +190,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         }
 
         self._send_reply(json.dumps(response).encode('utf-8'))
+        return
 
     def _do_decrypt_faults(self, blob):
         kms_http_common.stats.fault_calls += 1
