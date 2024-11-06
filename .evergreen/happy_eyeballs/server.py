@@ -9,7 +9,7 @@
 #
 ### Usage:
 #
-# python3 happy-eyeballs-server.py [-c|--control PORT] [--wait] [--stop]
+# python3 server.py [-c|--control PORT] [--wait] [--stop]
 #
 # Running with no arguments, or with just `-c PORT`, will start the server in the foreground.  PORT
 # defaults to 10036 if not specified.
@@ -41,12 +41,12 @@ import socket
 import sys
 
 parser = argparse.ArgumentParser(
-    prog='happy-eyeballs-server',
-    description='Fake server for testing happy eyeballs',
+    prog='server',
+    description='Test server for happy eyeballs',
 )
 parser.add_argument('-c', '--control', default=10036, type=int, metavar='PORT', help='control port')
-parser.add_argument('--wait', action='store_true', help='wait for a server to be ready')
-parser.add_argument('--stop', action='store_true', help='stop a currently-running server')
+parser.add_argument('--wait', action='store_true', help='wait for a running server to be ready')
+parser.add_argument('--stop', action='store_true', help='stop a running server')
 args = parser.parse_args()
 
 PREFIX='happy eyeballs server'

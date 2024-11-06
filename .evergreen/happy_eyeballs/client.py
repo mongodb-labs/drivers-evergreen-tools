@@ -1,6 +1,6 @@
-### A test client for happy-eyeballs-server.py
+### A test client for server.py
 #
-# This can be used to check that happy-eyeballs-server.py is functioning properly.  When run, it
+# This can be used to check that server.py is functioning properly.  When run, it
 # will connect to the control port on that server, request a pair of ports, open a connection to
 # both ports in parallel, and assert that the byte read is the expected one for that port.
 
@@ -9,7 +9,7 @@ import asyncio
 import socket
 
 parser = argparse.ArgumentParser(
-    prog='happy-eyeballs-client',
+    prog='client',
     description='client for testing the happy eyeballs test server',
 )
 parser.add_argument('-c', '--control', default=10036, type=int, metavar='PORT', help='control port')
