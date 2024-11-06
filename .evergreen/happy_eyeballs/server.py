@@ -85,7 +85,7 @@ async def on_control_connected(reader: asyncio.StreamReader, writer: asyncio.Str
     else:
         print(f'Unexpected control byte: {data}', file=sys.stderr)
         exit(1)
-    
+
     # Bind the test ports but do not yet start accepting connections
     connected = asyncio.Event()
     on_ipv4_connected = lambda reader, writer: on_test_connected('IPv4', writer, b'\x04', connected, slow)
@@ -122,7 +122,7 @@ async def on_control_connected(reader: asyncio.StreamReader, writer: asyncio.Str
         asyncio.create_task(srv6.wait_closed()),
     ]
     await asyncio.wait(close_tasks)
-    
+
     print(f'{PREFIX}: [slow {slow}] connection complete, test ports closed', file=sys.stderr)
     print(f'{PREFIX}: ========================', file=sys.stderr)
 
