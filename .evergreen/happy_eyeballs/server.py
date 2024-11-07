@@ -1,39 +1,4 @@
-### A test server for driver Happy Eyeballs behavior.
-#
-# This server will start accepting connections on a "control" port.  Driver tests can connect to
-# that port to request a new pair (IPv4, IPv6) of open ephemeral ports, where one is much slower to
-# complete the TCP handshake than the other.
-#
-# This server relies on network stack behavior present in Windows and MacOS kernels but not Linux,
-# so any tests using it should only be run on those two OSen.
-#
-### Usage:
-#
-# python3 server.py [-c|--control PORT] [--wait] [--stop]
-#
-# Running with no arguments, or with just `-c PORT`, will start the server in the foreground.  PORT
-# defaults to 10036 if not specified.
-#
-# Running with `--wait` will wait for a server running in another process to be ready to start
-# accepting control connections.
-#
-# Running with `--stop` will signal a server running in another process to gracefully shutdown.
-#
-### Control protocol:
-#
-# On opening a connection to the control port, the driver test should send a single byte: 0x04 to
-# request a port pair with a slow IPv4 connection, 0x06 to request one with a slow IPv6 connection.
-# The server will respond with:
-#   0x01  (success signal)
-#   uint16 (IPv4 port, big-endian)
-#   uint16 (IPv6 port, big-endian)
-# Any other response should be treated as an error.  The connection will be closed after the ports
-# are sent; to request another pair, open a new connection to the control port.
-#
-# Test connections to the two ports should be initiated immediately; the TCP handshake completion
-# will be delayed on the slow port by two seconds from the time of the port being bound, not the
-# ACK received.  When connected to, both ports will write out a single byte for verification (0x04
-# for IPv4, 0x06 for IPv6) and then immediately close.
+# A test server for driver Happy Eyeballs behavior.  See README.md for more information.
 
 import argparse
 import asyncio
