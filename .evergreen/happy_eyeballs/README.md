@@ -46,10 +46,10 @@ The `"stop happy eyeballs server"` function should be included in the `post` con
 
 ## Test Usage
 
-On opening a connection to the control port, the driver test should send a single byte: `0x04` to request a port pair with a slow IPv4 connection, or `0x06` to request one with a slow IPv6 connection. The server will respond with:  
-`0x01`  (success signal), followed by  
-`uint16` (IPv4 port, big-endian), followed by  
-`uint16` (IPv6 port, big-endian)  
+On opening a connection to the control port, the driver test should send a single byte: `0x04` to request a port pair with a slow IPv4 connection, or `0x06` to request one with a slow IPv6 connection. The server will respond with:
+`0x01`  (success signal), followed by
+`uint16` (IPv4 port, big-endian), followed by
+`uint16` (IPv6 port, big-endian)
 Any other response should be treated as an error.  The connection will be closed after the ports are sent; to request another pair, open a new connection to the control port.
 
 Test connections to the two ports should be initiated immediately; the TCP handshake completion will be delayed on the slow port by two seconds from the time of the port _being bound_, not the ACK received.  When connected to, both ports will write out a single byte for verification (`0x04`
