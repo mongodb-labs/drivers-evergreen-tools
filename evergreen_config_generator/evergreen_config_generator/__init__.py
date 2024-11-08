@@ -25,7 +25,7 @@ except ImportError:
     raise
 
 
-class ConfigObject(object):
+class ConfigObject:
     def __init__(self, *args, **kwargs):
         super(ConfigObject, self).__init__()
 
@@ -60,7 +60,7 @@ class _Dumper(yamlordereddictloader.Dumper):
                                    type(self).represent_config_object)
 
     def represent_scalar(self, tag, value, style=None):
-        if isinstance(value, (str, unicode)) and '\n' in value:
+        if isinstance(value, str) and '\n' in value:
             style = '|'
         return super(_Dumper, self).represent_scalar(tag, value, style)
 

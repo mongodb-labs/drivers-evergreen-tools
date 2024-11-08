@@ -64,7 +64,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def _send_not_found(self):
         self.send_response(http.HTTPStatus.NOT_FOUND)
-        msg = "Not found".encode("utf8")
+        msg = b"Not found"
         self.send_header("Content-Type", "text/plain")
         self.send_header("Content-Length", len(msg))
         self.end_headers()
@@ -93,18 +93,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 remaining_http_fails = data['count']
             else:
                 self._send_not_found()
-                return
-            print("Enabling failpoint for type: {}".format(failpoint_type))
+                return None
+            print(f"Enabling failpoint for type: {failpoint_type}")
             self._send_json(
-                {"message": "failpoint set for type: '{}'".format(failpoint_type)}
+                {"message": f"failpoint set for type: '{failpoint_type}'"}
             )
-            return
+            return None
 
         if path.match("/reset"):
             remaining_http_fails = 0
             remaining_network_fails = 0
             self._send_json({"message": "failpoints reset"})
-            return
+            return None
 
         # If a failpoint was set, fail the request.
         if remaining_network_fails > 0:
@@ -116,40 +116,39 @@ class Handler(http.server.BaseHTTPRequestHandler):
             aws_op = self.headers['X-Amz-Target']
             if aws_op == "TrentService.Encrypt":
                 self._send_json({"CiphertextBlob": base64.b64encode(fake_ciphertext.encode()).decode()})
-                return
-            elif aws_op == "TrentService.Decrypt":
+                return None
+            if aws_op == "TrentService.Decrypt":
                 if remaining_http_fails > 0:
                     self._http_fail()
-                    return
+                    return None
                 self._send_json({"Plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
-                return
-            else:
-                self._send_not_found()
-                return
+                return None
+            self._send_not_found()
+            return None
 
         # GCP or Azure auth path: /c01df00d-cafe-g00d-dea1-decea5sedbeef/oauth2/v2.0/token
         if path.match("*token"):
             if remaining_http_fails > 0:
                 self._http_fail()
-                return
+                return None
             return self._send_json({"access_token": "foo", "expires_in": 99999})
         # GCP encrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:encrypt
-        elif path.match("*encrypt"):
+        if path.match("*encrypt"):
             return self._send_json({"ciphertext": base64.b64encode(fake_ciphertext.encode()).decode()})
         # GCP decrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:decrypt
-        elif path.match("*decrypt"):
+        if path.match("*decrypt"):
             if remaining_http_fails > 0:
                 self._http_fail()
-                return
+                return None
             return self._send_json({"plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
         # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey
-        elif path.match("*unwrapkey"):
+        if path.match("*unwrapkey"):
             if remaining_http_fails > 0:
                 self._http_fail()
-                return
+                return None
             return self._send_json({"value": base64.b64encode(fake_plaintext.encode()).decode()})
         # Azure encrypt path: /keys/{key-name}/{key-version}/wrapkey
-        elif path.match("*wrapkey"):
+        if path.match("*wrapkey"):
             return self._send_json({"value": base64.b64encode(fake_ciphertext.encode()).decode()})
         self._send_not_found()
 

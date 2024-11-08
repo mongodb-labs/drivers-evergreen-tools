@@ -9,7 +9,7 @@ import sys
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, HERE)
-from utils import get_secrets, MOCK_ENDPOINT, DEFAULT_CLIENT
+from utils import get_secrets, DEFAULT_CLIENT
 
 
 def azure():

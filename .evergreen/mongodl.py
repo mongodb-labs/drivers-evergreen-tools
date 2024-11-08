@@ -157,8 +157,7 @@ def infer_target_from_os_release(osr: Path) -> str:
     # Extract the "ID" field
     id_re = re.compile(r'\bID=("?)(.*)\1')
     mat = id_re.search(os_rel)
-    assert mat, 'Unable to detect ID from [{}] content:\n{}'.format(
-        osr, os_rel)
+    assert mat, f'Unable to detect ID from [{osr}] content:\n{os_rel}'
     os_id = mat.group(2)
     if os_id == 'arch':
         # There are no Archlinux-specific MongoDB downloads, so we'll just use
@@ -168,8 +167,7 @@ def infer_target_from_os_release(osr: Path) -> str:
     # Extract the "VERSION_ID" field
     ver_id_re = re.compile(r'VERSION_ID=("?)(.*)\1')
     mat = ver_id_re.search(os_rel)
-    assert mat, 'Unable to detect VERSION_ID from [{}] content:\n{}'.format(
-        osr, os_rel)
+    assert mat, f'Unable to detect VERSION_ID from [{osr}] content:\n{os_rel}'
     ver_id = mat.group(2)
     # Map the ID to the download ID
     mapped_id = DISTRO_ID_MAP.get(os_id)
@@ -184,23 +182,22 @@ def infer_target_from_os_release(osr: Path) -> str:
         if mapped_version is None:
             # If this raises, a version/pattern needs to be added
             # to DISTRO_VERSION_MAP
-            raise RuntimeError("We don't know how to map {} version '{}' "
-                               "to an upstream {} version. Please contribute!"
-                               "".format(os_id, ver_id, mapped_id))
+            raise RuntimeError(f"We don't know how to map {os_id} version '{ver_id}' "
+                               f"to an upstream {mapped_id} version. Please contribute!")
         ver_id = mapped_version
         os_id = mapped_id
     os_id = os_id.lower()
     if os_id not in DISTRO_ID_TO_TARGET:
-        raise RuntimeError("We don't know how to map '{}' to a distribution "
-                           "download target. Please contribute!".format(os_id))
+        raise RuntimeError(f"We don't know how to map '{os_id}' to a distribution "
+                           "download target. Please contribute!")
     # Find the download target based on a filename-style pattern:
     ver_table = DISTRO_ID_TO_TARGET[os_id]
     for pattern, target in ver_table.items():
         if fnmatch(ver_id, pattern):
             return target
     raise RuntimeError(
-        "We don't know how to map '{}' version '{}' to a distribution "
-        "download target. Please contribute!".format(os_id, ver_id))
+        f"We don't know how to map '{os_id}' version '{ver_id}' to a distribution "
+        "download target. Please contribute!")
 
 
 def user_caches_root() -> Path:
@@ -253,7 +250,7 @@ def version_tup(version: str) -> 'tuple[int, int, int, int, int]':
         return tuple([int(maj), int(min), 0, 0, 0])
 
     mat = VERSION_RE.match(version)
-    assert mat, ('Failed to parse "{}" as a version number'.format(version))
+    assert mat, (f'Failed to parse "{version}" as a version number')
     major, minor, patch, tag, tagnum = list(mat.groups())
     if tag is None:
         # No rc tag is greater than an equal base version with any rc tag
@@ -569,7 +566,7 @@ class Cache:
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(
-                    'Failed to download [{u}]'.format(u=url)) from e
+                    f'Failed to download [{url}]') from e
             assert dest.is_file(), (
                 'The download cache is missing an expected file', dest)
             return DownloadResult(False, dest)
@@ -633,19 +630,18 @@ def _print_list(db: CacheDB, version: 'str | None', target: 'str | None',
                                      component=component)
         for version, target, arch, edition, comp_key, comp_data in matching:
             counter += 1
-            print('Download: {}\n'
-                  ' Version: {}\n'
-                  '  Target: {}\n'
-                  '    Arch: {}\n'
-                  ' Edition: {}\n'
-                  '    Info: {}\n\n'.format(comp_key, version, target, arch,
-                                            edition, comp_data))
+            print(f'Download: {comp_key}\n'
+                  f' Version: {version}\n'
+                  f'  Target: {target}\n'
+                  f'    Arch: {arch}\n'
+                  f' Edition: {edition}\n'
+                  f'    Info: {comp_data}\n\n')
         if counter == 1:
             print('Only one matching item')
         elif counter == 0:
             print('No items matched the listed filters')
         else:
-            print('{} available downloadable components'.format(counter))
+            print(f'{counter} available downloadable components')
         print('(Omit filter arguments for a list of available filters)')
         return
 
@@ -678,15 +674,15 @@ def _print_list(db: CacheDB, version: 'str | None', target: 'str | None',
                       initial_indent='  ',
                       subsequent_indent='  '))
     print('Architectures:\n'
-          '  {}\n'
+          f'  {arches}\n'
           'Targets:\n'
-          '{}\n'
+          f'{targets}\n'
           'Editions:\n'
-          '  {}\n'
+          f'  {editions}\n'
           'Versions:\n'
-          '{}\n'
+          f'{versions}\n'
           'Components:\n'
-          '  {}\n'.format(arches, targets, editions, versions, components))
+          f'  {components}\n')
 
 
 def infer_arch():
@@ -722,8 +718,7 @@ def _published_build_url(cache: Cache, version: str, target: str, arch: str,
     if tup is None:
         raise ValueError(
             'No download was found for '
-            'version="{}" target="{}" arch="{}" edition="{}" component="{}"'.format(
-                version, target, arch, edition, component))
+            f'version="{version}" target="{target}" arch="{arch}" edition="{edition}" component="{component}"')
     data = json.loads(tup.data_json)
     return data[value]
 
@@ -752,28 +747,21 @@ def _latest_build_url(target: str, arch: str, edition: str, component: str,
         'archive': 'mongodb',
         'crypt_shared': 'mongo_crypt_shared_v1',
     }.get(component, component)
-    base = 'https://downloads.10gen.com/{plat}'.format(plat=platform)
+    base = f'https://downloads.10gen.com/{platform}'
     # Windows has Zip files
     ext = 'zip' if target == 'windows' else 'tgz'
     # Enterprise builds have an "enterprise" infix
     ent_infix = 'enterprise-' if edition == 'enterprise' else ''
     # Some platforms have a filename infix
-    tgt_infix = ((target + '-')  #
-                 if target not in ('windows', 'win32', 'macos')  #
+    tgt_infix = ((target + '-')
+                 if target not in ('windows', 'win32', 'macos')
                  else '')
     # Non-master branch uses a filename infix
     br_infix = ((branch + '-') if
-                (branch is not None and branch != 'master')  #
+                (branch is not None and branch != 'master')
                 else '')
-    filename = '{comp}-{typ}-{arch}-{enterprise_}{target_}{br_}latest.{ext}'.format(
-        comp=component_name,
-        typ=typ,
-        arch=arch,
-        enterprise_=ent_infix,
-        target_=tgt_infix,
-        br_=br_infix,
-        ext=ext)
-    return '{}/{}'.format(base, filename)
+    filename = f'{component_name}-{typ}-{arch}-{ent_infix}{tgt_infix}{br_infix}latest.{ext}'
+    return f'{base}/{filename}'
 
 
 def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
@@ -781,8 +769,7 @@ def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
                   pattern: 'str | None', strip_components: int, test: bool,
                   no_download: bool,
                   latest_build_branch: 'str|None') -> ExpandResult:
-    print('Download {} {}-{} for {}-{}'.format(component, version, edition,
-                                               target, arch), file=sys.stderr)
+    print(f'Download {component} {version}-{edition} for {target}-{arch}', file=sys.stderr)
     if version == 'latest-build':
         dl_url = _latest_build_url(target, arch, edition, component,
                                    latest_build_branch)
@@ -791,7 +778,7 @@ def _dl_component(cache: Cache, out_dir: Path, version: str, target: str,
                                       component)
     if no_download:
         print(dl_url)
-        return
+        return None
     cached = cache.download_file(dl_url).path
     return _expand_archive(cached,
                            out_dir,
@@ -845,8 +832,8 @@ def _expand_archive(ar: Path, dest: Path, pattern: 'str | None',
     Expand the archive members from 'ar' into 'dest'. If 'pattern' is not-None,
     only extracts members that match the pattern.
     '''
-    print('Extract from: [{}]'.format(ar.name), file=sys.stderr)
-    print('        into: [{}]'.format(dest), file=sys.stderr)
+    print(f'Extract from: [{ar.name}]', file=sys.stderr)
+    print(f'        into: [{dest}]', file=sys.stderr)
     if ar.suffix == '.zip':
         n_extracted = _expand_zip(ar,
                                   dest,
@@ -864,27 +851,22 @@ def _expand_archive(ar: Path, dest: Path, pattern: 'str | None',
     verb = 'would be' if test else 'were'
     if n_extracted == 0:
         if pattern and strip_components:
-            print('NOTE: No files {verb} extracted. Likely all files {verb} '
-                  'excluded by "--only={p}" and/or "--strip-components={s}"'.
-                  format(p=pattern, s=strip_components, verb=verb), file=sys.stderr)
+            print(f'NOTE: No files {verb} extracted. Likely all files {verb} '
+                  f'excluded by "--only={pattern}" and/or "--strip-components={strip_components}"', file=sys.stderr)
         elif pattern:
-            print('NOTE: No files {verb} extracted. Likely all files {verb} '
-                  'excluded by the "--only={p}" filter'.format(p=pattern,
-                                                               verb=verb), file=sys.stderr)
+            print(f'NOTE: No files {verb} extracted. Likely all files {verb} '
+                  f'excluded by the "--only={pattern}" filter', file=sys.stderr)
         elif strip_components:
-            print('NOTE: No files {verb} extracted. Likely all files {verb} '
-                  'excluded by "--strip-components={s}"'.format(
-                      s=strip_components, verb=verb), file=sys.stderr)
+            print(f'NOTE: No files {verb} extracted. Likely all files {verb} '
+                  f'excluded by "--strip-components={strip_components}"', file=sys.stderr)
         else:
-            print('NOTE: No files {verb} extracted. Empty archive?'.format(
-                verb=verb), file=sys.stderr)
+            print(f'NOTE: No files {verb} extracted. Empty archive?', file=sys.stderr)
         return ExpandResult.Empty
-    elif n_extracted == 1:
+    if n_extracted == 1:
         print('One file {v} extracted'.format(v='would be' if test else 'was'), file=sys.stderr)
         return ExpandResult.Okay
-    else:
-        print('{n} files {verb} extracted'.format(n=n_extracted, verb=verb), file=sys.stderr)
-        return ExpandResult.Okay
+    print(f'{n_extracted} files {verb} extracted', file=sys.stderr)
+    return ExpandResult.Okay
 
 
 def _expand_tgz(ar: Path, dest: Path, pattern: 'str | None',
@@ -899,7 +881,7 @@ def _expand_tgz(ar: Path, dest: Path, pattern: 'str | None',
                 pattern,
                 strip_components,
                 mem.isdir(),
-                lambda: cast('IO[bytes]', tf.extractfile(mem)),
+                lambda: cast('IO[bytes]', tf.extractfile(mem)),  # noqa: B023
                 mem.mode,
                 test=test,
             )
@@ -918,7 +900,7 @@ def _expand_zip(ar: Path, dest: Path, pattern: 'str | None',
                 pattern,
                 strip_components,
                 item.filename.endswith('/'),  ## Equivalent to: item.is_dir(),
-                lambda: zf.open(item, 'r'),
+                lambda: zf.open(item, 'r'),  # noqa: B023
                 0o655,
                 test=test,
             )
@@ -946,7 +928,7 @@ def _maybe_extract_member(out: Path, relpath: PurePath, pattern: 'str | None',
         return 0
     stripped = _pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
-    print('\n    -> [{}]'.format(dest), file=sys.stderr)
+    print(f'\n    -> [{dest}]', file=sys.stderr)
     if test:
         # We are running in test-only mode: Do not do anything
         return 1
@@ -1058,7 +1040,7 @@ def main(argv: 'Sequence[str]'):
     if args.list:
         _print_list(cache.db, args.version, args.target, args.arch,
                     args.edition, args.component)
-        return
+        return None
 
     if args.version is None:
         raise argparse.ArgumentError(None, 'A "--version" is required')
