@@ -2,7 +2,7 @@
 
 This folder contains a test server ([`server.py`](server.py)) for driver Happy Eyeballs TCP connection behavior.  It also has has [`client.py`](client.py), a simple client for that server that can be useful for debugging but won't be needed in most cases.
 
-**NOTE**: This server relies on network stack behavior present in Windows and MacOS but not Linux, so any tests using it must only be run on those two OSen.
+**NOTE**: This server relies on network stack behavior present in Windows and MacOS but not Linux, so any tests using it must only be run on those two OSes.
 
 ## Command-line Usage
 
