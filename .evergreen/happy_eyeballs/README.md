@@ -53,5 +53,5 @@ On opening a connection to the control port, the driver test should send a singl
 
 Any other response should be treated as an error.  The connection will be closed after the ports are sent; to request another pair, open a new connection to the control port.
 
-Test connections to the two ports should be initiated immediately; the TCP handshake completion will be delayed on the slow port by two seconds from the time of the port _being bound_, not the ACK received.  When connected to, both ports will write out a single byte for verification (`0x04`
-for IPv4, `0x06` for IPv6) and then immediately close.
+Test connections to the two ports should be initiated immediately; the TCP handshake completion will be delayed on the slow port by two seconds from the time of the port _being bound_, not the ACK received. Only one port is expected to successfully connect. Once connected, the port will write out a single byte for verification (`0x04`
+for IPv4, `0x06` for IPv6) and then immediately close both ports.
