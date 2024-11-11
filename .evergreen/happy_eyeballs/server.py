@@ -4,7 +4,11 @@ import argparse
 import asyncio
 import socket
 import sys
+import platform
 
+if platform.system() not in ["Darwin", "Windows"]:
+    print(f'Only macOS (Darwin) and Windows are supported, but got: {platform.system()}', file=sys.stderr)
+    exit(1)
 parser = argparse.ArgumentParser(
     prog='server',
     description='Test server for happy eyeballs',
