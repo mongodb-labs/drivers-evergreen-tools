@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Run a local MongoDB orchestration inside a docker container
+# Run a local MongoDB orchestration inside a container
 #
 set -eu
 
@@ -18,9 +18,18 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
     PLATFORM="--platform linux/$ARCH"
 fi
 
+if command -v podman &> /dev/null; then
+    DOCKER=podman
+else
+    DOCKER=docker
+fi
+if [ -n "${DOCKER_COMMAND:-}" ]; then
+    DOCKER=$DOCKER_COMMAND
+fi
+
 pushd $SCRIPT_DIR
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
-docker build $PLATFORM -t $NAME $USER $IMAGE
+$DOCKER build $PLATFORM -t $NAME $USER $IMAGE
 popd
 pushd $DRIVERS_TOOLS
 
@@ -71,7 +80,7 @@ test -t 1 && ARGS+=" -t"
 # Map in the DRIVERS_TOOLS directory.
 ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
 
-# Launch server docker container.
-docker run $ARGS $NAME $ENTRYPOINT
+# Launch server container.
+$DOCKER run $ARGS $NAME $ENTRYPOINT
 
 popd

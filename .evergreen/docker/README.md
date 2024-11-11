@@ -1,12 +1,11 @@
 # Drivers Evergreen Tools Dockerfile
 
-The `Dockerfile` and scripts can be used to run a local server in docker container.
+The `Dockerfile` and scripts can be used to run a local server in a container.
 
-Additionally, you can build a Docker [container](#driver-testing-using-this-docker-container)
+Additionally, you can build a [container](#driver-testing-using-this-container)
 for your Driver that shares the binary files and communicates with this container.
 
-You will need Docker (or podman aliased to Docker) installed and running
-locally.
+You will need podman (or Docker) installed and running locally.
 
 # Run Local Server
 
@@ -16,11 +15,11 @@ To run a local server, change to this directory and run:
 bash ./run-server.sh
 ```
 
-This will build the docker image and run it with appropriate settings.
+This will build the container image and run it with appropriate settings.
 Note that any of the environment variables used by `run-orchestration`
 will be passed through to the container.
 The appropriate port(s) will be exposed, allowing you to run local test against
-the running docker container.
+the running container.
 
 The default image can be overridden with `IMAGE`, and the entrypoint with `ENTRYPOINT`.
 To use a specific architecture, use `PLATFORM`, e.g. `--platform linux/amd64`.
@@ -61,20 +60,20 @@ ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04
 
 ### Get Logs
 
-The orchestration logs can be found using `docker logs`:
+The orchestration logs can be found using `podman logs`:
 
 ```bash
-docker logs mongodb
+podman logs mongodb
 ```
 
 The server logs can be found on the container in /tmp, with the scheme `/tmp/mongo-<port>/mongo.log`.
-You can pull them locally using `docker cp`:
+You can pull them locally using `podman cp`:
 
 ```bash
-docker cp mongodb:/tmp/mongo-27017/mongod.log mongod.log
+podman cp mongodb:/tmp/mongo-27017/mongod.log mongod.log
 ```
 
-## Driver Testing using this Docker container
+## Driver Testing using this container
 
 First, start this container with the appropriate environment variables, running as:
 

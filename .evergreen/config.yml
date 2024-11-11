@@ -1365,6 +1365,7 @@ buildvariants:
   display_name: Docker
   run_on:
     - ubuntu2204-small
+    - macos-14
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
