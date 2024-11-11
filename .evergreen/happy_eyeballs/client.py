@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(
     description='client for testing the happy eyeballs test server',
 )
 parser.add_argument('-c', '--control', default=10036, type=int, metavar='PORT', help='control port')
-parser.add_argument('-d', '--delay', default=4, type=int)
+parser.add_argument('-d', '--delay', default=4, choices=[4,6], type=int, help="ip protocol to request server delay")
 args = parser.parse_args()
 
 async def main():
