@@ -10,6 +10,10 @@ else
     CURRENT_VERSION=latest
 fi
 
+which podman || true
+which docker || true
+exit 1
+
 DRIVERS_TOOLS="$(pwd)/../drivers-tools"
 PROJECT_DIRECTORY="$(pwd)"
 
