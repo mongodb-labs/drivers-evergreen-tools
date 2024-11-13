@@ -38,7 +38,7 @@ activate_authawsvenv() {
     venvcreate "${PYTHON:?}" authawsvenv || return
 
     local packages=(
-      "boto3~=1.28.0"
+      "boto3~=1.35.0"
       "pyop~=3.4.0"
       "pymongo[aws]~=4.0"
     )
