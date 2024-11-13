@@ -74,6 +74,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global remaining_http_fails
         remaining_http_fails -= 1
         self.send_response(429)
+        self.end_headers()
+        print("mock http error")
 
     def do_POST(self):
         global remaining_http_fails
