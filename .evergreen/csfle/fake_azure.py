@@ -19,49 +19,39 @@ else:
     from typing import Protocol
 
     class _RequestParams(Protocol):
-
-        def __getitem__(self, key: str) -> str:
-            ...
+        def __getitem__(self, key: str) -> str: ...
 
         @overload
-        def get(self, key: str) -> 'str | None':
-            ...
+        def get(self, key: str) -> "str | None": ...
 
         @overload
-        def get(self, key: str, default: str) -> str:
-            ...
+        def get(self, key: str, default: str) -> str: ...
 
     class _HeadersDict(dict[str, str]):
-
-        def raw(self, key: str) -> 'bytes | None':
-            ...
+        def raw(self, key: str) -> "bytes | None": ...
 
     class _Request(Protocol):
+        @property
+        def query(self) -> _RequestParams: ...
 
         @property
-        def query(self) -> _RequestParams:
-            ...
+        def params(self) -> _RequestParams: ...
 
         @property
-        def params(self) -> _RequestParams:
-            ...
+        def headers(self) -> _HeadersDict: ...
 
-        @property
-        def headers(self) -> _HeadersDict:
-            ...
-
-    request = cast('_Request', None)
+    request = cast("_Request", None)
 
 
-def parse_qs(qs: str) -> 'dict[str, str]':
+def parse_qs(qs: str) -> "dict[str, str]":
     # Reuse the bottle.py query string parser. It's a private function, but
     # we're using a fixed version of Bottle.
     return dict(bottle._parse_qsl(qs))  # type: ignore
 
 
 _HandlerFuncT = Callable[
-    [],
-    'None|str|bytes|dict[str, Any]|bottle.BaseResponse|Iterable[bytes|str]']
+    [], "None|str|bytes|dict[str, Any]|bottle.BaseResponse|Iterable[bytes|str]"
+]
 
 
 def handle_asserts(fn: _HandlerFuncT) -> _HandlerFuncT:
@@ -73,55 +63,59 @@ def handle_asserts(fn: _HandlerFuncT) -> _HandlerFuncT:
             return fn()
         except AssertionError as e:
             traceback.print_exc()
-            return bottle.HTTPResponse(status=400,
-                                       body=json.dumps({'error':
-                                                        list(e.args)}))
+            return bottle.HTTPResponse(
+                status=400, body=json.dumps({"error": list(e.args)})
+            )
 
     return wrapped
 
 
-def test_params() -> 'dict[str, str]':
-    return parse_qs(request.headers.get('X-MongoDB-HTTP-TestParams', ''))
+def test_params() -> "dict[str, str]":
+    return parse_qs(request.headers.get("X-MongoDB-HTTP-TestParams", ""))
 
-@imds.route('/')
+
+@imds.route("/")
 def main():
     pass
 
-@imds.get('/metadata/identity/oauth2/token')
+
+@imds.get("/metadata/identity/oauth2/token")
 @handle_asserts
 def get_oauth2_token():
-    api_version = request.query['api-version']
-    assert api_version == '2018-02-01', 'Only api-version=2018-02-01 is supported'
-    resource = request.query['resource']
-    assert resource == 'https://vault.azure.net', 'Only https://vault.azure.net is supported'
+    api_version = request.query["api-version"]
+    assert api_version == "2018-02-01", "Only api-version=2018-02-01 is supported"
+    resource = request.query["resource"]
+    assert (
+        resource == "https://vault.azure.net"
+    ), "Only https://vault.azure.net is supported"
 
-    case = test_params().get('case')
-    print('Case is:', case)
-    if case == '404':
+    case = test_params().get("case")
+    print("Case is:", case)
+    if case == "404":
         return HTTPResponse(status=404)
 
-    if case == '500':
+    if case == "500":
         return HTTPResponse(status=500)
 
-    if case == 'bad-json':
+    if case == "bad-json":
         return b'{"key": }'
 
-    if case == 'empty-json':
-        return b'{}'
+    if case == "empty-json":
+        return b"{}"
 
-    if case == 'giant':
+    if case == "giant":
         return _gen_giant()
 
-    if case == 'slow':
+    if case == "slow":
         return _slow()
 
-    assert case in (None, ''), f'Unknown HTTP test case "{case}"'
+    assert case in (None, ""), f'Unknown HTTP test case "{case}"'
 
     return {
-        'access_token': 'magic-cookie',
-        'expires_in': '70',
-        'token_type': 'Bearer',
-        'resource': 'https://vault.azure.net',
+        "access_token": "magic-cookie",
+        "expires_in": "70",
+        "token_type": "Bearer",
+        "resource": "https://vault.azure.net",
     }
 
 
@@ -129,25 +123,27 @@ def _gen_giant() -> Iterable[bytes]:
     "Generate a giant message"
     yield b'{ "item": ['
     for _ in range(1024 * 256):
-        yield (b'null, null, null, null, null, null, null, null, null, null, '
-               b'null, null, null, null, null, null, null, null, null, null, '
-               b'null, null, null, null, null, null, null, null, null, null, '
-               b'null, null, null, null, null, null, null, null, null, null, ')
-    yield b' null ] }'
-    yield b'\n'
+        yield (
+            b"null, null, null, null, null, null, null, null, null, null, "
+            b"null, null, null, null, null, null, null, null, null, null, "
+            b"null, null, null, null, null, null, null, null, null, null, "
+            b"null, null, null, null, null, null, null, null, null, null, "
+        )
+    yield b" null ] }"
+    yield b"\n"
 
 
 def _slow() -> Iterable[bytes]:
     "Generate a very slow message"
     yield b'{ "item": ['
     for _ in range(1000):
-        yield b'null, '
+        yield b"null, "
         time.sleep(1)
-    yield b' null ] }'
+    yield b" null ] }"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(
-        f'RECOMMENDED: Run this script using bottle.py (e.g. [{sys.executable} {Path(__file__).resolve().parent}/bottle.py fake_azure:imds])'
-        )
+        f"RECOMMENDED: Run this script using bottle.py (e.g. [{sys.executable} {Path(__file__).resolve().parent}/bottle.py fake_azure:imds])"
+    )
     imds.run()
