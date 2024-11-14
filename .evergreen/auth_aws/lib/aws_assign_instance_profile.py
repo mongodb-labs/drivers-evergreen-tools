@@ -4,27 +4,30 @@ Script for assign an instance policy to the current machine.
 """
 
 import argparse
-import urllib.request
-import logging
 import json
+import logging
 import os
 import sys
 import time
+import urllib.request
 from functools import partial
 
 import boto3
 import botocore
-
 from util import get_key as _get_key
 
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def _get_local_instance_id():
-    return urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id').read().decode()
+    return (
+        urllib.request.urlopen("http://169.254.169.254/latest/meta-data/instance-id")
+        .read()
+        .decode()
+    )
 
 
 def _has_instance_profile():
@@ -41,7 +44,7 @@ def _has_instance_profile():
     try:
         url = base_url + iam_role
         print("Reading: " + url)
-        req = urllib.request.urlopen(url)
+        _ = urllib.request.urlopen(url)
         print("Assigned " + iam_role)
     except urllib.error.HTTPError as e:
         print(e)
@@ -64,7 +67,7 @@ def _wait_instance_profile():
 
 def _handle_config():
     try:
-        with open(os.path.join(HERE, '..', 'aws_e2e_setup.json')) as fid:
+        with open(os.path.join(HERE, "..", "aws_e2e_setup.json")) as fid:
             CONFIG = json.load(fid)
             get_key = partial(_get_key, uppercase=False)
 
@@ -73,13 +76,17 @@ def _handle_config():
         get_key = partial(_get_key, uppercase=True)
 
     try:
-        os.environ.setdefault('AWS_ACCESS_KEY_ID', CONFIG[get_key('iam_auth_ec2_instance_account')])
-        os.environ.setdefault('AWS_SECRET_ACCESS_KEY',
-                              CONFIG[get_key('iam_auth_ec2_instance_secret_access_key')])
-        return CONFIG[get_key('iam_auth_ec2_instance_profile')]
+        os.environ.setdefault(
+            "AWS_ACCESS_KEY_ID", CONFIG[get_key("iam_auth_ec2_instance_account")]
+        )
+        os.environ.setdefault(
+            "AWS_SECRET_ACCESS_KEY",
+            CONFIG[get_key("iam_auth_ec2_instance_secret_access_key")],
+        )
+        return CONFIG[get_key("iam_auth_ec2_instance_profile")]
     except Exception as e:
         print(e)
-        return ''
+        return ""
 
 
 DEFAULT_ARN = _handle_config()
@@ -87,20 +94,23 @@ DEFAULT_ARN = _handle_config()
 
 def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
     if _has_instance_profile():
-        print("IMPORTANT: Found machine already has instance profile, skipping the assignment")
+        print(
+            "IMPORTANT: Found machine already has instance profile, skipping the assignment"
+        )
         return
 
     instance_id = _get_local_instance_id()
 
-    ec2_client = boto3.client("ec2", 'us-east-1')
+    ec2_client = boto3.client("ec2", "us-east-1")
 
     # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.associate_iam_instance_profile
     try:
         response = ec2_client.associate_iam_instance_profile(
             IamInstanceProfile={
-                'Arn': iam_instance_arn,
+                "Arn": iam_instance_arn,
             },
-            InstanceId=instance_id)
+            InstanceId=instance_id,
+        )
 
         print(response)
 
@@ -117,12 +127,21 @@ def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
 def main() -> None:
     """Execute Main entry point."""
 
-    parser = argparse.ArgumentParser(description='IAM Assign Instance frontend.')
+    parser = argparse.ArgumentParser(description="IAM Assign Instance frontend.")
 
-    parser.add_argument('-v', "--verbose", action='store_true', help="Enable verbose logging")
-    parser.add_argument('-d', "--debug", action='store_true', help="Enable debug logging")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Enable debug logging"
+    )
 
-    parser.add_argument('--instance_profile_arn', type=str, help="Name of instance profile", default=DEFAULT_ARN)
+    parser.add_argument(
+        "--instance_profile_arn",
+        type=str,
+        help="Name of instance profile",
+        default=DEFAULT_ARN,
+    )
 
     args = parser.parse_args()
 

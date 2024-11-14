@@ -19,20 +19,21 @@ $ curl -X POST localhost:3000/keys/{key-name}/{key-version}/unwrapkey
 """
 
 import argparse
+import base64
 import http.server
 import json
-import urllib
-import ssl
-import base64
 import os
+import ssl
+import urllib
 from pathlib import PurePosixPath
 
 # A new instance of Handler is created for every request, so these have to be global variables
 remaining_http_fails = 0
 remaining_network_fails = 0
 
-fake_ciphertext = 'a' * 96
-fake_plaintext = 'b' * 96
+fake_ciphertext = "a" * 96
+fake_plaintext = "b" * 96
+
 
 class HTTPServerWithTLS(http.server.HTTPServer):
     def __init__(self, server_address, Handler, use_tls=True):
@@ -47,7 +48,7 @@ class HTTPServerWithTLS(http.server.HTTPServer):
                 server_side=True,
                 certfile=cert_file,
                 ca_certs=ca_file,
-                ssl_version=ssl.PROTOCOL_TLS
+                ssl_version=ssl.PROTOCOL_TLS,
             )
 
 
@@ -84,22 +85,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
         path = PurePosixPath(parts.path)
 
         if path.match("/set_failpoint/*"):
-            content_length = int(self.headers['Content-Length'])
+            content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
+            data = json.loads(post_data.decode("utf-8"))
 
             failpoint_type = path.parts[-1]
-            if failpoint_type == 'network':
-                remaining_network_fails = data['count']
-            elif failpoint_type == 'http':
-                remaining_http_fails = data['count']
+            if failpoint_type == "network":
+                remaining_network_fails = data["count"]
+            elif failpoint_type == "http":
+                remaining_http_fails = data["count"]
             else:
                 self._send_not_found()
                 return None
             print(f"Enabling failpoint for type: {failpoint_type}")
-            self._send_json(
-                {"message": f"failpoint set for type: '{failpoint_type}'"}
-            )
+            self._send_json({"message": f"failpoint set for type: '{failpoint_type}'"})
             return None
 
         if path.match("/reset"):
@@ -114,16 +113,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
             raise Exception("mock network error")
 
         # No path for AWS
-        if 'X-Amz-Target' in self.headers and str(path) == "/":
-            aws_op = self.headers['X-Amz-Target']
+        if "X-Amz-Target" in self.headers and str(path) == "/":
+            aws_op = self.headers["X-Amz-Target"]
             if aws_op == "TrentService.Encrypt":
-                self._send_json({"CiphertextBlob": base64.b64encode(fake_ciphertext.encode()).decode()})
+                self._send_json(
+                    {
+                        "CiphertextBlob": base64.b64encode(
+                            fake_ciphertext.encode()
+                        ).decode()
+                    }
+                )
                 return None
             if aws_op == "TrentService.Decrypt":
                 if remaining_http_fails > 0:
                     self._http_fail()
                     return None
-                self._send_json({"Plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
+                self._send_json(
+                    {"Plaintext": base64.b64encode(fake_plaintext.encode()).decode()}
+                )
                 return None
             self._send_not_found()
             return None
@@ -136,28 +143,39 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send_json({"access_token": "foo", "expires_in": 99999})
         # GCP encrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:encrypt
         if path.match("*encrypt"):
-            return self._send_json({"ciphertext": base64.b64encode(fake_ciphertext.encode()).decode()})
+            return self._send_json(
+                {"ciphertext": base64.b64encode(fake_ciphertext.encode()).decode()}
+            )
         # GCP decrypt path: /v1/projects/{project}/locations/{location}/keyRings/{key-ring}/cryptoKeys/{key}:decrypt
         if path.match("*decrypt"):
             if remaining_http_fails > 0:
                 self._http_fail()
                 return None
-            return self._send_json({"plaintext": base64.b64encode(fake_plaintext.encode()).decode()})
+            return self._send_json(
+                {"plaintext": base64.b64encode(fake_plaintext.encode()).decode()}
+            )
         # Azure decrypt path: /keys/{key-name}/{key-version}/unwrapkey
         if path.match("*unwrapkey"):
             if remaining_http_fails > 0:
                 self._http_fail()
                 return None
-            return self._send_json({"value": base64.b64encode(fake_plaintext.encode()).decode()})
+            return self._send_json(
+                {"value": base64.b64encode(fake_plaintext.encode()).decode()}
+            )
         # Azure encrypt path: /keys/{key-name}/{key-version}/wrapkey
         if path.match("*wrapkey"):
-            return self._send_json({"value": base64.b64encode(fake_ciphertext.encode()).decode()})
+            return self._send_json(
+                {"value": base64.b64encode(fake_ciphertext.encode()).decode()}
+            )
         self._send_not_found()
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='MongoDB mock KMS retry endpoint.')
-    parser.add_argument('-p', '--port', type=int, default=9003, help="Port to listen on")
-    parser.add_argument('--no-tls', action='store_true', help="Disable TLS")
+    parser = argparse.ArgumentParser(description="MongoDB mock KMS retry endpoint.")
+    parser.add_argument(
+        "-p", "--port", type=int, default=9003, help="Port to listen on"
+    )
+    parser.add_argument("--no-tls", action="store_true", help="Disable TLS")
     args = parser.parse_args()
 
     server_address = ("localhost", args.port)
