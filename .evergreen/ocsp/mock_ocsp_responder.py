@@ -39,17 +39,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import unicode_literals, division, absolute_import, print_function
 
 import logging
 import base64
 import inspect
 import re
 import enum
-import sys
 import textwrap
 from datetime import datetime, timezone, timedelta
-from typing import Callable, Tuple, Optional
 
 from asn1crypto import x509, keys, core, ocsp
 from asn1crypto.ocsp import OCSPRequest, OCSPResponse
@@ -60,11 +57,6 @@ __version__ = '0.10.2'
 __version_info__ = (0, 10, 2)
 
 logger = logging.getLogger(__name__)
-
-if sys.version_info < (3,):
-    byte_cls = str
-else:
-    byte_cls = bytes
 
 def _pretty_message(string, *params):
     """
@@ -90,9 +82,7 @@ def _pretty_message(string, *params):
     if params:
         output = output % params
 
-    output = output.strip()
-
-    return output
+    return output.strip()
 
 
 def _type_name(value):
@@ -120,7 +110,7 @@ def _writer(func):
     return property(fget=lambda self: getattr(self, '_%s' % name), fset=func)
 
 
-class OCSPResponseBuilder(object):
+class OCSPResponseBuilder:
 
     _response_status = None
     _certificate = None
@@ -135,7 +125,7 @@ class OCSPResponseBuilder(object):
     _response_data_extensions = None
     _single_response_extensions = None
 
-    def __init__(self, response_status, certificate_status_list=[], revocation_date=None):
+    def __init__(self, response_status, certificate_status_list=None, revocation_date=None):
         """
         Unless changed, responses will use SHA-256 for the signature,
         and will be valid from the moment created for one week.
@@ -169,7 +159,7 @@ class OCSPResponseBuilder(object):
             not "good" or "unknown".
         """
         self._response_status = response_status
-        self._certificate_status_list = certificate_status_list
+        self._certificate_status_list = certificate_status_list or []
         self._revocation_date = revocation_date
 
         self._key_hash_algo = 'sha1'
@@ -183,7 +173,7 @@ class OCSPResponseBuilder(object):
         The nonce that was provided during the request.
         """
 
-        if not isinstance(value, byte_cls):
+        if not isinstance(value, bytes):
             raise TypeError(_pretty_message(
                 '''
                 nonce must be a byte string, not %s
@@ -494,10 +484,10 @@ class OCSPResponder:
         time = datetime(2018, 1, 1, 1, 00, 00, 00, timezone.utc)
         if self._fault == FAULT_REVOKED:
             return (CertificateStatus.revoked, time)
-        elif self._fault == FAULT_UNKNOWN:
+        if self._fault == FAULT_UNKNOWN:
             return (CertificateStatus.unknown, None)
-        elif self._fault != None:
-            raise NotImplemented('Fault type could not be found')
+        if self._fault is not None:
+            raise NotImplementedError('Fault type could not be found')
         return (CertificateStatus.good, time)
 
     def _build_ocsp_response(self, ocsp_request: OCSPRequest) -> OCSPResponse:
@@ -509,7 +499,7 @@ class OCSPResponder:
         request_list = tbs_request['request_list']
         if len(request_list) < 1:
             logger.warning('Received OCSP request with no requests')
-            raise NotImplemented('Empty requests not supported')
+            raise NotImplementedError('Empty requests not supported')
 
         single_request = request_list[0]  # TODO: Support more than one request
         req_cert = single_request['req_cert']
@@ -525,11 +515,7 @@ class OCSPResponder:
         certificate_status_list = [(serial, certificate_status.value)]
 
         # Build the response
-        builder = OCSPResponseBuilder(**{
-            'response_status': ResponseStatus.successful.value,
-            'certificate_status_list': certificate_status_list,
-            'revocation_date': revocation_date,
-        })
+        builder = OCSPResponseBuilder(response_status=ResponseStatus.successful.value, certificate_status_list=certificate_status_list, revocation_date=revocation_date)
 
         # Parse extensions
         for extension in tbs_request['request_extensions']:
@@ -557,7 +543,7 @@ class OCSPResponder:
                 return self._fail(ResponseStatus.internal_error)
 
             # If it's an unknown non-critical extension, we can safely ignore it.
-            elif unknown is True:
+            if unknown is True:
                 logger.info('Ignored unknown non-critical extension: %r', dict(extension.native))
 
         # Set certificate issuer

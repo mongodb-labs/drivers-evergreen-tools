@@ -57,7 +57,7 @@ def _download(out_dir: Path, version: str, target: str,
                   arch: str,
                   pattern: 'str | None', strip_components: int, test: bool,
                   no_download: bool,) -> int:
-    print('Download {} mongosh for {}-{}'.format(version, target, arch), file=sys.stderr)
+    print(f'Download {version} mongosh for {target}-{arch}', file=sys.stderr)
     if version == "latest":
         version = _get_latest_version()
     if arch == "x86_64":
