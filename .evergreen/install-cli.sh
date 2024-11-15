@@ -47,11 +47,12 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR="$(mktemp -d)"
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
   UV_TOOL_BIN_DIR=$TMP_DIR uv tool install --force --editable .
-  for filename in "$TMP_DIR"/*; do
+  filenames=$(ls $TMP_DIR)
+  for filename in $filenames
+  do
     echo $filename
-    mv $filename "$1/${filename//.exe/}"
+    mv $TMP_DIR/filename "$1/${filename//.exe/}"
   done
-  popd
   rm -rf $TMP_DIR
 else
   UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
