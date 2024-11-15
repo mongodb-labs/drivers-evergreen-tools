@@ -143,6 +143,12 @@ support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
 See the Secrets Handling [readme](./.evergreen/secrets_handling/README.md) for more information on how secrets are managed
 locally and on on Evergreen.
 
+# Python CLIs
+
+We make some of our Python scripts available as self-contained clis that do not require setting up a Python
+virtual environment.  For example, after running `.evergreen/setup.sh` you can run the resulting `.evergreen/mongodl`,
+`.evergreen/mongosh-dl` and `.evergreen/socks5srv` scripts directly.
+
 ## Env Files
 
 This repo supports the use of `.env` files, which can be placed in `$DRIVERS_TOOLS` and in the sub-directories.
