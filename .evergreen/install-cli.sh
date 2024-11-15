@@ -38,10 +38,15 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
   python -m pip install uv
 else
   venvactivate venv
+  PYTHON=$(which python)
+fi
+
+if [ "Windows_NT" == "${OS:-}" ]; then
+  PYTHON="${PYTHON}.exe"
 fi
 
 pushd $1
-UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
+UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON  --force --editable .
 
 popd
 popd

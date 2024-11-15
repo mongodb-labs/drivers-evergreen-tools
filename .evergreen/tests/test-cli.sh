@@ -12,6 +12,11 @@ bash install-cli.sh .
 DOWNLOAD_DIR=mongodl_test
 
 ./socks5srv --help
+./mongodl --help
+./mongosh-dl --help
+
+# Make sure we can install again.
+bash install-cli.sh .
 
 if [ "${OS:-}" != "Windows_NT" ]; then
   ./mongodl --edition enterprise --version 7.0 --component archive-debug --no-download
