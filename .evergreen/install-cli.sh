@@ -44,7 +44,7 @@ pushd $1
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
-  TMP_DIR="$(mktemp -d)"
+  TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
   UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install --force --editable .
   filenames=$(ls ${TMP_DIR})
