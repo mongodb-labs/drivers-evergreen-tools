@@ -42,7 +42,7 @@ fi
 
 pushd $1
 
-# On Windows, we have to do a bit more.
+# On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR="$(mktemp -d)"
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
@@ -50,7 +50,6 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   filenames=$(ls $TMP_DIR)
   for filename in $filenames
   do
-    echo $filename
     mv $TMP_DIR/filename "$1/${filename//.exe/}"
   done
   rm -rf $TMP_DIR
