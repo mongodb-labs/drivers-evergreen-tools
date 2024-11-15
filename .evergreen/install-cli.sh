@@ -44,10 +44,10 @@ pushd $1
 
 # On Windows, we have to do a bit more.
 if [ "Windows_NT" == "${OS:-}" ]; then
-  PYTHON=$(cygpath -m "$(which python)")
   TMP_DIR="$(mktemp -d)"
   pushd $TMP_DIR
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON  --force --editable .
+  PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install --force --editable .
   for filename in *; do
     mv $filename "$1/${filename//.exe/}"
   done
