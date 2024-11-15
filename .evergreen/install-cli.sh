@@ -50,7 +50,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
     PYTHON="${PYTHON}.exe"
   fi
   TMP_DIR="$(mktemp -d)"
-  pushd $TEMP_DIR
+  pushd $TMP_DIR
   UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON  --force --editable .
   for filename in *; do
     mv $filename "$1/${filename//.exe/}"
@@ -58,7 +58,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   popd
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON --force --editable .
 fi
 
 popd
