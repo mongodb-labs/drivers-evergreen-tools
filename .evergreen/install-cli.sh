@@ -44,12 +44,7 @@ pushd $1
 
 # On Windows, we have to do a bit more.
 if [ "Windows_NT" == "${OS:-}" ]; then
-  PYTHON=$(which python)
-  # Add exe if needed
-  if [[ $PYTHON != *.exe ]]; then
-    PYTHON="${PYTHON}.exe"
-  fi
-  PYTHON=$(cygpath -m $PYTHON)
+  PYTHON=$(cygpath -m "$(which python)")
   TMP_DIR="$(mktemp -d)"
   pushd $TMP_DIR
   UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON  --force --editable .
