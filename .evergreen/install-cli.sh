@@ -41,7 +41,7 @@ else
 fi
 
 pushd $1
-UV_TOOL_BIN_DIR=$(pwd) uv tool install --force --editable .
+UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
 
 popd
 popd
