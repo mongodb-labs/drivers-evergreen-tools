@@ -23,7 +23,7 @@ export UV_TOOL_DIR=${DRIVERS_TOOLS}/.local/uv-tool
 
 . ./venv-utils.sh
 
-if [ ! -d $DRIVERS_TOOLS/.evergreen/venv ]; then
+if [ ! -d $SCRIPT_DIR/venv ]; then
 
   . ./find-python3.sh
 
