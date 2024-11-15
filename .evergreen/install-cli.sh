@@ -49,6 +49,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   UV_TOOL_BIN_DIR=$TMP_DIR uv tool install --force --editable .
   pushd $TMP_DIR
   for filename in *; do
+    echo $filename
     mv $filename "$1/${filename//.exe/}"
   done
   popd
