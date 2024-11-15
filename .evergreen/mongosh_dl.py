@@ -15,7 +15,6 @@ import sys
 import tempfile
 import urllib.request
 from pathlib import Path
-from typing import Sequence
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
@@ -111,7 +110,7 @@ def _download(
     return resp
 
 
-def main(argv: "Sequence[str]"):
+def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -175,7 +174,7 @@ def main(argv: "Sequence[str]"):
         help="Do not extract or place any files/directories. "
         "Only print what will be extracted without placing any files.",
     )
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     if args.out is None and args.test is None and args.no_download is None:
         raise argparse.ArgumentError(None, 'A "--out" directory should be provided')
@@ -199,9 +198,8 @@ def main(argv: "Sequence[str]"):
         no_download=args.no_download,
     )
     if result is ExpandResult.Empty:
-        return 1
-    return 0
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    main()

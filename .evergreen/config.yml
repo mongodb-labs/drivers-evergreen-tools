@@ -511,19 +511,19 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
-  "run mongodl test partial":
+  "run cli test partial":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
-        args: [src/.evergreen/tests/test-mongodl.sh, partial]
+        args: [src/.evergreen/tests/test-cli.sh, partial]
 
-  "run mongodl test full":
+  "run cli test full":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
-        args: [src/.evergreen/tests/test-mongodl.sh]
+        args: [src/.evergreen/tests/test-cli.sh]
 
   "teardown assets":
     - command: subprocess.exec
@@ -974,15 +974,15 @@ tasks:
       commands:
         - func: "run install binaries test"
 
-    - name: "test-mongodl-full"
+    - name: "test-cli-full"
       tags: ["pr"]
       commands:
-        - func: "run mongodl test full"
+        - func: "run cli test full"
 
-    - name: "test-mongodl-partial"
+    - name: "test-cli-partial"
       tags: ["pr"]
       commands:
-        - func: "run mongodl test partial"
+        - func: "run cli test partial"
 
 # }}}
 
@@ -1420,7 +1420,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
-          - "test-mongodl-full"
+          - "test-cli-full"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1447,7 +1447,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
-          - "test-mongodl-partial"
+          - "test-cli-partial"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1470,7 +1470,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
-          - "test-mongodl-partial"
+          - "test-cli-partial"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"

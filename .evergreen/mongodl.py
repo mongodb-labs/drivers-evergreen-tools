@@ -42,7 +42,6 @@ from typing import (
     Iterator,
     NamedTuple,
     Optional,
-    Sequence,
     cast,
 )
 
@@ -991,7 +990,7 @@ def _maybe_extract_member(
     return 1
 
 
-def main(argv: "Sequence[str]"):
+def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -1103,7 +1102,7 @@ def main(argv: "Sequence[str]"):
         _print_list(
             cache.db, args.version, args.target, args.arch, args.edition, args.component
         )
-        return None
+        return
 
     if args.version is None:
         raise argparse.ArgumentError(None, 'A "--version" is required')
@@ -1140,9 +1139,8 @@ def main(argv: "Sequence[str]"):
         latest_build_branch=args.latest_build_branch,
     )
     if result is ExpandResult.Empty and args.empty_is_error:
-        return 1
-    return 0
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    main()

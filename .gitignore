@@ -121,6 +121,9 @@ mo-expansion.sh
 .cargo
 .rustup
 .evergreen/orchestration/config.json
+.evergreen/socks5srv
+.evergreen/mongodl
+.evergreen/mongosh-dl
 
 # Azure functions.
 .python_packages/

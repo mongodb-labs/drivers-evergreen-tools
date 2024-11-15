@@ -261,7 +261,7 @@ class Socks5Handler(socketserver.BaseRequestHandler):
                         a.sendall(buf)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Start a Socks5 proxy server.")
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--auth", type=str)
@@ -271,3 +271,7 @@ if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
     with Socks5Server(("localhost", args.port), Socks5Handler, args) as server:
         server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

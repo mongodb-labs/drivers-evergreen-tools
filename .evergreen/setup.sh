@@ -25,3 +25,6 @@ DRIVERS_TOOLS=$DRIVERS_TOOLS
 OS=${OS:-}
 PATH=$PATH
 EOF
+
+# Install the clis in this folder.
+bash $SCRIPT_DIR/install-cli.sh $SCRIPT_DIR

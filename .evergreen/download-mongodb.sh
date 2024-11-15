@@ -91,7 +91,7 @@ get_mongodb_download_url_for ()
    # shellcheck disable=SC3028
    _script_dir="$(dirname ${BASH_SOURCE:-$0})"
    _python3=$(bash -c ". $_script_dir/find-python3.sh && ensure_python3 2>/dev/null")
-   MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh-dl.py" --no-download | tr -d '\r')
+   MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
 
    # Get the download url for MongoDB for the given version.
    MONGODB_DOWNLOAD_URL="$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
