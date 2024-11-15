@@ -39,10 +39,9 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
 else
   venvactivate venv
   PYTHON=$(which python)
-fi
-
-if [ "Windows_NT" == "${OS:-}" ]; then
-  PYTHON="${PYTHON}.exe"
+  if [ "Windows_NT" == "${OS:-}" ]; then
+    PYTHON="${PYTHON}.exe"
+  fi
 fi
 
 pushd $1
