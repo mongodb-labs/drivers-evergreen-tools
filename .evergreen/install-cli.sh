@@ -49,6 +49,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   if [[ $PYTHON != *.exe ]]; then
     PYTHON="${PYTHON}.exe"
   fi
+  PYTHON=$(cygpath -m $PYTHON)
   TMP_DIR="$(mktemp -d)"
   pushd $TMP_DIR
   UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON  --force --editable .
@@ -58,7 +59,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   popd
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python $PYTHON --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
 fi
 
 popd
