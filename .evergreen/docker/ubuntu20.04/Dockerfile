@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM artifactory.corp.mongodb.com/dockerhub/ubuntu:20.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   apt-get -qq update && apt-get -qq -y install --no-install-recommends \
