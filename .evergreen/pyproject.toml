@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "drivers-evergreen-tools"
+version = "0.1.0"
+description = 'Scripts for drivers-evergreen-tools'
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Steven Silvester", email = "steve.silvester@mongodb.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = []
+
+[project.scripts]
+mongodl = "mongodl:main"
+mongosh-dl = "mongosh_dl:main"
+socks5srv = "socks5srv:main"
+
+[tool.hatch.build]
+include = ["mongodl.py", "mongosh_dl.py", "socks5srv.py"]
