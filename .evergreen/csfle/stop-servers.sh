@@ -16,6 +16,8 @@ fi
 
 popd
 
+ps -ef | grep pem
+
 # Forcibly kill the process listening on the desired ports, most likely
 # left running from a previous task.
 . "$SCRIPT_DIR/../process-utils.sh"
