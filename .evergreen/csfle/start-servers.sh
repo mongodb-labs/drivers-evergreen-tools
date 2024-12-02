@@ -61,4 +61,7 @@ echo "$!" >> kmip_pids.pid
 echo "Starting Fake Azure IMDS...done."
 sleep 1
 
+cat http1.log
+exit 1
+
 bash ./await-servers.sh
