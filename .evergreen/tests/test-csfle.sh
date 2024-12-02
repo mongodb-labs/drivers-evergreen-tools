@@ -13,9 +13,7 @@ PYTHON_BINARY=$(bash -c ". $SCRIPT_DIR/../find-python3.sh && ensure_python3 2>/d
 export PYTHON_BINARY
 
 function run_test() {
-  SKIP_AWAIT=1 bash ./setup.sh &
-  sleep 10
-  bash ./await-servers.sh
+  bash ./setup.sh
   bash ./teardown.sh
   rm -rf kmstlsvenv
 }
@@ -30,7 +28,7 @@ for python in $pythons; do
   elif [[ "$(uname -s)" == CYGWIN* ]]; then
      PYTHON_BINARY="C:/python/Python3${python//.}/bin/python"
   else
-    PYTHON_BINARY="/opt/python$python/bin/python3"
+    PYTHON_BINARY="/opt/python/$python/bin/python3"
   fi
   export PYTHON_BINARY
   run_test
