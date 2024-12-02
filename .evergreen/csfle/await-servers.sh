@@ -42,6 +42,7 @@ await_server() {
 await_server "HTTP" 9000
 await_server "HTTP" 9001
 await_server "HTTP" 9002
+await_server "KMS Failpoint" 9003
 await_server "Azure" 8080
 await_server "KMIP" 5698
 
