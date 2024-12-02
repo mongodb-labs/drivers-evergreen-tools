@@ -32,8 +32,8 @@ done
 # The -u options forces the stdout and stderr streams to be unbuffered.
 # TMPDIR is required to avoid "AF_UNIX path too long" errors.
 echo "Starting KMIP Server..."
-TMPDIR="$(dirname "$DRIVERS_TOOLS")" python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 > kms_kmip_server.log &
-echo "$!" > kms_pids.pid
+TMPDIR="$(dirname "$DRIVERS_TOOLS")" python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 > kms_kmip_server.log 2>&1 &
+echo "$!" > kmip_pids.pid
 sleep 1
 cat kms_kmip_server.log
 echo "Starting KMIP Server...done."
