@@ -9,7 +9,8 @@ pushd $SCRIPT_DIR
 rm -f pykmip.db
 if [ -f "kmip_pids.pid" ]; then
   while read p; do
-    kill "$p" -9
+    echo "Killing process $p"
+    kill "$p" -SIGKILL
   done <kmip_pids.pid
 fi
 popd
