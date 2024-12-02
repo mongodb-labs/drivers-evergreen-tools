@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Clean up CSFLE kmip servers
-set -e
+set -ex
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
