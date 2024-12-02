@@ -10,6 +10,6 @@ rm -f pykmip.db
 if [ -f "kmip_pids.pid" ]; then
   while read p; do
     kill "$p" -9
-  done <kmip_pids.txt
+  done <kmip_pids.pid
 fi
 popd
