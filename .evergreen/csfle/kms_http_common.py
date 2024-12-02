@@ -150,8 +150,6 @@ def run(
     httpd.socket = context.wrap_socket(
         httpd.socket,
         server_side=True,
-        certfile=cert_file,
-        ca_certs=ca_file,
         do_handshake_on_connect=False,
         suppress_ragged_eofs=True,
     )
