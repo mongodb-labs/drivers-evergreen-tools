@@ -16,7 +16,6 @@ function run_test() {
   SKIP_AWAIT=1 bash ./setup.sh &
   sleep 10
   bash ./await-servers.sh
-  curl -s "localhost:5698"
   bash ./teardown.sh
   rm -rf kmstlsvenv
 }
