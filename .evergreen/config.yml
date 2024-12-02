@@ -512,6 +512,9 @@ functions:
           make test
 
   "run csfle test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
     - command: subprocess.exec
       type: test
       params:
