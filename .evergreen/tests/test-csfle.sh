@@ -12,10 +12,16 @@ pushd $SCRIPT_DIR/../csfle
 PYTHON_BINARY=$(bash -c ". $SCRIPT_DIR/../find-python3.sh && ensure_python3 2>/dev/null")
 export PYTHON_BINARY
 
-bash ./setup.sh
-curl -s "localhost:5698"
-bash ./teardown.sh
-rm -rf kmstlsvenv
+function run_test() {
+  SKIP_AWAIT=1 bash ./setup.sh &
+  sleep 5
+  bash ./await-servers.sh
+  curl -s "localhost:5698"
+  bash ./teardown.sh
+  rm -rf kmstlsvenv
+}
+run_test
+
 
 # Test with supported pythons
 pythons="3.8 3.9 3.10 3.11 3.12 3.13"
@@ -28,8 +34,5 @@ for python in $pythons; do
     PYTHON_BINARY="/opt/python$python/bin/python3"
   fi
   export PYTHON_BINARY
-  bash ./setup.sh
-  curl -s "localhost:5698"
-  bash ./teardown.sh
-  rm -rf kmstlsvenv
+  run_test
 done

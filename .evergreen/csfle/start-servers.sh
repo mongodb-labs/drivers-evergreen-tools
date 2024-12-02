@@ -70,4 +70,6 @@ sleep 1
 cat fake_azure.log
 echo "Starting Fake Azure IMDS...done."
 
-bash ./await-servers.sh
+if [ -z "${SKIP_AWAIT:-}" ]; then
+  bash ./await-servers.sh
+fi
