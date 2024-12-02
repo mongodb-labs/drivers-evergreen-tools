@@ -32,10 +32,10 @@ done
 # The -u options forces the stdout and stderr streams to be unbuffered.
 # TMPDIR is required to avoid "AF_UNIX path too long" errors.
 echo "Starting KMIP Server..."
-TMPDIR="$(dirname "$DRIVERS_TOOLS")" python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 &
+TMPDIR="$(dirname "$DRIVERS_TOOLS")" python -u kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 > kms_kmip_server.log &
 echo "$!" > kms_pids.pid
 sleep 1
-cat kms_kmip_server.py
+cat kms_kmip_server.log
 echo "Starting KMIP Server...done."
 
 
@@ -51,7 +51,7 @@ echo "Starting HTTP Server 2..."
 python -u kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file ../x509gen/wrong-host.pem --port 9001 > http2.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 sleep 1
-http2.log
+cat http2.log
 echo "Starting HTTP Server 2...done."
 
 
@@ -67,7 +67,7 @@ echo "Starting Fake Azure IMDS..."
 python bottle.py fake_azure:imds > fake_azure.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 sleep 1
-fake_azure.log
+cat fake_azure.log
 echo "Starting Fake Azure IMDS...done."
 
 bash ./await-servers.sh
