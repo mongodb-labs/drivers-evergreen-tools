@@ -8,7 +8,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 rm -f pykmip.db
 if [ -f "kmip_pids.pid" ]; then
-  < kmip_pids.pid xargs kill -9 || true
-  rm kmip_pids.pid
+  while read p; do
+    kill "$p" -9
+  done <kmip_pids.txt
 fi
 popd
