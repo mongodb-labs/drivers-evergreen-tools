@@ -511,6 +511,13 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run csfle test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-csfle.sh]
+
   "run cli test partial":
     - command: subprocess.exec
       type: test
@@ -974,6 +981,11 @@ tasks:
       commands:
         - func: "run install binaries test"
 
+    - name: "test-csfle"
+      tags: ["pr"]
+      commands:
+        - func: "run csfle test"
+
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
@@ -1421,6 +1433,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
+          - "test-csfle"
           - "test-cli-full"
           - "test-8.0-standalone-require-api"
 
