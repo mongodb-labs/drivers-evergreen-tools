@@ -63,6 +63,12 @@ cat http3.log
 echo "Starting HTTP Server 3...done."
 
 
+echo "Starting Failpoint Server..."
+python -u kms_failpoint_server.py --port 9003 > failpoint.log 2>&1 &
+echo "$!" >> kmip_pids.pid
+echo "Starting Failpoint Server...done."
+sleep 1
+
 echo "Starting Fake Azure IMDS..."
 python bottle.py fake_azure:imds > fake_azure.log 2>&1 &
 echo "$!" >> kmip_pids.pid
