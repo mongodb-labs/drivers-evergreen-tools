@@ -55,7 +55,7 @@ venvcreate() {
 
     case "$mod" in
     venv)
-      "$bin" -m "$mod" "$real_path" || continue
+      "$bin" -m "$mod" --system-site-packages "$real_path" || continue
       ;;
     virtualenv)
       # -p: some old versions of virtualenv (e.g. installed on Debian 10) are

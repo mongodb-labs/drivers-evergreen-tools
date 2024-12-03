@@ -15,6 +15,7 @@ export PYTHON_BINARY
 function run_test() {
   bash ./setup.sh
   bash ./teardown.sh
+  chmod -R a+w kmstlsvenv
   rm -rf kmstlsvenv
 }
 run_test
