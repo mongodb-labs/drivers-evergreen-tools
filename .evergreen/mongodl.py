@@ -23,6 +23,7 @@ import platform
 import re
 import shutil
 import sqlite3
+import ssl
 import sys
 import tarfile
 import textwrap
@@ -45,12 +46,13 @@ from typing import (
     cast,
 )
 
+SSL_CONTEXT = ssl.create_default_context()
 try:
     import certifi
 
-    CA_FILE = certifi.where()
+    SSL_CONTEXT.load_verify_locations(certifi.where())
 except ImportError:
-    CA_FILE = None
+    pass
 
 # These versions are used for performance benchmarking. Do not update to a newer version.
 PERF_VERSIONS = {"v6.0-perf": "6.0.6", "v8.0-perf": "8.0.1"}
@@ -587,7 +589,7 @@ class Cache:
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req, cafile=CA_FILE)
+            resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(f"Failed to download [{url}]") from e
