@@ -26,5 +26,5 @@ pushd $SCRIPT_DIR
 . $PARENT_DIR/secrets_handling/setup-secrets.sh drivers/csfle
 . ./activate-kmstlsvenv.sh
 python ./setup_secrets.py
-cp secrets-export.sh $CURRENT
+cp secrets-export.sh $CURRENT || true
 popd

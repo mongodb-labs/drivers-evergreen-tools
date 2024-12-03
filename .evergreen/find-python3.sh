@@ -52,8 +52,8 @@ is_python3() (
   echo " - $bin: $version_output"
 
   # shellcheck disable=SC2091
-  if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] >= 12)"); then
-    echo "Detected Python 3.12+. Skipping due to failures to start mock KMS server. Refer: DRIVERS-2743"
+  if ! $("$bin" -c "import sys; exit('free-threading' in sys.version)"); then
+    echo "Skipping free-threaded version of Python ${version}"
     return 1
   fi
 

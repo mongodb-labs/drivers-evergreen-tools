@@ -511,6 +511,17 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run csfle test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-csfle.sh]
+
   "run cli test partial":
     - command: subprocess.exec
       type: test
@@ -974,6 +985,11 @@ tasks:
       commands:
         - func: "run install binaries test"
 
+    - name: "test-csfle"
+      tags: ["pr"]
+      commands:
+        - func: "run csfle test"
+
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
@@ -1421,6 +1437,7 @@ buildvariants:
       then:
         add_tasks:
           - "test-install-binaries"
+          - "test-csfle"
           - "test-cli-full"
           - "test-8.0-standalone-require-api"
 
