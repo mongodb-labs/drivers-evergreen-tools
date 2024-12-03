@@ -18,7 +18,7 @@ from pathlib import Path
 
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
-from mongodl import ExpandResult, _expand_archive, infer_arch
+from mongodl import CA_FILE, ExpandResult, _expand_archive, infer_arch
 
 
 def _get_latest_version():
@@ -29,7 +29,7 @@ def _get_latest_version():
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
     try:
-        resp = urllib.request.urlopen(req)
+        resp = urllib.request.urlopen(req, cafile=CA_FILE)
     except Exception:
         return _get_latest_version_git()
 

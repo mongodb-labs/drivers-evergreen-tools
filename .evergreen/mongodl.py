@@ -45,7 +45,12 @@ from typing import (
     cast,
 )
 
-import certifi  # noqa: F401
+try:
+    import certifi
+
+    CA_FILE = certifi.where()
+except ImportError:
+    CA_FILE = None
 
 # These versions are used for performance benchmarking. Do not update to a newer version.
 PERF_VERSIONS = {"v6.0-perf": "6.0.6", "v8.0-perf": "8.0.1"}
@@ -582,7 +587,7 @@ class Cache:
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req)
+            resp = urllib.request.urlopen(req, cafile=CA_FILE)
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(f"Failed to download [{url}]") from e
