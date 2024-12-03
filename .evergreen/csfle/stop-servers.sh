@@ -15,12 +15,3 @@ if [ -f "kmip_pids.pid" ]; then
 fi
 
 popd
-
-ps -ef | grep python || true
-
-# Forcibly kill the process listening on the desired ports, most likely
-# left running from a previous task.
-. "$SCRIPT_DIR/../process-utils.sh"
-for port in 5698 9000 9001 9002 8080; do
-  killport $port 9
-done
