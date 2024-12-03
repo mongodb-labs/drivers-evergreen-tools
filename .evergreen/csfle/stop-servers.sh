@@ -16,7 +16,7 @@ fi
 
 popd
 
-ps -ef | grep pem
+ps -ef | grep python || true
 
 # Forcibly kill the process listening on the desired ports, most likely
 # left running from a previous task.
