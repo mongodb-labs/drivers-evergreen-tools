@@ -39,3 +39,5 @@ for python in $pythons; do
   export PYTHON_BINARY
   run_test
 done
+
+popd
