@@ -15,19 +15,24 @@ export PYTHON_BINARY
 function run_test() {
   bash ./setup.sh
   bash ./teardown.sh
-  chmod -R a+w kmstlsvenv
+  # Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
+  if [[ "$(uname -s)" == CYGWIN* ]]; then
+    return 0
+  fi
   rm -rf kmstlsvenv
 }
 run_test
 
+# Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
+if [[ "$(uname -s)" == CYGWIN* ]]; then
+  exit 0
+fi
 
 # Test with supported pythons
 pythons="3.8 3.9 3.10 3.11 3.12 3.13"
 for python in $pythons; do
   if [ "$(uname -s)" = "Darwin" ]; then
     PYTHON_BINARY="/Library/Frameworks/Python.Framework/Versions/$python/bin/python3"
-  elif [[ "$(uname -s)" == CYGWIN* ]]; then
-     PYTHON_BINARY="C:/python/Python3${python//.}/bin/python"
   else
     PYTHON_BINARY="/opt/python/$python/bin/python3"
   fi
