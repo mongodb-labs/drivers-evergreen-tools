@@ -45,6 +45,8 @@ from typing import (
     cast,
 )
 
+import certifi  # noqa: F401
+
 # These versions are used for performance benchmarking. Do not update to a newer version.
 PERF_VERSIONS = {"v6.0-perf": "6.0.6", "v8.0-perf": "8.0.1"}
 
