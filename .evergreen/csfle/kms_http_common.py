@@ -140,7 +140,7 @@ def run(
 
     httpd = server_class(server_address, handler_class)
 
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     context.load_verify_locations(ca_file)
     context.load_cert_chain(cert_file)
     if cert_required:
