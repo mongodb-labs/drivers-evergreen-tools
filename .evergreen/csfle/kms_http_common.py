@@ -146,7 +146,9 @@ def run(
     if cert_required:
         context.verify_mode = ssl.CERT_REQUIRED
 
-    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+    httpd.socket = context.wrap_socket(
+        httpd.socket, server_side=True, suppress_ragged_eofs=True
+    )
     print("Mock KMS Web Server Listening on port " + str(server_address[1]))
 
     httpd.serve_forever()
