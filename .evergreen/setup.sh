@@ -5,6 +5,7 @@ set -o errexit
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
+. $SCRIPT_DIR/find-python3.sh
 
 # Ensure environment variables are set.
 if [[ -z "$PROJECT_DIRECTORY" ]]; then
@@ -25,6 +26,10 @@ DRIVERS_TOOLS=$DRIVERS_TOOLS
 OS=${OS:-}
 PATH=$PATH
 EOF
+
+# Set the python binary to use.
+DRIVERS_TOOLS_PYTHON=$(find_python3 2>/dev/null)
+echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 
 # Install the clis in this folder.
 bash $SCRIPT_DIR/install-cli.sh $SCRIPT_DIR

@@ -312,12 +312,12 @@ find_python3() (
 # Diagnostic messages may be printed to stderr (pipe 2). Redirect to /dev/null
 # with `2>/dev/null` to silence these messages.
 #
-# If PYTHON or PYTHON_BINARY are set, it will return that value.  Otherwise
+# If DRIVERS_TOOLS_PYTHON is set, it will return that value.  Otherwise
 # it will use find_python3 to return a suitable value.
 #
 ensure_python3() {
   declare python_binary
-  python_binary="${PYTHON:-"${PYTHON_BINARY:-""}"}"
+  python_binary="${DRIVERS_TOOLS_PYTHON:-}"
   {
     if [ -z "${python_binary}" ]; then
       echo "Finding Python3 binary..."
