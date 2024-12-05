@@ -144,9 +144,9 @@ def run(
     context.load_verify_locations(ca_file)
     context.load_cert_chain(cert_file)
     if cert_required:
-        context.verify_mode = ssl.CERT_REQUIRED
+        context.options = ssl.CERT_REQUIRED
     else:
-        context.verify_mode = ssl.CERT_NONE
+        context.options = ssl.CERT_NONE
 
     httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
     print("Mock KMS Web Server Listening on port " + str(server_address[1]))
