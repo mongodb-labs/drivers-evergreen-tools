@@ -47,7 +47,7 @@ class HTTPServerWithTLS(http.server.HTTPServer):
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             context.load_verify_locations(ca_file)
             context.load_cert_chain(cert_file)
-            context.options = ssl.CERT_NONE
+            context.verify_mode = ssl.CERT_NONE
 
             self.socket = context.wrap_socket(self.socket, server_side=True)
 
