@@ -11,7 +11,6 @@ import shlex
 import shutil
 import socket
 import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -25,8 +24,8 @@ DRIVERS_TOOLS = EVG_PATH.parent
 
 # Add the binaries folder to path.
 print("hello?")
-os.environ["PATH"] = f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
-print(os.environ["PATH"])
+# os.environ["PATH"] = f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
+# print(os.environ["PATH"])
 
 
 def run_command(args, **kwargs):
