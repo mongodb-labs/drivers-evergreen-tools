@@ -24,6 +24,7 @@ EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
 # Add the binaries folder to path.
+print("hello?")
 os.environ["PATH"] = f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
 print(os.environ["PATH"])
 
