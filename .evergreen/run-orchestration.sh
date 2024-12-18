@@ -9,5 +9,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
 bash $SCRIPT_DIR/orchestration/setup.sh
-$SCRIPT_DIR/orchestration/run-orchestration --help
 $SCRIPT_DIR/orchestration/run-orchestration "$@"

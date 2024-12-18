@@ -247,7 +247,9 @@ def run():
 
     # Get the orchestration config data.
     topology = opts.topology
-    text = (mo_home / f"configs/{topology}s/{orchestration_file}").read_text()
+    orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
+    print("Using orchestration file:", orch_path)
+    text = orch_path.read_text()
     text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", str(DRIVERS_TOOLS))
     data = json.loads(text)
 

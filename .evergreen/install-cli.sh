@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the drivers orchestration scripts.
 
-set -eux
+set -eu
 
 if [ -z "$BASH" ]; then
   echo "install-cli.sh must be run in a Bash shell!" 1>&2
@@ -15,7 +15,7 @@ fi
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
-pushd $SCRIPT_DIR
+pushd $SCRIPT_DIR > /dev/null
 
 # Ensure pipx is writing assets to a contained location.
 export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
@@ -34,13 +34,12 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
   echo "Creating virtual environment 'venv'..."
   venvcreate "${PYTHON:?}" venv
   echo "Creating virtual environment 'venv'... done."
-
-  python -m pip install uv
 else
   venvactivate venv
 fi
+python -m pip install -q uv
 
-pushd $1
+pushd $1 > /dev/null
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
@@ -53,8 +52,8 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q --python "$(which python)" --force --editable .
 fi
 
-popd
-popd
+popd > /dev/null
+popd > /dev/null
