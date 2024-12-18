@@ -250,6 +250,10 @@ def run():
     data = json.loads(text)
 
     if opts.require_api_version:
+        if opts.topology == "replica_set":
+            raise ValueError(
+                "requireApiVersion is not supported with replica_sets, see SERVER-97010"
+            )
         data["requireApiVersion"] = "1"
 
     # If running on Docker, update the orchestration file to be docker-friendly.
