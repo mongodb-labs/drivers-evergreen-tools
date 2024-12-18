@@ -9,5 +9,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
 bash $SCRIPT_DIR/orchestration/setup.sh
-ls $DRIVERS_TOOLS/.local/uv-tool/drivers-evergreen-tools-orchestration/bin/
 $SCRIPT_DIR/orchestration/run-orchestration "$@"
