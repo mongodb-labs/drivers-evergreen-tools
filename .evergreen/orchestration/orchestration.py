@@ -326,16 +326,16 @@ def run():
             dict(
                 status="PASS",
                 test_file="Orchestration",
-                start=str(mo_start.isoformat()),
-                end=str(mo_end.isoformat()),
-                elapsed=str((mo_end - mo_start).total_seconds()),
+                start=int(mo_start.timestamp()),
+                end=int(mo_end.timestamp()),
+                elapsed=(mo_end - mo_start).total_seconds(),
             ),
             dict(
                 status="PASS",
                 test_file="Download MongoDB",
-                start=str(dl_start.isoformat()),
-                end=str(dl_end.isoformat()),
-                elapsed=str((dl_end - dl_start).total_seconds()),
+                start=int(dl_start.timestamp()),
+                end=int(dl_end.timestamp()),
+                elapsed=(dl_end - dl_start).total_seconds(),
             ),
         ]
     )
