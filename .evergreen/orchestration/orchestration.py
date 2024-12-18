@@ -328,14 +328,14 @@ def run():
                 test_file="Orchestration",
                 start=mo_start.isoformat(),
                 end=mo_end.isoformat(),
-                elapsed=(mo_end - mo_start).total_seconds(),
+                elapsed=str((mo_end - mo_start).total_seconds()),
             ),
             dict(
                 status="PASS",
                 test_file="Download MongoDB",
                 start=dl_start.isoformat(),
                 end=dl_end.isoformat(),
-                elapsed=(dl_end - dl_start).total_seconds(),
+                elapsed=str((dl_end - dl_start).total_seconds()),
             ),
         ]
     )
