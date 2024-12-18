@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck shell=sh
 
-# For future use the feed to get full list of distros : http://downloads.mongodb.org/full.json
+# This file is no longer used directly by drivers-evergreen-tools.
+# If using this file, you should consider instead using `mongodl.py` and `mongosh-dl.py`.
 
 set -o errexit  # Exit the script with error if any of the commands fail
 

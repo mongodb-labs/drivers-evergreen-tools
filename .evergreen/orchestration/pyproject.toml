@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "drivers-evergreen-tools-orchestration"
+version = "0.1.0"
+description = 'Scripts for drivers-evergreen-tools orchestration'
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Steven Silvester", email = "steve.silvester@mongodb.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = ["drivers-evergreen-tools @ {root:parent:uri}"]
+
+[project.scripts]
+run-orchestration = "orchestration:run"
+stop-orchestration = "orchestration:stop"
+
+[tool.hatch.build]
+include = ["orchestration.py"]
+
+[tool.hatch.metadata]
+allow-direct-references=true

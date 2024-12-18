@@ -120,7 +120,10 @@ mo-expansion.sh
 .kube
 .cargo
 .rustup
+.local
 .evergreen/orchestration/config.json
+.evergreen/orchestration/run-orchestration
+.evergreen/orchestration/stop-orchestration
 .evergreen/socks5srv
 .evergreen/mongodl
 .evergreen/mongosh-dl

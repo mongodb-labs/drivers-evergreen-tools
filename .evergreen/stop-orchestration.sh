@@ -3,24 +3,11 @@
 
 set -o errexit  # Exit the script with error if any of the commands fail
 
+# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
+# Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
 # shellcheck disable=SC3028
-SCRIPT_DIR=$(dirname "${BASH_SOURCE:-"$0"}")
-. "$SCRIPT_DIR/handle-paths.sh"
+SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+. $SCRIPT_DIR/handle-paths.sh
 
-cd ${DRIVERS_TOOLS}
-
-# source the mongo-orchestration virtualenv if it exists
-VENV="$MONGO_ORCHESTRATION_HOME/venv"
-if [ -x "$(command -v mongo-orchestration)" ]; then
-    mongo-orchestration stop
-elif [ -f "$VENV/bin/activate" ]; then
-    . "$VENV/bin/activate"
-    mongo-orchestration stop
-elif [ -f "$VENV/Scripts/activate" ]; then
-    . "$VENV/Scripts/activate"
-    mongo-orchestration stop
-else
-    echo "No virtualenv found!"
-fi
-
-cd -
+bash $SCRIPT_DIR/orchestration/setup.sh
+$SCRIPT_DIR/orchestration/stop-orchestration
