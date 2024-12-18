@@ -11,6 +11,7 @@ import shlex
 import shutil
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -21,6 +22,9 @@ from pathlib import Path
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
+
+# Add the binaries folder to path.
+os.environ["PATH"] = f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
 
 
 def run_command(args, **kwargs):
@@ -273,7 +277,6 @@ def run():
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
-    print(os.environ["PATH"])
     subprocess.run(
         shlex.split(args), stderr=subprocess.STDOUT, stdout=output_fid, check=False
     )
