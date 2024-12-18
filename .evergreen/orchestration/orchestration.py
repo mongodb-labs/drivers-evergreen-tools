@@ -273,6 +273,7 @@ def run():
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
+    print(os.environ["PATH"])
     subprocess.run(
         shlex.split(args), stderr=subprocess.STDOUT, stdout=output_fid, check=False
     )
