@@ -11,6 +11,7 @@ import shlex
 import shutil
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -22,18 +23,14 @@ HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
-# Add the binaries folder to path.
-print("hello?")
-# os.environ["PATH"] = f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
-# print(os.environ["PATH"])
-
 
 def run_command(args, **kwargs):
     if isinstance(args, str):
         args = shlex.split(args)
-    subprocess.check_call(
-        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs
-    )
+    kwargs.setdefault("stdout", subprocess.PIPE)
+    kwargs.setdefault("stderr", subprocess.PIPE)
+    args = [sys.executable, "-m", *args]
+    subprocess.run(args, check=True, **kwargs)
 
 
 def get_options():
@@ -224,7 +221,7 @@ def run():
         Path("mo-expansion.sh").write_text(crypt_text)
 
     # Download mongosh
-    args = f"mongosh-dl --out {mdb_binaries} --strip-path-components 2"
+    args = f"mongosh_dl --out {mdb_binaries} --strip-path-components 2"
     print("Downloading mongosh...")
     run_command(args)
     print("Downloading mongosh... done.")
@@ -270,7 +267,7 @@ def run():
     orch_file.write_text(json.dumps(data, indent=2))
 
     # Start mongo-orchestration
-    args = f"mongo-orchestration -e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    args = f"mongo_orchestration.server -e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args = +"-s wsgiref"
     args += " start"
@@ -278,9 +275,7 @@ def run():
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
-    subprocess.run(
-        shlex.split(args), stderr=subprocess.STDOUT, stdout=output_fid, check=False
-    )
+    run(args, stderr=subprocess.STDOUT, stdout=output_fid, check=False)
 
     # Wait for the server to be available.
     attempt = 0
