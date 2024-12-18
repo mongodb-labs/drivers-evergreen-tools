@@ -17,7 +17,7 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration"]
+dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration @ git+https://github.com/mongodb-labs/mongo-orchestration.git@master"]
 
 [project.scripts]
 run-orchestration = "orchestration:run"
