@@ -275,7 +275,7 @@ def run():
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
-    run(args, stderr=subprocess.STDOUT, stdout=output_fid, check=False)
+    run_command(args, stderr=subprocess.STDOUT, stdout=output_fid)
 
     # Wait for the server to be available.
     attempt = 0
@@ -347,7 +347,7 @@ def run():
 
 def stop():
     print("Stopping mongo-orchestration...")
-    run_command(["mongo-orchestration", "stop"])
+    run_command(["mongo_orchestration.server", "stop"])
     print("Stopping mongo-orchestration... done.")
 
 
