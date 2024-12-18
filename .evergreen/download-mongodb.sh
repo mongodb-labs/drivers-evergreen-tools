@@ -3,7 +3,7 @@
 
 # This file is no longer used directly by drivers-evergreen-tools.
 # If using this file to download mongodb binaries, you should consider instead using `mongodl.py` and `mongosh-dl.py`.
-# If using this file for get_distro, use `get-distro.sh`
+# If using this file for get_distro, use `get-distro.sh`.
 set -o errexit  # Exit the script with error if any of the commands fail
 
 get_distro ()
