@@ -5,7 +5,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 pushd $SCRIPT_DIR
 
-NODE_LTS_VERSION=${NODE_LTS_VERSION:-18}
+NODE_LTS_VERSION=${NODE_LTS_VERSION:-20}
 # npm version can be defined in the environment for cases where we need to install
 # a version lower than latest to support EOL Node versions.
 NPM_VERSION=${NPM_VERSION:-latest}
