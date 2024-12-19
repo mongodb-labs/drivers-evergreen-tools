@@ -98,7 +98,7 @@ def get_options():
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
     for key in vars(opts).keys():
-        env_var = key.capitalize()
+        env_var = key.upper()
         if env_var == "VERSION":
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
