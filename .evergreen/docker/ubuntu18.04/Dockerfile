@@ -49,7 +49,7 @@ ARG GROUP_ID
 ENV DRIVERS_TOOLS=/root/drivers-tools
 ENV ENTRYPOINTS=/root/drivers-tools/.evergreen/docker/ubuntu18.04
 ENV MONGO_ORCHESTRATION_HOME=/root/drivers-tools/.evergreen/orchestration
-ENV MONGODB_BINARIES=/root/mongodb_binaries
+ENV MONGODB_BINARIES=/root/drivers-tools/mongodb/bin
 ENV DOCKER_RUNNING=true
 
 COPY . /root/drivers-tools
