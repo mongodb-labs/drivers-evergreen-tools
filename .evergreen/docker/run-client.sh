@@ -6,7 +6,6 @@
 set -eu
 
 # Docker related variables.
-IMAGE=${TARGET_IMAGE:-ubuntu20.04}
 PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
 
@@ -19,8 +18,7 @@ AUTH=${AUTH:-""}
 SSL=${SSL:-""}
 
 # Internal variables.
-ROOT_DRIVERS_TOOLS=/root/drivers-evergeen-tools
-MONGODB_BINARIES="ROOT_DRIVERS_TOOLS/.evergreen/docker/$IMAGE/mongodb/bin"
+MONGODB_BINARIES="/root/mongodb_binaries"
 
 # Build up the arguments.
 ARGS="$PLATFORM --rm -i"

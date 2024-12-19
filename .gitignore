@@ -124,6 +124,7 @@ mo-expansion.sh
 .evergreen/socks5srv
 .evergreen/mongodl
 .evergreen/mongosh-dl
+.dockerignore
 
 # Azure functions.
 .python_packages/
