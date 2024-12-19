@@ -214,14 +214,12 @@ def run():
         print("Downloading crypt_shared... done.")
         crypt_shared_path = None
         for fname in os.listdir(mdb_binaries):
-            print("hello", fname)
             if fname.startswith("mongo_crypt_v1"):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
         expansion_file.write_text(crypt_text)
-        print("wat?", crypt_text)
-        Path("mo-expansion.sh").write_text(crypt_text)
+        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"mongosh_dl --out {mdb_binaries} --strip-path-components 2"
