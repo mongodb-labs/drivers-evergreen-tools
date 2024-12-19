@@ -84,3 +84,6 @@ ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
 $DOCKER run $ARGS $NAME $ENTRYPOINT
 
 popd
+
+# Restore the clis
+bash $DRIVERS_TOOLS/.evergreen/orchestration/setup.sh

@@ -103,7 +103,8 @@ def get_options():
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if isinstance(getattr(opts, key), bool):
-                setattr(opts, key, True)
+                if os.environ[env_var]:
+                    setattr(opts, key, True)
             else:
                 setattr(opts, key, os.environ[env_var])
 

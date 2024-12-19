@@ -21,6 +21,12 @@ pushd $SCRIPT_DIR > /dev/null
 export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
 export UV_TOOL_DIR=${DRIVERS_TOOLS}/.local/uv-tool
 
+if [ "${DOCKER_RUNNING:-}" == "true" ]; then
+  _root_dir=$(mktemp -d)
+  UV_CACHE_DIR=$_root_dir/uv-cache
+  UV_TOOL_DIR=$_root_dir/uv-tool
+fi
+
 . ./venv-utils.sh
 
 if [ ! -d $SCRIPT_DIR/venv ]; then

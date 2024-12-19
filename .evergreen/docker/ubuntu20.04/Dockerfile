@@ -1,4 +1,4 @@
-FROM artifactory.corp.mongodb.com/dockerhub/ubuntu:20.04
+FROM ubuntu:20.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   apt-get -qq update && apt-get -qq -y install --no-install-recommends \
@@ -24,7 +24,7 @@ ARG GROUP_ID
 ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
 ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/mongodb/bin
-ENV MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/orchestration
+ENV MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
 ENV DOCKER_RUNNING=true
 
 COPY ./local-entrypoint.sh /root/local-entrypoint.sh
