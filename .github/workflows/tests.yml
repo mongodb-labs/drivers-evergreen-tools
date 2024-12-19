@@ -21,7 +21,7 @@ jobs:
           - "windows-latest"
           - "macos-latest"
         mongodb-version:
-          - "7.0"
+          - "8.0"
         topology:
           - "server"
           - "replica_set"
