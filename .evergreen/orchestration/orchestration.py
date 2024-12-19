@@ -214,6 +214,7 @@ def run():
         print("Downloading crypt_shared... done.")
         crypt_shared_path = None
         for fname in os.listdir(mdb_binaries):
+            print("hello", fname)
             if fname.startswith("mongo_crypt_v1"):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
