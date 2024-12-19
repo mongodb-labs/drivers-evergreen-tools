@@ -338,7 +338,7 @@ functions:
       params:
         binary: bash
         env:
-          ENTRYPOINT: test-entrypoint.sh
+          ENTRYPOINT: /root/test-entrypoint.sh
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: shell.exec
