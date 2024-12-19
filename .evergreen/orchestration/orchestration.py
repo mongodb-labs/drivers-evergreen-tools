@@ -220,6 +220,7 @@ def run():
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
         expansion_file.write_text(crypt_text)
+        print("wat?", crypt_text)
         Path("mo-expansion.sh").write_text(crypt_text)
 
     # Download mongosh
