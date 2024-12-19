@@ -27,7 +27,6 @@ EOF
 
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
-VOL="-v ${DRIVERS_TOOLS}:/root/drivers-evergreen-tools"
 AWS_PROFILE=${AWS_PROFILE:-""}
 
 if [ -z "$AWS_PROFILE" ]; then
@@ -45,10 +44,13 @@ fi
 test -t 1 && USE_TTY="-t"
 
 echo "Drivers tools: $DRIVERS_TOOLS"
-pushd ../docker
-rm -rf ./ubuntu20.04/mongodb
-rm -rf ./ubuntu20.04/orchestration
-docker build -t drivers-evergreen-tools ./ubuntu20.04
+
+# Build from the root directory so we can include files.
+pushd $DRIVERS_TOOLS
+cp .gitignore .dockerignore
+USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
+$DOCKER build $PLATFORM -t $NAME -f $SCRIPT_DIR/../docker/20.04/Dockerfile $USER .
+docker build -t oidc-test -f $SCRIPT_DIR/Dockerfile $USER .
 popd
-docker build -t oidc-test .
-docker run --rm -i $USE_TTY $VOL $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
+
+docker run --rm -i $USE_TTY $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
