@@ -34,10 +34,10 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
   echo "Creating virtual environment 'venv'..."
   venvcreate "${PYTHON:?}" venv
   echo "Creating virtual environment 'venv'... done."
+  python -m pip install -q uv
 else
   venvactivate venv
 fi
-python -m pip install -q uv
 
 pushd $1 > /dev/null
 
