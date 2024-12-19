@@ -28,6 +28,7 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
 fi
 
 # Build from the root directory so we can include files.
+pushd $DRIVERS_TOOLS
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
 $DOCKER build $PLATFORM -t $NAME -f $SCRIPT_DIR/$IMAGE/Dockerfile $USER .
