@@ -50,10 +50,16 @@ def get_options():
         help="The topology of the server deployment",
     )
     parser.add_argument(
-        "--auth", action="store_true", help="Whether to add authentication"
+        "--auth",
+        choices=["auth", "noauth"],
+        default="noauth",
+        help="Whether to add authentication",
     )
     parser.add_argument(
-        "--ssl", action="store_true", help="Whether to add TLS configuration"
+        "--ssl",
+        choices=["ssl", "nossl"],
+        default="nossl",
+        help="Whether to add TLS configuration",
     )
     parser.add_argument(
         "--orchestration-file", help="The name of the orchestration config file"
@@ -233,9 +239,9 @@ def run():
     orchestration_file = opts.orchestration_file
     if not orchestration_file:
         prefix = "basic"
-        if opts.auth:
+        if opts.auth == "auth":
             prefix = "auth"
-        if opts.ssl:
+        if opts.ssl == "ssl":
             prefix += "-ssl"
         if opts.load_balancer:
             prefix += "-load-balancer"
