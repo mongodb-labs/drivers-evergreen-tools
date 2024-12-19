@@ -45,6 +45,15 @@ test -t 1 && USE_TTY="-t"
 
 echo "Drivers tools: $DRIVERS_TOOLS"
 
+if command -v podman &> /dev/null; then
+    DOCKER="podman --storage-opt ignore_chown_errors=true"
+else
+    DOCKER=docker
+fi
+if [ -n "${DOCKER_COMMAND:-}" ]; then
+    DOCKER=$DOCKER_COMMAND
+fi
+
 # Build from the root directory so we can include files.
 pushd $DRIVERS_TOOLS
 cp .gitignore .dockerignore
@@ -53,4 +62,4 @@ $DOCKER build $PLATFORM -t $NAME -f $SCRIPT_DIR/../docker/20.04/Dockerfile $USER
 docker build -t oidc-test -f $SCRIPT_DIR/Dockerfile $USER .
 popd
 
-docker run --rm -i $USE_TTY $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
+$DOCKER run --rm -i $USE_TTY $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
