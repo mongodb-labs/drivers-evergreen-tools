@@ -9,6 +9,15 @@ set -eu
 PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
 
+if command -v podman &> /dev/null; then
+    DOCKER="podman --storage-opt ignore_chown_errors=true"
+else
+    DOCKER=docker
+fi
+if [ -n "${DOCKER_COMMAND:-}" ]; then
+    DOCKER=$DOCKER_COMMAND
+fi
+
 # Mongo orchestration related variables.
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
 TOPOLOGY=${TOPOLOGY:-replica_set}
@@ -18,7 +27,7 @@ AUTH=${AUTH:-""}
 SSL=${SSL:-""}
 
 # Internal variables.
-MONGODB_BINARIES="/root/mongodb_binaries"
+MONGODB_BINARIES="/root/drivers-evergreen-tools/mongodb/bin"
 
 # Build up the arguments.
 ARGS="$PLATFORM --rm -i"
@@ -48,4 +57,4 @@ ARGS+=" -v `pwd`:/src"
 ARGS+=" -v $DRIVERS_TOOLS:/root/drivers-evergreen-tools"
 
 # Launch client docker container.
-docker run $ARGS "$@"
+$DOCKER run $ARGS "$@"
