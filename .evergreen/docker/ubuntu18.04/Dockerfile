@@ -52,3 +52,4 @@ ENV MONGO_ORCHESTRATION_HOME=/root/drivers-tools/.evergreen/orchestration
 ENV DOCKER_RUNNING=true
 
 COPY . /root/drivers-tools
+COPY ./root/drivers-tools/.evergreen/docker/ubuntu18.04/*.sh /root

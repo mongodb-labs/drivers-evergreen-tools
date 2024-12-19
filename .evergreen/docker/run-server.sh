@@ -8,7 +8,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
 NAME=drivers-evergreen-tools
-ENTRYPOINT=${ENTRYPOINT:-local-entrypoint.sh}
+ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu20.04}
 PLATFORM=${DOCKER_PLATFORM:-}
 ARCH=${ARCH:-}
@@ -27,6 +27,7 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
     DOCKER=$DOCKER_COMMAND
 fi
 
+# Build from the root directory so we can include files.
 pushd $DRIVERS_TOOLS
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
@@ -74,4 +75,4 @@ fi
 test -t 1 && ARGS+=" -t"
 
 # Launch server container.
-$DOCKER run $ARGS $NAME /root/drivers-tools/.evergreen/docker/$IMAGE/$ENTRYPOINT
+$DOCKER run $ARGS $NAME $ENTRYPOINT
