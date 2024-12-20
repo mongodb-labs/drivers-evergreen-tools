@@ -30,7 +30,11 @@ def run_command(args, **kwargs):
     kwargs.setdefault("stdout", subprocess.PIPE)
     kwargs.setdefault("stderr", subprocess.PIPE)
     args = [sys.executable, "-m", *args]
-    subprocess.run(args, check=True, **kwargs)
+    try:
+        subprocess.run(args, check=True, **kwargs)
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        raise e
 
 
 def get_options():
