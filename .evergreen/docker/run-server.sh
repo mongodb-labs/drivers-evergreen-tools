@@ -19,7 +19,7 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
 fi
 
 if command -v podman &> /dev/null; then
-    DOCKER=podman
+    DOCKER="podman --storage-opt ignore_chown_errors=true"
 else
     DOCKER=docker
 fi
@@ -27,15 +27,12 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
     DOCKER=$DOCKER_COMMAND
 fi
 
-pushd $SCRIPT_DIR
-USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
-$DOCKER build $PLATFORM -t $NAME $USER $IMAGE
-popd
+# Build from the root directory so we can include files.
 pushd $DRIVERS_TOOLS
-
-# Remove existing mongodb and orchestration files
-rm -rf $SCRIPT_DIR/$IMAGE/mongodb
-rm -rf $SCRIPT_DIR/$IMAGE/orchestration
+cp .gitignore .dockerignore
+USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
+$DOCKER build $PLATFORM -t $NAME -f $SCRIPT_DIR/$IMAGE/Dockerfile $USER .
+popd
 
 # Handle environment variables.
 AUTH=${AUTH:-noauth}
@@ -77,10 +74,5 @@ fi
 # If there is a tty, add the -t arg.
 test -t 1 && ARGS+=" -t"
 
-# Map in the DRIVERS_TOOLS directory.
-ARGS+=" -v `pwd`:/root/drivers-evergreen-tools"
-
 # Launch server container.
 $DOCKER run $ARGS $NAME $ENTRYPOINT
-
-popd
