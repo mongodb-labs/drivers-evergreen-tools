@@ -6,9 +6,17 @@
 set -eu
 
 # Docker related variables.
-IMAGE=${TARGET_IMAGE:-ubuntu20.04}
 PLATFORM=${DOCKER_PLATFORM:-}
 # e.g. --platform linux/amd64
+
+if command -v podman &> /dev/null; then
+    DOCKER="podman --storage-opt ignore_chown_errors=true"
+else
+    DOCKER=docker
+fi
+if [ -n "${DOCKER_COMMAND:-}" ]; then
+    DOCKER=$DOCKER_COMMAND
+fi
 
 # Mongo orchestration related variables.
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
@@ -18,19 +26,18 @@ SKIP_CRYPT_SHARED_LIB=${SKIP_CRYPT_SHARED_LIB:-false}
 AUTH=${AUTH:-""}
 SSL=${SSL:-""}
 
-# Internal variables.
-ROOT_DRIVERS_TOOLS=/root/drivers-evergeen-tools
-MONGODB_BINARIES="ROOT_DRIVERS_TOOLS/.evergreen/docker/$IMAGE/mongodb/bin"
+CONT_DRIVERS_TOOLS=/root/drivers-tools
 
 # Build up the arguments.
 ARGS="$PLATFORM --rm -i"
 ARGS+=" -e MONGODB_VERSION=$MONGODB_VERSION -e TOPOLOGY=$TOPOLOGY"
 ARGS+=" -e SSL=$SSL -e AUTH=$AUTH"
-ARGS+=" -e MONGODB_BINARIES=$MONGODB_BINARIES"
-ARGS+=" -e CRYPT_SHARED_LIB_PATH=$MONGODB_BINARIES/mongosh_crypt_v1.so"
+ARGS+=" -e MONGO_ORCHESTRATION_HOME=$CONT_DRIVERS_TOOLS/.evergreen/orchestration"
+ARGS+=" -e MONGODB_BINARIES=$CONT_DRIVERS_TOOLS/mongodb/bin"
+ARGS+=" -e DOCKER_RUNNING=true"
+ARGS+=" -e CRYPT_SHARED_LIB_PATH=$CONT_DRIVERS_TOOLS/mongosh_crypt_v1.so"
 ARGS+=" -e ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 ARGS+=" -e SKIP_CRYPT_SHARED_LIB=$SKIP_CRYPT_SHARED_LIB"
-ARGS+=" -e DRIVERS_TOOLS=$ROOT_DRIVERS_TOOLS"
 
 # Ensure host.docker.internal is available on MacOS.
 if [ "$(uname -s)" = "Darwin" ]; then
@@ -47,7 +54,7 @@ test -t 1 && ARGS+=" -t"
 
 # Map the cwd to /src and map in DRIVERS_TOOLS.
 ARGS+=" -v `pwd`:/src"
-ARGS+=" -v $DRIVERS_TOOLS:/root/drivers-evergreen-tools"
+ARGS+=" -v $DRIVERS_TOOLS:$CONT_DRIVERS_TOOLS"
 
 # Launch client docker container.
-docker run $ARGS "$@"
+$DOCKER run $ARGS "$@"

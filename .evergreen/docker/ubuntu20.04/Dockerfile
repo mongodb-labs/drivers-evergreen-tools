@@ -21,12 +21,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 ARG USER_ID
 ARG GROUP_ID
 
-ENV DRIVERS_TOOLS=/root/drivers-evergreen-tools
-ENV PROJECT_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
-ENV MONGODB_BINARIES=/root/drivers-evergreen-tools/.evergreen/docker/ubuntu20.04/mongodb/bin
-ENV MONGO_ORCHESTRATION_HOME=/root/drivers-evergreen-tools/.evergreen/orchestration
+ENV DRIVERS_TOOLS=/root/drivers-tools
+ENV MONGO_ORCHESTRATION_HOME=/root/drivers-tools/.evergreen/orchestration
+ENV MONGODB_BINARIES=/root/drivers-tools/mongodb/bin
 ENV DOCKER_RUNNING=true
 
-COPY ./local-entrypoint.sh /root/local-entrypoint.sh
-COPY ./base-entrypoint.sh /root/base-entrypoint.sh
-COPY ./test-entrypoint.sh /root/test-entrypoint.sh
+COPY . /root/drivers-tools
+COPY .evergreen/docker/ubuntu20.04/*.sh /root
