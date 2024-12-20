@@ -104,9 +104,9 @@ def get_options():
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if key == "auth":
-                opts.auth = os.environ["auth"] == "auth"
+                opts.auth = os.environ.get("auth") == "auth"
             elif key == "ssl":
-                opts.ssl = os.environ["ssl"] == "ssl"
+                opts.ssl = os.environ.get("ssl") == "ssl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
