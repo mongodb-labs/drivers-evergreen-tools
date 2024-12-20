@@ -37,6 +37,7 @@ def get_options():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument("command", choices=["run", "start", "stop"])
     parser.add_argument(
         "--version",
         default="latest",
@@ -156,38 +157,15 @@ def handle_docker_config(data):
             router["logpath"] = f"/tmp/mongodb-{item['port']}.log"
 
 
-def run():
-    opts = get_options()
-
+def run(opts):
     print("Running orchestration...")
-
-    # Stop a running server.
-    mo_home = Path(opts.mongo_orchestration_home)
-    if (mo_home / "server.pid").exists():
-        stop()
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
-    for fname in ["out.log", "server.log", "orchestration.config", "config.json"]:
-        if (mo_home / fname).exists():
-            (mo_home / fname).unlink()
 
     # The evergreen directory to path.
     os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
-
-    # Set up the mongo orchestration config.
-    os.makedirs(mo_home / "lib", exist_ok=True)
-    expansion_file = Path("mo-expansion.yml")
-    mo_config = mo_home / "orchestration.config"
-    config = dict(releases=dict(default=str(mdb_binaries)))
-    mo_config.write_text(json.dumps(config, indent=2))
-
-    # Copy client certificates on Windows.
-    if os.name == "nt":
-        src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
-        dst = mo_home / "lib/client.pem"
-        shutil.copy2(src, dst)
 
     # Download the archive.
     dl_start = datetime.now()
@@ -222,6 +200,7 @@ def run():
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
+        expansion_file = Path("mo-expansion.yml")
         expansion_file.write_text(crypt_text)
         Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
@@ -231,7 +210,7 @@ def run():
     run_command(args)
     print("Downloading mongosh... done.")
 
-    dl_end = mo_start = datetime.now()
+    dl_end = datetime.now()
 
     # Handle orchestration file - explicit or implicit.
     orchestration_file = opts.orchestration_file
@@ -252,6 +231,7 @@ def run():
 
     # Get the orchestration config data.
     topology = opts.topology
+    mo_home = Path(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
     text = orch_path.read_text()
@@ -273,36 +253,9 @@ def run():
     orch_file = mo_home / "config.json"
     orch_file.write_text(json.dumps(data, indent=2))
 
-    # Start mongo-orchestration
-    args = f"mongo_orchestration.server -e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
-    if os.name == "nt":
-        args = +"-s wsgiref"
-    args += " start"
-    output_file = mo_home / "out.log"
-    output_fid = output_file.open("w")
-
-    print("Starting mongo-orchestration...")
-    run_command(args, stderr=subprocess.STDOUT, stdout=output_fid)
-
-    # Wait for the server to be available.
-    attempt = 0
-    while True:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.connect(("localhost", 8889))
-                break
-            except ConnectionRefusedError:
-                if (datetime.now() - dl_start).seconds > 120:
-                    stop()
-                    output_fid.close()
-                    print(output_file.read_text())
-                    raise TimeoutError(
-                        "Failed to start cluster, see out.log and server.log"
-                    ) from None
-        attempt += 1
-        time.sleep(attempt * 1000)
-    print(output_file.read_text())
-    print("Starting mongo-orchestration... done.")
+    # Start the orchestration.
+    mo_start = datetime.now()
+    output_fid, output_file = start(opts)
 
     # Configure the server.
     print("Starting deployment...")
@@ -320,6 +273,9 @@ def run():
     resp = json.loads(resp.read().decode("utf-8"))
     print(resp)
     print("Starting deployment... done.")
+
+    print(output_file.read_text())
+    output_fid.close()
 
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
@@ -348,15 +304,88 @@ def run():
     )
     (DRIVERS_TOOLS / "results.json").write_text(json.dumps(data, indent=2))
 
-    output_fid.close()
     print("Running orchestration... done.")
 
 
-def stop():
+def start(opts):
+    # Start mongo-orchestration
+
+    # Stop a running server.
+    mo_home = Path(opts.mongo_orchestration_home)
+    if (mo_home / "server.pid").exists():
+        stop()
+
+    # Clean up previous files.
+    for fname in ["out.log", "server.log", "orchestration.config", "config.json"]:
+        if (mo_home / fname).exists():
+            (mo_home / fname).unlink()
+
+    # Set up the mongo orchestration config.
+    os.makedirs(mo_home / "lib", exist_ok=True)
+    mo_config = mo_home / "orchestration.config"
+    mdb_binaries = Path(opts.mongodb_binaries)
+    config = dict(releases=dict(default=str(mdb_binaries)))
+    mo_config.write_text(json.dumps(config, indent=2))
+
+    # Copy client certificates on Windows.
+    if os.name == "nt":
+        src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
+        dst = mo_home / "lib/client.pem"
+        shutil.copy2(src, dst)
+
+    mo_start = datetime.now()
+
+    # Start the process.
+    args = f"mongo_orchestration.server -e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    if os.name == "nt":
+        args = +"-s wsgiref"
+    args += " start"
+    output_file = mo_home / "out.log"
+    output_fid = output_file.open("w")
+
+    print("Starting mongo-orchestration...")
+    run_command(args, stderr=subprocess.STDOUT, stdout=output_fid)
+
+    # Wait for the server to be available.
+    attempt = 0
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.connect(("localhost", 8889))
+                break
+            except ConnectionRefusedError:
+                if (datetime.now() - mo_start).seconds > 120:
+                    stop()
+                    output_fid.close()
+                    print(output_file.read_text())
+                    raise TimeoutError(
+                        "Failed to start cluster, see out.log and server.log"
+                    ) from None
+        attempt += 1
+        time.sleep(attempt * 1000)
+
+    print("Starting mongo-orchestration... done.")
+
+    return output_fid, output_file
+
+
+def stop(_):
     print("Stopping mongo-orchestration...")
     run_command(["mongo_orchestration.server", "stop"])
     print("Stopping mongo-orchestration... done.")
 
 
+def main():
+    opts = get_options()
+    if opts.command == "run":
+        run(opts)
+    elif opts.command == "start":
+        output_fid, output_file = start(opts)
+        print(output_file.read_text())
+        output_fid.close()
+    elif opts.command == "stop":
+        stop(opts)
+
+
 if __name__ == "__main__":
-    run()
+    main()
