@@ -36,9 +36,10 @@ if [ -z "$AWS_PROFILE" ]; then
     fi
     ENV="-e AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
     ENV="$ENV -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+    VOL=""
 else
     ENV="-e AWS_PROFILE=$AWS_PROFILE"
-    VOL="$VOL -v $HOME/.aws:/root/.aws"
+    VOL="-v $HOME/.aws:/root/.aws"
 fi
 
 test -t 1 && USE_TTY="-t"
@@ -59,8 +60,8 @@ pushd $DRIVERS_TOOLS
 PLATFORM="--platform linux/amd64"
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
-$DOCKER build $PLATFORM -t drivers-evergreen-tools -f $SCRIPT_DIR/../docker/20.04/Dockerfile $USER .
-$DOCKER build $PLATFORM -t oidc-test -f $SCRIPT_DIR/Dockerfile $USER .
+$DOCKER build $PLATFORM -t drivers-evergreen-tools -f $SCRIPT_DIR/../docker/ubuntu20.04/Dockerfile $USER .
+$DOCKER build $PLATFORM -t oidc-test $VOL -f $SCRIPT_DIR/Dockerfile $USER .
 popd
 
 $DOCKER run --rm -i $USE_TTY $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
