@@ -26,11 +26,16 @@ SKIP_CRYPT_SHARED_LIB=${SKIP_CRYPT_SHARED_LIB:-false}
 AUTH=${AUTH:-""}
 SSL=${SSL:-""}
 
+CONT_DRIVERS_TOOLS=/root/drivers-tools
+
 # Build up the arguments.
 ARGS="$PLATFORM --rm -i"
 ARGS+=" -e MONGODB_VERSION=$MONGODB_VERSION -e TOPOLOGY=$TOPOLOGY"
 ARGS+=" -e SSL=$SSL -e AUTH=$AUTH"
-ARGS+=" -e CRYPT_SHARED_LIB_PATH=$MONGODB_BINARIES/mongosh_crypt_v1.so"
+ARGS+=" -e MONGO_ORCHESTRATION_HOME=$CONT_DRIVERS_TOOLS/.evergreen/orchestration"
+ARGS+=" -e MONGODB_BINARIES=$CONT_DRIVERS_TOOLS/mongodb/bin"
+ARGS+=" -e DOCKER_RUNNING=true"
+ARGS+=" -e CRYPT_SHARED_LIB_PATH=$CONT_DRIVERS_TOOLS/mongosh_crypt_v1.so"
 ARGS+=" -e ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
 ARGS+=" -e SKIP_CRYPT_SHARED_LIB=$SKIP_CRYPT_SHARED_LIB"
 
@@ -49,7 +54,7 @@ test -t 1 && ARGS+=" -t"
 
 # Map the cwd to /src and map in DRIVERS_TOOLS.
 ARGS+=" -v `pwd`:/src"
-ARGS+=" -v $DRIVERS_TOOLS:/root/drivers-tools"
+ARGS+=" -v $DRIVERS_TOOLS:$CONT_DRIVERS_TOOLS"
 
 # Launch client docker container.
 $DOCKER run $ARGS "$@"
