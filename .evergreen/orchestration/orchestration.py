@@ -27,13 +27,12 @@ DRIVERS_TOOLS = EVG_PATH.parent
 def run_command(args, **kwargs):
     if isinstance(args, str):
         args = shlex.split(args)
-    kwargs.setdefault("stdout", subprocess.PIPE)
-    kwargs.setdefault("stderr", subprocess.PIPE)
     args = [sys.executable, "-m", *args]
     try:
         subprocess.run(args, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
-        print("stderr:", e.stderr.decode("utf8"))
+        if e.stderr:
+            print("stderr:", e.stderr.decode("utf8"))
         raise e
 
 
