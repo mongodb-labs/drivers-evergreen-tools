@@ -16,10 +16,10 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path
+from pathlib import PosixPath
 
 # Get global values.
-HERE = Path(__file__).absolute().parent
+HERE = PosixPath(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
@@ -164,9 +164,7 @@ def run(opts):
     print("Running orchestration...")
 
     # Clean up previous files.
-    mdb_binaries = Path(opts.mongodb_binaries)
-    print("wat", mdb_binaries)
-    sys.exit(1)
+    mdb_binaries = PosixPath(opts.mongodb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
 
     # The evergreen directory to path.
@@ -211,9 +209,9 @@ def run(opts):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
-        expansion_file = Path("mo-expansion.yml")
+        expansion_file = PosixPath("mo-expansion.yml")
         expansion_file.write_text(crypt_text)
-        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
+        PosixPath("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"mongosh_dl --out {mdb_binaries} --strip-path-components 2"
@@ -242,7 +240,7 @@ def run(opts):
 
     # Get the orchestration config data.
     topology = opts.topology
-    mo_home = Path(opts.mongo_orchestration_home)
+    mo_home = PosixPath(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
     text = orch_path.read_text()
@@ -322,7 +320,7 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = Path(opts.mongo_orchestration_home)
+    mo_home = PosixPath(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
         stop()
 
@@ -334,7 +332,7 @@ def start(opts):
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
-    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries = PosixPath(opts.mongodb_binaries)
     config = dict(releases=dict(default=str(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
 
