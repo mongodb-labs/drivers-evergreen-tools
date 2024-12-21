@@ -165,6 +165,8 @@ def run(opts):
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
+    print("wat", mdb_binaries)
+    sys.exit(1)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
 
     # The evergreen directory to path.
