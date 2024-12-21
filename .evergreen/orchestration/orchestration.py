@@ -16,10 +16,10 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import PosixPath
+from pathlib import Path
 
 # Get global values.
-HERE = PosixPath(__file__).absolute().parent
+HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
@@ -165,7 +165,8 @@ def run(opts):
     print("Running orchestration...")
 
     # Clean up previous files.
-    mdb_binaries = PosixPath(opts.mongodb_binaries)
+    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries = str(mdb_binaries).replace(os.sep, "/")
     shutil.rmtree(mdb_binaries, ignore_errors=True)
 
     # The evergreen directory to path.
@@ -175,6 +176,7 @@ def run(opts):
     dl_start = datetime.now()
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
+    cache_dir = str(cache_dir).replace(os.sep, "/")
     args = f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version {version}"
     args += " --strip-path-components 2 --component archive"
     print(f"Downloading mongodb {version}...")
@@ -210,9 +212,9 @@ def run(opts):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
-        expansion_file = PosixPath("mo-expansion.yml")
+        expansion_file = Path("mo-expansion.yml")
         expansion_file.write_text(crypt_text)
-        PosixPath("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
+        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"mongosh_dl --out {mdb_binaries} --strip-path-components 2"
@@ -241,7 +243,7 @@ def run(opts):
 
     # Get the orchestration config data.
     topology = opts.topology
-    mo_home = PosixPath(opts.mongo_orchestration_home)
+    mo_home = Path(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
     text = orch_path.read_text()
@@ -321,7 +323,7 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = PosixPath(opts.mongo_orchestration_home)
+    mo_home = Path(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
         stop()
 
@@ -333,9 +335,10 @@ def start(opts):
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
-    mdb_binaries = PosixPath(opts.mongodb_binaries)
+    mdb_binaries = Path(opts.mongodb_binaries)
     config = dict(releases=dict(default=str(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
+    mo_config = str(mo_config).replace(os.sep, "/")
 
     # Copy client certificates on Windows.
     if os.name == "nt":
