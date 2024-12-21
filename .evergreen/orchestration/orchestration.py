@@ -28,6 +28,7 @@ def run_command(args, **kwargs):
     if isinstance(args, str):
         args = shlex.split(args)
     args = [sys.executable, "-m", *args]
+    kwargs.setdefault("stderr", subprocess.PIPE)
     try:
         subprocess.run(args, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
