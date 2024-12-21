@@ -33,9 +33,7 @@ def run_command(args, **kwargs):
     try:
         subprocess.run(args, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
-        print("output:", e.output.decode("utf8"))
         print("stderr:", e.stderr.decode("utf8"))
-        print("stdout:", e.stdout.decode("utf8"))
         raise e
 
 
@@ -193,9 +191,15 @@ def run(opts):
 
     # Download crypt shared.
     if not opts.skip_crypt_shared:
-        args = (
-            f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version {version}"
-        )
+        # Get the download URL for crypt_shared.
+        # The crypt_shared package is available on server 6.0 and newer.
+        # Try to download a version of crypt_shared matching the server version.
+        # If no matching version is available, try to download the latest Major release of crypt_shared.
+        if version in ["3.6", "4.0", "4.2", "4.4", "5.0"]:
+            crypt_shared_version = "latest"
+        else:
+            crypt_shared_version = version
+        args = f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version {crypt_shared_version}"
         args += " --strip-path-components 1 --component crypt_shared"
         print("Downloading crypt_shared...")
         run_command(args)
