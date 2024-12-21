@@ -122,7 +122,7 @@ mo-expansion.sh
 .rustup
 .local
 .evergreen/orchestration/config.json
-.evergreen/orchestration/orchestration
+.evergreen/orchestration/drivers-orchestration
 .evergreen/socks5srv
 .evergreen/mongodl
 .evergreen/mongosh-dl

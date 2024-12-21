@@ -3,9 +3,9 @@ requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "drivers-evergreen-tools-orchestration"
+name = "drivers-orchestration"
 version = "0.1.0"
-description = 'Scripts for drivers-evergreen-tools orchestration'
+description = 'Scripts for drivers orchestration'
 requires-python = ">=3.8"
 license = "MIT"
 keywords = []
@@ -20,10 +20,10 @@ classifiers = [
 dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration"]
 
 [project.scripts]
-orchestration = "orchestration:main"
+orchestration = "drivers-orchestration:main"
 
 [tool.hatch.build]
-include = ["orchestration.py"]
+include = ["drivers-orchestration.py"]
 
 [tool.hatch.metadata]
 allow-direct-references=true
