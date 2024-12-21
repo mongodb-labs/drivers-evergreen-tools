@@ -33,7 +33,9 @@ def run_command(args, **kwargs):
     try:
         subprocess.run(args, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print("output:", e.output)
+        print("stderr:", e.stderr)
+        print("stdout:", e.stdout)
         raise e
 
 
