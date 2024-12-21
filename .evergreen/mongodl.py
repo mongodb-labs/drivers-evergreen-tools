@@ -29,6 +29,7 @@ import tarfile
 import textwrap
 import urllib.error
 import urllib.request
+import warnings
 import zipfile
 from collections import namedtuple
 from contextlib import contextmanager
@@ -822,7 +823,23 @@ def _dl_component(
             target, arch, edition, component, latest_build_branch
         )
     else:
-        dl_url = _published_build_url(cache, version, target, arch, edition, component)
+        try:
+            dl_url = _published_build_url(
+                cache, version, target, arch, edition, component
+            )
+        except ValueError:
+            if component == "crypt_shared" and version != "latest":
+                warnings.warn(
+                    "No matching version of crypt_shared found, using 'latest'",
+                    stacklevel=2,
+                )
+                version = "latest"
+            else:
+                raise
+            dl_url = _published_build_url(
+                cache, version, target, arch, edition, component
+            )
+
     if no_download:
         print(dl_url)
         return None
@@ -999,7 +1016,7 @@ def _maybe_extract_member(
     return 1
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -1019,32 +1036,37 @@ def main():
     dl_grp = parser.add_argument_group(
         "Download arguments",
         description="Select what to download and extract. "
-        "Non-required arguments will be inferred "
+        "Some arguments will be inferred "
         "based on the host system.",
     )
     dl_grp.add_argument(
         "--target",
         "-T",
+        default="auto",
         help="The target platform for which to download. "
         'Use "--list" to list available targets.',
     )
-    dl_grp.add_argument("--arch", "-A", help="The architecture for which to download")
+    dl_grp.add_argument(
+        "--arch", "-A", default="auto", help="The architecture for which to download"
+    )
     dl_grp.add_argument(
         "--edition",
         "-E",
+        default="enterprise",
         help='The edition of the product to download (Default is "enterprise"). '
         'Use "--list" to list available editions.',
     )
     dl_grp.add_argument(
         "--out",
         "-o",
-        help="The directory in which to download components. (Required)",
+        help="The directory in which to download components.",
         type=Path,
     )
     dl_grp.add_argument(
         "--version",
         "-V",
-        help='The product version to download (Required). Use "latest" to download '
+        default="latest",
+        help='The product version to download. Use "latest" to download '
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
         'candidates. Use "rapid" to download the latest rapid release. '
@@ -1054,8 +1076,8 @@ def main():
     dl_grp.add_argument(
         "--component",
         "-C",
-        help="The component to download (Required). "
-        'Use "--list" to list available components.',
+        default="archive",
+        help="The component to download. " 'Use "--list" to list available components.',
     )
     dl_grp.add_argument(
         "--only",
@@ -1103,33 +1125,24 @@ def main():
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
-
-    if args.list:
-        _print_list(
-            cache.db, args.version, args.target, args.arch, args.edition, args.component
-        )
-        return
-
-    if args.version is None:
-        raise argparse.ArgumentError(None, 'A "--version" is required')
-    if args.component is None:
-        raise argparse.ArgumentError(None, 'A "--component" name should be provided')
-    if args.out is None and args.test is None and args.no_download is None:
-        raise argparse.ArgumentError(None, 'A "--out" directory should be provided')
 
     version = args.version
     if version in PERF_VERSIONS:
         version = PERF_VERSIONS[version]
     target = args.target
-    if target in (None, "auto"):
+    if target == "auto":
         target = infer_target(version)
     arch = args.arch
-    if arch in (None, "auto"):
+    if arch == "auto":
         arch = infer_arch()
-    edition = args.edition or "enterprise"
+
+    if args.list:
+        _print_list(cache.db, version, target, arch, args.edition, args.component)
+        return
+
     out = args.out or Path.cwd()
     out = out.absolute()
 
@@ -1139,7 +1152,7 @@ def main():
         version=version,
         target=target,
         arch=arch,
-        edition=edition,
+        edition=args.edition,
         component=args.component,
         pattern=args.only,
         strip_components=args.strip_components,
