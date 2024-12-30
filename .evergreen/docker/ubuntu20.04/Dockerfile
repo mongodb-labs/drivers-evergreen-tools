@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   gnupg \
   python \
   python3 \
-  python3.8-venv \
+  python3.9-venv \
   lsof \
   software-properties-common \
   libsnmp35 \
