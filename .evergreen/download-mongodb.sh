@@ -101,20 +101,7 @@ get_mongodb_download_url_for ()
      exit 1
    fi
 
-   # Get the download URL for crypt_shared.
-   # The crypt_shared package is available on server 6.0 and newer.
-   # Try to download a version of crypt_shared matching the server version.
-   # If no matching version is available, try to download the latest Major release of crypt_shared.
-   case "$_VERSION" in
-      5.0 | 4.4 | 4.2 | 4.0 | 3.6)
-         # Default to using the latest Major release. Major releases are expected yearly.
-         # MONGODB_60 may be empty if there is no 6.0 download available for this platform.
-         _crypt_shared_version=latest
-         ;;
-      *)
-         _crypt_shared_version=$_VERSION
-   esac
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongodl.py" --version $_crypt_shared_version --component crypt_shared --no-download | tr -d '\r')
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component crypt_shared --no-download | tr -d '\r')
 
    echo "$MONGODB_DOWNLOAD_URL"
 }

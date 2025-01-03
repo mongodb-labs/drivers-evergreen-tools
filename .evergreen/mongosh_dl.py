@@ -110,34 +110,37 @@ def _download(
     return resp
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     dl_grp = parser.add_argument_group(
         "Download arguments",
         description="Select what to download and extract. "
-        "Non-required arguments will be inferred "
+        "Some arguments will be inferred "
         "based on the host system.",
     )
     dl_grp.add_argument(
         "--target",
         "-T",
+        default="auto",
         help="The target platform for which to download. "
         'Use "--list" to list available targets.',
     )
-    dl_grp.add_argument("--arch", "-A", help="The architecture for which to download")
+    dl_grp.add_argument(
+        "--arch", "-A", default="auto", help="The architecture for which to download"
+    )
     dl_grp.add_argument(
         "--out",
         "-o",
-        help="The directory in which to download components. (Required)",
+        help="The directory in which to download components.",
         type=Path,
     )
     dl_grp.add_argument(
         "--version",
         "-V",
         default="latest",
-        help='The product version to download (Required). Use "latest" to download '
+        help='The product version to download. Use "latest" to download '
         "the newest available stable version.",
     )
     dl_grp.add_argument(
@@ -174,16 +177,13 @@ def main():
         help="Do not extract or place any files/directories. "
         "Only print what will be extracted without placing any files.",
     )
-    args = parser.parse_args()
-
-    if args.out is None and args.test is None and args.no_download is None:
-        raise argparse.ArgumentError(None, 'A "--out" directory should be provided')
+    args = parser.parse_args(argv)
 
     target = args.target
-    if target in (None, "auto"):
+    if target == "auto":
         target = sys.platform
     arch = args.arch
-    if arch in (None, "auto"):
+    if arch == "auto":
         arch = infer_arch()
     out = args.out or Path.cwd()
     out = out.absolute()
