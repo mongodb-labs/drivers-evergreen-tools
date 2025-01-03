@@ -10,31 +10,20 @@ import os
 import shlex
 import shutil
 import socket
-import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from mongo_orchestration.server import main as mongo_orchestration
+from mongodl import main as mongodl
+from mongosh_dl import main as mongosh_dl
+
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
-
-
-def run_command(args, **kwargs):
-    if isinstance(args, str):
-        args = shlex.split(args)
-    args = [sys.executable, "-m", *args]
-    kwargs.setdefault("stderr", subprocess.PIPE)
-    try:
-        subprocess.run(args, check=True, **kwargs)
-    except subprocess.CalledProcessError as e:
-        if e.stderr:
-            print("stderr:", e.stderr.decode("utf8"))
-        raise e
 
 
 def get_options():
@@ -166,7 +155,6 @@ def run(opts):
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
-    mdb_binaries = str(mdb_binaries).replace(os.sep, "/")
     shutil.rmtree(mdb_binaries, ignore_errors=True)
 
     # The evergreen directory to path.
@@ -176,19 +164,18 @@ def run(opts):
     dl_start = datetime.now()
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
-    cache_dir = str(cache_dir).replace(os.sep, "/")
-    args = f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version {version}"
+    args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version {version}"
     args += " --strip-path-components 2 --component archive"
     print(f"Downloading mongodb {version}...")
-    run_command(args)
+    mongodl(shlex.split(args))
     print(f"Downloading mongodb {version}... done.")
 
     # Download legacy shell
     if opts.install_legacy_shell:
-        args = f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version 5.0"
+        args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version 5.0"
         args += " --strip-path-components 2 --component shell"
         print("Downloading legacy shell...")
-        run_command(args)
+        mongodl(shlex.split(args))
         print("Downloading legacy shell... done.")
 
     # Download crypt shared.
@@ -201,10 +188,10 @@ def run(opts):
             crypt_shared_version = "latest"
         else:
             crypt_shared_version = version
-        args = f"mongodl --out {mdb_binaries} --cache-dir {cache_dir} --version {crypt_shared_version}"
+        args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version {crypt_shared_version}"
         args += " --strip-path-components 1 --component crypt_shared"
         print("Downloading crypt_shared...")
-        run_command(args)
+        mongodl(shlex.split(args))
         print("Downloading crypt_shared... done.")
         crypt_shared_path = None
         for fname in os.listdir(mdb_binaries):
@@ -217,9 +204,9 @@ def run(opts):
         Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
-    args = f"mongosh_dl --out {mdb_binaries} --strip-path-components 2"
+    args = f"--out {mdb_binaries} --strip-path-components 2"
     print("Downloading mongosh...")
-    run_command(args)
+    mongosh_dl(shlex.split(args))
     print("Downloading mongosh... done.")
 
     dl_end = datetime.now()
@@ -338,7 +325,6 @@ def start(opts):
     mdb_binaries = Path(opts.mongodb_binaries)
     config = dict(releases=dict(default=str(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
-    mo_config = str(mo_config).replace(os.sep, "/")
 
     # Copy client certificates on Windows.
     if os.name == "nt":
@@ -349,7 +335,7 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = f"mongo_orchestration.server -e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    args = f"-e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args = +"-s wsgiref"
     args += " start"
@@ -357,7 +343,7 @@ def start(opts):
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
-    run_command(args, stderr=subprocess.STDOUT, stdout=output_fid)
+    mongo_orchestration(shlex.split(args))
 
     # Wait for the server to be available.
     attempt = 0
@@ -369,8 +355,6 @@ def start(opts):
             except ConnectionRefusedError:
                 if (datetime.now() - mo_start).seconds > 120:
                     stop()
-                    output_fid.close()
-                    print(output_file.read_text())
                     raise TimeoutError(
                         "Failed to start cluster, see out.log and server.log"
                     ) from None
@@ -384,7 +368,7 @@ def start(opts):
 
 def stop(_):
     print("Stopping mongo-orchestration...")
-    run_command(["mongo_orchestration.server", "stop"])
+    mongo_orchestration(["stop"])
     print("Stopping mongo-orchestration... done.")
 
 

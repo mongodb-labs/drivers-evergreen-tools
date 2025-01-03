@@ -17,13 +17,13 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration"]
+dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration >= 0.11"]
 
 [project.scripts]
-orchestration = "drivers-orchestration:main"
+drivers-orchestration = "drivers_orchestration:main"
 
 [tool.hatch.build]
-include = ["drivers-orchestration.py"]
+include = ["drivers_orchestration.py"]
 
 [tool.hatch.metadata]
 allow-direct-references=true
