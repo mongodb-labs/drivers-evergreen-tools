@@ -57,8 +57,9 @@ is_python3() (
     return 1
   fi
 
+  # The minimum version we support is Python 3.9.  All other versions are EOL.
   # shellcheck disable=SC2091
-  if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] < 8)"); then
+  if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] < 9)"); then
     version=$($bin --version)
     echo "Detected EOL Python ${version}, skipping."
     return 1
