@@ -45,17 +45,13 @@ Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/
 TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh
 ```
 
-If you want to test server versions older than 4.4, you can use the 18.04 image, e.g.:
+If you want to test server versions older than 4.4, you can use the rhel8 image, e.g.:
+
+You must also specify `ARCH=amd64` in order to run MongoDB versions older than 4.4 on RHEL8, since `aarch` support
+is not available in RHEL8 for those versions.
 
 ```bash
-TOPOLOGY=sharded_cluster MONGODB_VERSION=4.2 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
-```
-
-You must also specify `ARCH=amd64` in order to run MongoDB 3.6 and 4.0, since `aarch` support
-is not available in Ubuntu 18.04 for those versions.
-
-```bash
-ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=3.6 TARGET_IMAGE=ubuntu18.04 ./run-server.sh
+ARCH=amd64 TOPOLOGY=sharded_cluster MONGODB_VERSION=4.2 TARGET_IMAGE=rhel8 ./run-server.sh
 ```
 
 ### Get Logs
