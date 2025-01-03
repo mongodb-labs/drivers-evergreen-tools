@@ -47,7 +47,7 @@ TOPOLOGY=replica_set ORCHESTRATION_FILE=auth.json bash ./run-server.sh
 
 If you want to test server versions older than 4.4, you can use the rhel8 image, e.g.:
 
-You must also specify `ARCH=amd64` in order to run MongoDB <4.4 on RHEL8, since `aarch` support
+You must also specify `ARCH=amd64` in order to run MongoDB versions older than 4.4 on RHEL8, since `aarch` support
 is not available in RHEL8 for those versions.
 
 ```bash
