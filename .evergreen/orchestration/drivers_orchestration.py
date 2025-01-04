@@ -350,7 +350,6 @@ def start(opts):
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
-    sys.exit(1)
     try:
         subprocess.run(
             shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
@@ -358,6 +357,7 @@ def start(opts):
     finally:
         output_fid.close()
         print(output_file.read_text())
+    raise ValueError("here I am")
 
     # Wait for the server to be available.
     attempt = 0
