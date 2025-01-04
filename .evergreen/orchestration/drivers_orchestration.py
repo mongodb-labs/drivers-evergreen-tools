@@ -347,7 +347,10 @@ def start(opts):
     args += " start"
 
     print("Starting mongo-orchestration...")
-    subprocess.run(shlex.split(args), check=True)
+    proc = subprocess.run(
+        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
+    )
+    print(proc.stdout.decode("utf-8"))
 
     # Wait for the server to be available.
     attempt = 0
@@ -371,7 +374,10 @@ def start(opts):
 def stop():
     print("Stopping mongo-orchestration...")
     args = f"{sys.executable} -m mongo_orchestration.server stop"
-    subprocess.run(shlex.split(args), check=True)
+    proc = subprocess.run(
+        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
+    )
+    print(proc.stdout.decode("utf-8"))
     print("Stopping mongo-orchestration... done.")
 
 
