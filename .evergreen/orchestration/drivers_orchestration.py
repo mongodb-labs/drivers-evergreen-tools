@@ -357,7 +357,6 @@ def start(opts):
     finally:
         output_fid.close()
         print(output_file.read_text())
-    raise ValueError("here I am")
 
     # Wait for the server to be available.
     attempt = 0
@@ -375,6 +374,7 @@ def start(opts):
         attempt += 1
         time.sleep(attempt * 1000)
 
+    raise ValueError("here I am")
     print("Starting mongo-orchestration... done.")
 
 
