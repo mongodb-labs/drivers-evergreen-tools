@@ -156,6 +156,8 @@ def run(opts):
     # Clean up previous files.
     mdb_binaries = PurePosixPath(opts.mongodb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
+    expansion_file = Path("mo-expansion.yml")
+    expansion_file.unlink()
 
     # The evergreen directory to path.
     os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
@@ -199,9 +201,8 @@ def run(opts):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
-        expansion_file = PurePosixPath("mo-expansion.yml")
         expansion_file.write_text(crypt_text)
-        PurePosixPath("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
+        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries} --strip-path-components 2"
@@ -233,7 +234,7 @@ def run(opts):
     mo_home = PurePosixPath(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
-    text = orch_path.read_text()
+    text = Path(orch_path).read_text()
     text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", str(DRIVERS_TOOLS))
     data = json.loads(text)
 
@@ -249,7 +250,7 @@ def run(opts):
         handle_docker_config(data)
 
     # Write the config file.
-    orch_file = mo_home / "config.json"
+    orch_file = Path(mo_home / "config.json")
     orch_file.write_text(json.dumps(data, indent=2))
 
     # Start the orchestration.
@@ -296,7 +297,7 @@ def run(opts):
             ),
         ]
     )
-    (DRIVERS_TOOLS / "results.json").write_text(json.dumps(data, indent=2))
+    Path(DRIVERS_TOOLS / "results.json").write_text(json.dumps(data, indent=2))
 
     print("Running orchestration... done.")
 
