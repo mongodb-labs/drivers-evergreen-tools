@@ -10,13 +10,14 @@ import os
 import shlex
 import shutil
 import socket
+import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-from mongo_orchestration.server import main as mongo_orchestration
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
 
@@ -240,7 +241,7 @@ def run(opts):
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
     text = orch_path.read_text()
-    text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", str(DRIVERS_TOOLS))
+    text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
     data = json.loads(text)
 
     if opts.require_api_version:
@@ -337,13 +338,16 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = f"-e default -f {mo_config_str} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    args = (
+        f"{sys.executable} -m mongo_orchestration.server -e default -f {mo_config_str}"
+    )
+    args += "--socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args = +"-s wsgiref"
     args += " start"
 
     print("Starting mongo-orchestration...")
-    mongo_orchestration(shlex.split(args))
+    subprocess.check_call(shlex.split(args))
 
     # Wait for the server to be available.
     attempt = 0
@@ -366,7 +370,8 @@ def start(opts):
 
 def stop(_):
     print("Stopping mongo-orchestration...")
-    mongo_orchestration(["stop"])
+    args = f"{sys.executable} -m mongo_orchestration.server stop"
+    subprocess.check_call(shlex.split(args))
     print("Stopping mongo-orchestration... done.")
 
 
