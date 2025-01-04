@@ -341,17 +341,13 @@ def start(opts):
     args = (
         f"{sys.executable} -m mongo_orchestration.server -e default -f {mo_config_str}"
     )
-    args += "--socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args += "-s wsgiref"
     args += " start"
 
     print("Starting mongo-orchestration...")
-    try:
-        subprocess.check_call(shlex.split(args))
-    except subprocess.CalledProcessError as e:
-        print(e.stderr.decode("utf-8"))
-        raise e
+    subprocess.run(shlex.split(args), check=True)
 
     # Wait for the server to be available.
     attempt = 0
@@ -372,14 +368,10 @@ def start(opts):
     print("Starting mongo-orchestration... done.")
 
 
-def stop(_):
+def stop():
     print("Stopping mongo-orchestration...")
     args = f"{sys.executable} -m mongo_orchestration.server stop"
-    try:
-        subprocess.check_call(shlex.split(args))
-    except subprocess.CalledProcessError as e:
-        print(e.stderr.decode("utf-8"))
-        raise e
+    subprocess.run(shlex.split(args), check=True)
     print("Stopping mongo-orchestration... done.")
 
 
@@ -390,7 +382,7 @@ def main():
     elif opts.command == "start":
         start(opts)
     elif opts.command == "stop":
-        stop(opts)
+        stop()
 
 
 if __name__ == "__main__":
