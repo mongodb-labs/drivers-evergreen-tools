@@ -156,8 +156,10 @@ def run(opts):
     # Clean up previous files.
     mdb_binaries = PurePosixPath(opts.mongodb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
-    expansion_file = Path("mo-expansion.yml")
-    expansion_file.unlink()
+    expansion_yaml = Path("mo-expansion.yml")
+    expansion_yaml.unlink(missing_ok=True)
+    expansion_sh = Path("mo-expansion.sh")
+    expansion_sh.unlink(missing_ok=True)
 
     # The evergreen directory to path.
     os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
@@ -201,8 +203,8 @@ def run(opts):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
-        expansion_file.write_text(crypt_text)
-        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
+        expansion_yaml.write_text(crypt_text)
+        expansion_sh.write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries} --strip-path-components 2"
@@ -274,7 +276,7 @@ def run(opts):
 
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
-    expansion_file.write_text(expansion_file.read_text() + f"\nMONGODB_URI: {uri}")
+    expansion_yaml.write_text(expansion_yaml.read_text() + f"\nMONGODB_URI: {uri}")
     print(f"\nCluster URI: {uri}")
 
     # Write the results file.
