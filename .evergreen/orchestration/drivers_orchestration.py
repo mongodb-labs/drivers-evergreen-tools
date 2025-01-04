@@ -338,10 +338,12 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = f"{sys.executable} -m mongo_orchestration.server run -e default -f {mo_config_str}"
+    args = (
+        f"{sys.executable} -m mongo_orchestration.server -e default -f {mo_config_str}"
+    )
     args += "--socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
-        args = +"-s wsgiref"
+        args += "-s wsgiref"
     args += " start"
 
     print("Starting mongo-orchestration...")
