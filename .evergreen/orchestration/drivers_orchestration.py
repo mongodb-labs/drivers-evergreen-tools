@@ -338,9 +338,8 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = (
-        f"{sys.executable} -m mongo_orchestration.server -e default -f {mo_config_str}"
-    )
+    py_exe = sys.executable.replace(os.sep, "/")
+    args = f"{py_exe} -m mongo_orchestration.server -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args += "-s wsgiref"
@@ -373,7 +372,8 @@ def start(opts):
 
 def stop():
     print("Stopping mongo-orchestration...")
-    args = f"{sys.executable} -m mongo_orchestration.server stop"
+    py_exe = sys.executable.replace(os.sep, "/")
+    args = f"{py_exe} -m mongo_orchestration.server stop"
     proc = subprocess.run(
         shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
     )
