@@ -6,6 +6,7 @@ Use '--help' for more information.
 
 import argparse
 import json
+import logging
 import os
 import shlex
 import shutil
@@ -25,6 +26,8 @@ from mongosh_dl import main as mongosh_dl
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig()
 
 
 def get_options():
@@ -32,6 +35,12 @@ def get_options():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("command", choices=["run", "start", "stop"])
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Whether to log at the DEBUG level"
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Whether to log at the WARNING level"
+    )
     parser.add_argument(
         "--version",
         default="latest",
@@ -113,6 +122,13 @@ def get_options():
         opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
     if opts.topology == "standalone":
         opts.topology = "server"
+
+    if opts.verbose:
+        LOGGER.setLevel(logging.DEBUG)
+    elif opts.quiet:
+        LOGGER.setLevel(logging.WARNING)
+    else:
+        LOGGER.setLevel(logging.INFO)
     return opts
 
 
@@ -152,10 +168,11 @@ def handle_docker_config(data):
 
 
 def run(opts):
-    print("Running orchestration...")
+    LOGGER.info("Running orchestration...")
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
+    # NOTE: in general, we need to use posix strings to avoid path escapes on cygwin.
     mdb_binaries_str = mdb_binaries.as_posix()
     shutil.rmtree(mdb_binaries, ignore_errors=True)
     expansion_yaml = Path("mo-expansion.yml")
@@ -173,17 +190,17 @@ def run(opts):
     cache_dir_str = cache_dir.as_posix()
     args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version {version}"
     args += " --strip-path-components 2 --component archive"
-    print(f"Downloading mongodb {version}...")
+    LOGGER.info(f"Downloading mongodb {version}...")
     mongodl(shlex.split(args))
-    print(f"Downloading mongodb {version}... done.")
+    LOGGER.info(f"Downloading mongodb {version}... done.")
 
     # Download legacy shell
     if opts.install_legacy_shell:
         args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version 5.0"
         args += " --strip-path-components 2 --component shell"
-        print("Downloading legacy shell...")
+        LOGGER.INFO("Downloading legacy shell...")
         mongodl(shlex.split(args))
-        print("Downloading legacy shell... done.")
+        LOGGER.INFO("Downloading legacy shell... done.")
 
     # Download crypt shared.
     if not opts.skip_crypt_shared:
@@ -198,9 +215,9 @@ def run(opts):
         args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str}"
         args += f" --version {crypt_shared_version}"
         args += " --strip-path-components 1 --component crypt_shared"
-        print("Downloading crypt_shared...")
+        LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
-        print("Downloading crypt_shared... done.")
+        LOGGER.info("Downloading crypt_shared... done.")
         crypt_shared_path = None
         for fname in os.listdir(mdb_binaries_str):
             if fname.startswith("mongo_crypt_v1"):
@@ -212,9 +229,9 @@ def run(opts):
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2"
-    print("Downloading mongosh...")
+    LOGGER.info("Downloading mongosh...")
     mongosh_dl(shlex.split(args))
-    print("Downloading mongosh... done.")
+    LOGGER.info("Downloading mongosh... done.")
 
     dl_end = datetime.now()
 
@@ -239,7 +256,7 @@ def run(opts):
     topology = opts.topology
     mo_home = Path(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
-    print("Using orchestration file:", orch_path)
+    LOGGER.info(f"Using orchestration file: {orch_path}")
     text = orch_path.read_text()
     text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
     data = json.loads(text)
@@ -264,7 +281,7 @@ def run(opts):
     start(opts)
 
     # Configure the server.
-    print("Starting deployment...")
+    LOGGER.info("Starting deployment...")
     url = f"http://localhost:8889/v1/{topology}s"
     req = urllib.request.Request(
         url, data=json.dumps(data).encode("utf-8"), method="POST"
@@ -275,13 +292,13 @@ def run(opts):
         stop()
         raise e
     resp = json.loads(resp.read().decode("utf-8"))
-    print(resp)
-    print("Starting deployment... done.")
+    LOGGER.debug(resp)
+    LOGGER.info("Starting deployment... done.")
 
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
     expansion_yaml.write_text(expansion_yaml.read_text() + f"\nMONGODB_URI: {uri}")
-    print(f"\nCluster URI: {uri}")
+    LOGGER.info(f"\nCluster URI: {uri}")
 
     # Write the results file.
     mo_end = datetime.now()
@@ -305,7 +322,7 @@ def run(opts):
     )
     Path(DRIVERS_TOOLS / "results.json").write_text(json.dumps(data, indent=2))
 
-    print("Running orchestration... done.")
+    LOGGER.info("Running orchestration... done.")
 
 
 def start(opts):
@@ -325,7 +342,7 @@ def start(opts):
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
     mdb_binaries = Path(opts.mongodb_binaries)
-    config = dict(releases=dict(default=str(mdb_binaries)))
+    config = dict(releases=dict(default=mdb_binaries.as_posix()))
     mo_config.write_text(json.dumps(config, indent=2))
     mo_config_str = mo_config.as_posix()
 
@@ -338,30 +355,28 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    py_exe = sys.executable.replace(os.sep, "/")
-    args = f"{py_exe} -m mongo_orchestration.server -e default -f {mo_config_str}"
+    args = f"mongo-orchestration start -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args += " -s wsgiref"
-    args += " start"
 
-    print("Starting mongo-orchestration...")
+    LOGGER.info("Starting mongo-orchestration...")
     output_file = mo_home / "out.log"
     server_file = mo_home / "server.log"
-    output_fid = output_file.open("w")
 
-    print("Starting mongo-orchestration...")
+    # NOTE: we need to use a separate file id and close it so Evergreen does not hang.
+    output_fid = output_file.open("w")
     try:
         subprocess.run(
             shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
         )
     except subprocess.CalledProcessError:
-        print("Orchestration failed!")
-        print(f"server.log: {server_file.read_text()}")
+        LOGGER.error("Orchestration failed!")
+        LOGGER.error(f"server.log: {server_file.read_text()}")
         raise
     finally:
         output_fid.close()
-        print(f"out.log: {output_file.read_text()}")
+        LOGGER.info(f"out.log: {output_file.read_text()}")
 
     # Wait for the server to be available.
     attempt = 0
@@ -373,25 +388,24 @@ def start(opts):
             except ConnectionRefusedError:
                 if (datetime.now() - mo_start).seconds > 120:
                     stop()
-                    raise TimeoutError(
-                        f"Failed to start cluster, server.log contents: {server_file.read_text()}"
-                    ) from None
+                    LOGGER.error("Orchestration failed!")
+                    LOGGER.error(f"server.log: {server_file.read_text()}")
+                    raise TimeoutError("Server failed to start") from None
         attempt += 1
         time.sleep(attempt * 1000)
 
-    raise ValueError("here I am")
-    print("Starting mongo-orchestration... done.")
+    LOGGER.info("Starting mongo-orchestration... done.")
 
 
 def stop():
-    print("Stopping mongo-orchestration...")
+    LOGGER.info("Stopping mongo-orchestration...")
     py_exe = sys.executable.replace(os.sep, "/")
     args = f"{py_exe} -m mongo_orchestration.server stop"
     proc = subprocess.run(
         shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
     )
-    print(proc.stdout.decode("utf-8"))
-    print("Stopping mongo-orchestration... done.")
+    LOGGER.debug(proc.stdout.decode("utf-8"))
+    LOGGER.info("Stopping mongo-orchestration... done.")
 
 
 def main():
