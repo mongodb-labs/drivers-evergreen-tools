@@ -14,14 +14,14 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from mongo_orchestration.server import main as mongo_orchestration
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
 
 # Get global values.
-HERE = PurePosixPath(Path(__file__).absolute().parent)
+HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
@@ -154,7 +154,8 @@ def run(opts):
     print("Running orchestration...")
 
     # Clean up previous files.
-    mdb_binaries = PurePosixPath(opts.mongodb_binaries)
+    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries_str = mdb_binaries.as_posix()
     shutil.rmtree(mdb_binaries, ignore_errors=True)
     expansion_yaml = Path("mo-expansion.yml")
     expansion_yaml.unlink(missing_ok=True)
@@ -168,7 +169,8 @@ def run(opts):
     dl_start = datetime.now()
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
-    args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version {version}"
+    cache_dir_str = cache_dir.as_posix()
+    args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version {version}"
     args += " --strip-path-components 2 --component archive"
     print(f"Downloading mongodb {version}...")
     mongodl(shlex.split(args))
@@ -176,7 +178,7 @@ def run(opts):
 
     # Download legacy shell
     if opts.install_legacy_shell:
-        args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version 5.0"
+        args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version 5.0"
         args += " --strip-path-components 2 --component shell"
         print("Downloading legacy shell...")
         mongodl(shlex.split(args))
@@ -192,22 +194,23 @@ def run(opts):
             crypt_shared_version = "latest"
         else:
             crypt_shared_version = version
-        args = f"--out {mdb_binaries} --cache-dir {cache_dir} --version {crypt_shared_version}"
+        args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str}"
+        args += f" --version {crypt_shared_version}"
         args += " --strip-path-components 1 --component crypt_shared"
         print("Downloading crypt_shared...")
         mongodl(shlex.split(args))
         print("Downloading crypt_shared... done.")
         crypt_shared_path = None
-        for fname in os.listdir(mdb_binaries):
+        for fname in os.listdir(mdb_binaries_str):
             if fname.startswith("mongo_crypt_v1"):
-                crypt_shared_path = mdb_binaries / fname
+                crypt_shared_path = (mdb_binaries / fname).as_posix()
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
         expansion_yaml.write_text(crypt_text)
         expansion_sh.write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
-    args = f"--out {mdb_binaries} --strip-path-components 2"
+    args = f"--out {mdb_binaries_str} --strip-path-components 2"
     print("Downloading mongosh...")
     mongosh_dl(shlex.split(args))
     print("Downloading mongosh... done.")
@@ -233,10 +236,10 @@ def run(opts):
 
     # Get the orchestration config data.
     topology = opts.topology
-    mo_home = PurePosixPath(opts.mongo_orchestration_home)
+    mo_home = Path(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
-    text = Path(orch_path).read_text()
+    text = orch_path.read_text()
     text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", str(DRIVERS_TOOLS))
     data = json.loads(text)
 
@@ -308,7 +311,7 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = PurePosixPath(opts.mongo_orchestration_home)
+    mo_home = Path(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
         stop()
 
@@ -320,9 +323,10 @@ def start(opts):
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
-    mdb_binaries = PurePosixPath(opts.mongodb_binaries)
+    mdb_binaries = Path(opts.mongodb_binaries)
     config = dict(releases=dict(default=str(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
+    mo_config_str = mo_config.as_posix()
 
     # Copy client certificates on Windows.
     if os.name == "nt":
@@ -333,7 +337,7 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = f"-e default -f {mo_config} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
+    args = f"-e default -f {mo_config_str} --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args = +"-s wsgiref"
     args += " start"
