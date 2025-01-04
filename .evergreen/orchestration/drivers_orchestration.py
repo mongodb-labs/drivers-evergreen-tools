@@ -14,14 +14,14 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from mongo_orchestration.server import main as mongo_orchestration
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
 
 # Get global values.
-HERE = PurePosixPath(__file__).absolute().parent
+HERE = PurePosixPath(Path(__file__).absolute().parent)
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
