@@ -342,12 +342,16 @@ def start(opts):
     args = f"{py_exe} -m mongo_orchestration.server -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
-        args += "-s wsgiref"
+        args += " -s wsgiref"
     args += " start"
 
     print("Starting mongo-orchestration...")
+    output_file = mo_home / "out.log"
+    output_fid = output_file.open("w")
+
+    print("Starting mongo-orchestration...")
     proc = subprocess.run(
-        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
+        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
     )
     print(proc.stdout.decode("utf-8"))
 
@@ -361,11 +365,16 @@ def start(opts):
             except ConnectionRefusedError:
                 if (datetime.now() - mo_start).seconds > 120:
                     stop()
+                    output_fid.close()
+                    print(output_file.read_text())
                     raise TimeoutError(
                         "Failed to start cluster, see out.log and server.log"
                     ) from None
         attempt += 1
         time.sleep(attempt * 1000)
+
+    output_fid.close()
+    print(output_file.read_text())
 
     print("Starting mongo-orchestration... done.")
 
