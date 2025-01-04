@@ -14,14 +14,14 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path
+from pathlib import PurePosixPath
 
 from mongo_orchestration.server import main as mongo_orchestration
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
 
 # Get global values.
-HERE = Path(__file__).absolute().parent
+HERE = PurePosixPath(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 
@@ -154,7 +154,7 @@ def run(opts):
     print("Running orchestration...")
 
     # Clean up previous files.
-    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries = PurePosixPath(opts.mongodb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
 
     # The evergreen directory to path.
@@ -199,9 +199,9 @@ def run(opts):
                 crypt_shared_path = mdb_binaries / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
-        expansion_file = Path("mo-expansion.yml")
+        expansion_file = PurePosixPath("mo-expansion.yml")
         expansion_file.write_text(crypt_text)
-        Path("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
+        PurePosixPath("mo-expansion.sh").write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries} --strip-path-components 2"
@@ -230,7 +230,7 @@ def run(opts):
 
     # Get the orchestration config data.
     topology = opts.topology
-    mo_home = Path(opts.mongo_orchestration_home)
+    mo_home = PurePosixPath(opts.mongo_orchestration_home)
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     print("Using orchestration file:", orch_path)
     text = orch_path.read_text()
@@ -254,7 +254,7 @@ def run(opts):
 
     # Start the orchestration.
     mo_start = datetime.now()
-    output_fid, output_file = start(opts)
+    start(opts)
 
     # Configure the server.
     print("Starting deployment...")
@@ -266,15 +266,10 @@ def run(opts):
         resp = urllib.request.urlopen(req)
     except urllib.error.HTTPError as e:
         stop()
-        output_fid.close()
-        print(output_file.read_text())
         raise e
     resp = json.loads(resp.read().decode("utf-8"))
     print(resp)
     print("Starting deployment... done.")
-
-    print(output_file.read_text())
-    output_fid.close()
 
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
@@ -310,7 +305,7 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = Path(opts.mongo_orchestration_home)
+    mo_home = PurePosixPath(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
         stop()
 
@@ -322,7 +317,7 @@ def start(opts):
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
-    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries = PurePosixPath(opts.mongodb_binaries)
     config = dict(releases=dict(default=str(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
 
@@ -339,8 +334,6 @@ def start(opts):
     if os.name == "nt":
         args = +"-s wsgiref"
     args += " start"
-    output_file = mo_home / "out.log"
-    output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
     mongo_orchestration(shlex.split(args))
@@ -363,8 +356,6 @@ def start(opts):
 
     print("Starting mongo-orchestration... done.")
 
-    return output_fid, output_file
-
 
 def stop(_):
     print("Stopping mongo-orchestration...")
@@ -377,9 +368,7 @@ def main():
     if opts.command == "run":
         run(opts)
     elif opts.command == "start":
-        output_fid, output_file = start(opts)
-        print(output_file.read_text())
-        output_fid.close()
+        start(opts)
     elif opts.command == "stop":
         stop(opts)
 
