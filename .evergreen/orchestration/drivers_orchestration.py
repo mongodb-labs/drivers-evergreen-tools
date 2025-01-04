@@ -355,6 +355,10 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
+    # We need to use the mongo-orchestration cli to start the daemon, so add it
+    # to PATH.
+    bin_dir = Path(sys.executable).parent.as_posix()
+    os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
     args = f"mongo-orchestration start -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
