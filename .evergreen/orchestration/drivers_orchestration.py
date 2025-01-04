@@ -347,6 +347,7 @@ def start(opts):
 
     print("Starting mongo-orchestration...")
     output_file = mo_home / "out.log"
+    server_file = mo_home / "server.log"
     output_fid = output_file.open("w")
 
     print("Starting mongo-orchestration...")
@@ -354,9 +355,15 @@ def start(opts):
         subprocess.run(
             shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
         )
+    except subprocess.CalledProcessError:
+        print("Orchestration failed!")
+        print(f"out.log: {output_file.read_text()}")
+        print(f"server.log: {server_file.read_text()}")
+        raise
     finally:
         output_fid.close()
-        print(output_file.read_text())
+
+    print(output_file.read_text())
 
     # Wait for the server to be available.
     attempt = 0
@@ -369,7 +376,7 @@ def start(opts):
                 if (datetime.now() - mo_start).seconds > 120:
                     stop()
                     raise TimeoutError(
-                        "Failed to start cluster, see out.log and server.log"
+                        f"Failed to start cluster, server.log contents: {server_file.read_text()}"
                     ) from None
         attempt += 1
         time.sleep(attempt * 1000)
