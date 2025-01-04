@@ -357,13 +357,11 @@ def start(opts):
         )
     except subprocess.CalledProcessError:
         print("Orchestration failed!")
-        print(f"out.log: {output_file.read_text()}")
         print(f"server.log: {server_file.read_text()}")
         raise
     finally:
         output_fid.close()
-
-    print(output_file.read_text())
+        print(f"out.log: {output_file.read_text()}")
 
     # Wait for the server to be available.
     attempt = 0
