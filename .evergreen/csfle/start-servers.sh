@@ -56,7 +56,7 @@ echo "Starting HTTP Server 2...done."
 
 
 echo "Starting HTTP Server 3..."
-nohup ython -u kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 9002 --require_client_cert > http3.log 2>&1 &
+nohup python -u kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 9002 --require_client_cert > http3.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 sleep 1
 cat http3.log
