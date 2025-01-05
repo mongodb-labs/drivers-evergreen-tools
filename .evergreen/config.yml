@@ -520,6 +520,18 @@ functions:
       params:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/csfle/setup.sh]
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/csfle/teardown.sh]
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
   "run cli test partial":
