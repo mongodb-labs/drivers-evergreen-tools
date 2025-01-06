@@ -7,6 +7,7 @@ Use '--help' for more information.
 
 import argparse
 import json
+import logging
 import os
 import re
 import shlex
@@ -16,8 +17,12 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
+
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
+from mongodl import LOGGER as DL_LOGGER
 from mongodl import SSL_CONTEXT, ExpandResult, _expand_archive, infer_arch
 
 
@@ -57,7 +62,7 @@ def _get_latest_version_git():
         )
         for line in reversed(output.decode("utf-8").splitlines()):
             if re.match(r"^v\d+\.\d+\.\d+$", line):
-                print("Found version", line, file=sys.stderr)
+                LOGGER.debug("Found version %s", line)
                 return line.replace("v", "").strip()
 
 
@@ -71,7 +76,7 @@ def _download(
     test: bool,
     no_download: bool,
 ) -> int:
-    print(f"Download {version} mongosh for {target}-{arch}", file=sys.stderr)
+    LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
         version = _get_latest_version()
     if arch == "x86_64":
@@ -89,6 +94,7 @@ def _download(
     else:
         suffix = ".zip"
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
+    # This must go to stdout to be consumed by the calling program.
     print(dl_url)
 
     if no_download:
@@ -113,6 +119,12 @@ def _download(
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Whether to log at the DEBUG level"
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Whether to log at the WARNING level"
     )
     dl_grp = parser.add_argument_group(
         "Download arguments",
@@ -187,6 +199,12 @@ def main(argv=None):
         arch = infer_arch()
     out = args.out or Path.cwd()
     out = out.absolute()
+    if args.verbose:
+        LOGGER.setLevel(logging.DEBUG)
+        DL_LOGGER.setLevel(logging.DEBUG)
+    elif args.quiet:
+        LOGGER.setLevel(logging.WARNING)
+        DL_LOGGER.setLevel(logging.WARNING)
     result = _download(
         out,
         version=args.version,
