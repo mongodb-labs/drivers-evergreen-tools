@@ -27,7 +27,7 @@ HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 LOGGER = logging.getLogger(__name__)
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
 
 def get_options():
@@ -125,10 +125,12 @@ def get_options():
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
+        mongodl.LOGGER.setLevel(logging.DEBUG)
+        mongosh_dl.LOGGER.setLevel(logging.DEBUG)
     elif opts.quiet:
         LOGGER.setLevel(logging.WARNING)
-    else:
-        LOGGER.setLevel(logging.INFO)
+        mongodl.LOGGER.setLevel(logging.WARNING)
+        mongosh_dl.LOGGER.setLevel(logging.WARNING)
     return opts
 
 
