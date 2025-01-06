@@ -231,7 +231,7 @@ def run(opts):
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2"
-    if opts.debug:
+    if opts.verbose:
         args += " -v"
     elif opts.quiet:
         args += " -q"
