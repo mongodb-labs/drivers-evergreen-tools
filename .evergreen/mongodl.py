@@ -18,6 +18,7 @@ import argparse
 import enum
 import hashlib
 import json
+import logging
 import os
 import platform
 import re
@@ -46,6 +47,9 @@ from typing import (
     Optional,
     cast,
 )
+
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
 SSL_CONTEXT = ssl.create_default_context()
 try:
@@ -483,9 +487,9 @@ class CacheDB:
                         data=json.dumps(data),
                     )
         if missing:
-            print("Missing targets in DISTRO_ID_TO_TARGET:", file=sys.stderr)
+            LOGGER.error("Missing targets in DISTRO_ID_TO_TARGET:")
             for item in missing:
-                print(f" - {item}", file=sys.stderr)
+                LOGGER.error(f" - {item}")
             if os.environ.get("VALIDATE_DISTROS") == "1":
                 sys.exit(1)
 
@@ -815,9 +819,7 @@ def _dl_component(
     no_download: bool,
     latest_build_branch: "str|None",
 ) -> ExpandResult:
-    print(
-        f"Download {component} {version}-{edition} for {target}-{arch}", file=sys.stderr
-    )
+    LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
     if version == "latest-build":
         dl_url = _latest_build_url(
             target, arch, edition, component, latest_build_branch
@@ -841,6 +843,7 @@ def _dl_component(
             )
 
     if no_download:
+        # This must go to stdout to be consumed by the calling program.
         print(dl_url)
         return None
     cached = cache.download_file(dl_url).path
@@ -893,8 +896,8 @@ def _expand_archive(
     Expand the archive members from 'ar' into 'dest'. If 'pattern' is not-None,
     only extracts members that match the pattern.
     """
-    print(f"Extract from: [{ar.name}]", file=sys.stderr)
-    print(f"        into: [{dest}]", file=sys.stderr)
+    LOGGER.debug(f"Extract from: [{ar.name}]")
+    LOGGER.debug(f"        into: [{dest}]")
     if ar.suffix == ".zip":
         n_extracted = _expand_zip(ar, dest, pattern, strip_components, test=test)
     elif ar.suffix == ".tgz":
@@ -904,33 +907,27 @@ def _expand_archive(
     verb = "would be" if test else "were"
     if n_extracted == 0:
         if pattern and strip_components:
-            print(
+            LOGGER.warning(
                 f"NOTE: No files {verb} extracted. Likely all files {verb} "
-                f'excluded by "--only={pattern}" and/or "--strip-components={strip_components}"',
-                file=sys.stderr,
+                f'excluded by "--only={pattern}" and/or "--strip-components={strip_components}"'
             )
         elif pattern:
-            print(
+            LOGGER.warning(
                 f"NOTE: No files {verb} extracted. Likely all files {verb} "
-                f'excluded by the "--only={pattern}" filter',
-                file=sys.stderr,
+                f'excluded by the "--only={pattern}" filter'
             )
         elif strip_components:
-            print(
+            LOGGER.warning(
                 f"NOTE: No files {verb} extracted. Likely all files {verb} "
-                f'excluded by "--strip-components={strip_components}"',
-                file=sys.stderr,
+                f'excluded by "--strip-components={strip_components}"'
             )
         else:
-            print(f"NOTE: No files {verb} extracted. Empty archive?", file=sys.stderr)
+            LOGGER.warning(f"NOTE: No files {verb} extracted. Empty archive?")
         return ExpandResult.Empty
     if n_extracted == 1:
-        print(
-            "One file {v} extracted".format(v="would be" if test else "was"),
-            file=sys.stderr,
-        )
+        LOGGER.info(f"One file {verb} extracted")
         return ExpandResult.Okay
-    print(f"{n_extracted} files {verb} extracted", file=sys.stderr)
+    LOGGER.info(f"{n_extracted} files {verb} extracted")
     return ExpandResult.Okay
 
 
@@ -990,18 +987,18 @@ def _maybe_extract_member(
     :return: Zero if the file was excluded by filters, one otherwise.
     """
     relpath = PurePath(relpath)
-    print("  | {:-<65} |".format(str(relpath) + " "), end="", file=sys.stderr)
+    LOGGER.debug("  | {:-<65} |".format(str(relpath) + " "))
     if len(relpath.parts) <= strip:
         # Not enough path components
-        print(" (Excluded by --strip-components)", file=sys.stderr)
+        LOGGER.debug(" (Excluded by --strip-components)")
         return 0
     if not _test_pattern(relpath, PurePath(pattern) if pattern else None):
         # Doesn't match our pattern
-        print(" (excluded by pattern)", file=sys.stderr)
+        LOGGER.debug(" (excluded by pattern)")
         return 0
     stripped = _pathjoin(relpath.parts[strip:])
     dest = Path(out) / stripped
-    print(f"\n    -> [{dest}]", file=sys.stderr)
+    LOGGER.debug(f"-> [{dest}]")
     if test:
         # We are running in test-only mode: Do not do anything
         return 1
@@ -1025,6 +1022,12 @@ def main(argv=None):
         type=Path,
         default=default_cache_dir(),
         help="Directory where download caches and metadata will be stored",
+    )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Whether to log at the DEBUG level"
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Whether to log at the WARNING level"
     )
     grp = parser.add_argument_group("List arguments")
     grp.add_argument(
@@ -1138,6 +1141,11 @@ def main(argv=None):
     arch = args.arch
     if arch == "auto":
         arch = infer_arch()
+
+    if args.verbose:
+        LOGGER.setLevel(logging.DEBUG)
+    elif args.quiet:
+        LOGGER.setLevel(logging.WARNING)
 
     if args.list:
         _print_list(cache.db, version, target, arch, args.edition, args.component)
