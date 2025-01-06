@@ -40,9 +40,6 @@ ${DRIVERS_TOOLS}/.evergreen/csfle/teardown.sh
 
 ```yaml
 start-csfle-servers:
-  - command: ec2.assume_role
-      params:
-      role_arn: ${aws_test_secrets_role}
   - command: subprocess.exec
       params:
       binary: bash
