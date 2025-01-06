@@ -125,12 +125,8 @@ def get_options():
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
-        mongodl.LOGGER.setLevel(logging.DEBUG)
-        mongosh_dl.LOGGER.setLevel(logging.DEBUG)
     elif opts.quiet:
         LOGGER.setLevel(logging.WARNING)
-        mongodl.LOGGER.setLevel(logging.WARNING)
-        mongosh_dl.LOGGER.setLevel(logging.WARNING)
     return opts
 
 
@@ -190,7 +186,12 @@ def run(opts):
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
     cache_dir_str = cache_dir.as_posix()
-    args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version {version}"
+    default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str}"
+    if opts.quiet:
+        default_args += " -q"
+    elif opts.verbose:
+        default_args += " -v"
+    args = f"{default_args} --version {version}"
     args += " --strip-path-components 2 --component archive"
     LOGGER.info(f"Downloading mongodb {version}...")
     mongodl(shlex.split(args))
@@ -198,7 +199,7 @@ def run(opts):
 
     # Download legacy shell
     if opts.install_legacy_shell:
-        args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --version 5.0"
+        args = f"{default_args} --version 5.0"
         args += " --strip-path-components 2 --component shell"
         LOGGER.INFO("Downloading legacy shell...")
         mongodl(shlex.split(args))
@@ -214,8 +215,7 @@ def run(opts):
             crypt_shared_version = "latest"
         else:
             crypt_shared_version = version
-        args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str}"
-        args += f" --version {crypt_shared_version}"
+        args = f"{default_args} --version {crypt_shared_version}"
         args += " --strip-path-components 1 --component crypt_shared"
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
@@ -231,6 +231,10 @@ def run(opts):
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2"
+    if opts.debug:
+        args += " -v"
+    elif opts.quiet:
+        args += " -q"
     LOGGER.info("Downloading mongosh...")
     mongosh_dl(shlex.split(args))
     LOGGER.info("Downloading mongosh... done.")
