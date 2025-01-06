@@ -30,15 +30,17 @@ done
 . ./activate-kmstlsvenv.sh
 
 # The -u options forces the stdout and stderr streams to be unbuffered.
-# TMPDIR is required to avoid "AF_UNIX path too long" errors.
 COMMAND="python -u"
 if [ "$(uname -s)" != "Darwin" ]; then
+  # On linux and windows host, we need to use nohup to daemonize the process
+  # and prevent the task from hanging.
   # The macos hosts do not support nohup.
   COMMAND="nohup $COMMAND"
 fi
 
 
 echo "Starting KMIP Server..."
+# TMPDIR is required to avoid "AF_UNIX path too long" errors.
 TMPDIR="$(dirname "$DRIVERS_TOOLS")" $COMMAND kms_kmip_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_CERT_FILE --port 5698 > kms_kmip_server.log 2>&1 &
 echo "$!" > kmip_pids.pid
 sleep 1
@@ -83,4 +85,5 @@ sleep 1
 cat fake_azure.log
 echo "Starting Fake Azure IMDS...done."
 
+# Wait for all of the servers to start.
 bash ./await-servers.sh
