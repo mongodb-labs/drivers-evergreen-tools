@@ -361,11 +361,8 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    # We need to use the mongo-orchestration cli to start the daemon, so add it
-    # to PATH.
-    bin_dir = Path(sys.executable).parent.as_posix()
-    os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
-    args = f"mongo-orchestration start -e default -f {mo_config_str}"
+    args = f"{sys.executable} -m mongo_orchestration.server"
+    args += f" start -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
         args += " -s wsgiref"
@@ -382,11 +379,11 @@ def start(opts):
         )
     except subprocess.CalledProcessError:
         LOGGER.error("Orchestration failed!")
-        LOGGER.error(f"server.log: {server_file.read_text()}")
+        LOGGER.error(f"server.log:\n{server_file.read_text().strip()}")
         raise
     finally:
         output_fid.close()
-        LOGGER.info(f"out.log: {output_file.read_text()}")
+        LOGGER.info(f"out.log:\n{output_file.read_text().strip()}")
 
     # Wait for the server to be available.
     attempt = 0
