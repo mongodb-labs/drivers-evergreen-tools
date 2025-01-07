@@ -107,9 +107,9 @@ def get_options():
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if key == "auth":
-                opts.auth = os.environ.get("auth") == "auth"
+                opts.auth = os.environ.get("AUTH") == "auth"
             elif key == "ssl":
-                opts.ssl = os.environ.get("ssl") == "ssl"
+                opts.ssl = os.environ.get("SSL") == "ssl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
@@ -361,7 +361,8 @@ def start(opts):
     mo_start = datetime.now()
 
     # Start the process.
-    args = f"{sys.executable} -m mongo_orchestration.server"
+    python_str = Path(sys.executable).as_posix()
+    args = f"{python_str} -m mongo_orchestration.server"
     args += f" start -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
     if os.name == "nt":
