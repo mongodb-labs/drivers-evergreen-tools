@@ -13,7 +13,7 @@ if [ "$1" == "local" ]; then
   cat <<EOF >> "$SCRIPT_DIR/secrets-export.sh"
 export OIDC_SERVER_TYPE=local
 export MONGODB_URI="$URI"
-export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s&authSource=%24external"
 export OIDC_ADMIN_USER=bob
 export OIDC_ADMIN_PWD=pwd123
 EOF
@@ -97,7 +97,7 @@ URI=$(check_deployment)
 cat <<EOF >> "secrets-export.sh"
 export OIDC_SERVER_TYPE=atlas
 export MONGODB_URI="$URI"
-export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s"
+export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s&authSource=%24external"
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF

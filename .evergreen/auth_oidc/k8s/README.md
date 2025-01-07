@@ -112,5 +112,7 @@ Where the test looks something like:
         export K8S_DRIVERS_TAR_FILE=/tmp/driver.tgz
         git archive -o $K8S_DRIVERS_TAR_FILE HEAD
         export K8S_TEST_CMD="OIDC_PROVIDER_NAME=k8s ./.evergreen/run-mongodb-oidc-test.sh"
-        bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
+        bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup-pod.sh
+        bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/run-driver-test.sh
+        bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
 ```
