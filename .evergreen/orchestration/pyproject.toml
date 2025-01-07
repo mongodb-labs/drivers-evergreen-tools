@@ -17,7 +17,7 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration >= 0.11"]
+dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration @ https://github.com/blink1073/mongo-orchestration/archive/test-DRIVERS-3032-dec.tar.gz"]
 
 [project.scripts]
 drivers-orchestration = "drivers_orchestration:main"
