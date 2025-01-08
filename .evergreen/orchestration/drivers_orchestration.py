@@ -17,7 +17,7 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, WindowsPath
 
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
@@ -355,11 +355,16 @@ def start(opts):
     mo_config.write_text(json.dumps(config, indent=2))
     mo_config_str = mo_config.as_posix()
 
-    # Copy client certificates on Windows.
+    # Handle windows-specific concerns.
     if os.name == "nt":
+        # Copy client certificates.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
         shutil.copy2(src, dst)
+        # Ensure MONGO_ORCHESTRATION_HOME is a windows path.
+        os.environ["MONGO_ORCHESTRATION_HOME"] = str(
+            WindowsPath(opts.mongo_orchestration_home)
+        )
 
     mo_start = datetime.now()
 
