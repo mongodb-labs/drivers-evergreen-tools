@@ -102,6 +102,8 @@ def get_options():
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
     LOGGER.info("opts were %s", opts)
+    LOGGER.info("keys: %s", list(os.environ))
+    LOGGER.info("auth: %s", os.environ.get("AUTH"))
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
