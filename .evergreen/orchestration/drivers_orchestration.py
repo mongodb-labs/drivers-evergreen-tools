@@ -101,21 +101,24 @@ def get_options():
 
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
+    print("opts were", opts)
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if key == "auth":
+                print("hi auth", os.environ.get("AUTH"))
                 opts.auth = os.environ.get("AUTH") == "auth"
             elif key == "ssl":
+                print("hi ssl", os.environ.get("SSL"))
                 opts.ssl = os.environ.get("SSL") == "ssl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
             else:
                 setattr(opts, key, os.environ[env_var])
-
+    print("opts are", opts)
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
