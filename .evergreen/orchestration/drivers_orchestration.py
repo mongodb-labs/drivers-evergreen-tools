@@ -1,5 +1,5 @@
 """
-Run mongo-orchestration.
+Run mongo-orchestration and launch a deployment.
 
 Use '--help' for more information.
 """
@@ -101,26 +101,21 @@ def get_options():
 
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
-    LOGGER.info("opts were %s", opts)
-    LOGGER.info("keys: %s", list(os.environ))
-    LOGGER.info("auth: %s", os.environ.get("AUTH"))
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if key == "auth":
-                LOGGER.info("hi auth %s", os.environ.get("AUTH"))
                 opts.auth = os.environ.get("AUTH") == "auth"
             elif key == "ssl":
-                LOGGER.info("hi ssl %s", os.environ.get("SSL"))
                 opts.ssl = os.environ.get("SSL") == "ssl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
             else:
                 setattr(opts, key, os.environ[env_var])
-    LOGGER.info("opts are %s", opts)
+
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
@@ -202,7 +197,7 @@ def run(opts):
     mongodl(shlex.split(args))
     LOGGER.info(f"Downloading mongodb {version}... done.")
 
-    # Download legacy shell
+    # Download legacy shell.
     if opts.install_legacy_shell:
         args = f"{default_args} --version 5.0"
         args += " --strip-path-components 2 --component shell"
@@ -213,14 +208,7 @@ def run(opts):
     # Download crypt shared.
     if not opts.skip_crypt_shared:
         # Get the download URL for crypt_shared.
-        # The crypt_shared package is available on server 6.0 and newer.
-        # Try to download a version of crypt_shared matching the server version.
-        # If no matching version is available, try to download the latest Major release of crypt_shared.
-        if version in ["3.6", "4.0", "4.2", "4.4", "5.0"]:
-            crypt_shared_version = "latest"
-        else:
-            crypt_shared_version = version
-        args = f"{default_args} --version {crypt_shared_version}"
+        args = f"{default_args} --version {version}"
         args += " --strip-path-components 1 --component crypt_shared"
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
@@ -249,19 +237,18 @@ def run(opts):
     # Handle orchestration file - explicit or implicit.
     orchestration_file = opts.orchestration_file
     if not orchestration_file:
-        prefix = "basic"
+        fname = "basic"
         if opts.auth:
-            prefix = "auth"
+            fname = "auth"
         if opts.ssl:
-            prefix += "-ssl"
+            fname += "-ssl"
         if opts.load_balancer:
-            prefix += "-load-balancer"
+            fname += "-load-balancer"
         elif opts.disable_test_commands:
-            prefix = "disableTestCommands"
+            fname = "disableTestCommands"
         elif opts.storage_engine:
-            prefix = opts.storage_engine
-
-        orchestration_file = f"{prefix}.json"
+            fname = opts.storage_engine
+        orchestration_file = f"{fname}.json"
 
     # Get the orchestration config data.
     topology = opts.topology
@@ -358,14 +345,14 @@ def start(opts):
     mo_config_str = mo_config.as_posix()
     command = f"{sys.executable} -m mongo_orchestration.server"
 
-    # Handle windows-specific concerns.
+    # Handle Windows-specific concerns.
     if os.name == "nt":
         # Copy client certificates.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
         shutil.copy2(src, dst)
 
-        # We need to use the executable, and add it to our path.
+        # We need to use the CLI executable, and add it to our path.
         os.environ["PATH"] = (
             f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
         )
@@ -381,7 +368,7 @@ def start(opts):
     output_file = mo_home / "out.log"
     server_file = mo_home / "server.log"
 
-    # NOTE: we need to use a separate file id and close it so Evergreen does not hang.
+    # NOTE: we need to use a separate file id for stdout and close it so Evergreen does not hang.
     output_fid = output_file.open("w")
     try:
         subprocess.run(
@@ -416,7 +403,7 @@ def start(opts):
 
 def stop():
     LOGGER.info("Stopping mongo-orchestration...")
-    py_exe = sys.executable.replace(os.sep, "/")
+    py_exe = Path(sys.executable).as_posix()
     args = f"{py_exe} -m mongo_orchestration.server stop"
     proc = subprocess.run(
         shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
