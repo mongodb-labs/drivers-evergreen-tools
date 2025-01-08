@@ -17,7 +17,7 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path, WindowsPath
+from pathlib import Path
 
 from mongodl import main as mongodl
 from mongosh_dl import main as mongosh_dl
@@ -101,24 +101,24 @@ def get_options():
 
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
-    print("opts were", opts)
+    LOGGER.info("opts were %s", opts)
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
             if key == "auth":
-                print("hi auth", os.environ.get("AUTH"))
+                LOGGER.info("hi auth %s", os.environ.get("AUTH"))
                 opts.auth = os.environ.get("AUTH") == "auth"
             elif key == "ssl":
-                print("hi ssl", os.environ.get("SSL"))
+                LOGGER.info("hi ssl %s", os.environ.get("SSL"))
                 opts.ssl = os.environ.get("SSL") == "ssl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
             else:
                 setattr(opts, key, os.environ[env_var])
-    print("opts are", opts)
+    LOGGER.info("opts are %s", opts)
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
@@ -354,6 +354,7 @@ def start(opts):
     config = dict(releases=dict(default=mdb_binaries.as_posix()))
     mo_config.write_text(json.dumps(config, indent=2))
     mo_config_str = mo_config.as_posix()
+    command = f"{sys.executable} -m mongo_orchestration.server"
 
     # Handle windows-specific concerns.
     if os.name == "nt":
@@ -361,20 +362,18 @@ def start(opts):
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
         shutil.copy2(src, dst)
-        # Ensure MONGO_ORCHESTRATION_HOME is a windows path.
-        os.environ["MONGO_ORCHESTRATION_HOME"] = str(
-            WindowsPath(opts.mongo_orchestration_home)
+
+        # We need to use the executable, and add it to our path.
+        os.environ["PATH"] = (
+            f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
         )
+        command = "mongo-orchestration -s wsgiref"
 
     mo_start = datetime.now()
 
     # Start the process.
-    python_str = Path(sys.executable).as_posix()
-    args = f"{python_str} -m mongo_orchestration.server"
-    args += f" start -e default -f {mo_config_str}"
+    args = f"{command} start -e default -f {mo_config_str}"
     args += " --socket-timeout-ms=60000 --bind=127.0.0.1 --enable-majority-read-concern"
-    if os.name == "nt":
-        args += " -s wsgiref"
 
     LOGGER.info("Starting mongo-orchestration...")
     output_file = mo_home / "out.log"
