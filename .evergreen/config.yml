@@ -295,6 +295,7 @@ functions:
           MONGODB_VERSION: ${VERSION}
           TOPOLOGY: ${TOPOLOGY}
           SSL: ${SSL}
+          AUTH: ${AUTH}
           STORAGE_ENGINE: ${STORAGE_ENGINE}
           LOAD_BALANCER: ${LOAD_BALANCER}
           REQUIRE_API_VERSION: ${REQUIRE_API_VERSION}
