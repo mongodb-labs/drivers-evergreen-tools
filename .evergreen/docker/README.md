@@ -110,8 +110,8 @@ export PATH="$MONGODB_BINARIES:$PATH"
 
 ## Using Rancher
 
-When using [Rancher Desktop](https://rancherdesktop.io/) on Apple Silicon or other ARM-based systems, it's _might_ be necessary to specify the amd64 architecture since some dependencies and tools are more reliable or only available for amd64. 
+When using [Rancher Desktop](https://rancherdesktop.io/) on Apple Silicon or other ARM-based systems, it's _might_ be necessary to specify the amd64 architecture since some dependencies and tools are more reliable or only available for amd64.
 
 ```
-ARCH=amd64 MONGODB_VERSION="8.0" TOPOLOGY=replica_set ./run-server.sh  
+ARCH=amd64 MONGODB_VERSION="8.0" TOPOLOGY=replica_set ./run-server.sh
 ```
