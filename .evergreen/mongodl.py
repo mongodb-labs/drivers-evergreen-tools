@@ -623,10 +623,11 @@ class Cache:
 
     def refresh_full_json(self) -> None:
         """
-        Sync the content of the MongoDB full.json downloads list.
+        Sync the content of the MongoDB cloud.json downloads list.
+        cloud.json is a superset of full.json
         """
         with self._db.transaction():
-            dl = self.download_file("https://downloads.mongodb.org/full.json")
+            dl = self.download_file("https://downloads.mongodb.org/cloud.json")
             if not dl.is_changed:
                 # We still have a good cache
                 return
