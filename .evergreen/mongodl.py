@@ -837,6 +837,9 @@ def _dl_component(
                     stacklevel=2,
                 )
                 version = "latest"
+                # The target will be macos on latest.
+                if target == "osx":
+                    target = "macos"
             else:
                 raise
             dl_url = _published_build_url(

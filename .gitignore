@@ -125,6 +125,7 @@ mo-expansion.sh
 .evergreen/mongodl
 .evergreen/mongosh-dl
 .dockerignore
+.local
 
 # Azure functions.
 .python_packages/
