@@ -296,7 +296,7 @@ def run(opts):
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
     expansion_yaml.write_text(expansion_yaml.read_text() + f"\nMONGODB_URI: {uri}")
-    LOGGER.info(f"\nCluster URI: {uri}")
+    LOGGER.info(f"Cluster URI: {uri}")
 
     # Write the results file.
     mo_end = datetime.now()
