@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
+
+# Remove the virtual env.
+rm -rf $DRIVERS_TOOLS/.evergreen/venv || true
 
 # Start the server.
 cd $DRIVERS_TOOLS
