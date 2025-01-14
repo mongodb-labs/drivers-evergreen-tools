@@ -515,6 +515,7 @@ functions:
     - command: ec2.assume_role
       params:
         role_arn: ${aws_test_secrets_role}
+    # Ensure that we can run setup and teardown commands in the foreground without hanging.
     - command: subprocess.exec
       type: test
       params:
@@ -527,6 +528,7 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/csfle/teardown.sh]
+    # Test setup and teardown for each supported version of Python.
     - command: subprocess.exec
       type: test
       params:
