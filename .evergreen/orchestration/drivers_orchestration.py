@@ -350,7 +350,10 @@ def start(opts):
         # Copy client certificates.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
-        shutil.copy2(src, dst)
+        try:
+            shutil.copy2(src, dst)
+        except shutil.SameFileError:
+            pass
 
         # We need to use the CLI executable, and add it to our path.
         os.environ["PATH"] = (
