@@ -6,9 +6,16 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR
 
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-20}
-# npm version can be defined in the environment for cases where we need to install
-# a version lower than latest to support EOL Node versions.
-NPM_VERSION=${NPM_VERSION:-latest}
+# If NODE_LTS_VERSION is numeric and less than 18, default to 9, if less than 20, default to 10.
+# Do not override if it is already set.
+if [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 18 ]]; then
+  NPM_VERSION=${NPM_VERSION:-9}
+elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 20 ]]; then
+  NPM_VERSION=${NPM_VERSION:-10}
+else
+  NPM_VERSION=${NPM_VERSION:-latest}
+fi
+export NPM_VERSION=${NPM_VERSION}
 
 source "./init-node-and-npm-env.sh"
 
