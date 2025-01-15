@@ -29,22 +29,14 @@ The following servers will be started:
 - KMS HTTP server with an expired cert on port 9000
 - KMS HTTP server with an "wrong host" cert on port 9001
 - KMS HTTP server with a correct cert on port 9002
+- KMS Failpoint Server on port 9003
 - Mock Azure IMDS server on port 8080
 
 When finished, stop the servers by running:
 
 ```bash
-$DRIVERS_TOOLS/.evergreen/csfle/stop-servers.sh
+${DRIVERS_TOOLS}/.evergreen/csfle/teardown.sh
 ```
-
-If you are starting your CSFLE servers in a separate Evergreen function, it is recommended that you setup secrets
-and start the servers in the background, and then have a separate function that uses `await-servers.sh`
-in the foreground to wait for the servers to be ready.  This will ensure the servers are not torn down
-between functions (or the function may stall and not finish because there are processes still running).
-If you are starting the servers in a step within the same function as your tests, you
-can just start the servers directly in a foreground step.
-
-
 
 ```yaml
 start-csfle-servers:
@@ -53,24 +45,9 @@ start-csfle-servers:
       role_arn: ${aws_test_secrets_role}
   - command: subprocess.exec
       params:
-      working_dir: src
       binary: bash
-      include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
-      args: |
-          ${DRIVERS_TOOLS}/.evergreen/csfle/setup-secrets.sh
-  - command: subprocess.exec
-      params:
-      working_dir: src
-      binary: bash
-      background: true
-      args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/start-servers.sh
-  - command: subprocess.exec
-      params:
-      working_dir: src
-      binary: bash
-      args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/await-servers.sh
+      include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+      args: [${DRIVERS_TOOLS}/.evergreen/csfle/setup.sh]
 ```
 
 ## Legacy Usage
