@@ -33,3 +33,6 @@ echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 
 # Install the clis in this folder.
 bash $SCRIPT_DIR/install-cli.sh $SCRIPT_DIR
+
+# Set up the orchestration folder.
+bash $SCRIPT_DIR/orchestration/setup.sh

@@ -76,3 +76,6 @@ test -t 1 && ARGS+=" -t"
 
 # Launch server container.
 $DOCKER run $ARGS $NAME $ENTRYPOINT
+
+# Restore the clis
+bash $DRIVERS_TOOLS/.evergreen/orchestration/setup.sh
