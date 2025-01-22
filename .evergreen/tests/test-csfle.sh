@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Test csfle
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
@@ -13,6 +13,7 @@ PYTHON_BINARY=$(bash -c ". $SCRIPT_DIR/../find-python3.sh && ensure_python3 2>/d
 export PYTHON_BINARY
 
 function run_test() {
+  echo "Running csfle test with $PYTHON_BINARY..."
   bash ./setup.sh
   bash ./teardown.sh
   # Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
@@ -20,6 +21,7 @@ function run_test() {
     return 0
   fi
   rm -rf kmstlsvenv
+  echo "Running csfle test with $PYTHON_BINARY... done."
 }
 run_test
 
