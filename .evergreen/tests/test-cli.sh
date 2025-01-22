@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Test mongodl and mongosh_dl.
-set -eux
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh

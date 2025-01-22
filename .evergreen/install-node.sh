@@ -89,8 +89,6 @@ node_download_url="https://nodejs.org/dist/${node_index_version}/${node_archive}
 
 echo "Node.js ${node_index_version} for ${operating_system}-${architecture} released on ${node_index_date}"
 
-set -o xtrace
-
 if [[ "$file_extension" = "zip" ]]; then
   if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
     echo "Node.js already installed!"
