@@ -352,7 +352,7 @@ def start(opts):
         dst = mo_home / "lib/client.pem"
         try:
             shutil.copy2(src, dst)
-        except shutil.SameFileError:
+        except (shutil.SameFileError, PermissionError):
             pass
 
         # We need to use the CLI executable, and add it to our path.
