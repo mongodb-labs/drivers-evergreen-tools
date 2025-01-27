@@ -15,17 +15,11 @@ fi
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
-pushd $SCRIPT_DIR > /dev/null
+pushd $SCRIPT_DIR
 
 # Ensure pipx is writing assets to a contained location.
 export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
 export UV_TOOL_DIR=${DRIVERS_TOOLS}/.local/uv-tool
-
-if [ "${DOCKER_RUNNING:-}" == "true" ]; then
-  _root_dir=$(mktemp -d)
-  UV_CACHE_DIR=$_root_dir/uv-cache
-  UV_TOOL_DIR=$_root_dir/uv-tool
-fi
 
 . ./venv-utils.sh
 
@@ -40,12 +34,13 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
   echo "Creating virtual environment 'venv'..."
   venvcreate "${PYTHON:?}" venv
   echo "Creating virtual environment 'venv'... done."
-  python -m pip install -q uv
+
+  python -m pip install uv
 else
   venvactivate venv
 fi
 
-pushd $1 > /dev/null
+pushd $1
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
@@ -58,8 +53,8 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q --python "$(which python)" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install --python "$(which python)" --force --editable .
 fi
 
-popd > /dev/null
-popd > /dev/null
+popd
+popd

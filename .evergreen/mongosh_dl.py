@@ -61,7 +61,7 @@ def _get_latest_version_git():
             shlex.split(cmd), cwd=path, stderr=subprocess.PIPE
         )
         for line in reversed(output.decode("utf-8").splitlines()):
-            if re.match(r"^v\d+\.\d+\.\d+$", line):
+            if re.match("^v\d+\.\d+\.\d+$", line):
                 LOGGER.debug("Found version %s", line)
                 return line.replace("v", "").strip()
 

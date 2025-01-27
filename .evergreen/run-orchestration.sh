@@ -1,12 +1,179 @@
 #!/usr/bin/env bash
 # shellcheck shell=sh
 set -o errexit  # Exit the script with error if any of the commands fail
-set -x
+
+# Supported environment variables:
+#   AUTH                   Set to "auth" to enable authentication. Defaults to "noauth"
+#   SSL                    Set to "yes" to enable SSL. Defaults to "nossl"
+#   TOPOLOGY               Set to "server", "replica_set", or "sharded_cluster". Defaults to "server" (i.e. standalone).
+#   LOAD_BALANCER          Set to a non-empty string to enable load balancer. Only supported for sharded clusters.
+#   STORAGE_ENGINE         Set to a non-empty string to use the <topology>/<storage_engine>.json configuration (e.g. STORAGE_ENGINE=inmemory).
+#   REQUIRE_API_VERSION    Set to a non-empty string to set the requireApiVersion parameter. Currently only supported for standalone servers.
+#   DISABLE_TEST_COMMANDS  Set to a non-empty string to use the <topology>/disableTestCommands.json configuration (e.g. DISABLE_TEST_COMMANDS=1).
+#   MONGODB_VERSION        Set to a MongoDB version to use for download-mongodb.sh. Defaults to "latest".
+#   MONGODB_DOWNLOAD_URL   Set to a MongoDB download URL to use for download-mongodb.sh.
+#   ORCHESTRATION_FILE     Set to a non-empty string to use the <topology>/<orchestration_file>.json configuration.
+#   SKIP_CRYPT_SHARED      Set to a non-empty string to skip downloading crypt_shared
+#   MONGODB_BINARIES       Set to a non-empty string to set the path to the MONGODB_BINARIES for mongo orchestration.
+#   PYTHON                 Set to a non-empty string to set the Python binary to use.
+#   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
+
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
 # shellcheck disable=SC3028
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
-bash $SCRIPT_DIR/orchestration/setup.sh
-$SCRIPT_DIR/orchestration/drivers-orchestration run "$@"
+AUTH=${AUTH:-noauth}
+SSL=${SSL:-nossl}
+TOPOLOGY=${TOPOLOGY:-server}
+LOAD_BALANCER=${LOAD_BALANCER}
+STORAGE_ENGINE=${STORAGE_ENGINE}
+REQUIRE_API_VERSION=${REQUIRE_API_VERSION}
+DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS}
+MONGODB_VERSION=${MONGODB_VERSION:-latest}
+MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL}
+ORCHESTRATION_FILE=${ORCHESTRATION_FILE}
+INSTALL_LEGACY_SHELL=${INSTALL_LEGACY_SHELL:-}
+PYTHON=${PYTHON:-}
+# Note: MONGO_ORCHESTRATION_HOME and MONGODB_BINARIES defaults are handled in handle-paths.sh.
+
+DL_START=$(date +%s)
+
+# Functions to fetch MongoDB binaries.
+. $SCRIPT_DIR/download-mongodb.sh
+
+# To continue supporting `sh run-orchestration.sh` for backwards-compatibility,
+# explicitly invoke Bash as a subshell here when running `ensure_python3`.
+PYTHON=$(bash -c ". $SCRIPT_DIR/find-python3.sh && ensure_python3 2>/dev/null")
+
+# Set up the mongo orchestration config.
+mkdir -p $MONGO_ORCHESTRATION_HOME
+printf '%s' $MONGODB_BINARIES | $PYTHON -c 'import json,sys; print(json.dumps({"releases": {"default": sys.stdin.read() }}))' > $MONGO_ORCHESTRATION_HOME/orchestration.config
+
+# Copy client certificate because symlinks do not work on Windows.
+mkdir -p ${MONGO_ORCHESTRATION_HOME}/lib
+cp ${DRIVERS_TOOLS}/.evergreen/x509gen/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem 2> /dev/null || true
+
+get_distro
+if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
+    get_mongodb_download_url_for "$DISTRO" "$MONGODB_VERSION"
+else
+  # Even though we have the MONGODB_DOWNLOAD_URL, we still call this to get the proper EXTRACT variable
+  get_mongodb_download_url_for "$DISTRO"
+fi
+download_and_extract "$MONGODB_DOWNLOAD_URL" "$EXTRACT" "$MONGOSH_DOWNLOAD_URL" "$EXTRACT_MONGOSH"
+
+# Write the crypt shared path to the expansion file if given.
+if [ -n "$CRYPT_SHARED_LIB_PATH" ]; then
+    cat <<EOT >> mo-expansion.yml
+CRYPT_SHARED_LIB_PATH: "$CRYPT_SHARED_LIB_PATH"
+EOT
+
+  cat <<EOT >> mo-expansion.sh
+export CRYPT_SHARED_LIB_PATH="$CRYPT_SHARED_LIB_PATH"
+EOT
+fi
+
+DL_END=$(date +%s)
+MO_START=$(date +%s)
+
+# If no orchestration file was specified, build up the name based on configuration parameters.
+if [ -z "$ORCHESTRATION_FILE" ]; then
+  ORCHESTRATION_FILE="basic"
+  if [ "$AUTH" = "auth" ]; then
+    ORCHESTRATION_FILE="auth"
+  fi
+
+  if [ "$SSL" != "nossl" ]; then
+    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-ssl"
+  fi
+
+  if [ -n "$LOAD_BALANCER" ]; then
+    ORCHESTRATION_FILE="${ORCHESTRATION_FILE}-load-balancer"
+  fi
+
+  # disableTestCommands files do not exist for different auth or ssl modes.
+  if [ ! -z "$DISABLE_TEST_COMMANDS" ]; then
+    ORCHESTRATION_FILE="disableTestCommands"
+  fi
+
+  # Storage engine config files do not exist for different auth or ssl modes.
+  if [ ! -z "$STORAGE_ENGINE" ]; then
+    ORCHESTRATION_FILE="$STORAGE_ENGINE"
+  fi
+
+  ORCHESTRATION_FILE="${ORCHESTRATION_FILE}.json"
+fi
+
+# Allow projects to override orchestration configs
+ORCHESTRATION_FILE="configs/${TOPOLOGY}s/${ORCHESTRATION_FILE}"
+
+if [ -f "$PROJECT_ORCHESTRATION_HOME/$ORCHESTRATION_FILE" ]; then
+  export ORCHESTRATION_FILE="$PROJECT_ORCHESTRATION_HOME/$ORCHESTRATION_FILE"
+elif [ -f "$MONGO_ORCHESTRATION_HOME/$ORCHESTRATION_FILE" ]; then
+  export ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/$ORCHESTRATION_FILE"
+else
+  echo "Could not find orchestration file $ORCHESTRATION_FILE (checked in $PROJECT_ORCHESTRATION_HOME and $MONGO_ORCHESTRATION_HOME)"
+  exit 1
+fi
+echo "ORCHESTRATION_FILE=$ORCHESTRATION_FILE"
+
+# Copy the orchestration file so we can override it.
+cp -f "$ORCHESTRATION_FILE" "$MONGO_ORCHESTRATION_HOME/config.json"
+ORCHESTRATION_FILE="$MONGO_ORCHESTRATION_HOME/config.json"
+
+# Handle absolute path.
+perl -p -i -e "s|ABSOLUTE_PATH_REPLACEMENT_TOKEN|$(echo $DRIVERS_TOOLS | sed 's/\\/\\\\\\\\/g')|g" $ORCHESTRATION_FILE
+
+# If running on Docker, update the orchestration file to be docker-friendly.
+if [ -n "$DOCKER_RUNNING" ]; then
+  $PYTHON $SCRIPT_DIR/docker/overwrite_orchestration.py
+fi
+
+export ORCHESTRATION_URL="http://localhost:8889/v1/${TOPOLOGY}s"
+
+# Start mongo-orchestration
+PYTHON="${PYTHON:?}" bash $SCRIPT_DIR/start-orchestration.sh "$MONGO_ORCHESTRATION_HOME"
+
+if ! curl --silent --show-error --data @"$ORCHESTRATION_FILE" "$ORCHESTRATION_URL" --max-time 600 --fail -o tmp.json; then
+  echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/out.log:
+  cat $MONGO_ORCHESTRATION_HOME/out.log
+  echo Failed to start cluster, see $MONGO_ORCHESTRATION_HOME/server.log:
+  cat $MONGO_ORCHESTRATION_HOME/server.log
+  exit 1
+fi
+cat tmp.json
+
+URI=$(${PYTHON:?} -c 'import json; j=json.load(open("tmp.json")); print(j["mongodb_auth_uri" if "mongodb_auth_uri" in j else "mongodb_uri"])' | tr -d '\r')
+echo 'MONGODB_URI: "'$URI'"' >> mo-expansion.yml
+echo $URI > $DRIVERS_TOOLS/uri.txt
+printf "\nCluster URI: %s\n" "$URI"
+
+MO_END=$(date +%s)
+MO_ELAPSED=$(expr $MO_END - $MO_START)
+DL_ELAPSED=$(expr $DL_END - $DL_START)
+cat <<EOT >$DRIVERS_TOOLS/results.json
+{"results": [
+  {
+    "status": "PASS",
+    "test_file": "Orchestration",
+    "start": $MO_START,
+    "end": $MO_END,
+    "elapsed": $MO_ELAPSED
+  },
+  {
+    "status": "PASS",
+    "test_file": "Download MongoDB",
+    "start": $DL_START,
+    "end": $DL_END,
+    "elapsed": $DL_ELAPSED
+  }
+]}
+
+EOT
+
+# Set the requireApiVersion parameter
+if [ ! -z "$REQUIRE_API_VERSION" ]; then
+  $MONGODB_BINARIES/mongosh $URI $MONGO_ORCHESTRATION_HOME/require-api-version.js
+fi
