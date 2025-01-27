@@ -214,8 +214,9 @@ def run(opts):
         mongodl(shlex.split(args))
         LOGGER.info("Downloading crypt_shared... done.")
         crypt_shared_path = None
+        expected = [f"mongo_crypt_v1.{ext}" for ext in ["dll", "so", "dylib"]]
         for fname in os.listdir(mdb_binaries_str):
-            if fname.startswith("mongo_crypt_v1"):
+            if fname in expected:
                 crypt_shared_path = (mdb_binaries / fname).as_posix()
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
