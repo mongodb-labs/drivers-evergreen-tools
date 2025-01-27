@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "drivers-orchestration"
+version = "0.1.0"
+description = 'Scripts for drivers orchestration'
+requires-python = ">=3.8"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Steven Silvester", email = "steve.silvester@mongodb.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration @ https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz"]
+
+[project.scripts]
+drivers-orchestration = "drivers_orchestration:main"
+
+[tool.hatch.build]
+include = ["drivers_orchestration.py"]
+
+[tool.hatch.metadata]
+allow-direct-references=true
