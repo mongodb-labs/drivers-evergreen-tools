@@ -236,7 +236,6 @@ def run(opts):
     dl_end = datetime.now()
 
     # Handle orchestration file - explicit or implicit.
-    print(f"hello there! {opts.orchestration_file=} {opts.ssl=}")
     orchestration_file = opts.orchestration_file
     if not orchestration_file:
         fname = "basic"
