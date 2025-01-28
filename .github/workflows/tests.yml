@@ -54,7 +54,7 @@ jobs:
         run: |
           chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
-          if [ ${{ matrix.auth }} == "auth"]; then
+          if [ ${{ matrix.auth }} == "auth" ]; then
             URI="${URI}&directConnection=true"
           else
             URI="${URI}/?directConnection=true"
