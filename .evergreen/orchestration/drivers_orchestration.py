@@ -109,7 +109,7 @@ def get_options():
             if env_var == "AUTH":
                 opts.auth = os.environ.get("AUTH") == "auth"
             elif env_var == "SSL":
-                opts.ssl = os.environ.get("SSL") != "nossl"
+                opts.ssl = os.environ.get("SSL", "nossl") != "nossl"
             elif isinstance(getattr(opts, key), bool):
                 if os.environ[env_var]:
                     setattr(opts, key, True)
