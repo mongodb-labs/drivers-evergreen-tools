@@ -55,7 +55,7 @@ jobs:
           chmod +x mongodb/bin/mongosh
           args=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
-            args="--tls"
+            args="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem"
           fi
           mongodb/bin/mongosh mongodb://127.0.0.1:27017/?directConnection=true $args --eval "db.runCommand({ ping: 1 })"
 
