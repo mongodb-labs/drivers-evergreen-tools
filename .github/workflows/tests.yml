@@ -53,7 +53,11 @@ jobs:
         name: "Test GitHub Action"
         run: |
           chmod +x mongodb/bin/mongosh
-          mongodb/bin/mongosh mongodb://127.0.0.1:27017/?directConnection=true --eval "db.runCommand({ ping: 1 })"
+          args=""
+          if [ ${{ matrix.ssl }} == "ssl" ]; then
+            args="--tls"
+          fi
+          mongodb/bin/mongosh mongodb://127.0.0.1:27017/?directConnection=true $args --eval "db.runCommand({ ping: 1 })"
 
   pre-commit:
     runs-on: ubuntu-latest
