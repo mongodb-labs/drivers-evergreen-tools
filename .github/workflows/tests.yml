@@ -53,9 +53,10 @@ jobs:
         name: "Test GitHub Action"
         run: |
           chmod +x mongodb/bin/mongosh
+          URI=$(cat )
           args=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
-            args="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem"
+            args="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x5095gen/ca.pem"
           fi
           mongodb/bin/mongosh mongodb://127.0.0.1:27017/?directConnection=true $args --eval "db.runCommand({ ping: 1 })"
 
