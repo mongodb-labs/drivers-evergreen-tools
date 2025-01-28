@@ -52,13 +52,15 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
+          cat uri.txt
+          exit 1
           chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
-          args=""
+          ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
-            args="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
+            ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
           fi
-          mongodb/bin/mongosh ${URI}/?directConnection=true $args --eval "db.runCommand({ ping: 1 })"
+          mongodb/bin/mongosh ${URI}/?directConnection=true $ARGS --eval "db.runCommand({ ping: 1 })"
 
   pre-commit:
     runs-on: ubuntu-latest
