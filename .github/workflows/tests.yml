@@ -54,13 +54,16 @@ jobs:
         run: |
           chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
-          echo "URI: ${URI}"
-          exit 1
+          if [ ${{ matrix.auth }} == "auth"]; then
+            URI="${URI}&directConnection=true"
+          else
+            URI="${URI}/?directConnection=true"
+          fi
           ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
             ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
           fi
-          mongodb/bin/mongosh ${URI}/?directConnection=true $ARGS --eval "db.runCommand({ ping: 1 })"
+          mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
 
   pre-commit:
     runs-on: ubuntu-latest
