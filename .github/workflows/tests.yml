@@ -52,10 +52,10 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
-          cat uri.txt
-          exit 1
           chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
+          echo "URI: ${URI}"
+          exit 1
           ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
             ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
