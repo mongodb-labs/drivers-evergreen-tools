@@ -12,6 +12,10 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash -eux {0}
+
 jobs:
   tests:
     name: "Tests"
