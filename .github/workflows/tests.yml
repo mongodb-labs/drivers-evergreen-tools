@@ -8,6 +8,14 @@ on:
     branches:
       - "master"
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -eux {0}
+
 jobs:
   tests:
     name: "Tests"
@@ -41,13 +49,24 @@ jobs:
           fetch-depth: 2
 
       - id: setup-mongodb
-        name: "Test GitHub Action"
+        name: "Run GitHub Action"
         uses: ./
         with:
           version: ${{ matrix.mongodb-version }}
           topology: ${{ matrix.topology }}
           auth: ${{ matrix.auth }}
           ssl: ${{ matrix.ssl }}
+
+      - id: test-mongodb
+        name: "Test GitHub Action"
+        run: |
+          chmod +x mongodb/bin/mongosh
+          URI=$(cat uri.txt)
+          ARGS=""
+          if [ ${{ matrix.ssl }} == "ssl" ]; then
+            ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
+          fi
+          mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
 
   pre-commit:
     runs-on: ubuntu-latest
