@@ -50,7 +50,7 @@ pushd $1 > /dev/null
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
 EXTRA_ARGS=()
 if [ "${MONGODB_VERSION:-latest}" == "3.6" ]; then
-  EXTRA_ARGS=(-with "pymongo<4.11")
+  EXTRA_ARGS=(--with "pymongo<4.11")
 fi
 
 # On Windows, we have to do a bit of path manipulation.
