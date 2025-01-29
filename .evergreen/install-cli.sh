@@ -48,23 +48,24 @@ fi
 pushd $1 > /dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
-EXTRA_ARGS=()
+EXTRA_ARGS=""
 if [ "${MONGODB_VERSION:-latest}" == "3.6" ]; then
-  EXTRA_ARGS=(--with "pymongo<4.11")
+  EXTRA_ARGS_ARR=(--with "pymongo<4.11")
+  EXTRA_ARGS="${EXTRA_ARGS_ARR[*]}"
 fi
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
-  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install "${EXTRA_ARGS[@]}" --force --editable .
+  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install "${EXTRA_ARGS}" --force --editable .
   filenames=$(ls ${TMP_DIR})
   for filename in $filenames; do
     mv $TMP_DIR/$filename "$1/${filename//.exe/}"
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q "${EXTRA_ARGS[@]}" --python "$(which python)" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q "${EXTRA_ARGS}" --python "$(which python)" --force --editable .
 fi
 
 popd > /dev/null
