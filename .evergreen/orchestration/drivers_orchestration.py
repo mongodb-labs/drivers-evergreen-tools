@@ -291,6 +291,8 @@ def run(opts):
         resp = urllib.request.urlopen(req)
     except urllib.error.HTTPError as e:
         stop()
+        LOGGER.error("out.log: %s", (mo_home / "out.log").read_text())
+        LOGGER.error("server.log: %s", (mo_home / "server.log").read_text())
         raise e
     resp = json.loads(resp.read().decode("utf-8"))
     LOGGER.debug(resp)
