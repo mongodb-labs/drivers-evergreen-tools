@@ -53,7 +53,6 @@ if [ "${MONGODB_VERSION:-latest}" == "3.6" ]; then
   EXTRA_ARGS_ARR=(--with "pymongo<4.11")
   EXTRA_ARGS="${EXTRA_ARGS_ARR[*]}"
 fi
-echo "hello ${EXTRA_ARGS}"
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
