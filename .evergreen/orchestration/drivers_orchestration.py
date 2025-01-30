@@ -210,18 +210,23 @@ def run(opts):
     # Download crypt shared.
     if not opts.skip_crypt_shared:
         # Get the download URL for crypt_shared.
-        args = f"{default_args} --version {version}"
-        args += " --strip-path-components 1 --component crypt_shared"
+        # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
+        # path location than the other binaries, which is required for
+        # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
+        args = default_args.replace(mdb_binaries_str, DRIVERS_TOOLS.as_posix())
+        args += (
+            f" --version {version} --strip-path-components 1 --component crypt_shared"
+        )
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
         LOGGER.info("Downloading crypt_shared... done.")
         crypt_shared_path = None
         expected = [f"mongo_crypt_v1.{ext}" for ext in ["dll", "so", "dylib"]]
-        for fname in os.listdir(mdb_binaries_str):
+        for fname in os.listdir(DRIVERS_TOOLS):
             if fname in expected:
-                crypt_shared_path = (mdb_binaries / fname).as_posix()
+                crypt_shared_path = DRIVERS_TOOLS / fname
         assert crypt_shared_path is not None
-        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path}"'
+        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path.as_posix()}"'
         expansion_yaml.write_text(crypt_text)
         expansion_sh.write_text(crypt_text.replace(": ", "="))
 
