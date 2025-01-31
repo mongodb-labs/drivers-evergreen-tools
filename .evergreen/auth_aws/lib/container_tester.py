@@ -63,6 +63,8 @@ def _scp(endpoint, src, dest):
     (user, host, port) = _userandhostandport(endpoint)
     cmd = [
         "scp",
+        "-i",
+        "/home/ubuntu/.ssh/fargate.ed25519",
         "-o",
         "StrictHostKeyChecking=no",
         "-P",
@@ -79,6 +81,8 @@ def _ssh(endpoint, cmd):
     (user, host, port) = _userandhostandport(endpoint)
     cmd = [
         "ssh",
+        "-i",
+        "/home/ubuntu/.ssh/fargate.ed25519",
         "-o",
         "StrictHostKeyChecking=no",
         "-p",
