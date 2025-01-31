@@ -121,8 +121,10 @@ def get_options():
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
         opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
-    if opts.topology == "standalone":
+    if opts.topology == "standalone" or not opts.topology:
         opts.topology = "server"
+    if not opts.version:
+        opts.version = "latest"
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
