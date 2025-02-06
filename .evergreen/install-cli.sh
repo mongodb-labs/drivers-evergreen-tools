@@ -68,7 +68,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --python "$(which python)" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) python -m uv tool install -q ${EXTRA_ARGS} --python "$(which python)" --force --editable .
 fi
 
 popd > /dev/null
