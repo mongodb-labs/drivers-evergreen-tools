@@ -3,9 +3,6 @@
 
 set -eu
 
-# REMOVE BEFORE MERGING
-set -x
-
 if [ -z "$BASH" ]; then
   echo "install-cli.sh must be run in a Bash shell!" 1>&2
   return 1
