@@ -40,10 +40,19 @@ if [ ! -d $SCRIPT_DIR/venv ]; then
   echo "Creating virtual environment 'venv'..."
   venvcreate "${PYTHON:?}" venv
   echo "Creating virtual environment 'venv'... done."
-  python -m pip install -q uv
 else
   venvactivate venv
 fi
+
+if ! command -v uv >/dev/null; then
+  UV_UNMANAGED_INSTALL=1 python -m pip install -q --force-reinstall uv
+fi
+
+command -V uv # Ensure a working uv binary is present.
+
+# Store paths to binaries for use outside of current working directory.
+python_binary="$(which python)"
+uv_binary="$(which uv)"
 
 pushd $1 > /dev/null
 
@@ -58,14 +67,14 @@ fi
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
-  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install ${EXTRA_ARGS} --force --editable .
+  UV_TOOL_BIN_DIR=${TMP_DIR} "${uv_binary}" tool install ${EXTRA_ARGS} --force --editable .
   filenames=$(ls ${TMP_DIR})
   for filename in $filenames; do
     mv $TMP_DIR/$filename "$1/${filename//.exe/}"
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --python "$(which python)" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) "${uv_binary}" tool install -q ${EXTRA_ARGS} --python "${python_binary}" --force --editable .
 fi
 
 popd > /dev/null
