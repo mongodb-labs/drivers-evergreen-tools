@@ -58,7 +58,7 @@ fi
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
-  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install ${EXTRA_ARGS} --force --editable .
+  UV_TOOL_BIN_DIR=${TMP_DIR} python -m uv tool install ${EXTRA_ARGS} --force --editable .
   filenames=$(ls ${TMP_DIR})
   for filename in $filenames; do
     mv $TMP_DIR/$filename "$1/${filename//.exe/}"
