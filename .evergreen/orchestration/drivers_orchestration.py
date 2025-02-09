@@ -98,6 +98,10 @@ def get_options():
     other_group.add_argument(
         "--mongodb-binaries", help="The path to store the MongoDB binaries"
     )
+    other_group.add_argument(
+        "--existing-binaries-dir",
+        help="A directory containing existing mongodb binaries to use instead of downloading new ones.",
+    )
 
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
@@ -197,9 +201,13 @@ def run(opts):
         default_args += " -v"
     args = f"{default_args} --version {version}"
     args += " --strip-path-components 2 --component archive"
-    LOGGER.info(f"Downloading mongodb {version}...")
-    mongodl(shlex.split(args))
-    LOGGER.info(f"Downloading mongodb {version}... done.")
+    if not opts.existing_binaries_dir:
+        LOGGER.info(f"Downloading mongodb {version}...")
+        mongodl(shlex.split(args))
+        LOGGER.info(f"Downloading mongodb {version}... done.")
+    else:
+        LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
+        shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
 
     # Download legacy shell.
     if opts.install_legacy_shell:

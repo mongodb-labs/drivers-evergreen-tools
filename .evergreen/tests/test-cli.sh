@@ -60,5 +60,12 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test
 ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test
 
+# Ensure that we can use a downloaded mongodb directory.
+rm -rf ${DOWNLOAD_DIR}
+./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2
+./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR}
+${DOWNLOAD_DIR}/mongod --version | grep v7.0
+./orchestration/drivers-orchestration stop
+
 popd
 make -C ${DRIVERS_TOOLS} test
