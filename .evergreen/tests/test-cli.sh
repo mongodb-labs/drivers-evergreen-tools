@@ -40,6 +40,7 @@ fi
 
 # Ensure that we can use a downloaded mongodb directory.
 rm -rf ${DOWNLOAD_DIR}
+bash install-cli.sh ./orchestration
 ./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2
 ./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR}
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
