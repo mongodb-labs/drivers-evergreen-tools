@@ -38,6 +38,14 @@ else
   ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1
 fi
 
+# Ensure that we can use a downloaded mongodb directory.
+rm -rf ${DOWNLOAD_DIR}
+bash install-cli.sh "$(pwd)/orchestration"
+./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2
+./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR}
+${DOWNLOAD_DIR}/mongod --version | grep v7.0
+./orchestration/drivers-orchestration stop
+
 if [ ${1:-} == "partial" ]; then
   popd
   make -C ${DRIVERS_TOOLS} test
