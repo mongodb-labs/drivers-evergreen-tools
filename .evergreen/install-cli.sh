@@ -67,6 +67,7 @@ fi
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
+  uv_binary=$(cygpath -m ${uv_binary})
   UV_TOOL_BIN_DIR=${TMP_DIR} "${uv_binary}" tool install ${EXTRA_ARGS} --force --editable .
   filenames=$(ls ${TMP_DIR})
   for filename in $filenames; do
