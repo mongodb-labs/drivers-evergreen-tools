@@ -207,7 +207,7 @@ def run(opts):
         LOGGER.info(f"Downloading mongodb {version}... done.")
     else:
         LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
-        shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
+        shutil.copytree(opts.existing_binaries_dir, mdb_binaries, symlinks=True)
 
     # Download legacy shell.
     if opts.install_legacy_shell:
