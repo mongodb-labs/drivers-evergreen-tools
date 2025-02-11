@@ -24,4 +24,5 @@ export NODE_OPTIONS="--trace-deprecation --trace-warnings"
 
 # https://github.com/nodejs/node-gyp#configuring-python-dependency
 source ./find-python3.sh
-export NODE_GYP_FORCE_PYTHON=$(find_python3)
+NODE_GYP_FORCE_PYTHON=$(find_python3)
+export NODE_GYP_FORCE_PYTHON
