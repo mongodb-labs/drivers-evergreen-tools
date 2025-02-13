@@ -49,7 +49,7 @@ spec:
       limits:
         memory: "4Gi"
         cpu: "1"
-        ephemeral-storage: "8Gi"
+        ephemeral-storage: "4Gi"
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
   nodeSelector:
