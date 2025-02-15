@@ -20,7 +20,7 @@ pushd $SCRIPT_DIR
 if [ ! -f "./secrets-export.sh" ]; then
     bash ./setup-secrets.sh
 fi
-source .secrets-export.sh
+source ./secrets-export.sh
 
 python aws_tester.py "$1"
 source $SCRIPT_DIR/test-env.sh
