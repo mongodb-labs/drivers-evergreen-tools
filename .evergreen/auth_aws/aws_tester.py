@@ -25,7 +25,7 @@ def join(*parts):
     return os.path.join(*parts).replace(os.sep, "/")
 
 
-sys.path.insert(0, HERE / "lib")
+sys.path.insert(0, str(HERE / "lib"))
 from aws_assign_instance_profile import _assign_instance_policy
 from aws_assume_role import _assume_role
 from aws_assume_web_role import _assume_role_with_web_identity
