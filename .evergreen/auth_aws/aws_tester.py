@@ -228,7 +228,7 @@ def handle_creds(creds: dict):
         MONGODB_URI = (
             f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
         )
-    with (HERE / "test-env.sh").open("w") as fid:
+    with (HERE / "test-env.sh").open("w", newline="\n") as fid:
         fid.write("#!/usr/bin/env bash\n\n")
         fid.write("set +x\n")
         for key, value in creds.items():
