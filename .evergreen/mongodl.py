@@ -1086,7 +1086,7 @@ def main(argv=None):
     dl_grp.add_argument(
         "--version",
         "-V",
-        default="latest-release",
+        default="latest-build",
         help='The product version to download. Use "latest-release" to download '
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
