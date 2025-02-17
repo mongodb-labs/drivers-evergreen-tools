@@ -835,7 +835,7 @@ def _dl_component(
     latest_build_branch: "str|None",
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
-    if version == "latest-build":
+    if version == "latest-build" or version == "latest":
         dl_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
@@ -1091,7 +1091,7 @@ def main(argv=None):
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
         'candidates. Use "rapid" to download the latest rapid release. '
-        ' Use "latest-build" to download the most recent build of '
+        ' Use "latest-build" or "latest" to download the most recent build of '
         'the named component. Use "--list" to list available versions.',
     )
     dl_grp.add_argument(
