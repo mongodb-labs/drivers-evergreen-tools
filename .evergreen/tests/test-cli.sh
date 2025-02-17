@@ -66,6 +66,7 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version rapid --component archive --test
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR}
 ./mongodl --edition enterprise --version latest-build --component archive --test
+./mongodl --edition enterprise --version latest-release --component archive --test
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test
 ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test
 
