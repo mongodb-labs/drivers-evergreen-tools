@@ -361,7 +361,7 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         working_dir: "src"
         script: |
-          set -ex
+          set -eu
           bash ${DRIVERS_TOOLS}/.evergreen/auth_oidc/setup.sh
           test -f /tmp/tokens/test_user1
           test -f /tmp/tokens/test_user2
@@ -380,7 +380,7 @@ functions:
         include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
         working_dir: "src"
         script: |
-          set -ex
+          set -eu
           cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc
           ENTRYPOINT=/root/docker_entry_base.sh bash start_local_server.sh
           test -f /tmp/tokens/test_user1

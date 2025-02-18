@@ -22,7 +22,7 @@
     "dependencies": {
         "commander": "^11.0.0",
         "minimatch": "^9.0.3",
-        "octokit": "^3.1.2",
+        "octokit": "^4.1.2",
         "yaml": "^2.4.0"
     },
     "devDependencies": {
