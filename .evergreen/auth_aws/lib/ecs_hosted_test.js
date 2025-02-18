@@ -19,6 +19,7 @@ admin.runCommand({createUser: "admin", pwd: "pwd", roles: ['root']});
 
 admin.auth("bob", "pwd123");
 
+console.log("Adding user:", AWS_ACCOUNT_ARN)
 external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]});
 
 // Try the auth function
