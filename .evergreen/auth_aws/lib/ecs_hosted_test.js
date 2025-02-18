@@ -11,8 +11,13 @@ const AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/ecsTaskExecution
 const external = Mongo().getDB("$external");
 const admin = Mongo().getDB("admin");
 
+// Add standard admin.
+admin.runCommand({createUser: "bob", pwd: "pwd123", roles: ['root']});
+
+// Add other admin for backwards compatibility.
 admin.runCommand({createUser: "admin", pwd: "pwd", roles: ['root']});
-admin.auth("admin", "pwd");
+
+admin.auth("bob", "pwd123");
 
 external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]});
 
