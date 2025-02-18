@@ -24,3 +24,5 @@ source ./secrets-export.sh
 
 python aws_tester.py "$1"
 source $SCRIPT_DIR/test-env.sh
+
+popd
