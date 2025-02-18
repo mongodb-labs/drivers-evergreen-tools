@@ -233,6 +233,7 @@ def handle_creds(creds: dict):
         fid.write("set +x\n")
         for key, value in creds.items():
             fid.write(f"export {key}={value}\n")
+        fid.write(f"export MONGODB_URI={MONGODB_URI}\n")
 
 
 def main():
