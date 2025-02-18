@@ -6,7 +6,7 @@
 "use strict";
 
 // This varies based on hosting ECS task as the account id and role name can vary
-const AWS_ACCOUNT_ARN = "arn:aws:iam::557821124784:user/authtest_fargate_user";
+const AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/ecsTaskExecutionRole/*";
 
 const external = Mongo().getDB("$external");
 const admin = Mongo().getDB("admin");
