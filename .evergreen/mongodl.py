@@ -767,7 +767,12 @@ def _published_build_url(
 
 
 def _latest_build_url(
-    target: str, arch: str, edition: str, component: str, branch: "str|None"
+    cache: Cache,
+    target: str,
+    arch: str,
+    edition: str,
+    component: str,
+    branch: "str|None",
 ) -> str:
     """
     Get the URL for an "unpublished" "latest" build.
@@ -796,6 +801,15 @@ def _latest_build_url(
     ext = "zip" if target == "windows" else "tgz"
     # Enterprise builds have an "enterprise" infix
     ent_infix = "enterprise-" if edition == "enterprise" else ""
+    if "rhel" in target:
+        # Some RHEL targets include a minor version, like "rhel93". Check the URL of the latest release.
+        latest_release_url = _published_build_url(
+            cache, "latest", target, arch, edition, component
+        )
+        got = re.search(r"rhel[0-9][0-9]", latest_release_url)
+        if got is not None:
+            # Rewrite target like "rhel9" to "rhel93" to match published URL.
+            target = got.group(0)
     # Some platforms have a filename infix
     tgt_infix = (target + "-") if target not in ("windows", "win32", "macos") else ""
     # Non-master branch uses a filename infix
@@ -823,7 +837,7 @@ def _dl_component(
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
     if version == "latest-build":
         dl_url = _latest_build_url(
-            target, arch, edition, component, latest_build_branch
+            cache, target, arch, edition, component, latest_build_branch
         )
     else:
         try:
