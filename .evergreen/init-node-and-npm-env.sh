@@ -21,8 +21,3 @@ export PATH="$npm_global_prefix/bin:$NODE_ARTIFACTS_PATH/nodejs/bin:$PATH"
 hash -r
 
 export NODE_OPTIONS="--trace-deprecation --trace-warnings"
-
-# https://github.com/nodejs/node-gyp#configuring-python-dependency
-. $SCRIPT_DIR/find-python3.sh
-NODE_GYP_FORCE_PYTHON=$(find_python3)
-export NODE_GYP_FORCE_PYTHON
