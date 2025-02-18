@@ -219,7 +219,7 @@ def handle_creds(creds: dict):
     if "USER" in creds:
         USER = quote_plus(creds.pop("USER"))
         PASS = quote_plus(creds.pop("PASS"))
-        MONGODB_URI = f"mongodb://{USER}:{PASS}localhost"
+        MONGODB_URI = f"mongodb://{USER}:{PASS}@localhost"
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
