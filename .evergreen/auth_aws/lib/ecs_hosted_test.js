@@ -12,13 +12,7 @@ const AWS_ACCOUNT_ARN2 = "arn:aws:iam::557821124784:user/authtest_fargate_user";
 const external = Mongo().getDB("$external");
 const admin = Mongo().getDB("admin");
 
-// Add standard admin.
-admin.runCommand({createUser: "bob", pwd: "pwd123", roles: ['root']});
-
-// Add other admin for backwards compatibility.
 admin.runCommand({createUser: "admin", pwd: "pwd", roles: ['root']});
-
-admin.auth("bob", "pwd123");
 
 console.log("Adding user:", AWS_ACCOUNT_ARN)
 external.runCommand({createUser: AWS_ACCOUNT_ARN, roles:[{role: 'read', db: "aws"}]});
