@@ -100,7 +100,6 @@ download_and_extract_package ()
    $EXTRACT mongodb-binaries.tgz
    echo "Installing server binaries... done."
 
-   set -x
    rm -f mongodb-binaries.tgz
    mv mongodb* mongodb
    chmod -R +x mongodb

@@ -2,7 +2,7 @@
 #
 # Get the set of OIDC tokens in the OIDC_TOKEN_DIR.
 #
-set -ex
+set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
