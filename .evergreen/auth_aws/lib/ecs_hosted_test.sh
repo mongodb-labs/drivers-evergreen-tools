@@ -11,13 +11,13 @@ echo "Running ECS hosted test..."
 env
 
 mkdir -p /data/db || true
-mongod --fork --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
+/root/mongod --fork --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
 sleep 1
-mongosh --verbose ecs_hosted_test.js
+/root/mongosh --verbose ecs_hosted_test.js
 
 # Restart the server with auth enabled.
-mongosh --eval "db.adminCommand( { shutdown: 1 } )" || true
-mongod --fork --auth --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
+/root/mongosh --eval "db.adminCommand( { shutdown: 1 } )" || true
+/root/mongod --fork --auth --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
 
 bash /root/src/.evergreen/run-mongodb-aws-ecs-test.sh "mongodb://localhost/aws?authMechanism=MONGODB-AWS"
 
