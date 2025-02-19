@@ -835,7 +835,7 @@ def _dl_component(
     latest_build_branch: "str|None",
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
-    if version == "latest-build" or version == "latest":
+    if version in ("latest-build", "latest"):
         dl_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
