@@ -20,7 +20,7 @@ console.log("Adding user:", AWS_ACCOUNT_ARN2)
 external.runCommand({createUser: AWS_ACCOUNT_ARN2, roles:[{role: 'read', db: "aws"}]});
 
 // Try the auth function
-// const testConn = new Mongo();
-// const testExternal = testConn.getDB('$external');
-// assert(testExternal.auth({mechanism: 'MONGODB-AWS'}));
+const testConn = new Mongo();
+const testExternal = testConn.getDB('$external');
+assert(testExternal.auth({mechanism: 'MONGODB-AWS'}));
 }());
