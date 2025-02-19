@@ -11,7 +11,7 @@ echo "Running ECS hosted test..."
 curl http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI/creds
 env
 aws sts get-caller-identity
-
+exit 1
 mkdir -p /data/db || true
 /root/mongod --fork --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
 sleep 1
