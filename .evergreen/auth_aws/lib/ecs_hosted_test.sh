@@ -8,7 +8,11 @@ echo "Running ECS hosted test..."
 # But for non-interactive logs, ~/.bashrc does not appear to be read on Ubuntu but it works on Fedora
 [[ -z "${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI:-}" ]] && export "$(strings /proc/1/environ | grep AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)"
 
-curl http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI/creds
+curl http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 30"`
+ROLE_NAME=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/ -H "X-aws-ec2-metadata-token: $TOKEN"`
+echo "Hello, $ROLE_NAME"
+
 env
 aws sts get-caller-identity
 exit 1
