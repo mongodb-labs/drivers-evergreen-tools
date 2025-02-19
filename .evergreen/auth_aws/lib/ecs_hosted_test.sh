@@ -8,6 +8,7 @@ echo "Running ECS hosted test..."
 # But for non-interactive logs, ~/.bashrc does not appear to be read on Ubuntu but it works on Fedora
 [[ -z "${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI:-}" ]] && export "$(strings /proc/1/environ | grep AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)"
 
+curl http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI/creds
 env
 
 mkdir -p /data/db || true
