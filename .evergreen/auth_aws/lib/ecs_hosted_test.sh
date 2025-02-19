@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # A shell script to run in an ECS hosted task
-set -eu
+set -eux
 
 echo "Running ECS hosted test..."
 
@@ -11,6 +11,7 @@ echo "Running ECS hosted test..."
 curl -L --verbose http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
 echo "hello"
 env
+cat ~/.aws/credentials
 exit 1
 mkdir -p /data/db || true
 /root/mongod --fork --logpath server.log --setParameter authenticationMechanisms="MONGODB-AWS,SCRAM-SHA-256"
