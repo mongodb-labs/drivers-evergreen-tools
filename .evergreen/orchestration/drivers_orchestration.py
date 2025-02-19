@@ -209,6 +209,8 @@ def run(opts):
         LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
         shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
 
+    subprocess.run([f"{mdb_binaries_str}/mongod", "--version"], check=True)
+
     # Download legacy shell.
     if opts.install_legacy_shell:
         args = f"{default_args} --version 5.0"
