@@ -13,7 +13,7 @@ fi
 source ./secrets-export.sh
 
 export AZUREKMS_TENANTID=$AZUREOIDC_TENANTID
-export AZUREKMS_SECRET=$AZUREOIDC_SECRET2
+export AZUREKMS_SECRET=$AZUREOIDC_SECRET
 export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
