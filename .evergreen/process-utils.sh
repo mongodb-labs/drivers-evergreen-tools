@@ -26,12 +26,12 @@ killport() {
   if [[ "${OSTYPE:?}" == cygwin || "${OSTYPE:?}" == msys ]]; then
     for pid in $(netstat -ano | grep ":$port .* LISTENING" | awk '{print $5}' | tr -d '[:space:]'); do
       echo "Killing pid $pid for port $port using taskkill" 1>&2
-      taskkill /F /T /PID "$pid" || true
+      taskkill /F /T /PID "$pid" 2>/dev/null || true
     done
   elif [ -x "$(command -v lsof)" ]; then
     for pid in $(lsof -t "-i:$port" || true); do
       echo "Killing pid $pid for port $port using kill" 1>&2
-      kill -SIGKILL "$pid" || true
+      kill -SIGKILL "$pid" 2>/dev/null|| true
     done
   elif [ -x "$(command -v fuser)" ]; then
     echo "Killing process using port $port using fuser" 1>&2
@@ -39,7 +39,7 @@ killport() {
   elif [ -x "$(command -v ss)" ]; then
     for pid in $(ss -tlnp "sport = :$port" | awk 'NR>1 {split($7,a,","); print a[1]}' | tr -d '[:space:]'); do
       echo "Killing pid $pid for port $port using kill" 1>&2
-      kill -SIGKILL "$pid" || true
+      kill -SIGKILL "$pid" 2>/dev/null || true
     done
   else
     echo "Unable to identify the OS (${OSTYPE:?}) or find necessary utilities (fuser/lsof/ss) to kill the process."
