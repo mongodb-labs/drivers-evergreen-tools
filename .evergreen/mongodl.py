@@ -518,7 +518,7 @@ class CacheDB:
               AND (:edition IS NULL OR edition=:edition)
               AND (
                   CASE
-                    WHEN :version='latest'
+                    WHEN :version='latest-release'
                         THEN 1
                     WHEN :version='latest-stable'
                         THEN mdb_version_not_rc(version)
@@ -804,7 +804,7 @@ def _latest_build_url(
     if "rhel" in target:
         # Some RHEL targets include a minor version, like "rhel93". Check the URL of the latest release.
         latest_release_url = _published_build_url(
-            cache, "latest", target, arch, edition, component
+            cache, "latest-release", target, arch, edition, component
         )
         got = re.search(r"rhel[0-9][0-9]", latest_release_url)
         if got is not None:
@@ -835,7 +835,7 @@ def _dl_component(
     latest_build_branch: "str|None",
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
-    if version == "latest-build":
+    if version in ("latest-build", "latest"):
         dl_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
@@ -845,13 +845,13 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
         except ValueError:
-            if component == "crypt_shared" and version != "latest":
+            if component == "crypt_shared" and version != "latest-release":
                 warnings.warn(
-                    "No matching version of crypt_shared found, using 'latest'",
+                    "No matching version of crypt_shared found, using 'latest-release'",
                     stacklevel=2,
                 )
-                version = "latest"
-                # The target will be macos on latest.
+                version = "latest-release"
+                # The target will be macos on latest-release.
                 if target == "osx":
                     target = "macos"
             else:
@@ -1086,12 +1086,12 @@ def main(argv=None):
     dl_grp.add_argument(
         "--version",
         "-V",
-        default="latest",
-        help='The product version to download. Use "latest" to download '
+        default="latest-build",
+        help='The product version to download. Use "latest-release" to download '
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
         'candidates. Use "rapid" to download the latest rapid release. '
-        ' Use "latest-build" to download the most recent build of '
+        ' Use "latest-build" or "latest" to download the most recent build of '
         'the named component. Use "--list" to list available versions.',
     )
     dl_grp.add_argument(
