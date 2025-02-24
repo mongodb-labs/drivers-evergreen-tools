@@ -833,7 +833,7 @@ def _dl_component(
     test: bool,
     no_download: bool,
     latest_build_branch: "str|None",
-    retry: int,
+    retries: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
     if version in ("latest-build", "latest"):
@@ -865,7 +865,7 @@ def _dl_component(
         # This must go to stdout to be consumed by the calling program.
         print(dl_url)
         return None
-    retries = retry
+    remaining = retries
     while True:
         try:
             cached = cache.download_file(dl_url).path
@@ -874,9 +874,9 @@ def _dl_component(
             retries -= 1
             if retries == 0:
                 raise
-            attempt = retry - retries
+            attempt = retries - remaining
             LOGGER.warning(
-                f"Download attempt failed, retry attempt {attempt} of {retry}"
+                f"Download attempt failed, retry attempt {attempt} of {retries}"
             )
             time.sleep(attempt**2)
     return _expand_archive(cached, out_dir, pattern, strip_components, test=test)
@@ -1160,7 +1160,7 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
-    dl_grp.add_argument("--retry", help="The number of times to retry", default=0)
+    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
@@ -1200,7 +1200,7 @@ def main(argv=None):
         test=args.test,
         no_download=args.no_download,
         latest_build_branch=args.latest_build_branch,
-        retry=int(args.retry),
+        retries=int(args.retries),
     )
     if result is ExpandResult.Empty and args.empty_is_error:
         sys.exit(1)

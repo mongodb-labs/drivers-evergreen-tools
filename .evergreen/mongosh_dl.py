@@ -76,7 +76,7 @@ def _download(
     strip_components: int,
     test: bool,
     no_download: bool,
-    retry: int,
+    retries: int,
 ) -> int:
     LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
@@ -103,7 +103,7 @@ def _download(
         return ExpandResult.Okay
 
     req = urllib.request.Request(dl_url)
-    retries = retry
+    remaining = retries
     while True:
         try:
             resp = urllib.request.urlopen(req)
@@ -112,9 +112,9 @@ def _download(
             retries -= 1
             if retries == 0:
                 raise
-            attempt = retry - retries
+            attempt = retries - remaining
             LOGGER.warning(
-                f"Download attempt failed, retry attempt {attempt} of {retry}"
+                f"Download attempt failed, retry attempt {attempt} of {retries}"
             )
             time.sleep(attempt**2)
 
@@ -204,7 +204,7 @@ def main(argv=None):
         help="Do not extract or place any files/directories. "
         "Only print what will be extracted without placing any files.",
     )
-    dl_grp.add_argument("--retry", help="The number of times to retry", default=0)
+    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
 
     target = args.target
@@ -230,7 +230,7 @@ def main(argv=None):
         strip_components=args.strip_components,
         test=args.test,
         no_download=args.no_download,
-        retry=int(args.retry),
+        retries=int(args.retries),
     )
     if result is ExpandResult.Empty:
         sys.exit(1)
