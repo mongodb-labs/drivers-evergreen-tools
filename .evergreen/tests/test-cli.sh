@@ -24,25 +24,25 @@ else
   DOWNLOAD_DIR=$(cygpath -m $DOWNLOAD_DIR)
 fi
 
-./mongodl --edition enterprise --version 7.0 --component archive --test
-./mongodl --edition enterprise --version 7.0 --component cryptd --out ${DOWNLOAD_DIR} --strip-path-components 1
+./mongodl --edition enterprise --version 7.0 --component archive --test --retries 3
+./mongodl --edition enterprise --version 7.0 --component cryptd --out ${DOWNLOAD_DIR} --strip-path-components 1 -- retries 3
 ./mongosh-dl --no-download
 ./mongosh-dl --version 2.1.1 --no-download
 
 export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then
-  ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1
+  ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 3
   chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
-  ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1
+  ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 3
 fi
 
 # Ensure that we can use a downloaded mongodb directory.
 rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
-./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2
-./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR}
+./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 3
+./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR} --retries 3
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 ./orchestration/drivers-orchestration stop
 
@@ -64,7 +64,7 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version 6.0 --component crypt_shared --test
 ./mongodl --edition enterprise --version 8.0 --component archive --test
 ./mongodl --edition enterprise --version rapid --component archive --test
-./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR}
+./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 3
 ./mongodl --edition enterprise --version latest-build --component archive --test
 ./mongodl --edition enterprise --version latest-release --component archive --test
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test
