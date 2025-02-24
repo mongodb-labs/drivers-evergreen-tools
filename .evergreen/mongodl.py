@@ -628,8 +628,14 @@ class Cache:
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
+        got_len = resp.getheader("Content-Length")
         with dest.open("wb") as of:
             shutil.copyfileobj(resp, of)
+        file_size = dest.stat().st_size
+        if file_size != got_len:
+            raise RuntimeError(
+                f"File size: {file_size} does not match download size: {got_len}"
+            )
         self._db(
             "INSERT OR REPLACE INTO mdl_http_downloads (url, etag, last_modified) "
             "VALUES (:url, :etag, :mtime)",
