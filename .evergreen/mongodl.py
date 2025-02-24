@@ -625,7 +625,7 @@ class Cache:
             )
             return DownloadResult(False, dest)
 
-        if resp.status_code != 200:
+        if resp.status != 200:
             raise RuntimeError(f"Failed to download [{url}]: {resp.reason}")
 
         _mkdir(dest.parent)
