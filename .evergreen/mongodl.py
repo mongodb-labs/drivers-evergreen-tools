@@ -322,7 +322,7 @@ class Retrier:
     """Class that handles retry logic.  It performs exponential backoff with a maximum delay of 10 minutes between retry attempts."""
 
     def __init__(self, retries: int) -> None:
-        self.retries = min(retries, 10)
+        self.retries = retries
         self.attempt = 0
         assert self.retries > 0
 
