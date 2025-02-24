@@ -869,8 +869,10 @@ def _dl_component(
     while True:
         try:
             cached = cache.download_file(dl_url).path
-            break
-        except ConnectionError:
+            return _expand_archive(
+                cached, out_dir, pattern, strip_components, test=test
+            )
+        except Exception:
             retries -= 1
             if retries == 0:
                 raise
@@ -879,7 +881,6 @@ def _dl_component(
                 f"Download attempt failed, retry attempt {attempt} of {retries}"
             )
             time.sleep(attempt**2)
-    return _expand_archive(cached, out_dir, pattern, strip_components, test=test)
 
 
 def _pathjoin(items: "Iterable[str]") -> PurePath:

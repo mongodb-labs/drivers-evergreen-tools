@@ -107,8 +107,18 @@ def _download(
     while True:
         try:
             resp = urllib.request.urlopen(req)
-            break
-        except ConnectionError:
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
+                buf = resp.read(1024 * 1024 * 4)
+                while buf:
+                    fp.write(buf)
+                    buf = resp.read(1024 * 1024 * 4)
+                fp.close()
+                resp = _expand_archive(
+                    Path(fp.name), out_dir, pattern, strip_components, test=test
+                )
+                os.remove(fp.name)
+            return resp
+        except Exception:
             retries -= 1
             if retries == 0:
                 raise
@@ -117,18 +127,6 @@ def _download(
                 f"Download attempt failed, retry attempt {attempt} of {retries}"
             )
             time.sleep(attempt**2)
-
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
-        buf = resp.read(1024 * 1024 * 4)
-        while buf:
-            fp.write(buf)
-            buf = resp.read(1024 * 1024 * 4)
-        fp.close()
-        resp = _expand_archive(
-            Path(fp.name), out_dir, pattern, strip_components, test=test
-        )
-        os.remove(fp.name)
-    return resp
 
 
 def main(argv=None):
