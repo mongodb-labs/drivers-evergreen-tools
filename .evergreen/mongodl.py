@@ -324,6 +324,7 @@ class Retrier:
     def __init__(self, retries: int) -> None:
         self.retries = min(retries, 10)
         self.attempt = 0
+        assert self.retries > 0
 
     def retry(self) -> bool:
         if self.attempt == self.retries:
@@ -879,12 +880,13 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
 
-    # This must go to stdout to be consumed by the calling program.
-    print(dl_url)
     LOGGER.info("Download url: %s", dl_url)
 
     if no_download:
         return None
+
+    # This must go to stdout to be consumed by the calling program.
+    print(dl_url)
 
     retrier = Retrier(retries)
     while True:
