@@ -194,7 +194,7 @@ def run(opts):
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
     cache_dir_str = cache_dir.as_posix()
-    default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str}"
+    default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
     if opts.quiet:
         default_args += " -q"
     elif opts.verbose:
@@ -243,7 +243,7 @@ def run(opts):
         expansion_sh.write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
-    args = f"--out {mdb_binaries_str} --strip-path-components 2"
+    args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
     if opts.verbose:
         args += " -v"
     elif opts.quiet:

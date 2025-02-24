@@ -23,7 +23,13 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import LOGGER as DL_LOGGER
-from mongodl import SSL_CONTEXT, ExpandResult, _expand_archive, infer_arch
+from mongodl import (
+    SSL_CONTEXT,
+    DownloadRetrier,
+    ExpandResult,
+    _expand_archive,
+    infer_arch,
+)
 
 
 def _get_latest_version():
@@ -75,6 +81,7 @@ def _download(
     strip_components: int,
     test: bool,
     no_download: bool,
+    retries: int,
 ) -> int:
     LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
@@ -96,24 +103,31 @@ def _download(
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
     # This must go to stdout to be consumed by the calling program.
     print(dl_url)
+    LOGGER.info("Download url: %s", dl_url)
 
     if no_download:
         return ExpandResult.Okay
 
     req = urllib.request.Request(dl_url)
-    resp = urllib.request.urlopen(req)
-
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
-        buf = resp.read(1024 * 1024 * 4)
-        while buf:
-            fp.write(buf)
-            buf = resp.read(1024 * 1024 * 4)
-        fp.close()
-        resp = _expand_archive(
-            Path(fp.name), out_dir, pattern, strip_components, test=test
-        )
-        os.remove(fp.name)
-    return resp
+    retrier = DownloadRetrier(retries)
+    while True:
+        try:
+            resp = urllib.request.urlopen(req)
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
+                four_mebibytes = 1024 * 1024 * 4
+                buf = resp.read(four_mebibytes)
+                while buf:
+                    fp.write(buf)
+                    buf = resp.read(four_mebibytes)
+                fp.close()
+                resp = _expand_archive(
+                    Path(fp.name), out_dir, pattern, strip_components, test=test
+                )
+                os.remove(fp.name)
+            return resp
+        except Exception:
+            if not retrier.retry():
+                raise
 
 
 def main(argv=None):
@@ -189,6 +203,7 @@ def main(argv=None):
         help="Do not extract or place any files/directories. "
         "Only print what will be extracted without placing any files.",
     )
+    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
 
     target = args.target
@@ -214,6 +229,7 @@ def main(argv=None):
         strip_components=args.strip_components,
         test=args.test,
         no_download=args.no_download,
+        retries=int(args.retries),
     )
     if result is ExpandResult.Empty:
         sys.exit(1)

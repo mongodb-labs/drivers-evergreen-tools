@@ -28,6 +28,7 @@ import ssl
 import sys
 import tarfile
 import textwrap
+import time
 import urllib.error
 import urllib.request
 import warnings
@@ -315,6 +316,26 @@ def mdb_version_not_rc(version: str) -> bool:
 def mdb_version_rapid(version: str) -> bool:
     tup = version_tup(version)
     return tup[1] > 0
+
+
+class DownloadRetrier:
+    """Class that handles retry logic.  It performs exponential backoff with a maximum delay of 10 minutes between retry attempts."""
+
+    def __init__(self, retries: int) -> None:
+        self.retries = retries
+        self.attempt = 0
+        assert self.retries >= 0
+
+    def retry(self) -> bool:
+        if self.attempt >= self.retries:
+            return False
+        self.attempt += 1
+        LOGGER.warning(
+            f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
+        )
+        ten_minutes = 600
+        time.sleep(min(2 ** (self.attempt - 1), ten_minutes))
+        return True
 
 
 class CacheDB:
@@ -832,6 +853,7 @@ def _dl_component(
     test: bool,
     no_download: bool,
     latest_build_branch: "str|None",
+    retries: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
     if version in ("latest-build", "latest"):
@@ -859,12 +881,23 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
 
+    # This must go to stdout to be consumed by the calling program.
+    print(dl_url)
+    LOGGER.info("Download url: %s", dl_url)
+
     if no_download:
-        # This must go to stdout to be consumed by the calling program.
-        print(dl_url)
         return None
-    cached = cache.download_file(dl_url).path
-    return _expand_archive(cached, out_dir, pattern, strip_components, test=test)
+
+    retrier = DownloadRetrier(retries)
+    while True:
+        try:
+            cached = cache.download_file(dl_url).path
+            return _expand_archive(
+                cached, out_dir, pattern, strip_components, test=test
+            )
+        except Exception:
+            if not retrier.retry():
+                raise
 
 
 def _pathjoin(items: "Iterable[str]") -> PurePath:
@@ -1145,6 +1178,7 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
+    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
@@ -1184,6 +1218,7 @@ def main(argv=None):
         test=args.test,
         no_download=args.no_download,
         latest_build_branch=args.latest_build_branch,
+        retries=int(args.retries),
     )
     if result is ExpandResult.Empty and args.empty_is_error:
         sys.exit(1)
