@@ -319,7 +319,7 @@ def mdb_version_rapid(version: str) -> bool:
 
 
 class Retrier:
-    """Class that handles retry logic.  It performs exponential backoff with a maximum of 10 retries."""
+    """Class that handles retry logic.  It performs exponential backoff with a maximum delay of 10 minutes between retry attempts."""
 
     def __init__(self, retries: int) -> None:
         self.retries = min(retries, 10)
