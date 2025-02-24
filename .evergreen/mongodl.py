@@ -327,13 +327,14 @@ class Retrier:
         assert self.retries > 0
 
     def retry(self) -> bool:
-        if self.attempt == self.retries:
+        if self.attempt >= self.retries:
             return False
+        self.attempt += 1
         LOGGER.warning(
             f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
         )
         ten_minutes = 600
-        time.sleep(min(2**self.attempt, ten_minutes))
+        time.sleep(min(2**(self.attempt - 1), ten_minutes))
         return True
 
 
