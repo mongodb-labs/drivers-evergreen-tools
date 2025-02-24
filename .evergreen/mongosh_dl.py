@@ -122,7 +122,7 @@ def _download(
             return resp
         except Exception:
             remaining -= 1
-            if remaining < 1:
+            if remaining < 0:
                 raise
             attempt = retries - remaining
             LOGGER.warning(
