@@ -625,8 +625,10 @@ class Cache:
         """
         Sync the content of the MongoDB full.json downloads list.
         """
+        default_source = "https://downloads.mongodb.org/full.json"
+        download_source = os.environ.get("MONGODB_DOWNLOAD_SOURCE", default_source)
         with self._db.transaction():
-            dl = self.download_file("https://downloads.mongodb.org/full.json")
+            dl = self.download_file(download_source)
             if not dl.is_changed:
                 # We still have a good cache
                 return
