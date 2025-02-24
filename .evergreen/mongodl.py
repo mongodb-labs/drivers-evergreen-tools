@@ -28,6 +28,7 @@ import ssl
 import sys
 import tarfile
 import textwrap
+import time
 import urllib.error
 import urllib.request
 import warnings
@@ -832,6 +833,7 @@ def _dl_component(
     test: bool,
     no_download: bool,
     latest_build_branch: "str|None",
+    retry: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
     if version in ("latest-build", "latest"):
@@ -863,7 +865,20 @@ def _dl_component(
         # This must go to stdout to be consumed by the calling program.
         print(dl_url)
         return None
-    cached = cache.download_file(dl_url).path
+    retries = retry
+    while True:
+        try:
+            cached = cache.download_file(dl_url).path
+            break
+        except ConnectionResetError:
+            retries -= 1
+            if retries == 0:
+                raise
+            attempt = retry - retries
+            LOGGER.warning(
+                f"Download attempt failed, retry attempt {attempt} of {retry}"
+            )
+            time.sleep(attempt**2)
     return _expand_archive(cached, out_dir, pattern, strip_components, test=test)
 
 
@@ -1145,6 +1160,7 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
+    dl_grp.add_argument("--retry", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
@@ -1184,6 +1200,7 @@ def main(argv=None):
         test=args.test,
         no_download=args.no_download,
         latest_build_branch=args.latest_build_branch,
+        retry=int(args.retry),
     )
     if result is ExpandResult.Empty and args.empty_is_error:
         sys.exit(1)
