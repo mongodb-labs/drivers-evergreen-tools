@@ -324,7 +324,7 @@ class DownloadRetrier:
     def __init__(self, retries: int) -> None:
         self.retries = retries
         self.attempt = 0
-        assert self.retries > 0
+        assert self.retries >= 0
 
     def retry(self) -> bool:
         if self.attempt >= self.retries:
