@@ -323,7 +323,7 @@ class Retrier:
 
     def __init__(self, retries: int) -> None:
         self.retries = min(retries, 10)
-        self.attempt = 1
+        self.attempt = 0
 
     def retry(self) -> bool:
         if self.attempt == self.retries:
