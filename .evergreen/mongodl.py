@@ -331,7 +331,8 @@ class Retrier:
         LOGGER.warning(
             f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
         )
-        time.sleep(2**self.attempt)
+        ten_minutes = 600
+        time.sleep(min(2**self.attempt, ten_minutes))
         return True
 
 
