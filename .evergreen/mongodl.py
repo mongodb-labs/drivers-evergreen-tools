@@ -318,7 +318,7 @@ def mdb_version_rapid(version: str) -> bool:
     return tup[1] > 0
 
 
-class Retrier:
+class DownloadRetrier:
     """Class that handles retry logic.  It performs exponential backoff with a maximum delay of 10 minutes between retry attempts."""
 
     def __init__(self, retries: int) -> None:
@@ -334,7 +334,7 @@ class Retrier:
             f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
         )
         ten_minutes = 600
-        time.sleep(min(2**(self.attempt - 1), ten_minutes))
+        time.sleep(min(2 ** (self.attempt - 1), ten_minutes))
         return True
 
 
@@ -889,7 +889,7 @@ def _dl_component(
     # This must go to stdout to be consumed by the calling program.
     print(dl_url)
 
-    retrier = Retrier(retries)
+    retrier = DownloadRetrier(retries)
     while True:
         try:
             cached = cache.download_file(dl_url).path

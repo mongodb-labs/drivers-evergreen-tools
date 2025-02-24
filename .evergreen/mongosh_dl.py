@@ -23,7 +23,13 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import LOGGER as DL_LOGGER
-from mongodl import SSL_CONTEXT, ExpandResult, Retrier, _expand_archive, infer_arch
+from mongodl import (
+    SSL_CONTEXT,
+    DownloadRetrier,
+    ExpandResult,
+    _expand_archive,
+    infer_arch,
+)
 
 
 def _get_latest_version():
@@ -103,7 +109,7 @@ def _download(
         return ExpandResult.Okay
 
     req = urllib.request.Request(dl_url)
-    retrier = Retrier(retries)
+    retrier = DownloadRetrier(retries)
     while True:
         try:
             resp = urllib.request.urlopen(req)
