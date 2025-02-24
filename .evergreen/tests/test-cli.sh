@@ -56,19 +56,19 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
-./mongodl --edition enterprise --version 3.6 --component archive --test
-./mongodl --edition enterprise --version 4.0 --component archive --test
-./mongodl --edition enterprise --version 4.2 --component archive --test
-./mongodl --edition enterprise --version 4.4 --component archive --test
-./mongodl --edition enterprise --version 5.0 --component archive --test
-./mongodl --edition enterprise --version 6.0 --component crypt_shared --test
-./mongodl --edition enterprise --version 8.0 --component archive --test
-./mongodl --edition enterprise --version rapid --component archive --test
+./mongodl --edition enterprise --version 3.6 --component archive --test --retries 3
+./mongodl --edition enterprise --version 4.0 --component archive --test --retries 3
+./mongodl --edition enterprise --version 4.2 --component archive --test --retries 3
+./mongodl --edition enterprise --version 4.4 --component archive --test --retries 3
+./mongodl --edition enterprise --version 5.0 --component archive --test --retries 3
+./mongodl --edition enterprise --version 6.0 --component crypt_shared --test --retries 3
+./mongodl --edition enterprise --version 8.0 --component archive --test --retries 3
+./mongodl --edition enterprise --version rapid --component archive --test --retries 3
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 3
-./mongodl --edition enterprise --version latest-build --component archive --test
-./mongodl --edition enterprise --version latest-release --component archive --test
-./mongodl --edition enterprise --version v6.0-perf --component cryptd --test
-./mongodl --edition enterprise --version v8.0-perf --component cryptd --test
+./mongodl --edition enterprise --version latest-build --component archive --test --retries 3
+./mongodl --edition enterprise --version latest-release --component archive --test --retries 3
+./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 3
+./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 3
 
 popd
 make -C ${DRIVERS_TOOLS} test
