@@ -119,8 +119,8 @@ def _download(
                 os.remove(fp.name)
             return resp
         except Exception:
-            retries -= 1
-            if retries == 0:
+            remaining -= 1
+            if remaining == 0:
                 raise
             attempt = retries - remaining
             LOGGER.warning(

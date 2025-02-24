@@ -873,8 +873,8 @@ def _dl_component(
                 cached, out_dir, pattern, strip_components, test=test
             )
         except Exception:
-            retries -= 1
-            if retries == 0:
+            remaining -= 1
+            if remaining == 0:
                 raise
             attempt = retries - remaining
             LOGGER.warning(
