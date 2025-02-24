@@ -25,7 +25,7 @@ else
 fi
 
 ./mongodl --edition enterprise --version 7.0 --component archive --test --retries 3
-./mongodl --edition enterprise --version 7.0 --component cryptd --out ${DOWNLOAD_DIR} --strip-path-components 1 -- retries 3
+./mongodl --edition enterprise --version 7.0 --component cryptd --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 3
 ./mongosh-dl --no-download
 ./mongosh-dl --version 2.1.1 --no-download
 
