@@ -40,7 +40,7 @@ def _get_latest_version():
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
     try:
-        resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
+        resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=10)
     except Exception:
         return _get_latest_version_git()
 
@@ -112,7 +112,7 @@ def _download(
     retrier = DownloadRetrier(retries)
     while True:
         try:
-            resp = urllib.request.urlopen(req)
+            resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
                 four_mebibytes = 1024 * 1024 * 4
                 buf = resp.read(four_mebibytes)

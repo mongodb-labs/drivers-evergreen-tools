@@ -615,7 +615,7 @@ class Cache:
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
+            resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(f"Failed to download [{url}]") from e
