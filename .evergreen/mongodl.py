@@ -861,10 +861,13 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
 
+    # This must go to stdout to be consumed by the calling program.
+    print(dl_url)
+    LOGGER.info("Download url: %s", dl_url)
+
     if no_download:
-        # This must go to stdout to be consumed by the calling program.
-        print(dl_url)
         return None
+
     remaining = retries
     while True:
         try:

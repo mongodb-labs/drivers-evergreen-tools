@@ -98,6 +98,7 @@ def _download(
     dl_url = f"https://downloads.mongodb.com/compass/mongosh-{version}-{target}-{arch}{suffix}"
     # This must go to stdout to be consumed by the calling program.
     print(dl_url)
+    LOGGER.info("Download url: %s", dl_url)
 
     if no_download:
         return ExpandResult.Okay
