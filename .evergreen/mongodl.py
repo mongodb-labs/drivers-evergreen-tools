@@ -625,6 +625,9 @@ class Cache:
             )
             return DownloadResult(False, dest)
 
+        if resp.status_code != 200:
+            raise RuntimeError(f"Failed to download [{url}]: {resp.reason}")
+
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
@@ -895,7 +898,8 @@ def _dl_component(
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
-        except Exception:
+        except Exception as e:
+            LOGGER.exception(e)
             if not retrier.retry():
                 raise
 
