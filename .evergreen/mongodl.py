@@ -632,7 +632,7 @@ class Cache:
         with dest.open("wb") as of:
             shutil.copyfileobj(resp, of)
         file_size = dest.stat().st_size
-        if file_size != got_len:
+        if file_size != int(got_len):
             raise RuntimeError(
                 f"File size: {file_size} does not match download size: {got_len}"
             )
