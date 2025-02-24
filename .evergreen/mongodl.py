@@ -625,6 +625,8 @@ class Cache:
             )
             return DownloadResult(False, dest)
 
+        LOGGER.info(f"Content-Type: {resp.info()['Content-Type']}")
+        LOGGER.info(f"Content-Length: {resp.info()['Content-Length']}")
         if resp.status != 200:
             raise RuntimeError(f"Failed to download [{url}]: {resp.reason}")
 
