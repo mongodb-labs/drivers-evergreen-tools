@@ -870,7 +870,7 @@ def _dl_component(
         try:
             cached = cache.download_file(dl_url).path
             break
-        except ConnectionResetError:
+        except ConnectionError:
             retries -= 1
             if retries == 0:
                 raise

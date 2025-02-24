@@ -108,7 +108,7 @@ def _download(
         try:
             resp = urllib.request.urlopen(req)
             break
-        except ConnectionResetError:
+        except ConnectionError:
             retries -= 1
             if retries == 0:
                 raise
