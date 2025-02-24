@@ -877,7 +877,7 @@ def _dl_component(
             )
         except Exception:
             remaining -= 1
-            if remaining <= 0:
+            if remaining < 1:
                 raise
             attempt = retries - remaining
             LOGGER.warning(
