@@ -318,6 +318,23 @@ def mdb_version_rapid(version: str) -> bool:
     return tup[1] > 0
 
 
+class Retrier:
+    """Class that handles retry logic.  It performs exponential backoff with a maximum of 10 retries."""
+
+    def __init__(self, retries: int) -> None:
+        self.retries = min(retries, 10)
+        self.attempt = 1
+
+    def retry(self) -> bool:
+        if self.attempt == self.retries:
+            return False
+        LOGGER.warning(
+            f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
+        )
+        time.sleep(2**self.attempt)
+        return True
+
+
 class CacheDB:
     """
     Abstract a mongodl cache SQLite database.
@@ -868,7 +885,7 @@ def _dl_component(
     if no_download:
         return None
 
-    remaining = retries
+    retrier = Retrier(retries)
     while True:
         try:
             cached = cache.download_file(dl_url).path
@@ -876,14 +893,8 @@ def _dl_component(
                 cached, out_dir, pattern, strip_components, test=test
             )
         except Exception:
-            remaining -= 1
-            if remaining < 1:
+            if not retrier.retry():
                 raise
-            attempt = retries - remaining
-            LOGGER.warning(
-                f"Download attempt failed, retry attempt {attempt} of {retries}"
-            )
-            time.sleep(attempt**2)
 
 
 def _pathjoin(items: "Iterable[str]") -> PurePath:

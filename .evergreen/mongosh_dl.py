@@ -14,7 +14,6 @@ import shlex
 import subprocess
 import sys
 import tempfile
-import time
 import urllib.request
 from pathlib import Path
 
@@ -24,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import LOGGER as DL_LOGGER
-from mongodl import SSL_CONTEXT, ExpandResult, _expand_archive, infer_arch
+from mongodl import SSL_CONTEXT, ExpandResult, Retrier, _expand_archive, infer_arch
 
 
 def _get_latest_version():
@@ -104,7 +103,7 @@ def _download(
         return ExpandResult.Okay
 
     req = urllib.request.Request(dl_url)
-    remaining = retries
+    retrier = Retrier(retries)
     while True:
         try:
             resp = urllib.request.urlopen(req)
@@ -121,14 +120,8 @@ def _download(
                 os.remove(fp.name)
             return resp
         except Exception:
-            remaining -= 1
-            if remaining < 0:
+            if not retrier.retry():
                 raise
-            attempt = retries - remaining
-            LOGGER.warning(
-                f"Download attempt failed, retry attempt {attempt} of {retries}"
-            )
-            time.sleep(attempt**2)
 
 
 def main(argv=None):
