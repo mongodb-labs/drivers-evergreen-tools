@@ -625,19 +625,11 @@ class Cache:
             )
             return DownloadResult(False, dest)
 
-        LOGGER.info(f"Content-Type: {resp.info()['Content-Type']}")
-        LOGGER.info(f"Content-Length: {resp.info()['Content-Length']}")
-        if resp.status != 200:
-            raise RuntimeError(f"Failed to download [{url}]: {resp.reason}")
-
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
         with dest.open("wb") as of:
-            buf = resp.read(1024 * 1024 * 4)
-            while buf:
-                of.write(buf)
-                buf = resp.read(1024 * 1024 * 4)
+            shutil.copyfileobj(resp, of)
         self._db(
             "INSERT OR REPLACE INTO mdl_http_downloads (url, etag, last_modified) "
             "VALUES (:url, :etag, :mtime)",

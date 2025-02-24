@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -114,17 +115,13 @@ def _download(
         try:
             resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
-                four_mebibytes = 1024 * 1024 * 4
-                buf = resp.read(four_mebibytes)
-                while buf:
-                    fp.write(buf)
-                    buf = resp.read(four_mebibytes)
+                shutil.copyfileobj(resp, fp)
                 fp.close()
-                resp = _expand_archive(
+                result = _expand_archive(
                     Path(fp.name), out_dir, pattern, strip_components, test=test
                 )
                 os.remove(fp.name)
-            return resp
+            return result
         except Exception:
             if not retrier.retry():
                 raise
