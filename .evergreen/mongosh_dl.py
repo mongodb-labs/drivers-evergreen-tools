@@ -109,10 +109,11 @@ def _download(
         try:
             resp = urllib.request.urlopen(req)
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
-                buf = resp.read(1024 * 1024 * 4)
+                four_mebibytes = 1024 * 1024 * 4
+                buf = resp.read(four_mebibytes)
                 while buf:
                     fp.write(buf)
-                    buf = resp.read(1024 * 1024 * 4)
+                    buf = resp.read(four_mebibytes)
                 fp.close()
                 resp = _expand_archive(
                     Path(fp.name), out_dir, pattern, strip_components, test=test
