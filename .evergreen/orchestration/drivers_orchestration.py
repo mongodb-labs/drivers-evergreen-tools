@@ -64,10 +64,10 @@ def get_options():
     )
 
     other_group = parser.add_argument_group("Other options")
-    parser.add_argument(
+    other_group.add_argument(
         "--load-balancer", action="store_true", help="Whether to use a load balancer"
     )
-    parser.add_argument(
+    other_group.add_argument(
         "--skip-crypt-shared",
         action="store_true",
         help="Whether to skip installing crypt_shared lib",
@@ -100,7 +100,19 @@ def get_options():
     )
     other_group.add_argument(
         "--existing-binaries-dir",
-        help="A directory containing existing mongodb binaries to use instead of downloading new ones.",
+        help="A directory containing existing mongodb binaries to use instead of downloading new ones",
+    )
+    other_group.add_argument(
+        "--tls-cert-key-file",
+        help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
+    )
+    other_group.add_argument(
+        "--tls-pem-key-file",
+        help="A .pem file that contains the TLS certificate and key for the server",
+    )
+    other_group.add_argument(
+        "--tls-ca-file",
+        help="A .pem file that contains the root certificate chain for the server",
     )
 
     # Get the options, and then allow environment variable overrides.
@@ -276,7 +288,16 @@ def run(opts):
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     LOGGER.info(f"Using orchestration file: {orch_path}")
     text = orch_path.read_text()
-    text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
+
+    # Handle overriding the tls configuration in the file.
+    if opts.tls_pem_key_file or opts.tls_ca_file:
+        if not (opts.tls_pem_key_file and opts.tls_ca_file):
+            raise ValueError("You must supply both tls-pem-key-file and tls-ca-file")
+        base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
+        text = text.replace(f"{base}/server.pem", opts.tls_pem_key_file)
+        text = text.replace(f"{base}/ca.pem", opts.tls_ca_file)
+    else:
+        text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
     data = json.loads(text)
 
     if opts.require_api_version:
@@ -385,6 +406,11 @@ def start(opts):
         )
         command = "mongo-orchestration -s wsgiref"
 
+    # Override the client cert file if applicable.
+    env = os.environ.copy()
+    if opts.tls_cert_key_file:
+        env["MONGO_ORCHESTRATION_CLIENT_CERT"] = opts.tls_cert_key_file
+
     mo_start = datetime.now()
 
     # Start the process.
@@ -399,7 +425,11 @@ def start(opts):
     output_fid = output_file.open("w")
     try:
         subprocess.run(
-            shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
+            shlex.split(args),
+            check=True,
+            stderr=subprocess.STDOUT,
+            stdout=output_fid,
+            env=env,
         )
     except subprocess.CalledProcessError:
         LOGGER.error("Orchestration failed!")
