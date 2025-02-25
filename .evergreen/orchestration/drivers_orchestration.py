@@ -186,7 +186,7 @@ def handle_docker_config(data):
 
 
 def normalize_path(path: Path | str) -> str:
-    path = Path(path).absolute
+    path = Path(path).absolute()
     if os.name != "nt":
         return str(path)
     path = path.as_posix()
