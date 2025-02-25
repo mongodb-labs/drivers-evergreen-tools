@@ -295,11 +295,9 @@ def run(opts):
             raise ValueError("You must supply both tls-pem-key-file and tls-ca-file")
         base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
         text = text.replace(
-            f"{base}/server.pem", str(opts.tls_pem_key_file).replace(os.sep, "/")
+            f"{base}/server.pem", Path(opts.tls_pem_key_file).as_posix()
         )
-        text = text.replace(
-            f"{base}/ca.pem", str(opts.tls_ca_file).replace(os.sep, "/")
-        )
+        text = text.replace(f"{base}/ca.pem", Path(opts.tls_ca_file).as_posix())
     else:
         text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
     data = json.loads(text)
