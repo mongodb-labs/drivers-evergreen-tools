@@ -609,13 +609,14 @@ class Cache:
         if modtime:
             headers["If-Modified-Since"] = modtime
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
-        dest = self._dirpath / "files" / digest / PurePosixPath(url).name
+        file_name = PurePosixPath(url).name
+        dest = self._dirpath / "files" / digest / file_name
         if not dest.exists():
             headers = {}
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
+            resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(f"Failed to download [{url}]") from e
@@ -623,16 +624,20 @@ class Cache:
                 "The download cache is missing an expected file",
                 dest,
             )
+            LOGGER.info("Using cached file %s", file_name)
             return DownloadResult(False, dest)
 
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
+        got_len = int(resp.getheader("Content-Length"))
         with dest.open("wb") as of:
-            buf = resp.read(1024 * 1024 * 4)
-            while buf:
-                of.write(buf)
-                buf = resp.read(1024 * 1024 * 4)
+            shutil.copyfileobj(resp, of, length=got_len)
+        file_size = dest.stat().st_size
+        if file_size != got_len:
+            raise RuntimeError(
+                f"File size: {file_size} does not match download size: {got_len}"
+            )
         self._db(
             "INSERT OR REPLACE INTO mdl_http_downloads (url, etag, last_modified) "
             "VALUES (:url, :etag, :mtime)",
@@ -895,7 +900,8 @@ def _dl_component(
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
-        except Exception:
+        except Exception as e:
+            LOGGER.exception(e)
             if not retrier.retry():
                 raise
 

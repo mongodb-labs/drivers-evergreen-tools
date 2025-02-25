@@ -25,9 +25,11 @@ sys.path.insert(0, str(HERE))
 from mongodl import LOGGER as DL_LOGGER
 from mongodl import (
     SSL_CONTEXT,
+    Cache,
     DownloadRetrier,
     ExpandResult,
     _expand_archive,
+    default_cache_dir,
     infer_arch,
 )
 
@@ -40,7 +42,7 @@ def _get_latest_version():
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
     try:
-        resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
+        resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
     except Exception:
         return _get_latest_version_git()
 
@@ -73,6 +75,7 @@ def _get_latest_version_git():
 
 
 def _download(
+    cache: Cache,
     out_dir: Path,
     version: str,
     target: str,
@@ -108,24 +111,15 @@ def _download(
     if no_download:
         return ExpandResult.Okay
 
-    req = urllib.request.Request(dl_url)
     retrier = DownloadRetrier(retries)
     while True:
         try:
-            resp = urllib.request.urlopen(req)
-            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as fp:
-                four_mebibytes = 1024 * 1024 * 4
-                buf = resp.read(four_mebibytes)
-                while buf:
-                    fp.write(buf)
-                    buf = resp.read(four_mebibytes)
-                fp.close()
-                resp = _expand_archive(
-                    Path(fp.name), out_dir, pattern, strip_components, test=test
-                )
-                os.remove(fp.name)
-            return resp
-        except Exception:
+            cached = cache.download_file(dl_url).path
+            return _expand_archive(
+                cached, out_dir, pattern, strip_components, test=test
+            )
+        except Exception as e:
+            LOGGER.exception(e)
             if not retrier.retry():
                 raise
 
@@ -139,6 +133,12 @@ def main(argv=None):
     )
     parser.add_argument(
         "--quiet", "-q", action="store_true", help="Whether to log at the WARNING level"
+    )
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=default_cache_dir(),
+        help="Directory where download caches and metadata will be stored",
     )
     dl_grp = parser.add_argument_group(
         "Download arguments",
@@ -220,7 +220,10 @@ def main(argv=None):
     elif args.quiet:
         LOGGER.setLevel(logging.WARNING)
         DL_LOGGER.setLevel(logging.WARNING)
+
+    cache = Cache.open_in(args.cache_dir)
     result = _download(
+        cache,
         out,
         version=args.version,
         target=target,
