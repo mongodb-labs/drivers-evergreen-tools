@@ -4,6 +4,8 @@ Run mongo-orchestration and launch a deployment.
 Use '--help' for more information.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
