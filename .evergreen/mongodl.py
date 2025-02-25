@@ -609,7 +609,8 @@ class Cache:
         if modtime:
             headers["If-Modified-Since"] = modtime
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
-        dest = self._dirpath / "files" / digest / PurePosixPath(url).name
+        file_name = PurePosixPath(url).name
+        dest = self._dirpath / "files" / digest / file_name
         if not dest.exists():
             headers = {}
         req = urllib.request.Request(url, headers=headers)
@@ -623,7 +624,7 @@ class Cache:
                 "The download cache is missing an expected file",
                 dest,
             )
-            LOGGER.info("Using cached file")
+            LOGGER.info("Using cached file %s", file_name)
             return DownloadResult(False, dest)
 
         _mkdir(dest.parent)
