@@ -294,8 +294,10 @@ def run(opts):
         if not (opts.tls_pem_key_file and opts.tls_ca_file):
             raise ValueError("You must supply both tls-pem-key-file and tls-ca-file")
         base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
-        text = text.replace(f"{base}/server.pem", opts.tls_pem_key_file)
-        text = text.replace(f"{base}/ca.pem", opts.tls_ca_file)
+        text = text.replace(
+            f"{base}/server.pem", Path(opts.tls_pem_key_file).as_posix()
+        )
+        text = text.replace(f"{base}/ca.pem", Path(opts.tls_ca_file).as_posix())
     else:
         text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
     data = json.loads(text)
@@ -409,7 +411,7 @@ def start(opts):
     # Override the client cert file if applicable.
     env = os.environ.copy()
     if opts.tls_cert_key_file:
-        env["MONGO_ORCHESTRATION_CLIENT_CERT"] = opts.tls_cert_key_file
+        env["MONGO_ORCHESTRATION_CLIENT_CERT"] = Path(opts.tls_cert_key_file).as_posix()
 
     mo_start = datetime.now()
 
