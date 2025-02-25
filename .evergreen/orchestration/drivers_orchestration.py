@@ -188,7 +188,7 @@ def handle_docker_config(data):
 def normalize_path(path: Path | str) -> str:
     path = Path(path).absolute
     if os.name != "nt":
-        return path
+        return str(path)
     path = path.as_posix()
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
