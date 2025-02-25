@@ -623,16 +623,17 @@ class Cache:
                 "The download cache is missing an expected file",
                 dest,
             )
+            LOGGER.info("Using cached file")
             return DownloadResult(False, dest)
 
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
-        got_len = resp.getheader("Content-Length")
+        got_len = int(resp.getheader("Content-Length"))
         with dest.open("wb") as of:
-            shutil.copyfileobj(resp, of)
+            shutil.copyfileobj(resp, of, length=got_len)
         file_size = dest.stat().st_size
-        if file_size != int(got_len):
+        if file_size != got_len:
             raise RuntimeError(
                 f"File size: {file_size} does not match download size: {got_len}"
             )
