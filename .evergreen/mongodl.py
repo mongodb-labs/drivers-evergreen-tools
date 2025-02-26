@@ -28,6 +28,7 @@ import ssl
 import sys
 import tarfile
 import textwrap
+import time
 import urllib.error
 import urllib.request
 import warnings
@@ -317,6 +318,26 @@ def mdb_version_rapid(version: str) -> bool:
     return tup[1] > 0
 
 
+class DownloadRetrier:
+    """Class that handles retry logic.  It performs exponential backoff with a maximum delay of 10 minutes between retry attempts."""
+
+    def __init__(self, retries: int) -> None:
+        self.retries = retries
+        self.attempt = 0
+        assert self.retries >= 0
+
+    def retry(self) -> bool:
+        if self.attempt >= self.retries:
+            return False
+        self.attempt += 1
+        LOGGER.warning(
+            f"Download attempt failed, retrying attempt {self.attempt} of {self.retries}"
+        )
+        ten_minutes = 600
+        time.sleep(min(2 ** (self.attempt - 1), ten_minutes))
+        return True
+
+
 class CacheDB:
     """
     Abstract a mongodl cache SQLite database.
@@ -518,7 +539,7 @@ class CacheDB:
               AND (:edition IS NULL OR edition=:edition)
               AND (
                   CASE
-                    WHEN :version='latest'
+                    WHEN :version='latest-release'
                         THEN 1
                     WHEN :version='latest-stable'
                         THEN mdb_version_not_rc(version)
@@ -588,13 +609,14 @@ class Cache:
         if modtime:
             headers["If-Modified-Since"] = modtime
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
-        dest = self._dirpath / "files" / digest / PurePosixPath(url).name
+        file_name = PurePosixPath(url).name
+        dest = self._dirpath / "files" / digest / file_name
         if not dest.exists():
             headers = {}
         req = urllib.request.Request(url, headers=headers)
 
         try:
-            resp = urllib.request.urlopen(req, context=SSL_CONTEXT)
+            resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
         except urllib.error.HTTPError as e:
             if e.code != 304:
                 raise RuntimeError(f"Failed to download [{url}]") from e
@@ -602,16 +624,20 @@ class Cache:
                 "The download cache is missing an expected file",
                 dest,
             )
+            LOGGER.info("Using cached file %s", file_name)
             return DownloadResult(False, dest)
 
         _mkdir(dest.parent)
         got_etag = resp.getheader("ETag")
         got_modtime = resp.getheader("Last-Modified")
+        got_len = int(resp.getheader("Content-Length"))
         with dest.open("wb") as of:
-            buf = resp.read(1024 * 1024 * 4)
-            while buf:
-                of.write(buf)
-                buf = resp.read(1024 * 1024 * 4)
+            shutil.copyfileobj(resp, of, length=got_len)
+        file_size = dest.stat().st_size
+        if file_size != got_len:
+            raise RuntimeError(
+                f"File size: {file_size} does not match download size: {got_len}"
+            )
         self._db(
             "INSERT OR REPLACE INTO mdl_http_downloads (url, etag, last_modified) "
             "VALUES (:url, :etag, :mtime)",
@@ -623,11 +649,10 @@ class Cache:
 
     def refresh_full_json(self) -> None:
         """
-        Sync the content of the MongoDB cloud.json downloads list.
-        cloud.json is a superset of full.json
+        Sync the content of the MongoDB full.json downloads list.
         """
         with self._db.transaction():
-            dl = self.download_file("https://downloads.mongodb.org/cloud.json")
+            dl = self.download_file("https://downloads.mongodb.org/full.json")
             if not dl.is_changed:
                 # We still have a good cache
                 return
@@ -804,7 +829,7 @@ def _latest_build_url(
     if "rhel" in target:
         # Some RHEL targets include a minor version, like "rhel93". Check the URL of the latest release.
         latest_release_url = _published_build_url(
-            cache, "latest", target, arch, edition, component
+            cache, "latest-release", target, arch, edition, component
         )
         got = re.search(r"rhel[0-9][0-9]", latest_release_url)
         if got is not None:
@@ -833,9 +858,10 @@ def _dl_component(
     test: bool,
     no_download: bool,
     latest_build_branch: "str|None",
+    retries: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
-    if version == "latest-build":
+    if version in ("latest-build", "latest"):
         dl_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
@@ -845,13 +871,13 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
         except ValueError:
-            if component == "crypt_shared" and version != "latest":
+            if component == "crypt_shared" and version != "latest-release":
                 warnings.warn(
-                    "No matching version of crypt_shared found, using 'latest'",
+                    "No matching version of crypt_shared found, using 'latest-release'",
                     stacklevel=2,
                 )
-                version = "latest"
-                # The target will be macos on latest.
+                version = "latest-release"
+                # The target will be macos on latest-release.
                 if target == "osx":
                     target = "macos"
             else:
@@ -860,12 +886,24 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
 
+    # This must go to stdout to be consumed by the calling program.
+    print(dl_url)
+    LOGGER.info("Download url: %s", dl_url)
+
     if no_download:
-        # This must go to stdout to be consumed by the calling program.
-        print(dl_url)
         return None
-    cached = cache.download_file(dl_url).path
-    return _expand_archive(cached, out_dir, pattern, strip_components, test=test)
+
+    retrier = DownloadRetrier(retries)
+    while True:
+        try:
+            cached = cache.download_file(dl_url).path
+            return _expand_archive(
+                cached, out_dir, pattern, strip_components, test=test
+            )
+        except Exception as e:
+            LOGGER.exception(e)
+            if not retrier.retry():
+                raise
 
 
 def _pathjoin(items: "Iterable[str]") -> PurePath:
@@ -1086,12 +1124,12 @@ def main(argv=None):
     dl_grp.add_argument(
         "--version",
         "-V",
-        default="latest",
-        help='The product version to download. Use "latest" to download '
+        default="latest-build",
+        help='The product version to download. Use "latest-release" to download '
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
         'candidates. Use "rapid" to download the latest rapid release. '
-        ' Use "latest-build" to download the most recent build of '
+        ' Use "latest-build" or "latest" to download the most recent build of '
         'the named component. Use "--list" to list available versions.',
     )
     dl_grp.add_argument(
@@ -1146,6 +1184,7 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
+    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
@@ -1185,6 +1224,7 @@ def main(argv=None):
         test=args.test,
         no_download=args.no_download,
         latest_build_branch=args.latest_build_branch,
+        retries=int(args.retries),
     )
     if result is ExpandResult.Empty and args.empty_is_error:
         sys.exit(1)

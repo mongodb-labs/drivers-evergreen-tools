@@ -94,6 +94,15 @@ TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 
 See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
 
+In order to use custom certificates in your server, copy the client certificate file to
+`$MONGO_ORCHESTRATION_HOME/lib/client.pem` (where `MONGO_ORCHESTRATION_HOME`
+defaults to `$DRIVERS_TOOLS/.evergreen/orchestration`), e.g.
+
+```bash
+# Replace Mongo Orchestration's client certificate.
+cp ${PROJECT_DIRECTORY}/test/certificates/client.pem ${MONGO_ORCHESTRATION_HOME}/lib/client.pem
+```
+
 ## Linters and Formatters
 
 This repo uses [pre-commit](https://pre-commit.com/) for managing linting and formatting of the codebase.
