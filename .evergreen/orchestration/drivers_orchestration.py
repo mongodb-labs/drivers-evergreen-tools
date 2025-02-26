@@ -4,10 +4,13 @@ Run mongo-orchestration and launch a deployment.
 Use '--help' for more information.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
 import os
+import re
 import shlex
 import shutil
 import socket
@@ -64,10 +67,10 @@ def get_options():
     )
 
     other_group = parser.add_argument_group("Other options")
-    parser.add_argument(
+    other_group.add_argument(
         "--load-balancer", action="store_true", help="Whether to use a load balancer"
     )
-    parser.add_argument(
+    other_group.add_argument(
         "--skip-crypt-shared",
         action="store_true",
         help="Whether to skip installing crypt_shared lib",
@@ -100,7 +103,19 @@ def get_options():
     )
     other_group.add_argument(
         "--existing-binaries-dir",
-        help="A directory containing existing mongodb binaries to use instead of downloading new ones.",
+        help="A directory containing existing mongodb binaries to use instead of downloading new ones",
+    )
+    other_group.add_argument(
+        "--tls-cert-key-file",
+        help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
+    )
+    other_group.add_argument(
+        "--tls-pem-key-file",
+        help="A .pem file that contains the TLS certificate and key for the server",
+    )
+    other_group.add_argument(
+        "--tls-ca-file",
+        help="A .pem file that contains the root certificate chain for the server",
     )
 
     # Get the options, and then allow environment variable overrides.
@@ -172,13 +187,20 @@ def handle_docker_config(data):
             router["logpath"] = f"/tmp/mongodb-{item['port']}.log"
 
 
+def normalize_path(path: Path | str) -> str:
+    if os.name != "nt":
+        return str(path)
+    path = Path(path).as_posix()
+    return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
+
+
 def run(opts):
     LOGGER.info("Running orchestration...")
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
-    # NOTE: in general, we need to use posix strings to avoid path escapes on cygwin.
-    mdb_binaries_str = mdb_binaries.as_posix()
+    # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
+    mdb_binaries_str = normalize_path(mdb_binaries)
     shutil.rmtree(mdb_binaries, ignore_errors=True)
     expansion_yaml = Path("mo-expansion.yml")
     expansion_yaml.unlink(missing_ok=True)
@@ -193,7 +215,7 @@ def run(opts):
     dl_start = datetime.now()
     version = opts.version
     cache_dir = DRIVERS_TOOLS / ".local/cache"
-    cache_dir_str = cache_dir.as_posix()
+    cache_dir_str = normalize_path(cache_dir)
     default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
     if opts.quiet:
         default_args += " -q"
@@ -225,7 +247,7 @@ def run(opts):
         # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
         # path location than the other binaries, which is required for
         # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
-        args = default_args.replace(mdb_binaries_str, DRIVERS_TOOLS.as_posix())
+        args = default_args.replace(mdb_binaries_str, normalize_path(DRIVERS_TOOLS))
         args += (
             f" --version {version} --strip-path-components 1 --component crypt_shared"
         )
@@ -238,7 +260,7 @@ def run(opts):
             if fname in expected:
                 crypt_shared_path = DRIVERS_TOOLS / fname
         assert crypt_shared_path is not None
-        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{crypt_shared_path.as_posix()}"'
+        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
         expansion_yaml.write_text(crypt_text)
         expansion_sh.write_text(crypt_text.replace(": ", "="))
 
@@ -276,7 +298,18 @@ def run(opts):
     orch_path = mo_home / f"configs/{topology}s/{orchestration_file}"
     LOGGER.info(f"Using orchestration file: {orch_path}")
     text = orch_path.read_text()
-    text = text.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS.as_posix())
+
+    # Handle overriding the tls configuration in the file.
+    if opts.tls_pem_key_file or opts.tls_ca_file:
+        if not (opts.tls_pem_key_file and opts.tls_ca_file):
+            raise ValueError("You must supply both tls-pem-key-file and tls-ca-file")
+        base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
+        text = text.replace(f"{base}/server.pem", normalize_path(opts.tls_pem_key_file))
+        text = text.replace(f"{base}/ca.pem", normalize_path(opts.tls_ca_file))
+    else:
+        text = text.replace(
+            "ABSOLUTE_PATH_REPLACEMENT_TOKEN", normalize_path(DRIVERS_TOOLS)
+        )
     data = json.loads(text)
 
     if opts.require_api_version:
@@ -366,14 +399,15 @@ def start(opts):
     os.makedirs(mo_home / "lib", exist_ok=True)
     mo_config = mo_home / "orchestration.config"
     mdb_binaries = Path(opts.mongodb_binaries)
-    config = dict(releases=dict(default=mdb_binaries.as_posix()))
+    config = dict(releases=dict(default=normalize_path(mdb_binaries)))
     mo_config.write_text(json.dumps(config, indent=2))
-    mo_config_str = mo_config.as_posix()
-    command = f"{sys.executable} -m mongo_orchestration.server"
+    mo_config_str = normalize_path(mo_config)
+    sys_executable = normalize_path(sys.executable)
+    command = f"{sys_executable} -m mongo_orchestration.server"
 
     # Handle Windows-specific concerns.
     if os.name == "nt":
-        # Copy client certificates.
+        # Copy default client certificate.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
         try:
@@ -383,9 +417,14 @@ def start(opts):
 
         # We need to use the CLI executable, and add it to our path.
         os.environ["PATH"] = (
-            f"{Path(sys.executable).parent}{os.pathsep}{os.environ['PATH']}"
+            f"{Path(sys_executable).parent}{os.pathsep}{os.environ['PATH']}"
         )
         command = "mongo-orchestration -s wsgiref"
+
+    # Override the client cert file if applicable.
+    env = os.environ.copy()
+    if opts.tls_cert_key_file:
+        env["MONGO_ORCHESTRATION_CLIENT_CERT"] = normalize_path(opts.tls_cert_key_file)
 
     mo_start = datetime.now()
 
@@ -401,7 +440,11 @@ def start(opts):
     output_fid = output_file.open("w")
     try:
         subprocess.run(
-            shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=output_fid
+            shlex.split(args),
+            check=True,
+            stderr=subprocess.STDOUT,
+            stdout=output_fid,
+            env=env,
         )
     except subprocess.CalledProcessError:
         LOGGER.error("Orchestration failed!")
@@ -432,7 +475,7 @@ def start(opts):
 
 def stop():
     LOGGER.info("Stopping mongo-orchestration...")
-    py_exe = Path(sys.executable).as_posix()
+    py_exe = normalize_path(sys.executable)
     args = f"{py_exe} -m mongo_orchestration.server stop"
     proc = subprocess.run(
         shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
