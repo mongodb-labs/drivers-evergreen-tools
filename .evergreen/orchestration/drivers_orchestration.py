@@ -205,7 +205,7 @@ def run_command(cmd: str, **kwargs):
             stdout=subprocess.PIPE,
             **kwargs,
         )
-        LOGGER.debug(proc.stdout)
+        LOGGER.info(proc.stdout)
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
