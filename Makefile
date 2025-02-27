@@ -5,8 +5,7 @@ all:
 
 clean:
 	@echo "Cleaning files..."
-	rm -rf ./mongodb .env results.json mo-expansion*
-	rm -rf "$${TMPDIR:-$${TEMP:-$${TMP:-/tmp}}}"/mongo*
+	.evergreen/clean.sh all
 
 run-server: clean
 	@echo "Running server..."

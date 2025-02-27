@@ -32,7 +32,6 @@ fi
 export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then
   ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 5
-  chmod +x ./mongodl_test/bin/mongosh
   ./mongodl_test/bin/mongosh --version
 else
   ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 5

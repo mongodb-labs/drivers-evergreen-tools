@@ -1001,7 +1001,7 @@ def _expand_tgz(
                 strip_components,
                 mem.isdir(),
                 lambda: cast("IO[bytes]", tf.extractfile(mem)),  # noqa: B023
-                mem.mode,
+                mem.mode | 0o222,  # make sure file is writable
                 test=test,
             )
     return n_extracted

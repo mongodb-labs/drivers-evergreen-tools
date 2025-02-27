@@ -194,14 +194,36 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
+def run_command(cmd: str, **kwargs):
+    LOGGER.debug(f"Running command {cmd}...")
+    try:
+        proc = subprocess.run(
+            shlex.split(cmd),
+            check=True,
+            encoding="utf-8",
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            **kwargs,
+        )
+        LOGGER.debug(proc.stdout)
+    except subprocess.CalledProcessError as e:
+        LOGGER.error(e.output)
+        LOGGER.error(str(e))
+        sys.exit(e.returncode)
+    LOGGER.debug(f"Running command {cmd}... done.")
+
+
 def run(opts):
     LOGGER.info("Running orchestration...")
 
     # Clean up previous files.
     mdb_binaries = Path(opts.mongodb_binaries)
+    env = os.environ.copy()
+    env["MONGODB_BINARIES"] = mdb_binaries.as_posix()
+    run_command("bash ./.evergreen/clean.sh", env=env, cwd=DRIVERS_TOOLS)
+
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries_str = normalize_path(mdb_binaries)
-    shutil.rmtree(mdb_binaries, ignore_errors=True)
     expansion_yaml = Path("mo-expansion.yml")
     expansion_yaml.unlink(missing_ok=True)
     expansion_sh = Path("mo-expansion.sh")
@@ -231,7 +253,7 @@ def run(opts):
         LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
         shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
 
-    subprocess.run([f"{mdb_binaries_str}/mongod", "--version"], check=True)
+    run_command(f"{mdb_binaries_str}/mongod --version")
 
     # Download legacy shell.
     if opts.install_legacy_shell:
@@ -247,8 +269,7 @@ def run(opts):
         # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
         # path location than the other binaries, which is required for
         # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
-        args = default_args.replace(mdb_binaries_str, normalize_path(DRIVERS_TOOLS))
-        args += (
+        args = default_args + (
             f" --version {version} --strip-path-components 1 --component crypt_shared"
         )
         LOGGER.info("Downloading crypt_shared...")
@@ -256,8 +277,9 @@ def run(opts):
         LOGGER.info("Downloading crypt_shared... done.")
         crypt_shared_path = None
         expected = [f"mongo_crypt_v1.{ext}" for ext in ["dll", "so", "dylib"]]
-        for fname in os.listdir(DRIVERS_TOOLS):
+        for fname in os.listdir(mdb_binaries):
             if fname in expected:
+                shutil.move(mdb_binaries / fname, DRIVERS_TOOLS)
                 crypt_shared_path = DRIVERS_TOOLS / fname
         assert crypt_shared_path is not None
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
@@ -474,17 +496,14 @@ def start(opts):
 def stop():
     LOGGER.info("Stopping mongo-orchestration...")
     py_exe = normalize_path(sys.executable)
-    args = f"{py_exe} -m mongo_orchestration.server stop"
-    proc = subprocess.run(
-        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
-    )
-    LOGGER.debug(proc.stdout.decode("utf-8"))
+    run_command(f"{py_exe} -m mongo_orchestration.server stop")
     LOGGER.info("Stopping mongo-orchestration... done.")
 
 
 def main():
     opts = get_options()
     if opts.command == "run":
+        stop()
         run(opts)
     elif opts.command == "start":
         start(opts)
