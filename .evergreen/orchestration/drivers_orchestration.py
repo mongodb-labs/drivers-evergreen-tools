@@ -459,7 +459,7 @@ def start(opts):
     command = f"{sys_executable} -m mongo_orchestration.server"
 
     # Handle Windows-specific concerns.
-    if PLATFORM != "win32":
+    if PLATFORM == "win32":
         # Copy default client certificate.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
