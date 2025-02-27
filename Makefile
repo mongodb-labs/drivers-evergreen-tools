@@ -5,9 +5,9 @@ all:
 
 clean:
 	@echo "Cleaning files..."
-	.evergreen/clean.sh all
+	.evergreen/clean.sh
 
-run-server: clean
+run-server:
 	@echo "Running server..."
 	.evergreen/run-orchestration.sh
 

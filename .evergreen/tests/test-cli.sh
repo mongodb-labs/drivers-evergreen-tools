@@ -8,6 +8,9 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR/..
 
+# Ensure we can run clean before the cli is installed.
+make clean
+
 bash install-cli.sh .
 DOWNLOAD_DIR=mongodl_test
 
