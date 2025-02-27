@@ -91,7 +91,11 @@ def setup_assume_role():
         authmechanismproperties=f"AWS_SESSION_TOKEN:{token}",
     )
     create_user(ASSUMED_ROLE, kwargs)
-    return dict(USER=kwargs["username"], PASS=kwargs["password"], SESSION_TOKEN=token)
+    return dict(
+        USER=kwargs["username"],
+        PASS=kwargs["password"],
+        SESSION_TOKEN=creds["SessionToken"],
+    )
 
 
 def setup_ec2():
