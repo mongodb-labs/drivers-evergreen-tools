@@ -220,7 +220,7 @@ def run(opts):
     mdb_binaries = Path(opts.mongodb_binaries)
     env = os.environ.copy()
     env["MONGODB_BINARIES"] = mdb_binaries.as_posix()
-    run_command("./.evergreen/clean.sh", env=env, cwd=DRIVERS_TOOLS)
+    run_command("bash ./.evergreen/clean.sh", env=env, cwd=DRIVERS_TOOLS)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries_str = normalize_path(mdb_binaries)
