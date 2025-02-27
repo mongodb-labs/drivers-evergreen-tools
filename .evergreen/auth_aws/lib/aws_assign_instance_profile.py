@@ -36,9 +36,9 @@ def _has_instance_profile():
         print("Reading: " + base_url)
         iam_role = urllib.request.urlopen(base_url).read().decode()
     except urllib.error.HTTPError as e:
-        print(e)
         if e.code == 404:
             return False
+        print(e)
         raise e
 
     try:

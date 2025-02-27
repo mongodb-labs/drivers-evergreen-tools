@@ -11,6 +11,7 @@ pushd $SCRIPT_DIR
 if [ -f secrets-export.sh ]; then
   . ./activate-authawsvenv.sh
   echo "SOURCING SECRETS!"
+  env | grep "AWS_ACCESS_KEY_ID"
   source secrets-export.sh
   python ./lib/aws_assign_instance_profile.py
 fi
