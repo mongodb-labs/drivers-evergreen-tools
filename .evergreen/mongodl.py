@@ -1021,7 +1021,7 @@ def _expand_zip(
                 strip_components,
                 item.filename.endswith("/"),  ## Equivalent to: item.is_dir(),
                 lambda: zf.open(item, "r"),  # noqa: B023
-                0o555,
+                0o777,
                 test=test,
             )
     return n_extracted
