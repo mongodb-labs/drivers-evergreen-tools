@@ -36,9 +36,9 @@ CRYPT_NAME_MAP = {
 }
 
 # Top level files
-URI_TXT = DRIVERS_TOOLS / "uri.txt"
-MO_EXPANSION_SH = DRIVERS_TOOLS / "mo-expansion.sh"
-MO_EXPANSION_YML = DRIVERS_TOOLS / "mo-expansion.yml"
+URI_TXT = Path("uri.txt")
+MO_EXPANSION_SH = Path("mo-expansion.sh")
+MO_EXPANSION_YML = Path("mo-expansion.yml")
 
 
 def get_options():
