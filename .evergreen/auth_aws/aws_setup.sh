@@ -21,11 +21,6 @@ if [ ! -f "./secrets-export.sh" ]; then
     bash ./setup-secrets.sh
 fi
 
-# Remove any AWS creds that might be set in the parent env.
-unset AWS_ACCESS_KEY_ID
-unset AWS_SECRET_ACCESS_KEY
-unset AWS_SESSION_TOKEN
-
 source ./secrets-export.sh
 
 if [ -f $SCRIPT_DIR/test-env.sh ]; then
