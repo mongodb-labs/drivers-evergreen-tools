@@ -53,8 +53,7 @@ def get_options():
     parser.add_argument(
         "--topology",
         choices=["standalone", "replica_set", "sharded_cluster"],
-        default="standalone",
-        help="The topology of the server deployment",
+        help="The topology of the server deployment (defaults to standalone in most cases)",
     )
     parser.add_argument(
         "--auth", action="store_true", help="Whether to add authentication"
@@ -69,6 +68,9 @@ def get_options():
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(
         "--load-balancer", action="store_true", help="Whether to use a load balancer"
+    )
+    other_group.add_argument(
+        "--auth-aws", action="store_true", help="Whether to use MONGODB-AWS auth"
     )
     other_group.add_argument(
         "--skip-crypt-shared",
@@ -140,6 +142,11 @@ def get_options():
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
         opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
+    if not opts.topology and opts.load_balancer:
+        opts.topology = "sharded_cluster"
+    if opts.auth_aws:
+        opts.auth = True
+        opts.orchestration_file = "auth-aws.json"
     if opts.topology == "standalone" or not opts.topology:
         opts.topology = "server"
     if not opts.version:
