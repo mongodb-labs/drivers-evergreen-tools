@@ -47,13 +47,13 @@ def get_options():
     parser.add_argument(
         "--version",
         default="latest",
-        help='The version to download (Required). Use "latest" to download '
+        help='The version to download. Use "latest" to download '
         "the newest available version (including release candidates).",
     )
     parser.add_argument(
         "--topology",
         choices=["standalone", "replica_set", "sharded_cluster"],
-        help="The topology of the server deployment (defaults to standalone in most cases)",
+        help="The topology of the server deployment (defaults to standalone unless another flag like load_balancer is set)",
     )
     parser.add_argument(
         "--auth", action="store_true", help="Whether to add authentication"
