@@ -1001,7 +1001,7 @@ def _expand_tgz(
                 strip_components,
                 mem.isdir(),
                 lambda: cast("IO[bytes]", tf.extractfile(mem)),  # noqa: B023
-                mem.mode,
+                mem.mode | 0o222,  # make sure file is writable
                 test=test,
             )
     return n_extracted
@@ -1021,7 +1021,7 @@ def _expand_zip(
                 strip_components,
                 item.filename.endswith("/"),  ## Equivalent to: item.is_dir(),
                 lambda: zf.open(item, "r"),  # noqa: B023
-                0o655,
+                0o777,
                 test=test,
             )
     return n_extracted

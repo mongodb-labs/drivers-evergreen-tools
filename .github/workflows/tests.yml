@@ -60,7 +60,6 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
-          chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
           ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then
