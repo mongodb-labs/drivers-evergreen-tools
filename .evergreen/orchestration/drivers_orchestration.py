@@ -348,10 +348,9 @@ def run(opts):
         base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
         text = text.replace(f"{base}/server.pem", normalize_path(opts.tls_pem_key_file))
         text = text.replace(f"{base}/ca.pem", normalize_path(opts.tls_ca_file))
-    else:
-        text = text.replace(
-            "ABSOLUTE_PATH_REPLACEMENT_TOKEN", normalize_path(DRIVERS_TOOLS)
-        )
+    text = text.replace(
+        "ABSOLUTE_PATH_REPLACEMENT_TOKEN", normalize_path(DRIVERS_TOOLS)
+    )
     data = json.loads(text)
 
     if opts.require_api_version:
