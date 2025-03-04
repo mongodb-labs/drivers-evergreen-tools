@@ -238,6 +238,9 @@ def handle_creds(creds: dict):
         for key, value in creds.items():
             fid.write(f"export {key}={value}\n")
         fid.write(f"export MONGODB_URI={MONGODB_URI}\n")
+        # TODO remove
+        if "USER" in creds:
+            print(MONGODB_URI)
 
 
 def main():
