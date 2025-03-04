@@ -236,10 +236,14 @@ def handle_creds(creds: dict):
         fid.write("#!/usr/bin/env bash\n\n")
         fid.write("set +x\n")
         for key, value in creds.items():
+            print("WRITING", key)
+            if key == "USER":
+                print("USER", key)
             fid.write(f"export {key}={value}\n")
         fid.write(f"export MONGODB_URI={MONGODB_URI}\n")
         # USER and PASS are always exported.
         if "USER" not in creds:
+            print("Writing default user")
             fid.write('export USER=""\n')
         if "PASS" not in creds:
             fid.write('export PASS=""\n')
