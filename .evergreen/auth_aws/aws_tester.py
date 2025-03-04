@@ -240,9 +240,9 @@ def handle_creds(creds: dict):
         fid.write(f"export MONGODB_URI={MONGODB_URI}\n")
         # USER and PASS are always exported.
         if "USER" not in creds:
-            fid.write("export USER=\n")
+            fid.write("export USER=''\n")
         if "PASS" not in creds:
-            fid.write("export PASS=\n")
+            fid.write("export PASS=''\n")
 
 
 def main():
