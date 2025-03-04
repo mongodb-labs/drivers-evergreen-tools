@@ -22,22 +22,30 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-from mongodl import main as mongodl
-from mongosh_dl import main as mongosh_dl
-
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
+PLATFORM = sys.platform.lower()
+CRYPT_NAME_MAP = {
+    "win32": "mongo_crypt_v1.dll",
+    "darwin": "mongo_crypt_v1.dylib",
+    "linux": "mongo_crypt_v1.so",
+}
+
+# Top level files
+URI_TXT = Path("uri.txt")
+MO_EXPANSION_SH = Path("mo-expansion.sh")
+MO_EXPANSION_YML = Path("mo-expansion.yml")
 
 
 def get_options():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("command", choices=["run", "start", "stop"])
+    parser.add_argument("command", choices=["run", "start", "stop", "clean"])
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Whether to log at the DEBUG level"
     )
@@ -195,25 +203,58 @@ def handle_docker_config(data):
 
 
 def normalize_path(path: Path | str) -> str:
-    if os.name != "nt":
+    if PLATFORM != "win32":
         return str(path)
     path = Path(path).as_posix()
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run(opts):
-    LOGGER.info("Running orchestration...")
+def run_command(cmd: str, **kwargs):
+    LOGGER.debug(f"Running command {cmd}...")
+    try:
+        proc = subprocess.run(
+            shlex.split(cmd),
+            check=True,
+            encoding="utf-8",
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            **kwargs,
+        )
+        LOGGER.info(proc.stdout)
+    except subprocess.CalledProcessError as e:
+        LOGGER.error(e.output)
+        LOGGER.error(str(e))
+        sys.exit(e.returncode)
+    LOGGER.debug(f"Running command {cmd}... done.")
 
-    # Clean up previous files.
+
+def clean_run(opts):
     mdb_binaries = Path(opts.mongodb_binaries)
-    # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries_str = normalize_path(mdb_binaries)
-    shutil.rmtree(mdb_binaries, ignore_errors=True)
-    expansion_yaml = Path("mo-expansion.yml")
-    expansion_yaml.unlink(missing_ok=True)
-    expansion_sh = Path("mo-expansion.sh")
-    expansion_sh.unlink(missing_ok=True)
-    uri_txt = DRIVERS_TOOLS / "uri.txt"
+    shutil.rmtree(mdb_binaries_str, ignore_errors=True)
+
+    mongodb_dir = DRIVERS_TOOLS / "mongodb"
+    if mongodb_dir.exists():
+        shutil.rmtree(normalize_path(mongodb_dir), ignore_errors=True)
+
+    for path in [URI_TXT, MO_EXPANSION_SH, MO_EXPANSION_YML]:
+        path.unlink(missing_ok=True)
+
+    crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
+    crypt_path.unlink(missing_ok=True)
+
+
+def run(opts):
+    # Deferred import so we can run as a script without the cli installed.
+    from mongodl import main as mongodl
+    from mongosh_dl import main as mongosh_dl
+
+    LOGGER.info("Running orchestration...")
+    clean_run(opts)
+
+    # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
+    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries_str = normalize_path(mdb_binaries)
 
     # The evergreen directory to path.
     os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
@@ -238,7 +279,7 @@ def run(opts):
         LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
         shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
 
-    subprocess.run([f"{mdb_binaries_str}/mongod", "--version"], check=True)
+    run_command(f"{mdb_binaries_str}/mongod --version")
 
     # Download legacy shell.
     if opts.install_legacy_shell:
@@ -254,22 +295,23 @@ def run(opts):
         # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
         # path location than the other binaries, which is required for
         # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
-        args = default_args.replace(mdb_binaries_str, normalize_path(DRIVERS_TOOLS))
-        args += (
+        args = default_args + (
             f" --version {version} --strip-path-components 1 --component crypt_shared"
         )
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
         LOGGER.info("Downloading crypt_shared... done.")
-        crypt_shared_path = None
-        expected = [f"mongo_crypt_v1.{ext}" for ext in ["dll", "so", "dylib"]]
-        for fname in os.listdir(DRIVERS_TOOLS):
-            if fname in expected:
-                crypt_shared_path = DRIVERS_TOOLS / fname
-        assert crypt_shared_path is not None
+        crypt_shared_path = mdb_binaries / CRYPT_NAME_MAP[PLATFORM]
+        if crypt_shared_path.exists():
+            shutil.move(crypt_shared_path, DRIVERS_TOOLS)
+            crypt_shared_path = DRIVERS_TOOLS / crypt_shared_path.name
+        else:
+            raise RuntimeError(
+                f"Could not find expected crypt_shared_path: {crypt_shared_path}"
+            )
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
-        expansion_yaml.write_text(crypt_text)
-        expansion_sh.write_text(crypt_text.replace(": ", "="))
+        MO_EXPANSION_YML.write_text(crypt_text)
+        MO_EXPANSION_SH.write_text(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
@@ -313,10 +355,9 @@ def run(opts):
         base = "ABSOLUTE_PATH_REPLACEMENT_TOKEN/.evergreen/x509gen"
         text = text.replace(f"{base}/server.pem", normalize_path(opts.tls_pem_key_file))
         text = text.replace(f"{base}/ca.pem", normalize_path(opts.tls_ca_file))
-    else:
-        text = text.replace(
-            "ABSOLUTE_PATH_REPLACEMENT_TOKEN", normalize_path(DRIVERS_TOOLS)
-        )
+    text = text.replace(
+        "ABSOLUTE_PATH_REPLACEMENT_TOKEN", normalize_path(DRIVERS_TOOLS)
+    )
     data = json.loads(text)
 
     if opts.require_api_version:
@@ -357,11 +398,13 @@ def run(opts):
 
     # Handle the cluster uri.
     uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
-    expansion_yaml.touch()
-    expansion_yaml.write_text(expansion_yaml.read_text() + f'\nMONGODB_URI: "{uri}"')
-    expansion_sh.touch()
-    expansion_sh.write_text(expansion_sh.read_text() + f'\nMONGODB_URI="{uri}"')
-    uri_txt.write_text(uri)
+    MO_EXPANSION_YML.touch()
+    MO_EXPANSION_YML.write_text(
+        MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
+    )
+    MO_EXPANSION_SH.touch()
+    MO_EXPANSION_SH.write_text(MO_EXPANSION_SH.read_text() + f'\nMONGODB_URI="{uri}"')
+    URI_TXT.write_text(uri)
     LOGGER.info(f"Cluster URI: {uri}")
 
     # Write the results file.
@@ -389,6 +432,19 @@ def run(opts):
     LOGGER.info("Running orchestration... done.")
 
 
+def clean_start(opts):
+    mo_home = Path(opts.mongo_orchestration_home)
+    for fname in [
+        "out.log",
+        "server.log",
+        "orchestration.config",
+        "config.json",
+        "server.pid",
+    ]:
+        if (mo_home / fname).exists():
+            (mo_home / fname).unlink()
+
+
 def start(opts):
     # Start mongo-orchestration
 
@@ -398,9 +454,7 @@ def start(opts):
         stop()
 
     # Clean up previous files.
-    for fname in ["out.log", "server.log", "orchestration.config", "config.json"]:
-        if (mo_home / fname).exists():
-            (mo_home / fname).unlink()
+    clean_start(opts)
 
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
@@ -413,7 +467,7 @@ def start(opts):
     command = f"{sys_executable} -m mongo_orchestration.server"
 
     # Handle Windows-specific concerns.
-    if os.name == "nt":
+    if PLATFORM == "win32":
         # Copy default client certificate.
         src = DRIVERS_TOOLS / ".evergreen/x509gen/client.pem"
         dst = mo_home / "lib/client.pem"
@@ -483,11 +537,7 @@ def start(opts):
 def stop():
     LOGGER.info("Stopping mongo-orchestration...")
     py_exe = normalize_path(sys.executable)
-    args = f"{py_exe} -m mongo_orchestration.server stop"
-    proc = subprocess.run(
-        shlex.split(args), check=True, stderr=subprocess.STDOUT, stdout=subprocess.PIPE
-    )
-    LOGGER.debug(proc.stdout.decode("utf-8"))
+    run_command(f"{py_exe} -m mongo_orchestration.server stop")
     LOGGER.info("Stopping mongo-orchestration... done.")
 
 
@@ -499,6 +549,9 @@ def main():
         start(opts)
     elif opts.command == "stop":
         stop()
+    elif opts.command == "clean":
+        clean_run(opts)
+        clean_start(opts)
 
 
 if __name__ == "__main__":
