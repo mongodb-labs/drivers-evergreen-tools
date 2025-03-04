@@ -88,7 +88,6 @@ evergreen_config_generator/dist
 *-expansion.yml
 secrets-export.sh
 token_file.txt
-test-env.sh
 
 # Virtual envs
 .venv
