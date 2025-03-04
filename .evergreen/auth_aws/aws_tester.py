@@ -221,14 +221,14 @@ def setup_web_identity():
 
 def handle_creds(creds: dict):
     if "USER" in creds:
-        USER = quote_plus(creds.pop("USER"))
-        PASS = quote_plus(creds.pop("PASS"))
+        USER = quote_plus(creds["USER"])
+        PASS = quote_plus(creds["PASS"])
         MONGODB_URI = f"mongodb://{USER}:{PASS}@localhost"
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
     if "SESSION_TOKEN" in creds:
-        SESSION_TOKEN = quote_plus(creds.pop("SESSION_TOKEN"))
+        SESSION_TOKEN = quote_plus(creds["SESSION_TOKEN"])
         MONGODB_URI = (
             f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
         )
