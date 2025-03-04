@@ -33,23 +33,23 @@ def _get_local_instance_id():
 def _has_instance_profile():
     base_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
     try:
-        print("Reading: " + base_url)
+        LOGGER.info("Reading: " + base_url)
         iam_role = urllib.request.urlopen(base_url).read().decode()
     except urllib.error.HTTPError as e:
-        print(e)
         if e.code == 404:
             return False
+        LOGGER.error(e)
         raise e
 
     try:
         url = base_url + iam_role
-        print("Reading: " + url)
+        LOGGER.info("Reading: " + url)
         _ = urllib.request.urlopen(url)
-        print("Assigned " + iam_role)
+        LOGGER.info("Assigned " + iam_role)
     except urllib.error.HTTPError as e:
-        print(e)
         if e.code == 404:
             return False
+        LOGGER.error(e)
         raise e
 
     return True
@@ -85,7 +85,7 @@ def _handle_config():
         )
         return CONFIG[get_key("iam_auth_ec2_instance_profile")]
     except Exception as e:
-        print(e)
+        LOGGER.error(e)
         return ""
 
 
@@ -94,7 +94,7 @@ DEFAULT_ARN = _handle_config()
 
 def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
     if _has_instance_profile():
-        print(
+        LOGGER.warning(
             "IMPORTANT: Found machine already has instance profile, skipping the assignment"
         )
         return
@@ -112,14 +112,14 @@ def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
             InstanceId=instance_id,
         )
 
-        print(response)
+        LOGGER.debug(response)
 
         # Wait for the instance profile to be assigned by polling the local instance metadata service
         _wait_instance_profile()
 
     except botocore.exceptions.ClientError as ce:
         if ce.response["Error"]["Code"] == "RequestLimitExceeded":
-            print("WARNING: RequestLimitExceeded, exiting with error code 2")
+            LOGGER.warning("WARNING: RequestLimitExceeded, exiting with error code 2")
             sys.exit(2)
         raise
 
