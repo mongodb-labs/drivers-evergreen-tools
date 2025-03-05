@@ -156,7 +156,7 @@ def setup_session_creds():
     creds = setup_assume_role()
     return dict(
         AWS_ACCESS_KEY_ID=creds["USER"],
-        AWS_ACCOUNT_ARN=creds["PASS"],
+        AWS_SECRET_ACCESS_KEY=creds["PASS"],
         AWS_SESSION_TOKEN=creds["SESSION_TOKEN"],
     )
 
@@ -175,7 +175,7 @@ def setup_regular():
 def setup_env_creds():
     # Set up the regular user, but export the creds as environment vars.
     creds = setup_regular()
-    return dict(AWS_ACCESS_KEY_ID=creds["USER"], AWS_ACCOUNT_ARN=creds["PASS"])
+    return dict(AWS_ACCESS_KEY_ID=creds["USER"], AWS_SECRET_ACCESS_KEY=creds["PASS"])
 
 
 def setup_web_identity():
