@@ -22,7 +22,7 @@ rm test-env.sh
 bash aws_setup.sh ec2
 # Ensure there is no password in the URI.
 cat test-env.sh
-cat test-env.sh | grep -q MONGODB_URI | grep -v -q "@"
+cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 bash aws_setup.sh regular
@@ -36,20 +36,20 @@ bash aws_setup.sh session-creds
 cat test-env.sh | grep -q AWS_ACCESS_KEY_ID
 cat test-env.sh | grep -q AWS_SECRET_ACCESS_KEY
 cat test-env.sh | grep -q AWS_SESSION_TOKEN
-cat test-env.sh | grep -q MONGODB_URI | grep -v -q "@"
+cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 bash aws_setup.sh env-creds
 cat test-env.sh | grep -q AWS_ACCESS_KEY_ID
 cat test-env.sh | grep -q AWS_SECRET_ACCESS_KEY
-cat test-env.sh | grep -c -q AWS_SESSION_TOKEN
-cat test-env.sh | grep -q MONGODB_URI | grep -v -q "@"
+cat test-env.sh | grep -v -q AWS_SESSION_TOKEN
+cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 bash aws_setup.sh web-identity
 cat test-env.sh | grep -q AWS_WEB_IDENTITY_TOKEN_FILE
 cat test-env.sh | grep -q AWS_ROLE_ARN
-cat test-env.sh | grep -q MONGODB_URI | grep -v -q "@"
+cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 bash ./teardown.sh
