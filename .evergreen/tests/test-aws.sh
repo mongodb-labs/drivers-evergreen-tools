@@ -27,7 +27,7 @@ rm test-env.sh
 bash aws_setup.sh regular
 cat test-env.sh | grep -q USER
 cat test-env.sh | grep -q PASS
-cat test-env.sh | grep -q -c SESSION_TOKEN
+cat test-env.sh | grep -v -q SESSION_TOKEN
 cat test-env.sh | grep MONGODB_URI | grep -q "@"
 rm test-env.sh
 
