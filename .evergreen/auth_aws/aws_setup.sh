@@ -32,7 +32,7 @@ if [ -f $SCRIPT_DIR/test-env.sh ]; then
     rm $SCRIPT_DIR/test-env.sh
 fi
 
-python aws_tester.py "$1"
+python aws_tester.py "$@"
 source $SCRIPT_DIR/test-env.sh
 
 popd
