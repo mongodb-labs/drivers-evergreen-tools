@@ -652,6 +652,18 @@ tasks:
             file: ".evergreen/compile.sh"
             buildtool: "cmake"
         - func: "upload build"
+
+    - name: delete_old_azure_resources
+      commands:
+        - command: ec2.assume_role
+          params:
+            role_arn: ${aws_test_secrets_role}
+        - command: subprocess.exec
+          params:
+            binary: bash
+            args:
+              - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/delete_old_azure_resources.sh
+            
 # }}}
 
 
@@ -1546,6 +1558,12 @@ buildvariants:
   display_name: "Serverless ${os-requires-50}"
   tasks:
     - serverless_task_group
+
+- name: delete_old_azure_resources
+  display_name: "Delete old Azure resources"
+  run_on: rhel80-small
+  tasks:
+    - name: delete_old_azure_resources
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
