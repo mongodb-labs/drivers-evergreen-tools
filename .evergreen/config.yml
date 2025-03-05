@@ -663,7 +663,7 @@ tasks:
             binary: bash
             args:
               - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/delete_old_azure_resources.sh
-            
+
 # }}}
 
 

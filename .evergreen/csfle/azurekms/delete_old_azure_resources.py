@@ -4,13 +4,13 @@ Delete old Azure Virtual Machines and related orphaned resources.
 Run with the shell script: delete_old_azure_resources.sh
 """
 
+import argparse
+import datetime
+import os
+
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
-import datetime
-import os
-import argparse
-import sys
 
 
 def main():
@@ -36,7 +36,9 @@ def main():
             now = datetime.datetime.now(tz=datetime.timezone.utc)
             delta = now - vm.time_created
             if delta < datetime.timedelta(hours=2):
-                print(f"{vm.name} is less than 2 hours old. Age is: {delta} ... skipping")
+                print(
+                    f"{vm.name} is less than 2 hours old. Age is: {delta} ... skipping"
+                )
                 continue
             vm_names.append(vm.name)
         except Exception as e:
@@ -78,7 +80,8 @@ def main():
             try:
                 print(f"Deleting orphaned NSG '{nsg_name}' ...")
                 nmclient.network_security_groups.begin_delete(
-                    resource_group_name, nsg_name).result()
+                    resource_group_name, nsg_name
+                ).result()
                 print(f"Deleting orphaned NSG '{nsg_name}' ... done")
             except Exception as e:
                 print(f"Exception occurred: {e}")
@@ -106,6 +109,7 @@ def main():
                 print(f"Deleting orphaned IP '{ip_name}' ... done")
             except Exception as e:
                 print(f"Exception occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
