@@ -151,6 +151,16 @@ def setup_ecs():
     return dict()
 
 
+def setup_session_creds():
+    # Set up the assume role user, and export the aws vars.
+    creds = setup_assume_role()
+    return dict(
+        AWS_ACCESS_KEY_ID=creds["USER"],
+        AWS_ACCOUNT_ARN=creds["PASS"],
+        AWS_SESSION_TOKEN=creds["SESSION_TOKEN"],
+    )
+
+
 def setup_regular():
     # Create the user.
     kwargs = dict(
@@ -160,6 +170,12 @@ def setup_regular():
     create_user(CONFIG[get_key("iam_auth_ecs_account_arn")], kwargs)
 
     return dict(USER=kwargs["username"], PASS=kwargs["password"])
+
+
+def setup_env_creds():
+    # Set up the regular user, but export the creds as environment vars.
+    creds = setup_regular()
+    return dict(AWS_ACCESS_KEY_ID=creds["USER"], AWS_ACCOUNT_ARN=creds["PASS"])
 
 
 def setup_web_identity():
@@ -246,9 +262,7 @@ def main():
     parser = argparse.ArgumentParser(description="MONGODB-AWS tester.")
     sub = parser.add_subparsers(title="Tester subcommands", help="sub-command help")
 
-    run_assume_role_cmd = sub.add_parser(
-        "assume-role", aliases=["session-creds"], help="Assume role test"
-    )
+    run_assume_role_cmd = sub.add_parser("assume-role", help="Assume role test")
     run_assume_role_cmd.set_defaults(func=setup_assume_role)
 
     run_ec2_cmd = sub.add_parser("ec2", help="EC2 test")
@@ -257,16 +271,20 @@ def main():
     run_ecs_cmd = sub.add_parser("ecs", help="ECS test")
     run_ecs_cmd.set_defaults(func=setup_ecs)
 
-    run_regular_cmd = sub.add_parser(
-        "regular", aliases=["env-creds"], help="Regular credentials test"
-    )
+    run_regular_cmd = sub.add_parser("regular", help="Regular credentials test")
     run_regular_cmd.set_defaults(func=setup_regular)
+
+    run_session_creds_cmd = sub.add_parser("session-creds", help="Session credentials")
+    run_session_creds_cmd.set_defaults(func=setup_session_creds)
+
+    run_env_creds_cmd = sub.add_parser("env-creds", help="Environment credentials")
+    run_env_creds_cmd.set_defaults(func=setup_env_creds)
 
     run_web_identity_cmd = sub.add_parser("web-identity", help="Web identity test")
     run_web_identity_cmd.set_defaults(func=setup_web_identity)
 
     args = parser.parse_args()
-    func_name = args.func.__name__.replace("setup_", "")
+    func_name = args.func.__name__.replace("setup_", "").replace("_", "-")
     LOGGER.info("Running aws_tester.py with %s...", func_name)
     creds = args.func()
     handle_creds(creds)
