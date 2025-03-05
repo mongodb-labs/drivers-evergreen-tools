@@ -21,7 +21,6 @@ rm test-env.sh
 
 bash aws_setup.sh ec2
 # Ensure there is no password in the URI.
-cat test-env.sh
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
