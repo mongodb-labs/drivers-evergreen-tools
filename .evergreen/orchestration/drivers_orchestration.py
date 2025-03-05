@@ -55,14 +55,13 @@ def get_options():
     parser.add_argument(
         "--version",
         default="latest",
-        help='The version to download (Required). Use "latest" to download '
+        help='The version to download. Use "latest" to download '
         "the newest available version (including release candidates).",
     )
     parser.add_argument(
         "--topology",
         choices=["standalone", "replica_set", "sharded_cluster"],
-        default="standalone",
-        help="The topology of the server deployment",
+        help="The topology of the server deployment (defaults to standalone unless another flag like load_balancer is set)",
     )
     parser.add_argument(
         "--auth", action="store_true", help="Whether to add authentication"
@@ -77,6 +76,9 @@ def get_options():
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(
         "--load-balancer", action="store_true", help="Whether to use a load balancer"
+    )
+    other_group.add_argument(
+        "--auth-aws", action="store_true", help="Whether to use MONGODB-AWS auth"
     )
     other_group.add_argument(
         "--skip-crypt-shared",
@@ -148,6 +150,11 @@ def get_options():
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
     if opts.mongodb_binaries is None:
         opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
+    if not opts.topology and opts.load_balancer:
+        opts.topology = "sharded_cluster"
+    if opts.auth_aws:
+        opts.auth = True
+        opts.orchestration_file = "auth-aws.json"
     if opts.topology == "standalone" or not opts.topology:
         opts.topology = "server"
     if not opts.version:
@@ -395,6 +402,8 @@ def run(opts):
     MO_EXPANSION_YML.write_text(
         MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
     )
+    MO_EXPANSION_SH.touch()
+    MO_EXPANSION_SH.write_text(MO_EXPANSION_SH.read_text() + f'\nMONGODB_URI="{uri}"')
     URI_TXT.write_text(uri)
     LOGGER.info(f"Cluster URI: {uri}")
 
