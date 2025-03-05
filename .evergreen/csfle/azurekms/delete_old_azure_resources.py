@@ -33,10 +33,13 @@ def main():
     vm_names = []
     for vm in cmclient.virtual_machines.list(resource_group_name):
         try:
-            now = datetime.datetime.now(tz=datetime.timezone.utc)
-            delta = now - vm.time_created
-            if delta < datetime.timedelta(hours=2):
-                print(f"{vm.name} is less than 2 hours old. Age is: {delta} ... skipping")
+            # now = datetime.datetime.now(tz=datetime.timezone.utc)
+            # delta = now - vm.time_created
+            # if delta < datetime.timedelta(hours=2):
+            #     print(f"{vm.name} is less than 2 hours old. Age is: {delta} ... skipping")
+            #     continue
+            if "KEVINALBS" not in vm.name:
+                print(f"{vm.name} is not eligible for test deletion ... skipping")
                 continue
             vm_names.append(vm.name)
         except Exception as e:
