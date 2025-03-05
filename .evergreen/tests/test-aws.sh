@@ -38,7 +38,7 @@ cat test-env.sh | grep -q MONGODB_URI
 
 bash aws_setup.sh web-identity
 cat test-env.sh | grep -q AWS_WEB_IDENTITY_TOKEN_FILE
-cat test-env.sh | AWS_ROLE_ARN
+cat test-env.sh | grep -q AWS_ROLE_ARN
 
 bash ./teardown.sh
 

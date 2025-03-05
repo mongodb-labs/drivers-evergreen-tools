@@ -1413,14 +1413,14 @@ buildvariants:
     - ".docker"  # Run all tasks with the "docker" tag
 
 - name: tests-aws
-  display_name: AWS
+  display_name: Auth AWS
   run_on:
     - ubuntu2204-small
   tasks:
     - ".aws"
 
 - name: tests-oidc
-  display_name: OIDC
+  display_name: Auth OIDC
   run_on: ubuntu2204-small
   tasks:
     - "test-oidc-local"
