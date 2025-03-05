@@ -3,11 +3,11 @@
 # Test aws setup function for different inputs.
 set -eu
 
-# Start a server with aws auth enabled.
-AUTH="auth"  ORCHESTRATION_FILE="auth-aws.json" make run-server
-
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+
+# Start a server with aws auth enabled.
+AUTH="auth"  ORCHESTRATION_FILE="auth-aws.json" make -C ${DRIVERS_TOOLS} run-server
 
 pushd $SCRIPT_DIR/../auth_aws
 
@@ -42,7 +42,7 @@ cat test-env.sh | AWS_ROLE_ARN
 
 bash ./teardown.sh
 
-make stop-server
-
 popd
+
+make -C ${DRIVERS_TOOLS} stop-server
 make -C ${DRIVERS_TOOLS} test
