@@ -5,27 +5,23 @@ Script for testing MONGDOB-AWS authentication.
 
 import argparse
 import json
-import logging
 import os
 import subprocess
 import sys
 from functools import partial
-from pathlib import Path
 from urllib.parse import quote_plus
 
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
-HERE = Path(__file__).absolute().parent
-LOGGER = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def join(*parts):
     return os.path.join(*parts).replace(os.sep, "/")
 
 
-sys.path.insert(0, str(HERE / "lib"))
+sys.path.insert(0, join(HERE, "lib"))
 from aws_assign_instance_profile import _assign_instance_policy
 from aws_assume_role import _assume_role
 from aws_assume_web_role import _assume_role_with_web_identity
@@ -39,7 +35,7 @@ AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_i
 _USE_AWS_SECRETS = False
 
 try:
-    with (HERE / "aws_e2e_setup.json").open() as fid:
+    with open(join(HERE, "aws_e2e_setup.json")) as fid:
         CONFIG = json.load(fid)
         get_key = partial(_get_key, uppercase=False)
 except FileNotFoundError:
@@ -55,7 +51,7 @@ def run(args, env):
 
 def create_user(user, kwargs):
     """Create a user and verify access."""
-    LOGGER.info("Creating user %s", user)
+    print("Creating user", user)
     client = MongoClient(username="bob", password="pwd123")
     db = client["$external"]
     try:
@@ -80,7 +76,7 @@ def setup_assume_role():
 
     role_name = CONFIG[get_key("iam_auth_assume_role_name")]
     creds = _assume_role(role_name, quiet=True)
-    with (HERE / "creds.json").open("w") as fid:
+    with open(join(HERE, "creds.json"), "w") as fid:
         json.dump(creds, fid)
 
     # Create the user.
@@ -91,11 +87,6 @@ def setup_assume_role():
         authmechanismproperties=f"AWS_SESSION_TOKEN:{token}",
     )
     create_user(ASSUMED_ROLE, kwargs)
-    return dict(
-        USER=kwargs["username"],
-        PASS=kwargs["password"],
-        SESSION_TOKEN=creds["SessionToken"],
-    )
 
 
 def setup_ec2():
@@ -104,7 +95,6 @@ def setup_ec2():
     os.environ.pop("AWS_ACCESS_KEY_ID", None)
     os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
     create_user(AWS_ACCOUNT_ARN, dict())
-    return dict()
 
 
 def setup_ecs():
@@ -148,8 +138,6 @@ def setup_ecs():
     # Run the test in a container
     subprocess.check_call(["/bin/sh", "-c", run_test_command], env=env)
 
-    return dict()
-
 
 def setup_regular():
     # Create the user.
@@ -158,8 +146,6 @@ def setup_regular():
         password=CONFIG[get_key("iam_auth_ecs_secret_access_key")],
     )
     create_user(CONFIG[get_key("iam_auth_ecs_account_arn")], kwargs)
-
-    return dict(USER=kwargs["username"], PASS=kwargs["password"])
 
 
 def setup_web_identity():
@@ -175,7 +161,7 @@ def setup_web_identity():
         raise RuntimeError("Request limit exceeded for AWS API")
 
     if ret != 0:
-        LOGGER.debug("return code was %s", ret)
+        print("ret was", ret)
         raise RuntimeError(
             "Failed to unassign an instance profile from the current machine"
         )
@@ -200,11 +186,10 @@ def setup_web_identity():
 
     # Assume the web role to get temp credentials.
     os.environ["AWS_WEB_IDENTITY_TOKEN_FILE"] = token_file
-    role_arn = CONFIG[get_key("iam_auth_assume_web_role_name")]
-    os.environ["AWS_ROLE_ARN"] = role_arn
+    os.environ["AWS_ROLE_ARN"] = CONFIG[get_key("iam_auth_assume_web_role_name")]
 
     creds = _assume_role_with_web_identity(True)
-    with (HERE / "creds.json").open("w") as fid:
+    with open(join(HERE, "creds.json"), "w") as fid:
         json.dump(creds, fid)
 
     # Create the user.
@@ -216,39 +201,12 @@ def setup_web_identity():
     )
     create_user(ASSUMED_WEB_ROLE, kwargs)
 
-    return dict(AWS_WEB_IDENTITY_TOKEN_FILE=token_file, AWS_ROLE_ARN=role_arn)
-
-
-def handle_creds(creds: dict):
-    if "USER" in creds:
-        USER = quote_plus(creds["USER"])
-        PASS = quote_plus(creds["PASS"])
-        MONGODB_URI = f"mongodb://{USER}:{PASS}@localhost"
-    else:
-        MONGODB_URI = "mongodb://localhost"
-    MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
-    if "SESSION_TOKEN" in creds:
-        SESSION_TOKEN = quote_plus(creds["SESSION_TOKEN"])
-        MONGODB_URI = (
-            f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
-        )
-    with (HERE / "test-env.sh").open("w", newline="\n") as fid:
-        fid.write("#!/usr/bin/env bash\n\n")
-        fid.write("set +x\n")
-        for key, value in creds.items():
-            if key in ["USER", "PASS", "SESSION_TOKEN"]:
-                value = quote_plus(value)  # noqa: PLW2901
-            fid.write(f"export {key}={value}\n")
-        fid.write(f"export MONGODB_URI={MONGODB_URI}\n")
-
 
 def main():
     parser = argparse.ArgumentParser(description="MONGODB-AWS tester.")
     sub = parser.add_subparsers(title="Tester subcommands", help="sub-command help")
 
-    run_assume_role_cmd = sub.add_parser(
-        "assume-role", aliases=["session-creds"], help="Assume role test"
-    )
+    run_assume_role_cmd = sub.add_parser("assume-role", help="Assume role test")
     run_assume_role_cmd.set_defaults(func=setup_assume_role)
 
     run_ec2_cmd = sub.add_parser("ec2", help="EC2 test")
@@ -257,20 +215,14 @@ def main():
     run_ecs_cmd = sub.add_parser("ecs", help="ECS test")
     run_ecs_cmd.set_defaults(func=setup_ecs)
 
-    run_regular_cmd = sub.add_parser(
-        "regular", aliases=["env-creds"], help="Regular credentials test"
-    )
+    run_regular_cmd = sub.add_parser("regular", help="Regular credentials test")
     run_regular_cmd.set_defaults(func=setup_regular)
 
     run_web_identity_cmd = sub.add_parser("web-identity", help="Web identity test")
     run_web_identity_cmd.set_defaults(func=setup_web_identity)
 
     args = parser.parse_args()
-    func_name = args.func.__name__.replace("setup_", "")
-    LOGGER.info("Running aws_tester.py with %s...", func_name)
-    creds = args.func()
-    handle_creds(creds)
-    LOGGER.info("Running aws_tester.py with %s... done.", func_name)
+    args.func()
 
 
 if __name__ == "__main__":
