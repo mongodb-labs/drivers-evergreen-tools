@@ -1013,7 +1013,7 @@ tasks:
       commands:
         - func: "run csfle test"
 
-    - name: "test-aws"
+    - name: "test-auth-aws"
       tags: ["pr", "aws"]
       commands:
         - func: "run aws test"
