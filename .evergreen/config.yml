@@ -512,6 +512,14 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run aws test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-aws.sh]
+
   "run csfle test":
     - command: ec2.assume_role
       params:
@@ -1005,6 +1013,11 @@ tasks:
       commands:
         - func: "run csfle test"
 
+    - name: "test-auth-aws"
+      tags: ["pr", "aws"]
+      commands:
+        - func: "run aws test"
+
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
@@ -1399,8 +1412,15 @@ buildvariants:
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
+- name: tests-aws
+  display_name: Auth AWS
+  run_on:
+    - ubuntu2204-small
+  tasks:
+    - ".aws"
+
 - name: tests-oidc
-  display_name: OIDC
+  display_name: Auth OIDC
   run_on: ubuntu2204-small
   tasks:
     - "test-oidc-local"
