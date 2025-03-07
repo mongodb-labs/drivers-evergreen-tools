@@ -18,7 +18,11 @@ for VARNAME in "${VARLIST[@]}"; do
   [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
+bash teardown.sh
+
 . ./activate-ocspvenv.sh
+
+echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}..."
 
 CA_FILE="${OCSP_ALGORITHM}/ca.pem"
 ARGS="-p 8100 -v"
@@ -48,8 +52,26 @@ case $SERVER_TYPE in
     ;;
 esac
 
+COMMAND="python"
+if [ "$(uname -s)" != "Darwin" ]; then
+  # On linux and windows host, we need to use nohup to daemonize the process
+  # and prevent the task from hanging.
+  # The macos hosts do not support nohup.
+  COMMAND="nohup $COMMAND"
+fi
+
 python ocsp_mock.py \
   --ca_file $CA_FILE \
   --ocsp_responder_cert $CERT \
   --ocsp_responder_key $KEY \
-  $ARGS
+  $ARGS > ocsp_mock_server.log 2>&1 &
+echo "$!" > ocsp.pid
+
+tail -f ocsp_mock_server.log &
+log_pid="$!"
+
+# Wait for server to start.
+grep -q "Debugger is active" <(tail -f ocsp_mock_server.log)
+kill $log_pid
+
+echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}... done."
