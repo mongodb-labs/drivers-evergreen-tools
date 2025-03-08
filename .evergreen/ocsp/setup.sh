@@ -60,7 +60,7 @@ if [ "$(uname -s)" != "Darwin" ]; then
   COMMAND="nohup $COMMAND"
 fi
 
-python ocsp_mock.py \
+$COMMAND ocsp_mock.py \
   --ca_file $CA_FILE \
   --ocsp_responder_cert $CERT \
   --ocsp_responder_key $KEY \
