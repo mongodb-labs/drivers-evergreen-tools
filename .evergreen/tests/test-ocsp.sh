@@ -32,8 +32,9 @@ bash ./setup.sh
 echo "Connecting to server..."
 TLS_OPTS=("--tls --tlsCertificateKeyFile \"${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/server.pem\"")
 TLS_OPTS+=("--tlsCAFile \"${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/ca.pem\"")
+URI="mongodb://localhost/?serverSelectionTimeoutMS=10000"
 # shellcheck disable=SC2068
-$MONGODB_BINARIES/mongosh ${TLS_OPTS[@]} --eval "db.runCommand({\"ping\":1})"
+$MONGODB_BINARIES/mongosh $URI ${TLS_OPTS[@]} --eval "db.runCommand({\"ping\":1})"
 echo "Connecting to server... done."
 
 bash ./teardown.sh
