@@ -52,7 +52,7 @@ case $SERVER_TYPE in
     ;;
 esac
 
-COMMAND="python"
+COMMAND="python -u"
 if [ "$(uname -s)" != "Darwin" ]; then
   # On linux and windows host, we need to use nohup to daemonize the process
   # and prevent the task from hanging.
