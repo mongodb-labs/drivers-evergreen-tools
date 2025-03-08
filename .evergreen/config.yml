@@ -559,6 +559,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-cli.sh]
 
+  "run ocsp test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-ocsp.sh]
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -1035,6 +1042,11 @@ tasks:
       commands:
         - func: "run cli test full"
 
+    - name: "test-ocsp"
+      tags: ["pr"]
+      commands:
+        - func: "run ocsp test"
+
     - name: "test-cli-partial"
       tags: ["pr"]
       commands:
@@ -1485,6 +1497,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-ocsp"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
