@@ -6,25 +6,15 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-
-if [[ "$(uname -s)" == CYGWIN* ]]; then
-  ORCHESTRATION_FILE="rsa-basic-tls-ocsp-disableStapling.json"
-  OCSP_SERVER_TYPE="revoked"
-  URI_OPTIONS="tls=true&tlsInsecure=true"
-  OCSP_ALGORITHM="rsa"
-elif [[ $(uname -s) = "Darwin" ]]; then
-  ORCHESTRATION_FILE="rsa-basic-tls-ocsp-disableStapling.json"
-  OCSP_SERVER_TYPE="valid"
-  URI_OPTIONS="tls=true"
-  OCSP_ALGORITHM="rsa"
-else
+if [[ $(uname -s) = "Linux" ]]; then
   ORCHESTRATION_FILE="ecdsa-basic-tls-ocsp-mustStaple.json"
-  OCSP_SERVER_TYPE="valid-delegate"
-  URI_OPTIONS="tls=true"
   OCSP_ALGORITHM="ecdsa"
+else
+  ORCHESTRATION_FILE="rsa-basic-tls-ocsp-disableStapling.json"
+  OCSP_ALGORITHM="rsa"
 fi
+
 export ORCHESTRATION_FILE
-export OCSP_SERVER_TYPE
 export OCSP_ALGORITHM
 
 # Start a MongoDB server with ocsp enabled.
@@ -33,7 +23,7 @@ SSL="ssl" make -C ${DRIVERS_TOOLS} run-server
 pushd $SCRIPT_DIR/../ocsp
 
 # Start the ocsp server.
-bash ./setup.sh
+SERVER_TYPE="valid" bash ./setup.sh
 
 # Connect to the MongoDB server.
 echo "Connecting to server..."
