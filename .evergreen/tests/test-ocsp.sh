@@ -29,7 +29,7 @@ SERVER_TYPE="valid" bash ./setup.sh
 echo "Connecting to server..."
 TLS_OPTS=("--tls --tlsCertificateKeyFile \"${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/server.pem\"")
 TLS_OPTS+=("--tlsCAFile \"${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/ca.pem\"")
-$MONGODB_BINARIES/mongosh "mongodb://localhost:27017/&${URI_OPTIONS}" "${TLS_OPTS[@]}" --eval "db.runCommand({\"ping\":1})"
+$MONGODB_BINARIES/mongosh "mongodb://localhost:27017" "${TLS_OPTS[@]}" --eval "db.runCommand({\"ping\":1})"
 echo "Connecting to server... done."
 
 bash ./teardown.sh
