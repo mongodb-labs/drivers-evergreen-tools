@@ -9,22 +9,22 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 if [[ "$(uname -s)" == CYGWIN* ]]; then
   ORCHESTRATION_FILE="rsa-basic-tls-ocsp-disableStapling.json"
-  SERVER_TYPE="revoked"
+  OCSP_SERVER_TYPE="revoked"
   URI_OPTIONS="tls=true&tlsInsecure=true"
   OCSP_ALGORITHM="rsa"
 elif [[ $(uname -s) = "Darwin" ]]; then
   ORCHESTRATION_FILE="rsa-basic-tls-ocsp-disableStapling.json"
-  SERVER_TYPE="valid"
+  OCSP_SERVER_TYPE="valid"
   URI_OPTIONS="tls=true"
   OCSP_ALGORITHM="rsa"
 else
   ORCHESTRATION_FILE="ecdsa-basic-tls-ocsp-mustStaple.json"
-  SERVER_TYPE="valid-delegate"
+  OCSP_SERVER_TYPE="valid-delegate"
   URI_OPTIONS="tls=true"
   OCSP_ALGORITHM="ecdsa"
 fi
 export ORCHESTRATION_FILE
-export SERVER_TYPE
+export OCSP_SERVER_TYPE
 export OCSP_ALGORITHM
 
 # Start a MongoDB server with ocsp enabled.
