@@ -67,11 +67,7 @@ $COMMAND ocsp_mock.py \
   $ARGS > ocsp_mock_server.log 2>&1 &
 echo "$!" > ocsp.pid
 
-tail -f ocsp_mock_server.log &
-log_pid="$!"
-
-# Wait for server to start.
-grep -q "Debugger is active" <(tail -f ocsp_mock_server.log)
-kill $log_pid
+sleep 1
+cat ocsp_mock_server.log
 
 echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}... done."
