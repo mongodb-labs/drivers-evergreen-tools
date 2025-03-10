@@ -36,7 +36,7 @@ CRYPT_NAME_MAP = {
 }
 
 # Top level files
-URI_TXT = Path("uri.txt")
+URI_TXT = DRIVERS_TOOLS / "uri.txt"
 MO_EXPANSION_SH = Path("mo-expansion.sh")
 MO_EXPANSION_YML = Path("mo-expansion.yml")
 
