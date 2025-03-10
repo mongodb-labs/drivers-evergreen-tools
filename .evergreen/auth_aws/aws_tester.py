@@ -258,7 +258,7 @@ def handle_creds(creds: dict):
             if key in ["USER", "PASS", "SESSION_TOKEN"]:
                 value = quote_plus(value)  # noqa: PLW2901
             fid.write(f"export {key}={value}\n")
-        fid.write(f"export MONGODB_URI=\"{MONGODB_URI}\"\n")
+        fid.write(f'export MONGODB_URI="{MONGODB_URI}"\n')
 
 
 def main():
