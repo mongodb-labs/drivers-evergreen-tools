@@ -11,6 +11,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd(), "src", "third_party", "mock_ocsp_responder"))
 
 import mock_ocsp_responder
+from waitress import serve
 
 
 def main():
@@ -22,7 +23,7 @@ def main():
     )
 
     parser.add_argument(
-        "-b", "--bind_ip", type=str, default=None, help="IP to listen on"
+        "-b", "--bind_ip", type=str, default="127.0.0.1", help="IP to listen on"
     )
 
     parser.add_argument(
@@ -76,13 +77,7 @@ def main():
         next_update_seconds=args.next_update_seconds,
     )
 
-    mock_ocsp_responder.init(port=args.port, debug=args.verbose, host=args.bind_ip)
-
-    # Write the pid file.
-    with open(os.path.join(os.getcwd(), "ocsp.pid"), "w") as fid:
-        fid.write(str(os.getpid()))
-
-    print("Mock OCSP Responder is running on port %s" % (str(args.port)))
+    serve(mock_ocsp_responder.app, host=args.bind_ip, port=args.port)
 
 
 if __name__ == "__main__":

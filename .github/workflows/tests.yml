@@ -26,7 +26,7 @@ jobs:
       matrix:
         os:
           - "ubuntu-latest"
-          - "ubuntu-20.04"
+          - "ubuntu-22.04"
           - "windows-latest"
           - "macos-latest"
         mongodb-version:
@@ -60,7 +60,6 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
-          chmod +x mongodb/bin/mongosh
           URI=$(cat uri.txt)
           ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ]; then

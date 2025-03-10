@@ -78,35 +78,35 @@ role prior to the EKS test and that `duration_seconds` is set to account for the
 And should be run for all three variants:
 
 ```yaml
-- name: "test-oidc-k8s"
+  - name: "test-oidc-k8s"
     tags: ["latest", "oidc", "pr"]
     commands:
     - command: ec2.assume_role
       params:
-          role_arn: ${drivers_test_secrets_role}
-          duration_seconds: 1800
+        role_arn: ${drivers_test_secrets_role}
+        duration_seconds: 1800
     - func: "run oidc k8s test"
-        vars:
+      vars:
         VARIANT: eks
     - func: "run oidc k8s test"
-        vars:
+      vars:
         VARIANT: gke
     - func: "run oidc k8s test"
-        vars:
+      vars:
         VARIANT: aks
 ```
 
 Where the test looks something like:
 
 ```yaml
-"run oidc k8s test":
-- command: shell.exec
-    type: test
-    params:
-    shell: bash
-    working-directory: "src"
-    include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
-    script: |-
+  "run oidc k8s test":
+    - command: shell.exec
+      type: test
+      params:
+      shell: bash
+      working-directory: "src"
+      include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+      script: |-
         set -o errexit
         export K8S_VARIANT=${VARIANT}
         export K8S_DRIVERS_TAR_FILE=/tmp/driver.tgz

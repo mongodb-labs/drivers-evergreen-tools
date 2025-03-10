@@ -512,6 +512,14 @@ functions:
           cd ${PROJECT_DIRECTORY}
           make test
 
+  "run aws test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-aws.sh]
+
   "run csfle test":
     - command: ec2.assume_role
       params:
@@ -550,6 +558,13 @@ functions:
       params:
         binary: bash
         args: [src/.evergreen/tests/test-cli.sh]
+
+  "run ocsp test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-ocsp.sh]
 
   "teardown assets":
     - command: subprocess.exec
@@ -652,6 +667,18 @@ tasks:
             file: ".evergreen/compile.sh"
             buildtool: "cmake"
         - func: "upload build"
+
+    - name: delete_old_azure_resources
+      commands:
+        - command: ec2.assume_role
+          params:
+            role_arn: ${aws_test_secrets_role}
+        - command: subprocess.exec
+          params:
+            binary: bash
+            args:
+              - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/delete_old_azure_resources.sh
+
 # }}}
 
 
@@ -1005,10 +1032,19 @@ tasks:
       commands:
         - func: "run csfle test"
 
+    - name: "test-auth-aws"
+      tags: ["pr", "aws"]
+      commands:
+        - func: "run aws test"
+
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
         - func: "run cli test full"
+
+    - name: "test-ocsp"
+      commands:
+        - func: "run ocsp test"
 
     - name: "test-cli-partial"
       tags: ["pr"]
@@ -1399,8 +1435,15 @@ buildvariants:
   tasks:
     - ".docker"  # Run all tasks with the "docker" tag
 
+- name: tests-aws
+  display_name: Auth AWS
+  run_on:
+    - ubuntu2204-small
+  tasks:
+    - ".aws"
+
 - name: tests-oidc
-  display_name: OIDC
+  display_name: Auth OIDC
   run_on: ubuntu2204-small
   tasks:
     - "test-oidc-local"
@@ -1453,6 +1496,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-ocsp"
           - "test-8.0-standalone-require-api"
 
 - matrix_name: "tests-os-requires-50"
@@ -1546,6 +1590,14 @@ buildvariants:
   display_name: "Serverless ${os-requires-50}"
   tasks:
     - serverless_task_group
+
+- name: delete_old_azure_resources
+  display_name: "Delete old Azure resources"
+  run_on: rhel80-small
+  cron: '@daily'
+  patchable: false
+  tasks:
+    - name: delete_old_azure_resources
 
       # Platform notes
       # i386 builds of OpenSSL or Cyrus SASL are not available
