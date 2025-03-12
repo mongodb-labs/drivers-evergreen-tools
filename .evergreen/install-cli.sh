@@ -58,6 +58,7 @@ if ! command -v uv >/dev/null; then
     echo "Creating virtual environment 'venv'..."
     venvcreate "${PYTHON:?}" venv
     echo "Creating virtual environment 'venv'... done."
+    python -VV
   else
     venvactivate venv
   fi
@@ -72,7 +73,7 @@ command -V uv # Ensure a working uv binary is present.
 
 # Ensure there is a venv available for backwards compatibility.
 if [ ! -d venv ]; then
-  uv venv
+  uv venv venv
 fi
 
 pushd $1 > /dev/null
