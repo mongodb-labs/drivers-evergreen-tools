@@ -10,6 +10,7 @@ fi
 
 if [ -z "${1:-}" ]; then
   echo "Must give a target directory!"
+  exit 1
 fi
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -27,23 +28,42 @@ if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   UV_TOOL_DIR=$_root_dir/uv-tool
 fi
 
-. ./venv-utils.sh
-
-if [ ! -d $SCRIPT_DIR/venv ]; then
-
-  . ./find-python3.sh
-
-  echo "Ensuring python binary..."
-  PYTHON=$(ensure_python3 2>/dev/null)
-  echo "Ensuring python binary... done."
-
-  echo "Creating virtual environment 'venv'..."
-  venvcreate "${PYTHON:?}" venv
-  echo "Creating virtual environment 'venv'... done."
-else
-  venvactivate venv
+# If uv is not on path, try see if it is available from the Python toolchain.
+if ! command -v uv >/dev/null; then
+  _bin_path=""
+  if [ "Windows_NT" == "${OS:-}" ]; then
+    _bin_path="/cygdrive/c/Python/Current"
+  elif [ "$(uname -s)" != "Darwin" ]; then
+    _bin_path="/Library/Frameworks/Python.Framework/Versions/Current"
+  else
+    _bin_path="/opt/python/Current"
+  fi
+  if [ -d "${_bin_path}" ]; then
+    export PATH="$PATH:${_bin_path}"
+  fi
 fi
 
+# If uv is still not available, we need a venv.
+if ! command -v uv >/dev/null; then
+  . ./venv-utils.sh
+
+  if [ ! -d $SCRIPT_DIR/venv ]; then
+
+    . ./find-python3.sh
+
+    echo "Ensuring python binary..."
+    PYTHON=$(ensure_python3 2>/dev/null)
+    echo "Ensuring python binary... done."
+
+    echo "Creating virtual environment 'venv'..."
+    venvcreate "${PYTHON:?}" venv
+    echo "Creating virtual environment 'venv'... done."
+  else
+    venvactivate venv
+  fi
+fi
+
+# If uv is still not available, we need to install it into the venv.
 if ! command -v uv >/dev/null; then
   UV_UNMANAGED_INSTALL=1 python -m pip install -q --force-reinstall uv
 fi
