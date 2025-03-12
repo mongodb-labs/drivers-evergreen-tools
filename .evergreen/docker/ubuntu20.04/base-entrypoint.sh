@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -eu
 
 # Remove the virtual env.
 rm -rf $DRIVERS_TOOLS/.evergreen/venv || true
