@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the drivers orchestration scripts.
 
-set -eu
+set -eux
 
 if [ -z "$BASH" ]; then
   echo "install-cli.sh must be run in a Bash shell!" 1>&2
