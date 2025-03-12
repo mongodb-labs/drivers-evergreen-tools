@@ -75,6 +75,9 @@ if [ ! -d venv ]; then
   uv venv venv
 fi
 
+# Store paths to binaries for use outside of current working directory.
+python_binary="$(uv run python -c 'import sys;print(sys.executable)')"
+
 pushd $1 > /dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
@@ -95,7 +98,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --python "${python_binary}" --with certifi --force --editable .
 fi
 
 popd > /dev/null
