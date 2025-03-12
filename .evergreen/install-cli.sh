@@ -39,7 +39,7 @@ if ! command -v uv >/dev/null; then
     _bin_path="/opt/python/Current"
   fi
   if [ -d "${_bin_path}" ]; then
-    export PATH="$PATH:${_bin_path}"
+    export PATH="${_bin_path}:$PATH"
   fi
 fi
 
@@ -70,8 +70,10 @@ fi
 
 command -V uv # Ensure a working uv binary is present.
 
-# Store paths to binaries for use outside of current working directory.
-python_binary="$(which python)"
+# Ensure there is a venv available for backwards compatibility.
+if [ ! -d venv ]; then
+  uv venv
+fi
 
 pushd $1 > /dev/null
 
@@ -93,7 +95,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --python "${python_binary}" --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --force --editable .
 fi
 
 popd > /dev/null
