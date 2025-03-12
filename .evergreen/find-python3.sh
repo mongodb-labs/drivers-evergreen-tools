@@ -314,11 +314,25 @@ find_python3() (
 # with `2>/dev/null` to silence these messages.
 #
 # If DRIVERS_TOOLS_PYTHON is set, it will return that value.  Otherwise
-# it will use find_python3 to return a suitable value.
+# it will look for the "Current" python in the python toolchain.  Finally,
+# it will fall back to using find_python3 to return a suitable value.
 #
 ensure_python3() {
   declare python_binary
+  declare test_path
   python_binary="${DRIVERS_TOOLS_PYTHON:-}"
+  if [ -z "${python_binary}" ]; then
+    if [ "Windows_NT" == "${OS:-}" ]; then
+      test_path="/cygdrive/c/Python/Current/python.exe"
+    elif [ "$(uname -s)" != "Darwin" ]; then
+      test_path="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3"
+    else
+      test_path="/opt/python/Current/bin/python3"
+    fi
+    if [ -f "${test_path}" ]; then
+      python_binary=${test_path}
+    fi
+  fi
   {
     if [ -z "${python_binary}" ]; then
       echo "Finding Python3 binary..."
