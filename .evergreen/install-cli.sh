@@ -70,6 +70,7 @@ if ! command -v uv >/dev/null; then
 fi
 
 command -V uv # Ensure a working uv binary is present.
+uv run python -VV
 
 # Ensure there is a venv available for backwards compatibility.
 if [ ! -d venv ]; then
