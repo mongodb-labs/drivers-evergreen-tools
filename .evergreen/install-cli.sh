@@ -30,13 +30,13 @@ if ! command -v uv >/dev/null; then
   export PATH
   case "${OSTYPE:?}" in
   cygwin)
-    PATH="/cygdrive/c/Python/Current/python.exe:${PATH:-}"
+    PATH="/cygdrive/c/Python/Current:${PATH:-}"
     ;;
   darwin*)
-    PATH="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3:${PATH:-}"
+    PATH="/Library/Frameworks/Python.Framework/Versions/Current/bin:${PATH:-}"
     ;;
   *)
-    PATH="/opt/python/Current/bin/python3:${PATH:-}"
+    PATH="/opt/python/Current/bin:${PATH:-}"
     ;;
   esac
 fi
