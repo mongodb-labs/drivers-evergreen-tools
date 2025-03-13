@@ -1338,10 +1338,6 @@ axes:
     display_name: OS
     values:
 
-      - id: debian10
-        display_name: "Debian 10.0"
-        run_on: debian10-small
-
       - id: debian11
         display_name: "Debian 11.0"
         run_on: debian11-small
