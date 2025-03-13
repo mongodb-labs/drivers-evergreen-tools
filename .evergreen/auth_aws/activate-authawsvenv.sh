@@ -33,11 +33,7 @@ activate_authawsvenv() {
     # shellcheck source=.evergreen/find-python3.sh
     . ../find-python3.sh || return
     PYTHON=$(ensure_python3) || return
-    set -eux
-    echo "Creating virtual environment 'authawsvenv'..."
-    echo "USING PYTHON=$PYTHON"
-    $PYTHON -m venv .venv
-    exit 1
+
     venvcreate "${PYTHON:?}" authawsvenv || return
 
     local packages=(
