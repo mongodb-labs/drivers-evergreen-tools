@@ -35,6 +35,8 @@ activate_authawsvenv() {
     PYTHON=$(ensure_python3) || return
 
     echo "Creating virtual environment 'authawsvenv'..."
+    echo "USING PYTHON=$PYTHON"
+    exit 1
     venvcreate "${PYTHON:?}" authawsvenv || return
 
     local packages=(
