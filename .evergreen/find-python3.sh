@@ -338,7 +338,7 @@ ensure_python3() {
     ;;
   esac
   if command -v "${python_binary:?}" >/dev/null; then
-    echo "${python_binary:?}"
+    echo "hello ${python_binary:?} hello"
     return
   fi
 
