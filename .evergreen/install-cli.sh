@@ -8,10 +8,7 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
-if [ -z "${1:-}" ]; then
-  echo "Must give a target directory!"
-  exit 1
-fi
+TARGET_DIR="${1:?"must give a target directory!"}"
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
@@ -79,7 +76,7 @@ fi
 # Store paths to binaries for use outside of current working directory.
 python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
 
-pushd $1 > /dev/null
+pushd $TARGET_DIR > /dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
 EXTRA_ARGS=""
