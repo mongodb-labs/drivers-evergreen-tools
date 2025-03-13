@@ -52,7 +52,7 @@ if ! command -v uv >/dev/null; then
     . ./find-python3.sh
 
     echo "Ensuring python binary..."
-    PYTHON=$(ensure_python3 2>/dev/null)
+    PYTHON="$(ensure_python3 2>/dev/null)"
     echo "Ensuring python binary... done."
 
     echo "Creating virtual environment 'venv'..."
