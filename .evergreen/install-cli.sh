@@ -47,7 +47,7 @@ fi
 if ! command -v uv >/dev/null; then
   . ./venv-utils.sh
 
-  if [ ! -d $SCRIPT_DIR/venv ]; then
+  if [ ! -d "$SCRIPT_DIR/venv" ]; then
 
     . ./find-python3.sh
 
