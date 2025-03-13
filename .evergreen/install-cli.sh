@@ -76,7 +76,7 @@ if [ ! -d venv ]; then
 fi
 
 # Store paths to binaries for use outside of current working directory.
-python_binary="$(uv run python -c 'import sys;print(sys.executable)')"
+python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
 
 pushd $1 > /dev/null
 
