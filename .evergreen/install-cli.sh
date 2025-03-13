@@ -41,10 +41,14 @@ if ! command -v uv >/dev/null; then
   esac
 fi
 
-# If uv is still not available, we need a venv.
-if ! command -v uv >/dev/null; then
+if command -V uv 2>/dev/null; then
+  # Ensure there is a venv available for backward compatibility.
+  uv venv venv
+else
+  # If uv is still not available, we need a venv.
   . ./venv-utils.sh
 
+  # Create and activate `venv` via `venvcreate` or `venvactivate`.
   if [ ! -d "$SCRIPT_DIR/venv" ]; then
 
     . ./find-python3.sh
@@ -59,19 +63,15 @@ if ! command -v uv >/dev/null; then
   else
     venvactivate venv
   fi
-fi
 
-# If uv is still not available, we need to install it into the venv.
-if ! command -v uv >/dev/null; then
+  # Install uv into the newly created venv.
   UV_UNMANAGED_INSTALL=1 python -m pip install -q --force-reinstall uv
+
+  # Ensure a working uv binary is present.
+  command -V uv
 fi
 
-command -V uv # Ensure a working uv binary is present.
-
-# Ensure there is a venv available for backwards compatibility.
-if [ ! -d venv ]; then
-  uv venv venv
-fi
+[[ -d venv ]] # venv should exist by this point.
 
 # Store paths to binaries for use outside of current working directory.
 python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
