@@ -319,7 +319,8 @@ find_python3() (
 #
 ensure_python3() {
   # Use "$DRIVERS_TOOLS_PYTHON".
-  if command -v "${DRIVERS_TOOLS_PYTHON:-}"; then
+  if command -v "${DRIVERS_TOOLS_PYTHON:-}" >/dev/null; then
+    echo "Using Python binary ${DRIVERS_TOOLS_PYTHON:?}" >&2
     echo "${DRIVERS_TOOLS_PYTHON:?}"
     return
   fi
@@ -338,7 +339,8 @@ ensure_python3() {
     ;;
   esac
   if command -v "${python_binary:?}" >/dev/null; then
-    echo "hello ${python_binary:?} hello"
+    echo "Using Python binary ${python_binary:?}" >&2
+    echo "${python_binary:?}"
     return
   fi
 
