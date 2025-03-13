@@ -76,7 +76,7 @@ fi
 # Store paths to binaries for use outside of current working directory.
 python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
 
-pushd $TARGET_DIR > /dev/null
+pushd "$TARGET_DIR" > /dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
 EXTRA_ARGS=""
