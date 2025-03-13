@@ -30,17 +30,18 @@ fi
 
 # If uv is not on path, try see if it is available from the Python toolchain.
 if ! command -v uv >/dev/null; then
-  _bin_path=""
-  if [ "Windows_NT" == "${OS:-}" ]; then
-    _bin_path="/cygdrive/c/Python/Current"
-  elif [ "$(uname -s)" != "Darwin" ]; then
-    _bin_path="/Library/Frameworks/Python.Framework/Versions/Current"
-  else
-    _bin_path="/opt/python/Current"
-  fi
-  if [ -d "${_bin_path}" ]; then
-    export PATH="${_bin_path}:$PATH"
-  fi
+  export PATH
+  case "${OSTYPE:?}" in
+  cygwin)
+    PATH="/cygdrive/c/Python/Current/python.exe:${PATH:-}"
+    ;;
+  darwin*)
+    PATH="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3:${PATH:-}"
+    ;;
+  *)
+    PATH="/opt/python/Current/bin/python3:${PATH:-}"
+    ;;
+  esac
 fi
 
 # If uv is still not available, we need a venv.
