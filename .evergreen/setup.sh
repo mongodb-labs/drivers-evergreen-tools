@@ -28,7 +28,7 @@ PATH=$PATH
 EOF
 
 # Set the python binary to use.
-DRIVERS_TOOLS_PYTHON=$(find_python3 2>/dev/null)
+DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
 echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 
 # Install the clis in this folder.

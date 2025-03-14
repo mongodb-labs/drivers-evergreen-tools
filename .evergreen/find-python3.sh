@@ -314,19 +314,41 @@ find_python3() (
 # with `2>/dev/null` to silence these messages.
 #
 # If DRIVERS_TOOLS_PYTHON is set, it will return that value.  Otherwise
-# it will use find_python3 to return a suitable value.
+# it will look for the "Current" python in the python toolchain.  Finally,
+# it will fall back to using find_python3 to return a suitable value.
 #
 ensure_python3() {
-  declare python_binary
-  python_binary="${DRIVERS_TOOLS_PYTHON:-}"
+  # Use "$DRIVERS_TOOLS_PYTHON".
+  if command -v "${DRIVERS_TOOLS_PYTHON:-}" >/dev/null; then
+    echo "Using Python binary ${DRIVERS_TOOLS_PYTHON:?}" >&2
+    echo "${DRIVERS_TOOLS_PYTHON:?}"
+    return
+  fi
+
+  # Use Python Toolchain.
+  declare python_binary=""
+  case "${OSTYPE:?}" in
+  cygwin)
+    python_binary="/cygdrive/c/Python/Current/python.exe"
+    ;;
+  darwin*)
+    python_binary="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3"
+    ;;
+  *)
+    python_binary="/opt/python/Current/bin/python3"
+    ;;
+  esac
+  if command -v "${python_binary:?}" >/dev/null; then
+    echo "Using Python binary ${python_binary:?}" >&2
+    echo "${python_binary:?}"
+    return
+  fi
+
+  # Use find_python3.
   {
-    if [ -z "${python_binary}" ]; then
-      echo "Finding Python3 binary..."
-      python_binary="$(find_python3 2>/dev/null)" || return
-      echo "Finding Python3 binary... done."
-    else
-      echo "Using Python binary $python_binary"
-    fi
+    echo "Finding Python3 binary..."
+    python_binary="$(find_python3 2>/dev/null)" || return
+    echo "Finding Python3 binary... done."
   } 1>&2
   echo "${python_binary:?}"
 }
