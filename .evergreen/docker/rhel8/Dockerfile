@@ -20,6 +20,7 @@ RUN dnf update -y && \
     make \
     gnupg \
     python3.9 \
+    python3-pip \
     mongodb-enterprise \
     lsof < /dev/null > /dev/null
 

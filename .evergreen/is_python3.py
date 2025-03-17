@@ -6,11 +6,11 @@ import sys
 MIN_PYTHON = "3.9"
 
 # For diagnostic purposes.
-print(f" - {sys.executable} - {sys.version.split()[0]}")
+print(" - %s - %s" % (sys.executable, sys.version.split()[0]))
 
 
 def error_out(message):
-    print(f"   INVALID: {message}")
+    print("   INVALID: %s" % message)
     sys.exit(1)
 
 
