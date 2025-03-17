@@ -6,18 +6,21 @@ import sys
 MIN_PYTHON = "3.9"
 
 # For diagnostic purposes.
-print(" - %s - %s" % (sys.executable, sys.version.split()[0]))
+print(f"  Version: {sys.version.split()[0]}")
 
 
 def error_out(message):
-    print("   INVALID: %s" % message)
+    print(f"   INVALID: {message}")
     sys.exit(1)
 
 
 try:
     import pip  # noqa: F401
 except ImportError:
-    error_out("Does not support pip")
+    try:
+        import ensurepip  # noqa: F401
+    except ImportError:
+        error_out("Does not support pip")
 
 try:
     import venv  # noqa: F401

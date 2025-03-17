@@ -43,7 +43,9 @@ is_python3() (
   # Binary must be executable.
   command -V "$bin" &>/dev/null || return
 
-  "$bin" $HERE/is_python3.py
+  echo "- ${bin}"
+
+  "$bin" $HERE/is_python3.py || return
 ) 1>&2
 
 # is_venv_capable
@@ -253,6 +255,8 @@ find_python3() (
     echo "Using Python binary ${python_binary:?}" >&2
     echo "${python_binary:?}"
     return
+  else
+    echo "No valid pythons found!" >&2
   fi
 )
 
@@ -280,10 +284,11 @@ ensure_python3() {
   fi
 
   # Use find_python3.
+  declare python_binary=""
   {
     echo "Finding Python3 binary..."
-    python_binary="$(find_python3 2>/dev/null)" || return
+    python_binary="$(find_python3 2>/dev/null)"
     echo "Finding Python3 binary... done."
   } 1>&2
-  echo "${python_binary:?}"
+  echo "${python_binary}"
 }
