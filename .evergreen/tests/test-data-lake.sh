@@ -11,6 +11,10 @@ DOWNLOAD_DIR=dl_test
 bash install-cli.sh .
 export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 5
+set -x
+echo "PATH: $PATH"
+ls $DOWNLOAD_DIR
+exit 1
 popd
 
 bash $SCRIPT_DIR/../setup.sh
