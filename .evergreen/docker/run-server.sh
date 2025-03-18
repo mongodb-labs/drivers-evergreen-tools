@@ -31,7 +31,9 @@ fi
 pushd $DRIVERS_TOOLS
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
-$DOCKER build $PLATFORM -t $NAME -f $SCRIPT_DIR/$IMAGE/Dockerfile $USER .
+ARGS="$PLATFORM -t $NAME -f $SCRIPT_DIR/$IMAGE/Dockerfile $USER ."
+# Allow a single failure due to transient issues with apt-get.
+$DOCKER build $ARGS || $DOCKER build $ARGS
 popd
 
 # Handle environment variables.
