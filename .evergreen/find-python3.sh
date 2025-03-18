@@ -233,7 +233,7 @@ find_python3() (
     ;;
   *)
     # MongoDB toolchain: /opt/mongodbtoolchain/vX/bin/python
-    python_binary=$(test_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python")
+    python_binary="$(test_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python")"
     if [ -z $python_binary ]; then
       # Python toolchain: /opt/python/3.X/bin/python
       python_binary=$(test_bins "/opt/python" "3.[0-9]*" "bin/python3" "bin/python")
