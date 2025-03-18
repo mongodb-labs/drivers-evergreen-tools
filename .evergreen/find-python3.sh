@@ -229,7 +229,7 @@ find_python3() (
     ;;
   darwin*)
     # Standard location: /Library/Frameworks/Python.Framework/Versions/XXX/bin/python3
-    python_binary=$(test_bins "/Library/Frameworks/Python.Framework/Versions/" "[0-9]*" "bin/python3")
+    python_binary="$(test_bins "/Library/Frameworks/Python.Framework/Versions/" "[0-9]*" "bin/python3")"
     ;;
   *)
     # MongoDB toolchain: /opt/mongodbtoolchain/vX/bin/python
