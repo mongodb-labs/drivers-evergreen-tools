@@ -12,8 +12,10 @@ bash install-cli.sh .
 export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR}/bin --strip-path-components 2 --retries 5
 set -x
-ls ${DOWNLOAD_DIR}
-ls ${DOWNLOAD_DIR}/bin
+ls -ltr ${DOWNLOAD_DIR}
+ls -ltr ${DOWNLOAD_DIR}/bin
+which mongosh
+exit 1
 popd
 
 bash $SCRIPT_DIR/../setup.sh
