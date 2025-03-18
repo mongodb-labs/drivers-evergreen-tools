@@ -1441,14 +1441,6 @@ buildvariants:
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
-# Tests relating to docker images
-- name: tests-docker
-  display_name: Docker
-  run_on:
-    - ubuntu2204-small
-  tasks:
-    - ".docker"  # Run all tasks with the "docker" tag
-
 - name: tests-misc
   display_name: Other tests
   run_on:
