@@ -1056,7 +1056,7 @@ tasks:
         - func: "run cli test full"
 
     - name: "test-ocsp"
-      tags: ["ocsp"]
+      tags: ["pr", "ocsp"]
       commands:
         - func: "run ocsp test"
 
