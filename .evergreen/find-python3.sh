@@ -225,7 +225,7 @@ find_python3() (
   case "${OSTYPE:?}" in
   cygwin)
     # Python toolchain: C:/python/Python3X/bin/python
-    python_binary=$(test_bins "C:/python" "Python3[0-9]*" "python3.exe" "python.exe")
+    python_binary="$(test_bins "C:/python" "Python3[0-9]*" "python3.exe" "python.exe")"
     ;;
   darwin*)
     # Standard location: /Library/Frameworks/Python.Framework/Versions/XXX/bin/python3
