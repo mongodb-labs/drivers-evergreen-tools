@@ -520,6 +520,14 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-aws.sh]
 
+  "run data lake test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-data-lake.sh]
+
   "run csfle test":
     - command: ec2.assume_role
       params:
@@ -1037,12 +1045,18 @@ tasks:
       commands:
         - func: "run aws test"
 
+    - name: "test-atlas-data-lake"
+      tags: ["pr", "data_lake"]
+      commands:
+        - func: "run data lake test"
+
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
         - func: "run cli test full"
 
     - name: "test-ocsp"
+      tags: ["pr", "ocsp"]
       commands:
         - func: "run ocsp test"
 
@@ -1427,20 +1441,15 @@ buildvariants:
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
-# Tests relating to docker images
-- name: tests-docker
-  display_name: Docker
-  run_on:
-    - ubuntu2204-small
-  tasks:
-    - ".docker"  # Run all tasks with the "docker" tag
-
-- name: tests-aws
-  display_name: Auth AWS
+- name: tests-misc
+  display_name: Other tests
   run_on:
     - ubuntu2204-small
   tasks:
     - ".aws"
+    - ".data_lake"
+    - ".ocsp"
+    - ".docker"
 
 - name: tests-oidc
   display_name: Auth OIDC
