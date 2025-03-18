@@ -3,7 +3,8 @@
 
 import sys
 
-MIN_PYTHON = "3.9"
+REQUIRED_PYTHON_VERSION_MAJOR = 3
+REQUIRED_PYTHON_VERSION_MINOR = 9
 
 # For diagnostic purposes.
 print(f"  Version: {sys.version.split()[0]}")
