@@ -36,9 +36,13 @@ if "free-threading" in sys.version:
     error_out("Free threaded python not supported")
 
 
-minor_version = int(MIN_PYTHON.split(".")[-1])
-if not (sys.version_info[0] == 3 and sys.version_info[1] >= minor_version):  # noqa: YTT201
-    error_out("Unsupported version of python")
+if not (
+    sys.version_info[0] == REQUIRED_PYTHON_VERSION_MAJOR
+    and sys.version_info[1] >= REQUIRED_PYTHON_VERSION_MINOR
+):
+    error_out(
+        f"Unsupported version of python, requires {REQUIRED_PYTHON_VERSION_MAJOR}.{REQUIRED_PYTHON_VERSION_MINOR}+"
+    )
 
 if sys.version_info.releaselevel != "final":
     error_out("Prerelease version of python")
