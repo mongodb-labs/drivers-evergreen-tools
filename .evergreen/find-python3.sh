@@ -35,7 +35,7 @@ is_python3() (
   set -o errexit
   set -o pipefail
 
-  HERE=$(dirname ${BASH_SOURCE[0]})
+  HERE="$(dirname "${BASH_SOURCE[0]}")"
 
   # Binary to use, e.g. "python".
   local -r bin="${1:?'is_python3 requires a name or path of a python binary to test'}"
