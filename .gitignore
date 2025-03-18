@@ -97,6 +97,7 @@ test-env.sh
 # Temporary files created during operation.
 /uri.txt
 /results.json
+/test-results.json
 /mongodb
 node_index.tab
 mongodb-binaries.tgz
