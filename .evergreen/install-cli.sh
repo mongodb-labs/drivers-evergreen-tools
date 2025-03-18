@@ -55,6 +55,11 @@ else
 
     echo "Ensuring python binary..."
     PYTHON="$(ensure_python3 2>/dev/null)"
+    if [ -z "${PYTHON}" ]; then
+      # For debug purposes
+      find_python3
+      exit 1
+    fi
     echo "Ensuring python binary... done."
 
     echo "Creating virtual environment 'venv'..."

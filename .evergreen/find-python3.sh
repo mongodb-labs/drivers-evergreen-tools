@@ -26,7 +26,7 @@ fi
 # Parameters:
 #   "$1": The name or path of the python binary to test.
 #
-# Return 0 (true) if the given argument "$1" is a Python 3 binary.
+# Return 0 (true) if the given argument "$1" is a viable Python 3 binary.
 # Return a non-zero value (false) otherwise.
 #
 # Diagnostic messages may be printed to stderr (pipe 2). Redirect to /dev/null
@@ -35,41 +35,17 @@ is_python3() (
   set -o errexit
   set -o pipefail
 
+  HERE="$(dirname "${BASH_SOURCE[0]}")"
+
   # Binary to use, e.g. "python".
   local -r bin="${1:?'is_python3 requires a name or path of a python binary to test'}"
 
   # Binary must be executable.
   command -V "$bin" &>/dev/null || return
 
-  # Reject binaries that do not support argument "-V".
-  "$bin" -V &>/dev/null || return
+  echo "- ${bin}"
 
-  # Expect an output of the form: "Python x.y.z".
-  # Note: Python 2 binaries output to stderr rather than stdout.
-  local -r version_output="$("$bin" -V 2>&1 | tr -d '\n')"
-
-  # For diagnostic purposes.
-  echo " - $bin: $version_output"
-
-  # shellcheck disable=SC2091
-  if ! $("$bin" -c "import sys; exit('free-threading' in sys.version)"); then
-    echo "Skipping free-threaded version of Python ${version}"
-    return 1
-  fi
-
-  # The minimum version we support is Python 3.9.  All other versions are EOL.
-  # shellcheck disable=SC2091
-  if ! $("$bin" -c "import sys; exit(sys.version_info[0] == 3 and sys.version_info[1] < 9)"); then
-    version=$($bin --version)
-    echo "Detected EOL Python ${version}, skipping."
-    return 1
-  fi
-
-  # Evaluate result of this function.
-  # Note: Python True (1) and False (0) is treated as fail (1) and success (0)
-  # by Bash; therefore `is_python3` returns "true" when `v < 3` is false.
-  # Skip prerelease versions of python.
-  "$bin" -c "import sys; exit(sys.version_info[0] < 3 or sys.version_info.releaselevel != 'final')"
+  "$bin" "${HERE:?}/is_python3.py" || return
 ) 1>&2
 
 # is_venv_capable
@@ -209,15 +185,26 @@ find_python3() (
   set -o errexit
   set -o pipefail
 
-  local -a bins=()
-  local bin=""
+  # Prefer Python Toolchain Current version.
+  declare python_binary=""
+  case "${OSTYPE:?}" in
+  cygwin)
+    python_binary="/cygdrive/c/Python/Current/python.exe"
+    ;;
+  darwin*)
+    python_binary="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3"
+    ;;
+  *)
+    python_binary="/opt/python/Current/bin/python3"
+    ;;
+  esac
+  if is_python3 "${python_binary:?}"; then
+    echo "Using Python binary ${python_binary:?}" >&2
+    echo "${python_binary:?}"
+    return
+  fi
 
-  # The list of Python binaries to test for venv or virtualenv support.
-  # The binaries are tested in the order of their position in the array.
-  {
-    echo "Finding python3 binaries to test..."
-
-    append_bins() {
+  test_bins() {
       local -r bin_path="${1:?'missing path'}"
       shift
       local -r pattern="${1:?'missing pattern'}"
@@ -227,78 +214,50 @@ find_python3() (
       for dir in $(find "$bin_path" -maxdepth 1 -name "$pattern" -type d 2>/dev/null | sort -rV); do
         for bin in "${suffixes[@]}"; do
           if is_python3 "$dir/$bin"; then
-            bins+=("$dir/$bin")
+            echo "$dir/$bin"
+            return
           fi
         done
       done
     }
 
-    # C:/python/Python3X/bin/python
-    append_bins "C:/python" "Python3[0-9]*" "python3.exe" "python.exe"
-
-    # /opt/python/3.X/bin/python
-    append_bins "/opt/python" "3.[0-9]*" "bin/python3" "bin/python"
-
-    # /opt/mongodbtoolchain/vX/bin/python
-    append_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python"
-
-    # /Library/Frameworks/Python.Framework/Versions/XXX/bin/python3 (used by AWS Mac Fleet)
-    append_bins "/Library/Frameworks/Python.Framework/Versions/" "[0-9]*" "bin/python3"
-
-    bin="python3"
-    if is_python3 "$bin"; then bins+=("$bin"); fi
-
-    bin="python"
-    if is_python3 "$bin"; then bins+=("$bin"); fi
-  } 1>&2
-
-  {
-    # Some environments trigger an unbound variable error if "${bins[@]}" is empty when used below.
-    if (("${#bins[@]}" == 0)); then
-      echo "Could not find any python3 binaries!"
-      return 1
+  # Look in other standard locations.
+  case "${OSTYPE:?}" in
+  cygwin)
+    # Python toolchain: C:/python/Python3X/bin/python
+    python_binary="$(test_bins "C:/python" "Python3[0-9]*" "python3.exe" "python.exe")"
+    ;;
+  darwin*)
+    # Standard location: /Library/Frameworks/Python.Framework/Versions/XXX/bin/python3
+    python_binary="$(test_bins "/Library/Frameworks/Python.Framework/Versions/" "[0-9]*" "bin/python3")"
+    ;;
+  *)
+    # MongoDB toolchain: /opt/mongodbtoolchain/vX/bin/python
+    python_binary="$(test_bins "/opt/mongodbtoolchain" "v[0-9]*" "bin/python3" "bin/python")"
+    if [ -z "$python_binary" ]; then
+      # Python toolchain: /opt/python/3.X/bin/python
+      python_binary=$(test_bins "/opt/python" "3.[0-9]*" "bin/python3" "bin/python")
     fi
+    ;;
+  esac
 
-    # For diagnostic purposes.
-    echo "List of python3 binaries to test:"
-    for bin in "${bins[@]}"; do
-      echo " - $bin"
-    done
-  } 1>&2
-
-  # Find a binary that is capable of venv or virtualenv and set it as `res`.
-  local res=""
-  {
-    echo "Testing python3 binaries..."
-    for bin in "${bins[@]}"; do
-      {
-        if ! is_venv_capable "$bin"; then
-          echo " - $bin is not capable of venv"
-
-          if ! is_virtualenv_capable "$bin"; then
-            echo " - $bin is not capable of virtualenv"
-            continue
-          else
-            echo " - $bin is capable of virtualenv"
-          fi
-        else
-          echo " - $bin is capable of venv"
-        fi
-      } 1>&2
-
-      res="$bin"
-      break
-    done
-
-    if [[ -z "$res" ]]; then
-      echo "Could not find a python3 binary capable of creating a virtual environment!"
-      return 1
+  # Fall back to looking for a system python.
+  if [ -z "${python_binary}" ]; then
+    if is_python3 "python3"; then
+      python_binary="python3"
+    elif is_python3 "python"; then
+      python_binary="python"
     fi
-  } 1>&2
+  fi
 
-  echo "$res"
-
-  return 0
+  # Handle success.
+  if [ -n "${python_binary}" ]; then
+    echo "Using Python binary ${python_binary:?}" >&2
+    echo "${python_binary:?}"
+    return
+  else
+    echo "No valid pythons found!" >&2
+  fi
 )
 
 #
@@ -314,7 +273,6 @@ find_python3() (
 # with `2>/dev/null` to silence these messages.
 #
 # If DRIVERS_TOOLS_PYTHON is set, it will return that value.  Otherwise
-# it will look for the "Current" python in the python toolchain.  Finally,
 # it will fall back to using find_python3 to return a suitable value.
 #
 ensure_python3() {
@@ -325,30 +283,12 @@ ensure_python3() {
     return
   fi
 
-  # Use Python Toolchain.
-  declare python_binary=""
-  case "${OSTYPE:?}" in
-  cygwin)
-    python_binary="/cygdrive/c/Python/Current/python.exe"
-    ;;
-  darwin*)
-    python_binary="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3"
-    ;;
-  *)
-    python_binary="/opt/python/Current/bin/python3"
-    ;;
-  esac
-  if command -v "${python_binary:?}" >/dev/null; then
-    echo "Using Python binary ${python_binary:?}" >&2
-    echo "${python_binary:?}"
-    return
-  fi
-
   # Use find_python3.
+  declare python_binary=""
   {
     echo "Finding Python3 binary..."
-    python_binary="$(find_python3 2>/dev/null)" || return
+    python_binary="$(find_python3 2>/dev/null)"
     echo "Finding Python3 binary... done."
   } 1>&2
-  echo "${python_binary:?}"
+  echo "${python_binary}"
 }
