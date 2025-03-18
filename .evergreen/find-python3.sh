@@ -45,7 +45,7 @@ is_python3() (
 
   echo "- ${bin}"
 
-  "$bin" $HERE/is_python3.py || return
+  "$bin" "${HERE:?}/is_python3.py" || return
 ) 1>&2
 
 # is_venv_capable
