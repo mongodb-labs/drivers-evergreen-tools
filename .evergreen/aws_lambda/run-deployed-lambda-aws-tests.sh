@@ -111,9 +111,12 @@ check_lambda_output () {
   cat output.json | jq -r '.LogResult' | base64 --decode
 }
 
+set -o xtrace
 aws lambda invoke --function-name ${LAMBDA_FUNCTION_ARN} --log-type Tail lambda-invoke-standard.json > output.json
+cat output.json
 cat lambda-invoke-standard.json
 check_lambda_output
+set +o xtrace
 
 echo "Sleeping 1 minute to build up some streaming protocol heartbeats..."
 sleep 60
