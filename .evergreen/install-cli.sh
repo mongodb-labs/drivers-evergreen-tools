@@ -79,6 +79,8 @@ fi
 [[ -d venv ]] # venv should exist by this point.
 
 # Store paths to binaries for use outside of current working directory.
+echo "UV_PYTHON=$UV_PYTHON"
+exit 1
 python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
 
 pushd "$TARGET_DIR" > /dev/null

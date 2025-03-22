@@ -28,9 +28,5 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
-echo "HELLO: $UV_PYTHON"
-exit 1
 bash $SCRIPT_DIR/orchestration/setup.sh
-echo "HELLO: $UV_PYTHON"
-exit 1
 $SCRIPT_DIR/orchestration/drivers-orchestration run "$@"
