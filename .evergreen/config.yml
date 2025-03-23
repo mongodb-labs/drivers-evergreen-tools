@@ -574,6 +574,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-ocsp.sh]
 
+  "run happy eyeballs test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-happy-eyeballs.sh]
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -1060,6 +1067,11 @@ tasks:
       commands:
         - func: "run ocsp test"
 
+    - name: "test-happy-eyeballs"
+      tags: ["pr", "happy-eyeballs"]
+      commands:
+        - func: "run happy eyeballs test"
+
     - name: "test-cli-partial"
       tags: ["pr"]
       commands:
@@ -1450,6 +1462,7 @@ buildvariants:
     - ".data_lake"
     - ".ocsp"
     - ".docker"
+    - ".happy-eyeballs"
 
 - name: tests-oidc
   display_name: Auth OIDC
