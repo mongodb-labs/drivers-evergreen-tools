@@ -1462,7 +1462,6 @@ buildvariants:
     - ".data_lake"
     - ".ocsp"
     - ".docker"
-    - ".happy-eyeballs"
 
 - name: tests-oidc
   display_name: Auth OIDC
@@ -1518,6 +1517,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
 
@@ -1546,6 +1546,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
+          - "test-happy-eyeballs"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
