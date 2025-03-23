@@ -41,6 +41,20 @@ if ! command -v uv >/dev/null; then
   esac
 fi
 
+if [ -z "${UV_PYTHON:-}" ]; then
+   . ./find-python3.sh
+
+  echo "Ensuring python binary..."
+  UV_PYTHON="$(ensure_python3 2>/dev/null)"
+  if [ -z "${UV_PYTHON}" ]; then
+    # For debug purposes
+    find_python3
+    exit 1
+  fi
+  echo "Ensuring python binary... done."
+fi
+export UV_PYTHON
+
 if command -V uv 2>/dev/null; then
   # Ensure there is a venv available for backward compatibility.
   uv venv venv
@@ -50,20 +64,8 @@ else
 
   # Create and activate `venv` via `venvcreate` or `venvactivate`.
   if [ ! -d "$SCRIPT_DIR/venv" ]; then
-
-    . ./find-python3.sh
-
-    echo "Ensuring python binary..."
-    PYTHON="$(ensure_python3 2>/dev/null)"
-    if [ -z "${PYTHON}" ]; then
-      # For debug purposes
-      find_python3
-      exit 1
-    fi
-    echo "Ensuring python binary... done."
-
     echo "Creating virtual environment 'venv'..."
-    venvcreate "${PYTHON:?}" venv
+    venvcreate "${UV_PYTHON:?}" venv
     echo "Creating virtual environment 'venv'... done."
   else
     venvactivate venv
@@ -77,12 +79,6 @@ else
 fi
 
 [[ -d venv ]] # venv should exist by this point.
-
-# Store paths to binaries for use outside of current working directory.
-echo "UV_PYTHON=$UV_PYTHON"
-python_binary="$(uv run --no-project python -c 'import sys;print(sys.executable)')"
-echo "OKAY=${python_binary}"
-exit 1
 
 pushd "$TARGET_DIR" > /dev/null
 
@@ -104,7 +100,7 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --python "${python_binary}" --with certifi --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
 fi
 
 popd > /dev/null
