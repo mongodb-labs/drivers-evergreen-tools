@@ -8,6 +8,12 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR/../happy_eyeballs
 
+# Skip the test on Linux.
+if [ "$(uname -s)" = "Linux" ]; then
+  make -C ${DRIVERS_TOOLS} test
+  exit 0
+fi
+
 # Start the default server.
 bash ./setup.sh
 

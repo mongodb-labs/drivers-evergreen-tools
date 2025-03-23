@@ -1546,7 +1546,6 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
-          - "test-happy-eyeballs"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
