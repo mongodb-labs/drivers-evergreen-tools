@@ -23,7 +23,7 @@ echo "Starting Happy Eyeballs server..."
 
 COMMAND="$PYTHON -u"
 if [ "$(uname -s)" != "Darwin" ]; then
-  # On linux and windows host, we need to use nohup to daemonize the process
+  # On windows host, we need to use nohup to daemonize the process
   # and prevent the task from hanging.
   # The macos hosts do not support nohup.
   COMMAND="nohup $COMMAND"
@@ -31,7 +31,7 @@ fi
 
 $COMMAND server.py "$@" > server.log 2>&1 &
 sleep 1
-$COMMAND server.py "$@" --wait
+$PYTHON -u server.py "$@" --wait
 cat server.log
 
 echo "Starting Happy Eyeballs server... done."

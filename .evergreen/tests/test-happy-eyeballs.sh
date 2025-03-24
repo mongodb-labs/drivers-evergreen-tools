@@ -10,6 +10,7 @@ pushd $SCRIPT_DIR/../happy_eyeballs
 
 # Skip the test on Linux.
 if [ "$(uname -s)" = "Linux" ]; then
+  echo "Skipping happy eyeballs test on Linux!"
   make -C ${DRIVERS_TOOLS} test
   exit 0
 fi
