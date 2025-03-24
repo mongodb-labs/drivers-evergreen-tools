@@ -41,6 +41,7 @@ if ! command -v uv >/dev/null; then
   esac
 fi
 
+# Only ensure a Python binary when not already specified for uv.
 if [ -z "${UV_PYTHON:-}" ]; then
    . ./find-python3.sh
 
