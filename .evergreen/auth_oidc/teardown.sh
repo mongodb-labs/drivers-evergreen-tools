@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o errexit
+set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
@@ -13,6 +13,10 @@ export DRIVERS_ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
 export DRIVERS_ATLAS_PRIVATE_API_KEY=$OIDC_ATLAS_PRIVATE_API_KEY
 export DRIVERS_ATLAS_GROUP_ID=$OIDC_ATLAS_GROUP_ID
 
-bash ../atlas/teardown-atlas-cluster.sh
+if [ -n "${OIDC_IS_LOCAL:-}" ]; then
+  echo "No teardown required!"
+else
+  bash ../atlas/teardown-atlas-cluster.sh
+fi
 
 popd
