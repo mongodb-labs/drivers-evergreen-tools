@@ -13,6 +13,9 @@ Run with:
 * `--wait` to wait for a server running in another process to be ready to start accepting control connections.
 * `--stop` to signal a server running in another process to gracefully shutdown.
 
+For convenience, you can run `setup.sh` to start the server in the background and wait for it to stop, and
+`teardown.sh` to stop the server.  If you use a different port, pass the port argument to both scripts.
+
 ## Integration with Evergreen
 
 The server can be incorporated into an evergreen test run via these functions:
@@ -22,25 +25,16 @@ functions:
     - command: subprocess.exec
       params:
         working_dir: src
-        background: true
-        binary: ${PYTHON3}
+        binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/happy_eyeballs/server.py
-    - command: subprocess.exec
-      params:
-        working_dir: src
-        binary: ${PYTHON3}
-        args:
-          - ${DRIVERS_TOOLS}/.evergreen/happy_eyeballs/server.py
-          - --wait
+          - ${DRIVERS_TOOLS}/.evergreen/happy_eyeballs/setup.sh
   "stop happy eyeballs server":
     - command: subprocess.exec
       params:
         working_dir: src
-        binary: ${PYTHON3}
+        binary: bash
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/happy_eyeballs/server.py
-          - --stop
+          - ${DRIVERS_TOOLS}/.evergreen/happy_eyeballs/teardown.sh
 ```
 The `"stop happy eyeballs server"` function should be included in the `post` configuration or a `teardown_task` section to ensure that the server isn't left running after the test finishes.
 

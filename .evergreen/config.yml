@@ -574,6 +574,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-ocsp.sh]
 
+  "run happy eyeballs test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-happy-eyeballs.sh]
+
   "teardown assets":
     - command: subprocess.exec
       params:
@@ -1060,6 +1067,11 @@ tasks:
       commands:
         - func: "run ocsp test"
 
+    - name: "test-happy-eyeballs"
+      tags: ["pr", "happy-eyeballs"]
+      commands:
+        - func: "run happy eyeballs test"
+
     - name: "test-cli-partial"
       tags: ["pr"]
       commands:
@@ -1505,6 +1517,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
 
