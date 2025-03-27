@@ -606,7 +606,7 @@ def stop(opts):
         container_file.unlink()
         LOGGER.info("Stopping mongodb_atlas_local... done.")
     elif docker:
-        cmd = "{docker} ps -a -q -f name=mongodb_atlas_local"
+        cmd = f"{docker} ps -a -q -f name=mongodb_atlas_local"
         result = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         if result:
             run_command(f"{docker} kill {result}")
