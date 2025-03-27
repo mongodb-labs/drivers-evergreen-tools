@@ -699,6 +699,15 @@ tasks:
 
 # Standard test tasks {{{
 
+    - name: "test-8.0-atlas"
+      tags: ["8.0", "atlas"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            USE_ATLAS: "1"
+        - func: "run tests"
+
     - name: "test-8.0-standalone"
       tags: ["8.0", "standalone"]
       commands:
@@ -734,6 +743,15 @@ tasks:
             VERSION: "8.0"
             TOPOLOGY: "server"
             REQUIRE_API_VERSION: "1"
+        - func: "run tests"
+
+    - name: "test-7.0-atlas"
+      tags: ["7.0", "atlas"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "7.0"
+            USE_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-7.0-standalone"
@@ -923,6 +941,15 @@ tasks:
           vars:
             VERSION: "3.6"
             TOPOLOGY: "sharded_cluster"
+        - func: "run tests"
+
+    - name: "test-latest-atlas"
+      tags: ["latest", "standalone"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "latest"
+            USE_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-latest-standalone"
@@ -1554,12 +1581,15 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
+     - name: "test-latest-atlas"
      - name: "test-8.0-replica_set"
      - name: "test-8.0-sharded_cluster"
      - name: "test-8.0-standalone"
+     - name: "test-8.0-atlas"
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
+     - name: "test-7.0-atlas"
   rules:
     - if:
         auth: "auth"
