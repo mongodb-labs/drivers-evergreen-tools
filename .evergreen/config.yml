@@ -1583,15 +1583,15 @@ buildvariants:
      - name: "test-latest-replica_set"
      - name: "test-latest-sharded_cluster"
      - name: "test-latest-standalone"
-     - name: "test-latest-atlas-local"
      - name: "test-8.0-replica_set"
      - name: "test-8.0-sharded_cluster"
      - name: "test-8.0-standalone"
-     - name: "test-8.0-atlas-local"
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
      - name: "test-7.0-atlas-local"
+     - name: "test-latest-atlas-local"
+     - name: "test-8.0-atlas-local"
   rules:
     - if:
         auth: "auth"
