@@ -28,6 +28,7 @@ create_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID..." 1>&2
+  echo "Using Atlas base url: $ATLAS_BASE_URL" 1>&2
   RESP=$(curl -sS -L \
     --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
     -d "${DEPLOYMENT_DATA}" \

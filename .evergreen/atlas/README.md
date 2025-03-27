@@ -5,7 +5,7 @@ The scripts in this folder are used to setup and teardown Atlas clusters.
 ## Prerequisites
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
-from the `drivers/atlas-dev` or `drivers/atlas` vault.
+from the `drivers/atlas-qa`, `drivers/atlas-dev` or `drivers/atlas` vault.
 
 ## Usage
 
@@ -48,5 +48,5 @@ An example task group running on a Linux EVG host might look like:
 If other OSes are needed, use the `setup-secrets.sh` script in this directory with the full `ec2.assume_role`
 method described in [Secrets Handling](../secrets_handling/README.md).
 
-By default, it will use the `drivers/atlas-dev` credentials for Cloud Dev.  You can pass `atlas` to
-either `setup-secrets.sh` or `setup.sh` to use a Prod environment instead.
+By default, it will use the `drivers/atlas-qa` credentials for Cloud QA.  You can pass `atlas` or `atlas-dev` to
+either `setup-secrets.sh` or `setup.sh` to use a Prod or Dev environment instead.
