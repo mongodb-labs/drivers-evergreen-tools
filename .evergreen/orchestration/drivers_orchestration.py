@@ -592,6 +592,7 @@ def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
     container_file = mo_home / "container_id.txt"
+    docker = shutil.which("docker") or shutil.which("podman")
     if pid_file.exists():
         LOGGER.info("Stopping mongo-orchestration...")
         py_exe = normalize_path(sys.executable)
@@ -600,11 +601,15 @@ def stop(opts):
         LOGGER.info("Stopping mongo-orchestration... done.")
     if container_file.exists():
         LOGGER.info("Stopping mongodb_atlas_local...")
-        docker = shutil.which("docker") or shutil.which("podman")
         container_id = container_file.read_text()
         run_command(f"{docker} kill {container_id}")
         container_file.unlink()
         LOGGER.info("Stopping mongodb_atlas_local... done.")
+    elif docker:
+        cmd = "{docker} ps -a -q -f name=mongodb_atlas_local"
+        result = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+        if result:
+            run_command(f"{docker} kill {result}")
 
 
 def main():
