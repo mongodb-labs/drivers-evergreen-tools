@@ -17,6 +17,7 @@ set -eu
 #   LOAD_BALANCER          Set to a non-empty string to enable load balancer. Only supported for sharded clusters.
 #   AUTH_AWS               Set to a non-empty string to enable MONGODB-AWS authentication.
 #   PYTHON                 Set the Python binary to use.
+#   USE_ATLAS              Set to use mongodb-atlas-local to start the server.
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 #   TLS_CERT_KEY_FILE      Set a .pem file to be used as the tlsCertificateKeyFile option in mongo-orchestration
 #   TLS_PEM_KEY_FILE       Set a .pem file that contains the TLS certificate and key for the server

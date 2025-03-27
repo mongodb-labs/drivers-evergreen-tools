@@ -41,6 +41,15 @@ jobs:
         ssl:
           - "nossl"
           - "ssl"
+        use-atlas:
+          - ""
+        include:
+          - os: "ubuntu-latest"
+            mongodb-version: "latest"
+            use-atlas: "1"
+          - os: "macos-latest"
+            mongodb-version: "8.0"
+            use-atlas: "1"
 
     steps:
       - name: "Checkout"
@@ -56,13 +65,14 @@ jobs:
           topology: ${{ matrix.topology }}
           auth: ${{ matrix.auth }}
           ssl: ${{ matrix.ssl }}
+          use-atlas: ${{ matrix.use-atlas }}
 
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
           URI=$(cat uri.txt)
           ARGS=""
-          if [ ${{ matrix.ssl }} == "ssl" ]; then
+          if [ ${{ matrix.ssl }} == "ssl" ] && [ -z "${{ matrix.use-atlas }}" ]; then
             ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
           fi
           mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"

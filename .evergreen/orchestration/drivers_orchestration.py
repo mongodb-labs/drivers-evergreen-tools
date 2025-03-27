@@ -70,6 +70,11 @@ def get_options():
         "--ssl", action="store_true", help="Whether to add TLS configuration"
     )
     parser.add_argument(
+        "--use-atlas",
+        action="store_true",
+        help="Whether to use mongodb-atlas-local to start the server",
+    )
+    parser.add_argument(
         "--orchestration-file", help="The name of the orchestration config file"
     )
 
@@ -228,103 +233,29 @@ def run_command(cmd: str, **kwargs):
     LOGGER.debug(f"Running command {cmd}... done.")
 
 
-def clean_run(opts):
-    mdb_binaries = Path(opts.mongodb_binaries)
-    mdb_binaries_str = normalize_path(mdb_binaries)
-    shutil.rmtree(mdb_binaries_str, ignore_errors=True)
+def start_atlas(opts):
+    mo_home = Path(opts.mongo_orchestration_home)
+    image = f"mongodb/mongodb-atlas-local:{opts.version}"
+    docker = shutil.which("docker") or shutil.which("podman")
+    stop(opts)
+    cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
+    if opts.auth:
+        cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
+        cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+    cmd += f" -P {image}"
+    container_id = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+    (mo_home / "container_id.txt").write_text(container_id)
+    # Wait for container to become healthy.
+    run_command(f"{docker} logs {container_id}")
+    uri = "mongodb://127.0.0.1:27017?directConnection=true"
+    if opts.auth:
+        uri = "mongodb://bob:pwd123@127.0.0.1:27017?directConnection=true"
+    mongosh = Path(opts.mongodb_binaries) / "mongosh"
+    run_command(f"{mongosh} {uri} --eval 'db.runCommand({{ping:1}})'")
+    return uri
 
-    mongodb_dir = DRIVERS_TOOLS / "mongodb"
-    if mongodb_dir.exists():
-        shutil.rmtree(normalize_path(mongodb_dir), ignore_errors=True)
 
-    for path in [URI_TXT, MO_EXPANSION_SH, MO_EXPANSION_YML]:
-        path.unlink(missing_ok=True)
-
-    crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
-    crypt_path.unlink(missing_ok=True)
-
-
-def run(opts):
-    # Deferred import so we can run as a script without the cli installed.
-    from mongodl import main as mongodl
-    from mongosh_dl import main as mongosh_dl
-
-    LOGGER.info("Running orchestration...")
-    clean_run(opts)
-
-    # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
-    mdb_binaries = Path(opts.mongodb_binaries)
-    mdb_binaries_str = normalize_path(mdb_binaries)
-
-    # The evergreen directory to path.
-    os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
-
-    # Download the archive.
-    dl_start = datetime.now()
-    version = opts.version
-    cache_dir = DRIVERS_TOOLS / ".local/cache"
-    cache_dir_str = normalize_path(cache_dir)
-    default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
-    if opts.quiet:
-        default_args += " -q"
-    elif opts.verbose:
-        default_args += " -v"
-    args = f"{default_args} --version {version}"
-    args += " --strip-path-components 2 --component archive"
-    if not opts.existing_binaries_dir:
-        LOGGER.info(f"Downloading mongodb {version}...")
-        mongodl(shlex.split(args))
-        LOGGER.info(f"Downloading mongodb {version}... done.")
-    else:
-        LOGGER.info(f"Using existing mongod binaries dir: {opts.existing_binaries_dir}")
-        shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
-
-    run_command(f"{mdb_binaries_str}/mongod --version")
-
-    # Download legacy shell.
-    if opts.install_legacy_shell:
-        args = f"{default_args} --version 5.0"
-        args += " --strip-path-components 2 --component shell"
-        LOGGER.INFO("Downloading legacy shell...")
-        mongodl(shlex.split(args))
-        LOGGER.INFO("Downloading legacy shell... done.")
-
-    # Download crypt shared.
-    if not opts.skip_crypt_shared:
-        # Get the download URL for crypt_shared.
-        # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
-        # path location than the other binaries, which is required for
-        # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
-        args = default_args + (
-            f" --version {version} --strip-path-components 1 --component crypt_shared"
-        )
-        LOGGER.info("Downloading crypt_shared...")
-        mongodl(shlex.split(args))
-        LOGGER.info("Downloading crypt_shared... done.")
-        crypt_shared_path = mdb_binaries / CRYPT_NAME_MAP[PLATFORM]
-        if crypt_shared_path.exists():
-            shutil.move(crypt_shared_path, DRIVERS_TOOLS)
-            crypt_shared_path = DRIVERS_TOOLS / crypt_shared_path.name
-        else:
-            raise RuntimeError(
-                f"Could not find expected crypt_shared_path: {crypt_shared_path}"
-            )
-        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
-        MO_EXPANSION_YML.write_text(crypt_text)
-        MO_EXPANSION_SH.write_text(crypt_text.replace(": ", "="))
-
-    # Download mongosh
-    args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
-    if opts.verbose:
-        args += " -v"
-    elif opts.quiet:
-        args += " -q"
-    LOGGER.info("Downloading mongosh...")
-    mongosh_dl(shlex.split(args))
-    LOGGER.info("Downloading mongosh... done.")
-
-    dl_end = datetime.now()
-
+def get_orchestration_data(opts):
     # Handle orchestration file - explicit or implicit.
     orchestration_file = opts.orchestration_file
     if not orchestration_file:
@@ -371,33 +302,144 @@ def run(opts):
     if os.environ.get("DOCKER_RUNNING"):
         handle_docker_config(data)
 
-    # Write the config file.
-    orch_file = Path(mo_home / "config.json")
-    orch_file.write_text(json.dumps(data, indent=2))
+    return data
 
-    # Start the orchestration.
+
+def clean_run(opts):
+    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries_str = normalize_path(mdb_binaries)
+    shutil.rmtree(mdb_binaries_str, ignore_errors=True)
+
+    mongodb_dir = DRIVERS_TOOLS / "mongodb"
+    if mongodb_dir.exists():
+        shutil.rmtree(normalize_path(mongodb_dir), ignore_errors=True)
+
+    for path in [URI_TXT, MO_EXPANSION_SH, MO_EXPANSION_YML]:
+        path.unlink(missing_ok=True)
+
+    crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
+    crypt_path.unlink(missing_ok=True)
+
+
+def run(opts):
+    # Deferred import so we can run as a script without the cli installed.
+    from mongodl import main as mongodl
+    from mongosh_dl import main as mongosh_dl
+
+    LOGGER.info("Running orchestration...")
+    clean_run(opts)
+
+    # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
+    mdb_binaries = Path(opts.mongodb_binaries)
+    mdb_binaries_str = normalize_path(mdb_binaries)
+
+    # The evergreen directory to path.
+    os.environ["PATH"] = f"{EVG_PATH}:{os.environ['PATH']}"
+
+    dl_start = datetime.now()
+
+    version = opts.version
+    cache_dir = DRIVERS_TOOLS / ".local/cache"
+    cache_dir_str = normalize_path(cache_dir)
+    default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
+    if opts.quiet:
+        default_args += " -q"
+    elif opts.verbose:
+        default_args += " -v"
+
+    if not opts.use_atlas:
+        # Download the archive.
+        args = f"{default_args} --version {version}"
+        args += " --strip-path-components 2 --component archive"
+        if not opts.existing_binaries_dir:
+            LOGGER.info(f"Downloading mongodb {version}...")
+            mongodl(shlex.split(args))
+            LOGGER.info(f"Downloading mongodb {version}... done.")
+        else:
+            LOGGER.info(
+                f"Using existing mongod binaries dir: {opts.existing_binaries_dir}"
+            )
+            shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
+
+        run_command(f"{mdb_binaries_str}/mongod --version")
+
+    # Download legacy shell.
+    if opts.install_legacy_shell:
+        args = f"{default_args} --version 5.0"
+        args += " --strip-path-components 2 --component shell"
+        LOGGER.INFO("Downloading legacy shell...")
+        mongodl(shlex.split(args))
+        LOGGER.INFO("Downloading legacy shell... done.")
+
+    # Download crypt shared.
+    if not opts.skip_crypt_shared:
+        # Get the download URL for crypt_shared.
+        # We download crypt_shared to DRIVERS_TOOLS so that it is on a different
+        # path location than the other binaries, which is required for
+        # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
+        args = default_args + (
+            f" --version {version} --strip-path-components 1 --component crypt_shared"
+        )
+        LOGGER.info("Downloading crypt_shared...")
+        mongodl(shlex.split(args))
+        LOGGER.info("Downloading crypt_shared... done.")
+        crypt_shared_path = mdb_binaries / CRYPT_NAME_MAP[PLATFORM]
+        if crypt_shared_path.exists():
+            shutil.move(crypt_shared_path, DRIVERS_TOOLS)
+            crypt_shared_path = DRIVERS_TOOLS / crypt_shared_path.name
+        else:
+            raise RuntimeError(
+                f"Could not find expected crypt_shared_path: {crypt_shared_path}"
+            )
+        crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
+        MO_EXPANSION_YML.write_text(crypt_text)
+        MO_EXPANSION_SH.write_text(crypt_text.replace(": ", "="))
+
+    # Download mongosh
+    args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
+    if opts.verbose:
+        args += " -v"
+    elif opts.quiet:
+        args += " -q"
+    LOGGER.info("Downloading mongosh...")
+    mongosh_dl(shlex.split(args))
+    LOGGER.info("Downloading mongosh... done.")
+
+    dl_end = datetime.now()
     mo_start = datetime.now()
-    start(opts)
 
-    # Configure the server.
-    LOGGER.info("Starting deployment...")
-    url = f"http://localhost:8889/v1/{topology}s"
-    req = urllib.request.Request(
-        url, data=json.dumps(data).encode("utf-8"), method="POST"
-    )
-    try:
-        resp = urllib.request.urlopen(req)
-    except urllib.error.HTTPError as e:
-        stop()
-        LOGGER.error("out.log: %s", (mo_home / "out.log").read_text())
-        LOGGER.error("server.log: %s", (mo_home / "server.log").read_text())
-        raise e
-    resp = json.loads(resp.read().decode("utf-8"))
-    LOGGER.debug(resp)
-    LOGGER.info("Starting deployment... done.")
+    if opts.use_atlas:
+        uri = start_atlas(opts)
+    else:
+        mo_home = Path(opts.mongo_orchestration_home)
+        data = get_orchestration_data(opts)
+
+        # Write the config file.
+        orch_file = Path(mo_home / "config.json")
+        orch_file.write_text(json.dumps(data, indent=2))
+
+        # Start the orchestration.
+        start(opts)
+
+        # Configure the server.
+        LOGGER.info("Starting deployment...")
+        url = f"http://localhost:8889/v1/{opts.topology}s"
+        req = urllib.request.Request(
+            url, data=json.dumps(data).encode("utf-8"), method="POST"
+        )
+        try:
+            resp = urllib.request.urlopen(req)
+        except urllib.error.HTTPError as e:
+            stop()
+            LOGGER.error("out.log: %s", (mo_home / "out.log").read_text())
+            LOGGER.error("server.log: %s", (mo_home / "server.log").read_text())
+            raise e
+        resp = json.loads(resp.read().decode("utf-8"))
+        LOGGER.debug(resp)
+        LOGGER.info("Starting deployment... done.")
+        uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
 
     # Handle the cluster uri.
-    uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
     MO_EXPANSION_YML.touch()
     MO_EXPANSION_YML.write_text(
         MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
@@ -534,11 +576,23 @@ def start(opts):
     LOGGER.info("Starting mongo-orchestration... done.")
 
 
-def stop():
-    LOGGER.info("Stopping mongo-orchestration...")
-    py_exe = normalize_path(sys.executable)
-    run_command(f"{py_exe} -m mongo_orchestration.server stop")
-    LOGGER.info("Stopping mongo-orchestration... done.")
+def stop(opts):
+    mo_home = Path(opts.mongo_orchestration_home)
+    pid_file = mo_home / "server.pid"
+    container_file = mo_home / "container_id.txt"
+    if pid_file.exists():
+        LOGGER.info("Stopping mongo-orchestration...")
+        py_exe = normalize_path(sys.executable)
+        run_command(f"{py_exe} -m mongo_orchestration.server stop")
+        pid_file.unlink(missing_ok=True)
+        LOGGER.info("Stopping mongo-orchestration... done.")
+    if container_file.exists():
+        LOGGER.info("Stopping mongodb_atlas_local...")
+        docker = shutil.which("docker") or shutil.which("podman")
+        container_id = container_file.read_text()
+        run_command(f"{docker} kill {container_id}")
+        container_file.unlink()
+        LOGGER.info("Stopping mongodb_atlas_local... done.")
 
 
 def main():
@@ -548,7 +602,7 @@ def main():
     elif opts.command == "start":
         start(opts)
     elif opts.command == "stop":
-        stop()
+        stop(opts)
     elif opts.command == "clean":
         clean_run(opts)
         clean_start(opts)
