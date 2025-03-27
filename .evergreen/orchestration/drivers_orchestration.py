@@ -246,7 +246,19 @@ def start_atlas(opts):
     container_id = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
-    run_command(f"{docker} logs {container_id}")
+    LOGGER.info("Waiting for container to be healthy...")
+    cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
+    tries = 0
+    while 1:
+        resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+        if resp == "healthy":
+            break
+        time.sleep(tries * 2)
+        tries += 1
+        if tries == 10:
+            LOGGER.error("Timed out waiting for container to become healthy")
+            sys.exit(1)
+    LOGGER.info("Waiting for container to be healthy... done.")
     uri = "mongodb://127.0.0.1:27017?directConnection=true"
     if opts.auth:
         uri = "mongodb://bob:pwd123@127.0.0.1:27017?directConnection=true"
