@@ -235,7 +235,7 @@ def run_command(cmd: str, **kwargs):
 
 def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
-    image = f"mongodb/mongodb-atlas-local:{opts.version}"
+    image = f"docker.io/mongodb/mongodb-atlas-local:{opts.version}"
     docker = shutil.which("docker") or shutil.which("podman")
     stop(opts)
     cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
