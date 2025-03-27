@@ -5,6 +5,6 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
-VAULT_NAME="${1:-atlas-dev}"
+VAULT_NAME="${1:-atlas-qa}"
 . $SCRIPT_DIR/../secrets_handling/setup-secrets.sh drivers/$VAULT_NAME
 popd
