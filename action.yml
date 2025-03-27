@@ -54,7 +54,7 @@ runs:
     - id: "run-orchestration"
       name: "Download MongoDB"
       run: |
-        ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh
+        ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh -v
         [[ -f mo-expansion.sh ]] && source mo-expansion.sh
         echo "cluster-uri=$(cat ${GITHUB_ACTION_PATH}/uri.txt)" >> $GITHUB_OUTPUT
         echo "crypt-shared-lib-path=${CRYPT_SHARED_LIB_PATH}" >> $GITHUB_OUTPUT

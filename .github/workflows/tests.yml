@@ -47,7 +47,7 @@ jobs:
           - os: "ubuntu-latest"
             mongodb-version: "latest"
             use-atlas: "1"
-          - os: "macos-latest"
+          - os: "ubuntu-latest"
             mongodb-version: "8.0"
             use-atlas: "1"
 
