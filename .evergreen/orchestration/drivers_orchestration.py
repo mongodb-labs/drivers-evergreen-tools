@@ -242,6 +242,8 @@ def start_atlas(opts):
     if opts.auth:
         cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
         cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+    if "podman" in docker:
+        cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
     container_id = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
@@ -253,10 +255,10 @@ def start_atlas(opts):
         resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         if resp == "healthy":
             break
-        if tries == 10:
+        if tries == 60:
             LOGGER.error("Timed out waiting for container to become healthy")
             sys.exit(1)
-        time.sleep(2**tries)
+        time.sleep(1)
         tries += 1
 
     LOGGER.info("Waiting for container to be healthy... done.")

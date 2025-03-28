@@ -1486,11 +1486,13 @@ buildvariants:
   display_name: Other tests
   run_on:
     - ubuntu2204-small
+    - rhel94-small
   tasks:
     - ".aws"
     - ".data_lake"
     - ".ocsp"
     - ".docker"
+    - ".atlas-local"
 
 - name: tests-oidc
   display_name: Auth OIDC
@@ -1589,9 +1591,6 @@ buildvariants:
      - name: "test-7.0-replica_set"
      - name: "test-7.0-sharded_cluster"
      - name: "test-7.0-standalone"
-     - name: "test-7.0-atlas-local"
-     - name: "test-latest-atlas-local"
-     - name: "test-8.0-atlas-local"
   rules:
     - if:
         auth: "auth"
