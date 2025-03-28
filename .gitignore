@@ -130,6 +130,7 @@ mo-expansion.sh
 .evergreen/mongosh-dl
 .dockerignore
 .local
+container_id.txt
 
 # Azure functions.
 .python_packages/
