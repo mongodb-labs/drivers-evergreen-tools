@@ -364,7 +364,7 @@ def run(opts):
     elif opts.verbose:
         default_args += " -v"
 
-    if not opts.use_atlas:
+    if not opts.local_atlas:
         # Download the archive.
         args = f"{default_args} --version {version}"
         args += " --strip-path-components 2 --component archive"
@@ -425,7 +425,7 @@ def run(opts):
     dl_end = datetime.now()
     mo_start = datetime.now()
 
-    if opts.use_atlas:
+    if opts.local_atlas:
         uri = start_atlas(opts)
     else:
         mo_home = Path(opts.mongo_orchestration_home)

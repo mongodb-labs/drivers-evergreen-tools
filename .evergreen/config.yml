@@ -299,7 +299,7 @@ functions:
           STORAGE_ENGINE: ${STORAGE_ENGINE}
           LOAD_BALANCER: ${LOAD_BALANCER}
           REQUIRE_API_VERSION: ${REQUIRE_API_VERSION}
-          USE_ATLAS: ${USE_ATLAS}
+          LOCAL_ATLAS: ${LOCAL_ATLAS}
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
           - -v
@@ -701,13 +701,13 @@ tasks:
 
 # Standard test tasks {{{
 
-    - name: "test-8.0-atlas-local"
-      tags: ["8.0", "atlas-local"]
+    - name: "test-8.0-local-atlas"
+      tags: ["8.0", "local-atlas"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
             VERSION: "8.0"
-            USE_ATLAS: "1"
+            LOCAL_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-8.0-standalone"
@@ -747,13 +747,13 @@ tasks:
             REQUIRE_API_VERSION: "1"
         - func: "run tests"
 
-    - name: "test-7.0-atlas-local"
-      tags: ["7.0", "atlas-local"]
+    - name: "test-7.0-local-atlas"
+      tags: ["7.0", "local-atlas"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
             VERSION: "7.0"
-            USE_ATLAS: "1"
+            LOCAL_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-7.0-standalone"
@@ -945,13 +945,13 @@ tasks:
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-latest-atlas-local"
-      tags: ["latest", "atlas-local"]
+    - name: "test-latest-local-atlas"
+      tags: ["latest", "local-atlas"]
       commands:
         - func: "bootstrap mongo-orchestration"
           vars:
             VERSION: "latest"
-            USE_ATLAS: "1"
+            LOCAL_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-latest-standalone"
@@ -1491,7 +1491,7 @@ buildvariants:
     - ".data_lake"
     - ".ocsp"
     - ".docker"
-    - ".atlas-local"
+    - ".local-atlas"
 
 - name: tests-podman
   display_name: Podman Tests
@@ -1500,7 +1500,7 @@ buildvariants:
   tasks:
     - ".data_lake"
     - ".docker"
-    - ".atlas-local"
+    - ".local-atlas"
 
 - name: tests-oidc
   display_name: Auth OIDC
