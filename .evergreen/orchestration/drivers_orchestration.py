@@ -245,7 +245,7 @@ def start_atlas(opts):
     if "podman" in docker:
         cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
-    container_id = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+    container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
