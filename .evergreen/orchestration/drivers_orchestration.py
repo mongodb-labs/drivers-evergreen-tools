@@ -70,7 +70,7 @@ def get_options():
         "--ssl", action="store_true", help="Whether to add TLS configuration"
     )
     parser.add_argument(
-        "--use-atlas",
+        "--local-atlas",
         action="store_true",
         help="Whether to use mongodb-atlas-local to start the server",
     )
