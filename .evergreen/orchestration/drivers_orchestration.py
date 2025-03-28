@@ -242,6 +242,8 @@ def start_atlas(opts):
     if opts.auth:
         cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
         cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+    if "podman" in docker:
+        cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
     container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
