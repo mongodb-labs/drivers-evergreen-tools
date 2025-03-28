@@ -1486,11 +1486,19 @@ buildvariants:
   display_name: Other tests
   run_on:
     - ubuntu2204-small
-    - rhel94-small
   tasks:
     - ".aws"
     - ".data_lake"
     - ".ocsp"
+    - ".docker"
+    - ".atlas-local"
+
+- name: tests-podman
+  display_name: Podman Tests
+  run_on:
+    - rhel94-small
+  tasks:
+    - ".data_lake"
     - ".docker"
     - ".atlas-local"
 
