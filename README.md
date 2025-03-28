@@ -93,6 +93,8 @@ For example:
 TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 ```
 
+You can also run:  `make run-local-atlas` to run a local atlas server in a container.
+
 See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
 
 In order to use custom certificates in your server, set the following environment variables:
