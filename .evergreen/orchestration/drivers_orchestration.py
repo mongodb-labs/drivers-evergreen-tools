@@ -614,7 +614,10 @@ def stop(opts):
         cmd = f"{docker} ps -a -q -f name=mongodb_atlas_local"
         result = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         if result:
-            run_command(f"{docker} kill -fa {result}")
+            if "podman" in docker:
+                run_command(f"{docker} kill -fa {result}")
+            else:
+                run_command(f"{docker} kill {result}")
 
 
 def main():
