@@ -20,6 +20,8 @@ fi
 
 if command -v podman &> /dev/null; then
     DOCKER="podman --storage-opt ignore_chown_errors=true"
+    XDG_RUNTIME_DIR=/run/user/$(id -u)
+    export XDG_RUNTIME_DIR
 else
     DOCKER=docker
 fi
