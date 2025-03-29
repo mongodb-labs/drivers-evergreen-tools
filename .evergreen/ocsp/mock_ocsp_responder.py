@@ -649,6 +649,7 @@ def _handle_get(u_path):
         raise ValueError("Required 'Host' header not present")
     der = base64.b64decode(u_path)
     ocsp_request = responder.parse_ocsp_request(der)
+    logger.debug("Handled get %s", u_path)
     return responder.build_http_response(ocsp_request)
 
 
@@ -662,4 +663,5 @@ def _handle_post():
     if "Host" not in request.headers:
         raise ValueError("Required 'Host' header not present")
     ocsp_request = responder.parse_ocsp_request(request.data)
+    logger.debug("Handled post")
     return responder.build_http_response(ocsp_request)
