@@ -14,6 +14,6 @@ test -t 1 && USE_TTY="-t"
 if command -v docker &> /dev/null; then
     DOCKER=docker
 else
-    DOCKER="podman --storage-opt ignore_chown_errors=true"
+    DOCKER="podman"
 fi
 $DOCKER run -d -p 27017:27017 --platform linux/amd64 --name atlas-data-lake -v "$DRIVERS_TOOLS/.evergreen/atlas_data_lake:/src" -i $USE_TTY $IMAGE --config ./testdata/config/external/drivers/config.yaml
