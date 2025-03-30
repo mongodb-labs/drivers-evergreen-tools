@@ -5,7 +5,7 @@
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/handle-paths.sh
+. $SCRIPT_DIR/../handle-paths.sh
 
 # Find the appropriate docker command.
 if command -v podman &> /dev/null; then
