@@ -25,7 +25,8 @@ bash teardown.sh
 echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}..."
 
 CA_FILE="${OCSP_ALGORITHM}/ca.pem"
-ARGS="-p 8100 -v"
+PORT=8100
+ARGS="-p $PORT -v"
 
 case $SERVER_TYPE in
   valid)
@@ -67,7 +68,22 @@ $COMMAND ocsp_mock.py \
   $ARGS > ocsp_mock_server.log 2>&1 &
 echo "$!" > ocsp.pid
 
-sleep 1
+await_server() {
+    echo "Waiting on $1 server on port $2"
+    for _ in $(seq 10); do
+        # Exit code 7: "Failed to connect to host".
+        if curl -s "localhost:$2"; test $? -ne 7; then
+            echo "Waiting on $1 server on port $2...done"
+            return 0
+        else
+            echo "Could not connect, sleeping."
+            sleep 2
+        fi
+    done
+    echo "Could not detect '$1' server on port $2"
+    exit 1
+}
+await_server ocsp_mock.py $PORT
 cat ocsp_mock_server.log
 
 echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}... done."
