@@ -617,7 +617,10 @@ def stop(opts):
         except Exception:
             result = None
         if result:
-            run_command(f"{docker} kill {result}")
+            if "podman" in docker:
+                run_command(f"{docker} rm -f {result}")
+            else:
+                run_command(f"{docker} kill {result}")
 
 
 def main():
