@@ -257,7 +257,7 @@ def start_atlas(opts):
         resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         if resp == "healthy":
             break
-        if tries == 60:
+        if tries >= 60:
             LOGGER.error("Timed out waiting for container to become healthy")
             sys.exit(1)
         time.sleep(1)
