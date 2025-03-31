@@ -634,6 +634,7 @@ def init(port=8080, debug=False, host=None):
 
 @app.route("/", methods=["GET"])
 def _handle_root():
+    logger.debug("Handled root get")
     return "ocsp-responder"
 
 
@@ -645,11 +646,14 @@ def _handle_get(u_path):
     An OCSP GET request contains the DER-in-base64 encoded OCSP request in the
     HTTP request URL.
     """
+    logger.debug("Handling get %s...", u_path)
     if "Host" not in request.headers:
-        raise ValueError("Required 'Host' header not present")
+        message = "Required 'Host' header not present"
+        logger.error(message)
+        raise ValueError(message)
     der = base64.b64decode(u_path)
     ocsp_request = responder.parse_ocsp_request(der)
-    logger.debug("Handled get %s", u_path)
+    logger.debug("Handling get %s... done.", u_path)
     return responder.build_http_response(ocsp_request)
 
 
@@ -660,8 +664,11 @@ def _handle_post():
     An OCSP POST request contains the DER encoded OCSP request in the HTTP
     request body.
     """
+    logger.debug("Handling post to /status...")
     if "Host" not in request.headers:
-        raise ValueError("Required 'Host' header not present")
+        message = "Required 'Host' header not present"
+        logger.error(message)
+        raise ValueError(message)
     ocsp_request = responder.parse_ocsp_request(request.data)
-    logger.debug("Handled post")
+    logger.debug("Handling post to /status... done.")
     return responder.build_http_response(ocsp_request)
