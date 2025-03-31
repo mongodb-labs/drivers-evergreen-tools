@@ -13,10 +13,10 @@ if [ ! -f secrets-export.sh ]; then
 fi
 source secrets-export.sh
 unset AWS_SESSION_TOKEN
-if command -v docker &> /dev/null; then
-    DOCKER="docker"
-else
+if command -v podman &> /dev/null; then
     DOCKER=podman
+else
+    DOCKER=docker
 fi
 aws ecr get-login-password --region us-east-1 | $DOCKER login --username AWS --password-stdin $REPO
 $DOCKER pull $REPO
