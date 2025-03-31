@@ -19,7 +19,7 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
 fi
 
 if command -v podman &> /dev/null; then
-    DOCKER="podman --storage-opt ignore_chown_errors=true"
+    DOCKER="sudo podman --storage-opt ignore_chown_errors=true"
 else
     DOCKER=docker
 fi

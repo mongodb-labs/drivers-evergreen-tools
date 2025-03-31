@@ -11,6 +11,10 @@ run-server:
 	@echo "Running server..."
 	.evergreen/run-orchestration.sh
 
+run-local-atlas:
+	@echo "Running local atlas server..."
+	.evergreen/run-orchestration --local-atlas
+
 stop-server:
 	@echo "Stopping server..."
 	.evergreen/stop-orchestration.sh

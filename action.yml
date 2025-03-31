@@ -19,11 +19,14 @@ inputs:
   require-api-version:
     description: "Whether to start the server with requireApiVersion enabled (defaults to false)"
     required: false
-  skip-legacy-shell:
-    description: "Whether to skip installing the legacy shell for 6.0+ servers (deprecated)"
-    required: false
   install-legacy-shell:
     description: "Whether to install the legacy shell for 6.0+ servers"
+    required: false
+  local-atlas:
+    description: "Whether to use mongodb-atlas-local to start the server"
+    required: false
+  skip-legacy-shell:
+    description: "Whether to skip installing the legacy shell for 6.0+ servers (deprecated)"
     required: false
 outputs:
   cluster-uri:
@@ -51,7 +54,7 @@ runs:
     - id: "run-orchestration"
       name: "Download MongoDB"
       run: |
-        ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh
+        ${GITHUB_ACTION_PATH}/.evergreen/run-orchestration.sh -v
         [[ -f mo-expansion.sh ]] && source mo-expansion.sh
         echo "cluster-uri=$(cat ${GITHUB_ACTION_PATH}/uri.txt)" >> $GITHUB_OUTPUT
         echo "crypt-shared-lib-path=${CRYPT_SHARED_LIB_PATH}" >> $GITHUB_OUTPUT
@@ -68,4 +71,5 @@ runs:
         REQUIRE_API_VERSION: ${{ inputs.require-api-version }}
         SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
         INSTALL_LEGACY_SHELL: ${{ inputs.install-legacy-shell }}
+        LOCAL_ATLAS: ${{ inputs.local-atlas }}
       shell: bash

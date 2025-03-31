@@ -293,14 +293,17 @@ functions:
         binary: sh
         env:
           MONGODB_VERSION: ${VERSION}
-          TOPOLOGY: ${TOPOLOGY}
-          SSL: ${SSL}
-          AUTH: ${AUTH}
-          STORAGE_ENGINE: ${STORAGE_ENGINE}
-          LOAD_BALANCER: ${LOAD_BALANCER}
-          REQUIRE_API_VERSION: ${REQUIRE_API_VERSION}
+        include_expansions_in_env:
+          - AUTH
+          - LOAD_BALANCER
+          - LOCAL_ATLAS
+          - REQUIRE_API_VERSION,
+          - SSL
+          - STORAGE_ENGINE
+          - TOPOLOGY
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
+          - -v
     # run-orchestration generates expansion file with the MONGODB_URI for the cluster
     - command: expansions.update
       params:
@@ -699,6 +702,15 @@ tasks:
 
 # Standard test tasks {{{
 
+    - name: "test-8.0-local-atlas"
+      tags: ["8.0", "local-atlas"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "8.0"
+            LOCAL_ATLAS: "1"
+        - func: "run tests"
+
     - name: "test-8.0-standalone"
       tags: ["8.0", "standalone"]
       commands:
@@ -734,6 +746,15 @@ tasks:
             VERSION: "8.0"
             TOPOLOGY: "server"
             REQUIRE_API_VERSION: "1"
+        - func: "run tests"
+
+    - name: "test-7.0-local-atlas"
+      tags: ["7.0", "local-atlas"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "7.0"
+            LOCAL_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-7.0-standalone"
@@ -923,6 +944,15 @@ tasks:
           vars:
             VERSION: "3.6"
             TOPOLOGY: "sharded_cluster"
+        - func: "run tests"
+
+    - name: "test-latest-local-atlas"
+      tags: ["latest", "local-atlas"]
+      commands:
+        - func: "bootstrap mongo-orchestration"
+          vars:
+            VERSION: "latest"
+            LOCAL_ATLAS: "1"
         - func: "run tests"
 
     - name: "test-latest-standalone"
@@ -1462,6 +1492,16 @@ buildvariants:
     - ".data_lake"
     - ".ocsp"
     - ".docker"
+    - ".local-atlas"
+
+- name: tests-podman
+  display_name: Podman Tests
+  run_on:
+    - rhel94-small
+  tasks:
+    - ".data_lake"
+    - ".docker"
+    - ".local-atlas"
 
 - name: tests-oidc
   display_name: Auth OIDC
