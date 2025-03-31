@@ -65,10 +65,10 @@ def main():
     )
 
     args = parser.parse_args()
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+    level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(asctime)s %(levelname)-8s %(message)s")
 
-    print("Initializing OCSP Responder")
+    mock_ocsp_responder.logger.info("Initializing OCSP Responder")
     mock_ocsp_responder.init_responder(
         issuer_cert=args.ca_file,
         responder_cert=args.ocsp_responder_cert,
@@ -78,6 +78,7 @@ def main():
     )
 
     serve(mock_ocsp_responder.app, host=args.bind_ip, port=args.port)
+    mock_ocsp_responder.logger.info("Shutting down OCSP Responder")
 
 
 if __name__ == "__main__":
