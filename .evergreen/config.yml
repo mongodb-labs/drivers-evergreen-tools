@@ -291,9 +291,16 @@ functions:
       params:
         # Purposely use sh here to ensure backwards compatibility.
         binary: sh
-        include_expansions_in_env: [
-          MONGODB_VERSION,TOPOLOGY,SSL,AUTH,STORAGE_ENGINE,LOAD_BALANCER,REQUIRE_API_VERSION,
-          LOCAL_ATLAS]
+        env:
+          MONGODB_VERSION: ${VERSION}
+        include_expansions_in_env:
+          - AUTH
+          - LOAD_BALANCER
+          - LOCAL_ATLAS
+          - REQUIRE_API_VERSION,
+          - SSL
+          - STORAGE_ENGINE
+          - TOPOLOGY
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
           - -v
