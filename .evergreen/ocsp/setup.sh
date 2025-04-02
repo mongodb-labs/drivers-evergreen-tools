@@ -85,6 +85,5 @@ await_server() {
 }
 await_server ocsp_mock.py $PORT
 cat ocsp_mock_server.log
-sleep 3
 
 echo "Starting OCSP server ${OCSP_ALGORITHM}-${SERVER_TYPE}... done."
