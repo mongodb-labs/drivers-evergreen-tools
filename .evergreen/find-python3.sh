@@ -189,7 +189,7 @@ find_python3() (
   declare python_binary=""
   case "${OSTYPE:?}" in
   cygwin)
-    python_binary="/cygdrive/c/Python/Current/python.exe"
+    python_binary="/cygdrive/c/python/Current/python.exe"
     ;;
   darwin*)
     python_binary="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3"
