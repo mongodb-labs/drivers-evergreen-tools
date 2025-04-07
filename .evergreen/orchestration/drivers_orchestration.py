@@ -172,6 +172,16 @@ def get_options():
     return opts
 
 
+def get_docker_cmd():
+    """Get the appropriate docker command."""
+    docker = shutil.which("docker") or shutil.which("podman")
+    if not docker:
+        return None
+    if "podman" in docker:
+        docker = f"sudo {docker}"
+    return docker
+
+
 def handle_docker_config(data):
     """Modify config to when running in a docker container."""
     items = []
@@ -236,7 +246,7 @@ def run_command(cmd: str, **kwargs):
 def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     image = f"docker.io/mongodb/mongodb-atlas-local:{opts.version}"
-    docker = shutil.which("docker") or shutil.which("podman")
+    docker = get_docker_cmd()
     stop(opts)
     cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
     if opts.auth:
@@ -600,7 +610,7 @@ def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
     container_file = mo_home / "container_id.txt"
-    docker = shutil.which("docker") or shutil.which("podman")
+    docker = get_docker_cmd()
     if pid_file.exists():
         LOGGER.info("Stopping mongo-orchestration...")
         py_exe = normalize_path(sys.executable)
