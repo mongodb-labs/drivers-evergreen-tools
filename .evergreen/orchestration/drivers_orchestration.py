@@ -245,6 +245,8 @@ def start_atlas(opts):
     if "podman" in docker:
         cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
+    LOGGER.info("Starting local atlas...")
+    LOGGER.debug("Using command: '%s'", cmd)
     container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
@@ -269,6 +271,7 @@ def start_atlas(opts):
         uri = "mongodb://bob:pwd123@127.0.0.1:27017?directConnection=true"
     mongosh = Path(opts.mongodb_binaries) / "mongosh"
     run_command(f"{mongosh} {uri} --eval 'db.runCommand({{ping:1}})'")
+    LOGGER.info("Starting local atlas... done.")
     return uri
 
 
@@ -617,10 +620,12 @@ def stop(opts):
         except Exception:
             result = None
         if result:
+            LOGGER.info("Stopping mongodb_atlas_local...")
             if "podman" in docker:
                 run_command(f"{docker} rm -f {result}")
             else:
                 run_command(f"{docker} kill {result}")
+            LOGGER.info("Stopping mongodb_atlas_local... done.")
 
 
 def main():
