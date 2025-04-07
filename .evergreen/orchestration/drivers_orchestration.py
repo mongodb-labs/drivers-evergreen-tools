@@ -224,7 +224,7 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run_command(cmd: str, **kwargs):
+def run_command(cmd: str, exit_on_error=True, **kwargs):
     LOGGER.debug(f"Running command {cmd}...")
     try:
         proc = subprocess.run(
@@ -239,7 +239,8 @@ def run_command(cmd: str, **kwargs):
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
-        sys.exit(e.returncode)
+        if exit_on_error:
+            sys.exit(e.returncode)
     LOGGER.debug(f"Running command {cmd}... done.")
 
 
@@ -262,7 +263,7 @@ def start_atlas(opts):
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
     if "podman" in docker:
-        run_command(f"{docker} healthcheck run {container_id}")
+        run_command(f"{docker} healthcheck run {container_id}", exit_on_error=False)
     cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
     tries = 0
     while 1:
