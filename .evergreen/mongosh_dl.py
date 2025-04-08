@@ -50,6 +50,8 @@ def _get_latest_version():
     for item in data:
         if item["prerelease"]:
             continue
+        if "draft" in item and item["draft"]:
+            continue
         return item["tag_name"].replace("v", "").strip()
 
 
