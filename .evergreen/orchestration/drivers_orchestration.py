@@ -461,7 +461,7 @@ def run(opts):
         try:
             resp = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
-            stop()
+            stop(opts)
             LOGGER.error("out.log: %s", (mo_home / "out.log").read_text())
             LOGGER.error("server.log: %s", (mo_home / "server.log").read_text())
             raise e
@@ -597,7 +597,7 @@ def start(opts):
                 break
             except ConnectionRefusedError:
                 if (datetime.now() - mo_start).seconds > 120:
-                    stop()
+                    stop(opts)
                     LOGGER.error("Orchestration failed!")
                     LOGGER.error(f"server.log: {server_file.read_text()}")
                     raise TimeoutError("Server failed to start") from None
