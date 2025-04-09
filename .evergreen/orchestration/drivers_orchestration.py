@@ -524,7 +524,7 @@ def start(opts):
     # Stop a running server.
     mo_home = Path(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
-        stop()
+        stop(opts)
 
     # Clean up previous files.
     clean_start(opts)
