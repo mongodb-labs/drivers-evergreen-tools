@@ -621,7 +621,7 @@ def stop(opts):
     if container_file.exists():
         LOGGER.info("Stopping mongodb_atlas_local...")
         container_id = container_file.read_text()
-        run_command(f"{docker} kill {container_id}")
+        run_command(f"{docker} kill {container_id}", exit_on_error=False)
         container_file.unlink()
         LOGGER.info("Stopping mongodb_atlas_local... done.")
     elif docker:
