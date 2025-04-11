@@ -172,6 +172,16 @@ def get_options():
     return opts
 
 
+def get_docker_cmd():
+    """Get the appropriate docker command."""
+    docker = shutil.which("docker") or shutil.which("podman")
+    if not docker:
+        return None
+    if "podman" in docker:
+        docker = f"sudo {docker}"
+    return docker
+
+
 def handle_docker_config(data):
     """Modify config to when running in a docker container."""
     items = []
@@ -214,7 +224,7 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run_command(cmd: str, **kwargs):
+def run_command(cmd: str, exit_on_error=True, **kwargs):
     LOGGER.debug(f"Running command {cmd}...")
     try:
         proc = subprocess.run(
@@ -229,14 +239,15 @@ def run_command(cmd: str, **kwargs):
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
-        sys.exit(e.returncode)
+        if exit_on_error:
+            sys.exit(e.returncode)
     LOGGER.debug(f"Running command {cmd}... done.")
 
 
 def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     image = f"docker.io/mongodb/mongodb-atlas-local:{opts.version}"
-    docker = shutil.which("docker") or shutil.which("podman")
+    docker = get_docker_cmd()
     stop(opts)
     cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
     if opts.auth:
@@ -245,12 +256,14 @@ def start_atlas(opts):
     if "podman" in docker:
         cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
+    LOGGER.info("Starting local atlas...")
+    LOGGER.debug("Using command: '%s'", cmd)
     container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
     if "podman" in docker:
-        run_command(f"{docker} healthcheck run {container_id}")
+        run_command(f"{docker} healthcheck run {container_id}", exit_on_error=False)
     cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
     tries = 0
     while 1:
@@ -269,6 +282,7 @@ def start_atlas(opts):
         uri = "mongodb://bob:pwd123@127.0.0.1:27017?directConnection=true"
     mongosh = Path(opts.mongodb_binaries) / "mongosh"
     run_command(f"{mongosh} {uri} --eval 'db.runCommand({{ping:1}})'")
+    LOGGER.info("Starting local atlas... done.")
     return uri
 
 
@@ -447,7 +461,7 @@ def run(opts):
         try:
             resp = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
-            stop()
+            stop(opts)
             LOGGER.error("out.log: %s", (mo_home / "out.log").read_text())
             LOGGER.error("server.log: %s", (mo_home / "server.log").read_text())
             raise e
@@ -510,7 +524,7 @@ def start(opts):
     # Stop a running server.
     mo_home = Path(opts.mongo_orchestration_home)
     if (mo_home / "server.pid").exists():
-        stop()
+        stop(opts)
 
     # Clean up previous files.
     clean_start(opts)
@@ -583,7 +597,7 @@ def start(opts):
                 break
             except ConnectionRefusedError:
                 if (datetime.now() - mo_start).seconds > 120:
-                    stop()
+                    stop(opts)
                     LOGGER.error("Orchestration failed!")
                     LOGGER.error(f"server.log: {server_file.read_text()}")
                     raise TimeoutError("Server failed to start") from None
@@ -597,7 +611,7 @@ def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
     container_file = mo_home / "container_id.txt"
-    docker = shutil.which("docker") or shutil.which("podman")
+    docker = get_docker_cmd()
     if pid_file.exists():
         LOGGER.info("Stopping mongo-orchestration...")
         py_exe = normalize_path(sys.executable)
@@ -607,7 +621,7 @@ def stop(opts):
     if container_file.exists():
         LOGGER.info("Stopping mongodb_atlas_local...")
         container_id = container_file.read_text()
-        run_command(f"{docker} kill {container_id}")
+        run_command(f"{docker} kill {container_id}", exit_on_error=False)
         container_file.unlink()
         LOGGER.info("Stopping mongodb_atlas_local... done.")
     elif docker:
@@ -617,10 +631,12 @@ def stop(opts):
         except Exception:
             result = None
         if result:
+            LOGGER.info("Stopping mongodb_atlas_local...")
             if "podman" in docker:
                 run_command(f"{docker} rm -f {result}")
             else:
                 run_command(f"{docker} kill {result}")
+            LOGGER.info("Stopping mongodb_atlas_local... done.")
 
 
 def main():
