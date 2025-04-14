@@ -6,7 +6,7 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-pushd $DRIVERS_TOOLS/github_app
+pushd $DRIVERS_TOOLS/.evergreen/github_app
 . utils.sh
 bootstrap
 bash get-access-token.sh > /dev/null
