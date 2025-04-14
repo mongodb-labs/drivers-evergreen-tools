@@ -531,6 +531,14 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-data-lake.sh]
 
+  "run github app test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-github-app.sh]
+
   "run csfle test":
     - command: ec2.assume_role
       params:
@@ -1082,6 +1090,11 @@ tasks:
       commands:
         - func: "run aws test"
 
+    - name: "test-github-app"
+      tags: ["pr", "github_app"]
+      commands:
+        - func: "run github app test"
+
     - name: "test-atlas-data-lake"
       tags: ["pr", "data_lake"]
       commands:
@@ -1483,8 +1496,8 @@ buildvariants:
   tasks:
     - ".releng" # Run all tasks with the "releng" tag
 
-- name: tests-misc
-  display_name: Other tests
+- name: tests-ubuntu
+  display_name: Ubuntu tests
   run_on:
     - ubuntu2204-small
   tasks:
@@ -1493,15 +1506,17 @@ buildvariants:
     - ".ocsp"
     - ".docker"
     - ".local-atlas"
+    - ".github-app"
 
-- name: tests-podman
-  display_name: Podman Tests
+- name: tests-rhel
+  display_name: RHEL Tests
   run_on:
     - rhel94-small
   tasks:
     - ".data_lake"
     - ".docker"
     - ".local-atlas"
+    - ".github-app"
 
 - name: tests-oidc
   display_name: Auth OIDC

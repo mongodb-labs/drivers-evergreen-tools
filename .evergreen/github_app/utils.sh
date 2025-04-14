@@ -13,6 +13,9 @@ function bootstrap() {
     bash ../install-node.sh
     source ../init-node-and-npm-env.sh
 
+    # Use the standard registry.
+    npm config set -L project registry "https://registry.npmjs.org"
+
     # Install the app.
     npm install
 
