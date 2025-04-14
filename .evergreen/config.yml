@@ -1091,7 +1091,7 @@ tasks:
         - func: "run aws test"
 
     - name: "test-github-app"
-      tags: ["pr", "github_app"]
+      tags: ["pr", "github-app"]
       commands:
         - func: "run github app test"
 
