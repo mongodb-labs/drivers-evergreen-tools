@@ -9,7 +9,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $DRIVERS_TOOLS/.evergreen/github_app
 . utils.sh
 bootstrap
-bash get-access-token.sh > /dev/null
+bash get-access-token.sh drivers-evergreen-tools mongodb-labs > /dev/null
 popd
 
 make -C ${DRIVERS_TOOLS} test
