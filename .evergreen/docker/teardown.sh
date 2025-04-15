@@ -21,7 +21,7 @@ fi
 $DOCKER rm "$($DOCKER ps -a -q)" &> /dev/null || true
 
 # Remove all images.
-$DOCKER rmi -f "$($DOCKER -a -q)" &> /dev/null || true
+$DOCKER rmi -f "$($DOCKER images -a -q)" &> /dev/null || true
 
 # Remove all generated files in this subfolder.
 pushd $SCRIPT_DIR > /dev/null

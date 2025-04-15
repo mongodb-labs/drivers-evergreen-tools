@@ -345,6 +345,12 @@ functions:
           ENTRYPOINT: /root/test-entrypoint.sh
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/docker/teardown.sh
     - command: shell.exec
       type: test
       params:
