@@ -13,7 +13,7 @@ TARGET_DIR="${1:?"must give a target directory!"}"
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
-pushd $SCRIPT_DIR > /dev/null
+pushd $SCRIPT_DIR >/dev/null
 
 # First ensure we have a python binary.
 if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
@@ -84,17 +84,17 @@ if ! command -V uv &>/dev/null; then
 fi
 
 # uv should be on the path at this point.
-if ! command -V uv &>dev/null; then
+if ! command -V uv &>/dev/null; then
   echo "Could not install uv!"
   exit 1
 fi
 
 # Ensure there is a venv available in the script dir for backward compatibility.
-uv venv venv 2> /dev/null
+uv venv venv &>/dev/null
 [[ -d venv ]]
 
-popd > /dev/null
-pushd "$TARGET_DIR" > /dev/null
+popd >/dev/null
+pushd "$TARGET_DIR" >/dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
 EXTRA_ARGS=""
@@ -117,4 +117,4 @@ else
   UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
 fi
 
-popd > /dev/null
+popd >/dev/null
