@@ -43,7 +43,7 @@ if [ "${DOCKER_RUNNING:-}" == "true" ]; then
 fi
 
 # If uv is not on path, try see if it is available from the Python toolchain.
-if ! command -v uv 1>&2>/dev/null; then
+if ! command -v uv &>/dev/null; then
   export PATH
   case "${OSTYPE:?}" in
   cygwin)
@@ -59,14 +59,15 @@ if ! command -v uv 1>&2>/dev/null; then
 fi
 
 # If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
-if ! command -V uv 1>&2>/dev/null; then
+if ! command -V uv &>/dev/null; then
+  . ./venv-utils.sh
   _venv_dir=$(mktemp -d)
   if [ "Windows_NT" = "${OS:-}" ]; then
     _venv_dir=$(cygpath -m $_venv_dir)
   fi
   _install_dir=${DRIVERS_TOOLS}/.bin
   echo "Installing uv using pip..."
-  createvirtualenv "$DRIVERS_TOOLS_PYTHON" $_venv_dir
+  venvcreate "$DRIVERS_TOOLS_PYTHON" $_venv_dir
   # Install uv into the newly created venv.
   UV_UNMANAGED_INSTALL=1 python -m pip install -q --force-reinstall uv
   _suffix=""
@@ -81,7 +82,7 @@ if ! command -V uv 1>&2>/dev/null; then
 fi
 
 # uv should be on the path at this point.
-if ! command -V uv 1>&2>/dev/null; then
+if ! command -V uv &>dev/null; then
   echo "Could not install uv!"
   exit 1
 fi
