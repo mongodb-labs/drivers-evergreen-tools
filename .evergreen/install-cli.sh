@@ -35,6 +35,7 @@ export UV_PYTHON=$DRIVERS_TOOLS_PYTHON
 # Ensure uv is writing assets to a contained location.
 export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
 export UV_TOOL_DIR=${DRIVERS_TOOLS}/.local/uv-tool
+export UV_UNMANAGED_INSTALL="1"
 
 if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   _root_dir=$(mktemp -d)
@@ -65,16 +66,16 @@ if ! command -V uv &>/dev/null; then
   if [ "Windows_NT" = "${OS:-}" ]; then
     _venv_dir=$(cygpath -m $_venv_dir)
   fi
-  _install_dir=${DRIVERS_TOOLS}/.bin
   echo "Installing uv using pip..."
   venvcreate "$DRIVERS_TOOLS_PYTHON" $_venv_dir
   # Install uv into the newly created venv.
-  UV_UNMANAGED_INSTALL=1 python -m pip install -q --force-reinstall uv
+  python -m pip install -q --force-reinstall uv
   _suffix=""
   if [ "Windows_NT" = "${OS:-}" ]; then
     _suffix=".exe"
   fi
   # Symlink uv and uvx binaries.
+  _install_dir=${DRIVERS_TOOLS}/.bin
   mkdir -p $_install_dir
   ln -s "$(which uv)" $_install_dir/uv${_suffix}
   ln -s "$(which uvx)" $_install_dir/uvx${_suffix}
