@@ -118,4 +118,4 @@ else
   UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
 fi
 
-popd >/dev/null
+popd >/dev/null # "$TARGET_DIR"
