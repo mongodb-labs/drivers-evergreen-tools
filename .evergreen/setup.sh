@@ -32,4 +32,5 @@ DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
 echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 
 # Set up the orchestration folder, which also installs CLIs in this folder.
+# We do this is because it uses some of the CLIs in this folder.
 bash $SCRIPT_DIR/orchestration/setup.sh
