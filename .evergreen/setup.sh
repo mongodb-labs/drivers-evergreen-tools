@@ -30,10 +30,6 @@ EOF
 # Set the python binary to use.
 DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
 echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
-echo "UV_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 
-# Install the clis in this folder.
-bash $SCRIPT_DIR/install-cli.sh $SCRIPT_DIR
-
-# Set up the orchestration folder.
+# Setup the orchestration directory, which also installs CLIs into this directory.
 bash $SCRIPT_DIR/orchestration/setup.sh
