@@ -94,7 +94,7 @@ fi
 uv venv venv &>/dev/null
 [[ -d venv ]]
 
-popd >/dev/null
+popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
 # Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
