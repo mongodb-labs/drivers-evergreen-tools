@@ -64,7 +64,7 @@ if ! command -V uv &>/dev/null; then
   . ./venv-utils.sh
   _venv_dir="$(mktemp -d)"
   if [ "Windows_NT" = "${OS:-}" ]; then
-    _venv_dir=$(cygpath -m $_venv_dir)
+    _venv_dir="$(cygpath -m $_venv_dir)"
   fi
   echo "Installing uv using pip..."
   venvcreate "$DRIVERS_TOOLS_PYTHON" $_venv_dir
