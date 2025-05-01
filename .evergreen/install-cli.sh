@@ -75,10 +75,10 @@ if ! command -V uv &>/dev/null; then
     _suffix=".exe"
   fi
   # Symlink uv and uvx binaries.
-  _install_dir=${DRIVERS_TOOLS}/.bin
-  mkdir -p $_install_dir
-  ln -s "$(which uv)" $_install_dir/uv${_suffix}
-  ln -s "$(which uvx)" $_install_dir/uvx${_suffix}
+  _install_dir="${DRIVERS_TOOLS}/.bin"
+  mkdir -p "$_install_dir"
+  ln -s "$(which uv)" "$_install_dir/uv${_suffix}"
+  ln -s "$(which uvx)" "$_install_dir/uvx${_suffix}"
   echo "Installed to ${_install_dir}"
   deactivate
   echo "Installing uv using pip... done."
