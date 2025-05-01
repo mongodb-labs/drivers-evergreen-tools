@@ -62,7 +62,7 @@ fi
 # If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
 if ! command -V uv &>/dev/null; then
   . ./venv-utils.sh
-  _venv_dir=$(mktemp -d)
+  _venv_dir="$(mktemp -d)"
   if [ "Windows_NT" = "${OS:-}" ]; then
     _venv_dir=$(cygpath -m $_venv_dir)
   fi
