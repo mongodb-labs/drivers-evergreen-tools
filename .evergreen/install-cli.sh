@@ -59,15 +59,6 @@ if ! command -v uv &>/dev/null; then
   esac
 fi
 
-echo =================
-echo "$DRIVERS_TOOLS"
-echo "$PATH"
-# ensure $DRIVERS_TOOLS/.bin is in $PATH
-if [[ ! $PATH =~ :?$DRIVERS_TOOLS/\.bin/?:? ]]; then
-  echo Adding DRIVERS_TOOLS/.bin folder to the PATH variable
-  export PATH=$DRIVERS_TOOLS/.bin:$PATH
-fi
-
 # If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
 if ! command -V uv &>/dev/null; then
   . ./venv-utils.sh
@@ -85,6 +76,11 @@ if ! command -V uv &>/dev/null; then
   fi
   # Symlink uv and uvx binaries.
   _install_dir="${DRIVERS_TOOLS}/.bin"
+  
+  echo ==================
+  ls ${_venv_dir}/Scripts/
+  echo ==================
+  
   mkdir -p "$_install_dir"
   ln -s "${_venv_dir}/Scripts/uv${_suffix}" "$_install_dir/uv${_suffix}"
   ln -s "${_venv_dir}/Scripts/uvx${_suffix}" "$_install_dir/uvx${_suffix}"
