@@ -259,7 +259,7 @@ def start_atlas(opts):
     # If we're on evergreen, we need to log into docker.
     if "CI" in os.environ:
         LOGGER.info("Logging in to docker...")
-        run_command("bash start.sh", cwd=EVG_PATH / "docker")
+        run_command("bash start.sh", cwd=str(EVG_PATH / "docker"))
         LOGGER.info("Logging in to docker... done.")
     LOGGER.info("Starting local atlas...")
     LOGGER.debug("Using command: '%s'", cmd)
