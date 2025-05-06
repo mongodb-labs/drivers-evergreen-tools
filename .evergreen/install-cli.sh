@@ -76,11 +76,6 @@ if ! command -V uv &>/dev/null; then
   fi
   # Symlink uv and uvx binaries.
   _install_dir="${DRIVERS_TOOLS}/.bin"
-  
-  echo ==================
-  ls ${_venv_dir}/Scripts/
-  echo ==================
-  
   mkdir -p "$_install_dir"
   ln -s "${_venv_dir}/Scripts/uv${_suffix}" "$_install_dir/uv${_suffix}"
   ln -s "${_venv_dir}/Scripts/uvx${_suffix}" "$_install_dir/uvx${_suffix}"
