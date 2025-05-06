@@ -256,6 +256,11 @@ def start_atlas(opts):
     if "podman" in docker:
         cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
     cmd += f" -P {image}"
+    # If we're on evergreen, we need to log into docker.
+    if "CI" in os.environ:
+        LOGGER.info("Logging in to docker...")
+        run_command("bash start.sh", cwd=EVG_PATH / "docker")
+        LOGGER.info("Logging in to docker... done.")
     LOGGER.info("Starting local atlas...")
     LOGGER.debug("Using command: '%s'", cmd)
     container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()

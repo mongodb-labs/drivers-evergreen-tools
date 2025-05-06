@@ -14,6 +14,11 @@ PLATFORM=${DOCKER_PLATFORM:-}
 ARCH=${ARCH:-}
 # e.g. --platform linux/amd64
 
+# Log in to docker if running on CI.
+if [ -n "${CI:-}" ]; then
+    bash setup.sh
+fi
+
 if [[ -z $PLATFORM && -n $ARCH ]]; then
     PLATFORM="--platform linux/$ARCH"
 fi
