@@ -71,14 +71,16 @@ if ! command -V uv &>/dev/null; then
   # Install uv into the newly created venv.
   python -m pip install -q --force-reinstall uv
   _suffix=""
-  if [ "Windows_NT" = "${OS:-}" ]; then
-    _suffix=".exe"
-  fi
   # Symlink uv and uvx binaries.
   _install_dir="${DRIVERS_TOOLS}/.bin"
   mkdir -p "$_install_dir"
-  ln -s "${_venv_dir}/Scripts/uv${_suffix}" "$_install_dir/uv${_suffix}"
-  ln -s "${_venv_dir}/Scripts/uvx${_suffix}" "$_install_dir/uvx${_suffix}"
+  if [ "Windows_NT" = "${OS:-}" ]; then
+    ln -s "${_venv_dir}/Scripts/uv.exe" "$_install_dir/uv.exe"
+    ln -s "${_venv_dir}/Scripts/uvx.exe" "$_install_dir/uvx.exe"
+  else
+    ln -s "$(which uv)" "$_install_dir/uv"
+    ln -s "$(which uvx)" "$_install_dir/uvx"
+  fi
   echo "Installed to ${_install_dir}"
   deactivate
   echo "Installing uv using pip... done."
