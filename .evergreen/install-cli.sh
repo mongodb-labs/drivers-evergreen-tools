@@ -59,6 +59,9 @@ if ! command -v uv &>/dev/null; then
   esac
 fi
 
+echo =================
+echo "$DRIVERS_TOOLS"
+echo "$PATH"
 # ensure $DRIVERS_TOOLS/.bin is in $PATH
 if [[ ! $PATH =~ :?$DRIVERS_TOOLS/\.bin/?:? ]]; then
   echo Adding DRIVERS_TOOLS/.bin folder to the PATH variable
