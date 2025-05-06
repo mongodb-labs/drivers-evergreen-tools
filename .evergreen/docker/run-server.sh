@@ -16,7 +16,7 @@ ARCH=${ARCH:-}
 
 # Log in to docker if running on CI.
 if [ -n "${CI:-}" ]; then
-    bash setup.sh
+    bash $SCRIPT_DIR/setup.sh
 fi
 
 if [[ -z $PLATFORM && -n $ARCH ]]; then
