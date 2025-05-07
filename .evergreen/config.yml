@@ -53,6 +53,10 @@ functions:
       params:
         file: src/expansion.yml
 
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
+
   "upload release":
     - command: ec2.assume_role
       params:
@@ -337,9 +341,6 @@ functions:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
   "run docker test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: subprocess.exec
       type: test
       params:
@@ -365,9 +366,6 @@ functions:
           make test
 
   "run oidc local test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -384,9 +382,6 @@ functions:
           make test
 
   "run oidc docker test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -453,9 +448,6 @@ functions:
           make test
 
   "run oidc k8s atlas test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -477,9 +469,6 @@ functions:
           make test
 
   "run oidc k8s local test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
@@ -550,9 +539,6 @@ functions:
         args: [src/.evergreen/tests/test-github-app.sh]
 
   "run csfle test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     # Ensure that we can run setup and teardown commands in the foreground without hanging.
     - command: subprocess.exec
       type: test
@@ -706,9 +692,6 @@ tasks:
 
     - name: delete_old_azure_resources
       commands:
-        - command: ec2.assume_role
-          params:
-            role_arn: ${aws_test_secrets_role}
         - command: subprocess.exec
           params:
             binary: bash
