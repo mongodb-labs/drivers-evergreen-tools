@@ -17,6 +17,7 @@ if "CI" in os.environ:
     resp = sts_client.assume_role(
         RoleArn=os.environ["AWS_ROLE_ARN"],
         RoleSessionName=f"{account}-test",
+        ExternalId=os.envion["AWS_EXTERNAL_ID"],
     )
     creds = resp["Credentials"]
     sts_client.close()
