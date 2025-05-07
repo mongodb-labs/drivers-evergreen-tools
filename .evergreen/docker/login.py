@@ -38,6 +38,9 @@ token = resp["authorizationData"][0]["authorizationToken"]
 _, _, token = base64.b64decode(token).partition(b":")
 
 docker = shutil.which("docker") or shutil.which("podman")
+if "podman" in docker:
+    docker = f"sudo {docker}"
+
 cmd = f"{docker} login --username AWS --password-stdin {registry}"
 proc = subprocess.Popen(
     shlex.split(cmd),
