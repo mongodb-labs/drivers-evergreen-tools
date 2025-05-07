@@ -246,7 +246,7 @@ def run_command(cmd: str, exit_on_error=True, **kwargs):
 
 def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
-    image = f"901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/library/mongodb/mongodb-atlas-local:{opts.version}"
+    image = f"901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/mongodb/mongodb-atlas-local:{opts.version}"
     docker = get_docker_cmd()
     stop(opts)
     cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
