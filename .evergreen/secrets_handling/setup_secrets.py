@@ -18,10 +18,8 @@ AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
 def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
     # Handle local credentials.
-    print("profile:", repr(profile))
     profile = profile or os.environ.get("AWS_PROFILE")
-    print("profile:", repr(profile))
-    session = boto3.Session(profile_name=profile)
+    session = boto3.Session(profile_name=profile or None)
     creds = None
     kwargs = dict(region_name=region)
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
