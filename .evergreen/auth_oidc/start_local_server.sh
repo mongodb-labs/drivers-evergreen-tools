@@ -55,6 +55,11 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
     DOCKER=$DOCKER_COMMAND
 fi
 
+# Log in to docker if running on CI.
+if [ -n "${CI:-}" ]; then
+    bash $SCRIPT_DIR/../docker/setup.sh
+fi
+
 # Build from the root directory so we can include files.
 pushd $DRIVERS_TOOLS
 PLATFORM="--platform linux/amd64"
