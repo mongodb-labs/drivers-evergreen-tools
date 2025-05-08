@@ -60,6 +60,7 @@ def get_secrets(vaults, region, profile, assume_role=False):
         print(f"\nERROR: {e}\n")
         sys.exit(1)
     except Exception as e:
+        print("HERE I am also, I caught the exception!", assume_role)
         raise e
 
     # Decrypts secret using the associated KMS key.
