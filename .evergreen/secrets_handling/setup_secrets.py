@@ -19,9 +19,10 @@ def get_secrets(vaults, region, profile):
     """Get the driver secret values."""
     # Handle local credentials.
     profile = profile or os.environ.get("AWS_PROFILE", "")
-    profile = profile or None
-    print("HELLO PROFILE", repr(profile), type(profile))
-    session = boto3.Session(profile_name=profile)
+    if profile:
+        session = boto3.Session(profile_name=profile)
+    else:
+        session = boto3.Session()
     creds = None
     kwargs = dict(region_name=region)
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
