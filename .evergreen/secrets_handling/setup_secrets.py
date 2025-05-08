@@ -50,8 +50,7 @@ def get_secrets(vaults, region, profile, assume_role=False):
         for vault in vaults:
             secret = client.get_secret_value(SecretId=vault)["SecretString"]
             secrets.append(secret)
-    except botocore.exceptions.BotoCoreError as e:
-        print("HERE I am, I caught the exception!", assume_role)
+    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
         # Try one more time with assume_role.
         if not assume_role:
             return get_secrets(vaults, region, profile, True)
