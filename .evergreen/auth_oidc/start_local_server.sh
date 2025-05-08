@@ -27,9 +27,8 @@ EOF
 
 ENTRYPOINT=${ENTRYPOINT:-/root/docker_entry.sh}
 USE_TTY=""
-AWS_PROFILE=${AWS_PROFILE:-""}
 
-if [ -z "$AWS_PROFILE" ]; then
+if [ -z "${AWS_PROFILE:-}" ]; then
     if [[ -z "${AWS_SESSION_TOKEN:-}" ||  -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
         echo "Please set AWS_PROFILE or set AWS credentials environment variables" 1>&2
        exit 1
