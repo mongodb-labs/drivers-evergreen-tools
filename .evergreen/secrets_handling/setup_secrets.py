@@ -23,6 +23,7 @@ def get_secrets(vaults, region, profile):
         session = boto3.Session(profile_name=profile)
     else:
         session = boto3.Session()
+    print(sorted(os.environ))
     creds = None
     kwargs = dict(region_name=region)
     if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
