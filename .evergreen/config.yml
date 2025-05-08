@@ -369,6 +369,9 @@ functions:
           make test
 
   "run oidc local test":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${ecr_role}
     - command: shell.exec
       type: test
       params:
