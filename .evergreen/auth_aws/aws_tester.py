@@ -79,7 +79,6 @@ def setup_assume_role():
     ]
 
     role_name = CONFIG[get_key("iam_auth_assume_role_name")]
-    role_name = "arn:aws:iam::857654397073:role/drivers-test-secrets-assumed-role"
     creds = _assume_role(role_name, quiet=True)
     with (HERE / "creds.json").open("w") as fid:
         json.dump(creds, fid)

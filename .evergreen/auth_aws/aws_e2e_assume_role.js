@@ -17,8 +17,7 @@ function getAssumeCredentials() {
         AWS_SECRET_ACCESS_KEY: config["iam_auth_assume_aws_secret_access_key"],
     };
 
-    // const role_name = config["iam_auth_assume_role_name"];
-    const role_name = "arn:aws:iam::857654397073:role/drivers-test-secrets-assumed-role";
+    const role_name = config["iam_auth_assume_role_name"];
 
     const python_command = getPython3Binary() +
         ` -u lib/aws_assume_role.py --role_name=${role_name} > creds.json`;
