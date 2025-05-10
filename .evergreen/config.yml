@@ -115,7 +115,7 @@ functions:
   "assume role":
     - command: ec2.assume_role
       params:
-        role_arn: ${aws_test_secrets_role}
+        role_arn: ${drivers_test_secrets_role}
 
   "exec compile script" :
     - command: shell.exec
