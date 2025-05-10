@@ -5,7 +5,8 @@ set -o errexit
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-pushd $SCRIPT_DIR
+echo "Tearing down auth_aws..."
+pushd $SCRIPT_DIR >/dev/null
 
 # If we've gotten credentials, ensure the instance profile is set.
 if [ -f secrets-export.sh ]; then
@@ -14,4 +15,6 @@ if [ -f secrets-export.sh ]; then
   python ./lib/aws_assign_instance_profile.py || true
 fi
 
-popd
+popd >/dev/null
+
+echo "Tearing down auth_aws.. done."
