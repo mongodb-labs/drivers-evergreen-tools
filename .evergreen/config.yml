@@ -519,9 +519,6 @@ functions:
           make test
 
   "run aws test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${evergreen_role}
     - command: subprocess.exec
       type: test
       params:
