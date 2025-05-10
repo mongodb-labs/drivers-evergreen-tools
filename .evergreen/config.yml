@@ -1129,6 +1129,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: "bash"
@@ -1155,6 +1156,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1187,6 +1189,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1218,6 +1221,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1249,6 +1253,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1274,6 +1279,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1299,6 +1305,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
