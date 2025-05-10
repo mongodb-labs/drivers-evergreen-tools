@@ -11,7 +11,7 @@ pushd $SCRIPT_DIR
 if [ -f secrets-export.sh ]; then
   . ./activate-authawsvenv.sh
   source secrets-export.sh
-  python ./lib/aws_assign_instance_profile.py
+  python ./lib/aws_assign_instance_profile.py || true
 fi
 
 popd
