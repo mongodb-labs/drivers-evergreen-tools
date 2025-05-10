@@ -22,7 +22,7 @@ def get_secrets(vaults, region, profile):
     session = boto3.Session(profile_name=profile)
     creds = None
     kwargs = dict(region_name=region)
-    if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
+    if True:  # "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
         client = session.client(service_name="sts", **kwargs)
         try:
             # This will only fail locally.
