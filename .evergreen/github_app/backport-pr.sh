@@ -17,7 +17,7 @@ done
 
 # Bootstrap the app.
 source utils.sh
-bootstrap
+bootstrap drivers/release-bot
 
 # Run the app.
 
