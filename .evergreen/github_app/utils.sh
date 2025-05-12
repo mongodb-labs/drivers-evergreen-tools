@@ -7,7 +7,7 @@ function bootstrap() {
     pushd $SCRIPT_DIR > /dev/null
 
     # Bootstrap the secrets.
-    . ./setup-secrets.sh $1
+    . ./setup-secrets.sh ${1:-}
 
     # Install node and activate it.
     bash ../install-node.sh
