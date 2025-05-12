@@ -116,6 +116,11 @@ functions:
         bucket: ${aws_bucket}
         extract_to: ${PROJECT_DIRECTORY}
 
+  "assume role":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${drivers_test_secrets_role}
+
   "exec compile script" :
     - command: shell.exec
       type: test
@@ -335,6 +340,7 @@ functions:
       params:
         binary: bash
         working_dir: "src"
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         env:
           AUTH: ${AUTH}
           SSL: ${SSL}
@@ -372,7 +378,7 @@ functions:
     - command: shell.exec
       type: test
       params:
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         working_dir: "src"
         script: |
           set -eu
@@ -388,7 +394,7 @@ functions:
     - command: shell.exec
       type: test
       params:
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         working_dir: "src"
         script: |
           set -eu
@@ -406,6 +412,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -422,6 +429,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/self-test
@@ -439,6 +447,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -455,7 +464,7 @@ functions:
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -476,7 +485,7 @@ functions:
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -606,6 +615,7 @@ functions:
 
 pre:
   - func: "fetch and prepare resources"
+  - func: "assume role"
 
 post:
   # Skip: uploading the full working directory is not needed by drivers-evergreen-tools.
@@ -1127,6 +1137,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: "bash"
@@ -1153,6 +1164,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1185,6 +1197,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1216,6 +1229,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1247,6 +1261,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1272,6 +1287,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1297,6 +1313,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash

@@ -22,9 +22,13 @@ An example task group running on a Linux EVG host might look like:
   setup_group:
     - func: fetch source
     - func: prepare resources
+    - command: ec2.assume_role
+      params:
+        role_arn: ${aws_test_secrets_role}
     - command: subprocess.exec
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         env:
           CLUSTER_PREFIX: dbx-python
         args:
