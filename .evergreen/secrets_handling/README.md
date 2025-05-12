@@ -33,31 +33,7 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 
 ## Evergreen Secrets Handling
 
-If using a Linux host on Evergreen, the shorthand version of the script can be used to get the credentials, e.g.
-
-```yaml
-- command: subprocess.exec
-  params:
-    working_dir: src
-    binary: bash
-    args:
-      - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
-```
-
-If using one of the convenience scripts in one of the subfolders, or the following to use the
-script in this directory:
-
-```yaml
-- command: subprocess.exec
-  params:
-    working_dir: src
-    binary: bash
-    args:
-      - -c
-      - ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
-```
-
-If using other hosts, the following form should be used:
+First assume the secrets role, and then pass the assumed credentials to a script that will need to access the secrets.
 
 ```yaml
 - command: ec2.assume_role
@@ -67,9 +43,26 @@ If using other hosts, the following form should be used:
   params:
     working_dir: src
     binary: bash
-    include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+    include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
     args:
       - ${DRIVERS_TOOLS}/.evergreen/atlas/setup-secrets.sh
+```
+
+If using one of the convenience scripts in one of the subfolders, or the following to use the
+script in this directory:
+
+```yaml
+- command: ec2.assume_role
+  params:
+    role_arn: ${aws_test_secrets_role}
+- command: subprocess.exec
+  params:
+    working_dir: src
+    binary: bash
+    include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+    args:
+      - -c
+      - ${DRIVERS_TOOLS}/.evergreen/secrets_handling/setup-secrets.sh drivers/enterprise_auth
 ```
 
 ## Local Credential Access
