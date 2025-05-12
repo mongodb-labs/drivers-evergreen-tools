@@ -10,6 +10,10 @@ pushd $DRIVERS_TOOLS/.evergreen/github_app
 . utils.sh
 bootstrap
 bash get-access-token.sh drivers-evergreen-tools mongodb-labs > /dev/null
+
+bootstrap drivers/release-bot
+bash get-access-token.sh mongo-arrow mongodb-labs > /dev/null
+
 popd
 
 make -C ${DRIVERS_TOOLS} test
