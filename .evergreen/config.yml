@@ -306,6 +306,9 @@ functions:
           - SSL
           - STORAGE_ENGINE
           - TOPOLOGY
+          - AWS_ACCESS_KEY_ID
+          - AWS_SECRET_ACCESS_KEY
+          - AWS_SESSION_TOKEN
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
           - -v
@@ -349,6 +352,7 @@ functions:
         binary: bash
         env:
           ENTRYPOINT: /root/test-entrypoint.sh
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: subprocess.exec

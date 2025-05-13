@@ -7,7 +7,25 @@ for your Driver that shares the binary files and communicates with this containe
 
 You will need podman (or Docker) installed and running locally.
 
-# Run Local Server
+## Log in to Docker
+
+Run the `setup.sh` script to log into docker.  This is needed when using the ECR pull-through
+cache that DevProd maintains.  This script can be run after assuming the Drivers test secrets role.  For example:
+
+```yaml
+"docker login":
+  - command: ec2.assume_role
+    params:
+    role_arn: ${drivers_test_secrets_role}
+  - command: subprocess.exec
+    type: test
+    params:
+    binary: bash
+    include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
+    args: ["${DRIVERS_TOOLS}/.evergreen/docker/setup.sh"]
+```
+
+## Run Local Server
 
 To run a local server, change to this directory and run:
 
