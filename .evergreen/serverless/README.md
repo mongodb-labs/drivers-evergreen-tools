@@ -45,9 +45,13 @@ is `serverless` or `serverless_next`:
     setup_group:
       - func: "fetch source"
       - func: "prepare resources"
+      - command: ec2.assume_role
+        params:
+          role_arn: ${aws_test_secrets_role}
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
           env:
             VAULT_NAME: ${VAULT_NAME}
           args: |

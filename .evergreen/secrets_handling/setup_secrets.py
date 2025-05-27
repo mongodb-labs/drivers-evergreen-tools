@@ -15,14 +15,15 @@ import botocore.exceptions
 AWS_ROLE_ARN = "arn:aws:iam::857654397073:role/drivers-test-secrets-role"
 
 
-def get_secrets(vaults, region, profile):
+def get_secrets(vaults, region, profile, assume_role=False):
     """Get the driver secret values."""
     # Handle local credentials.
     profile = profile or os.environ.get("AWS_PROFILE")
     session = boto3.Session(profile_name=profile)
     creds = None
     kwargs = dict(region_name=region)
-    if "AWS_ACCESS_KEY_ID" not in os.environ and not profile:
+    if assume_role or ("AWS_ACCESS_KEY_ID" not in os.environ and not profile):
+        assume_role = True
         client = session.client(service_name="sts", **kwargs)
         try:
             # This will only fail locally.
@@ -49,12 +50,16 @@ def get_secrets(vaults, region, profile):
         for vault in vaults:
             secret = client.get_secret_value(SecretId=vault)["SecretString"]
             secrets.append(secret)
-    except botocore.exceptions.BotoCoreError as e:
+    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+        # Try one more time with assume_role.
+        if not assume_role:
+            return get_secrets(vaults, region, profile, True)
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         print(f"\nERROR: {e}\n")
         sys.exit(1)
     except Exception as e:
+        print("HERE I am also, I caught the exception!", assume_role)
         raise e
 
     # Decrypts secret using the associated KMS key.

@@ -112,6 +112,11 @@ functions:
         bucket: ${aws_bucket}
         extract_to: ${PROJECT_DIRECTORY}
 
+  "assume role":
+    - command: ec2.assume_role
+      params:
+        role_arn: ${drivers_test_secrets_role}
+
   "exec compile script" :
     - command: shell.exec
       type: test
@@ -301,6 +306,9 @@ functions:
           - SSL
           - STORAGE_ENGINE
           - TOPOLOGY
+          - AWS_ACCESS_KEY_ID
+          - AWS_SECRET_ACCESS_KEY
+          - AWS_SESSION_TOKEN
         args:
           - ${DRIVERS_TOOLS}/.evergreen/run-orchestration.sh
           - -v
@@ -328,6 +336,7 @@ functions:
       params:
         binary: bash
         working_dir: "src"
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         env:
           AUTH: ${AUTH}
           SSL: ${SSL}
@@ -343,6 +352,7 @@ functions:
         binary: bash
         env:
           ENTRYPOINT: /root/test-entrypoint.sh
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: subprocess.exec
@@ -361,13 +371,10 @@ functions:
           make test
 
   "run oidc local test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         working_dir: "src"
         script: |
           set -eu
@@ -380,13 +387,10 @@ functions:
           make test
 
   "run oidc docker test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         working_dir: "src"
         script: |
           set -eu
@@ -404,6 +408,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -420,6 +425,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/self-test
@@ -437,6 +443,7 @@ functions:
       type: test
       params:
         shell: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -449,14 +456,11 @@ functions:
           make test
 
   "run oidc k8s atlas test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -473,14 +477,11 @@ functions:
           make test
 
   "run oidc k8s local test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     - command: shell.exec
       type: test
       params:
         shell: bash
-        include_expansions_in_env: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
@@ -546,9 +547,6 @@ functions:
         args: [src/.evergreen/tests/test-github-app.sh]
 
   "run csfle test":
-    - command: ec2.assume_role
-      params:
-        role_arn: ${aws_test_secrets_role}
     # Ensure that we can run setup and teardown commands in the foreground without hanging.
     - command: subprocess.exec
       type: test
@@ -613,6 +611,7 @@ functions:
 
 pre:
   - func: "fetch and prepare resources"
+  - func: "assume role"
 
 post:
   # Skip: uploading the full working directory is not needed by drivers-evergreen-tools.
@@ -702,9 +701,6 @@ tasks:
 
     - name: delete_old_azure_resources
       commands:
-        - command: ec2.assume_role
-          params:
-            role_arn: ${aws_test_secrets_role}
         - command: subprocess.exec
           params:
             binary: bash
@@ -1137,6 +1133,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: "bash"
@@ -1163,6 +1160,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1195,6 +1193,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1226,6 +1225,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: shell.exec
         params:
           shell: bash
@@ -1257,6 +1257,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1282,6 +1283,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
@@ -1307,6 +1309,7 @@ task_groups:
     teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
     setup_group:
       - func: "fetch and prepare resources"
+      - func: "assume role"
       - command: subprocess.exec
         params:
           binary: bash
