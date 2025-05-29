@@ -20,6 +20,7 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 LOGGER = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
+get_key = partial(_get_key, uppercase=False)
 
 
 def _get_local_instance_id():
@@ -69,30 +70,27 @@ def _handle_config():
     try:
         with open(os.path.join(HERE, "..", "aws_e2e_setup.json")) as fid:
             CONFIG = json.load(fid)
-            get_key = partial(_get_key, uppercase=False)
-
     except FileNotFoundError:
         CONFIG = os.environ
-        get_key = partial(_get_key, uppercase=True)
 
     try:
-        os.environ.setdefault(
-            "AWS_ACCESS_KEY_ID", CONFIG[get_key("iam_auth_ec2_instance_account")]
-        )
-        os.environ.setdefault(
-            "AWS_SECRET_ACCESS_KEY",
-            CONFIG[get_key("iam_auth_ec2_instance_secret_access_key")],
-        )
-        return CONFIG[get_key("iam_auth_ec2_instance_profile")]
+        return CONFIG, CONFIG[get_key("iam_auth_ec2_instance_profile")]
     except Exception as e:
         LOGGER.error(e)
-        return ""
+        return CONFIG, ""
 
 
-DEFAULT_ARN = _handle_config()
+CONFIG, DEFAULT_ARN = _handle_config()
 
 
 def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
+    os.environ.setdefault(
+        "AWS_ACCESS_KEY_ID", CONFIG[get_key("iam_auth_ec2_instance_account")]
+    )
+    os.environ.setdefault(
+        "AWS_SECRET_ACCESS_KEY",
+        CONFIG[get_key("iam_auth_ec2_instance_secret_access_key")],
+    )
     if _has_instance_profile():
         LOGGER.warning(
             "IMPORTANT: Found machine already has instance profile, skipping the assignment"

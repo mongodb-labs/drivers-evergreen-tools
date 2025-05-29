@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import subprocess
 import sys
 from functools import partial
@@ -235,6 +236,24 @@ def setup_web_identity():
     return dict(AWS_WEB_IDENTITY_TOKEN_FILE=token_file, AWS_ROLE_ARN=role_arn)
 
 
+def setup_eks_pod_identity():
+    # Write the secrets-export.sh file to the k8s/eks directory.
+    target_dir = HERE.parent / "k8s" / "eks"
+    with (target_dir / "secrets-export.sh").open("w") as fid:
+        for name in "EKS_CLUSTER_NAME", "EKS_SERVICE_ACCOUNT_NAME", "EKS_REGION":
+            value = CONFIG[name]
+            fid.write(f"export {name}={value}\n")
+
+    # Call setup.sh in the k8s/eks directory.
+    subprocess.check_call(["bash", target_dir / "setup.sh"])
+
+    # Set up the MongoDB deployment and run the self tests script.
+    name = f"mongodb-{random.randrange(0, 32767)}"
+    subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
+
+    return dict(MONGODB_URI=f"mongodb://{name}:27017", EKS_APP_NAME=name)
+
+
 def handle_creds(creds: dict):
     if "USER" in creds:
         USER = quote_plus(creds["USER"])
@@ -243,6 +262,8 @@ def handle_creds(creds: dict):
             MONGODB_URI = f"mongodb://{USER}:{PASS}@localhost"
         else:
             MONGODB_URI = f"mongodb://{USER}@localhost"
+    elif "MONGODB_URI" in creds:
+        MONGODB_URI = creds.pop("MONGODB_URI")
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
@@ -285,6 +306,11 @@ def main():
 
     run_web_identity_cmd = sub.add_parser("web-identity", help="Web identity test")
     run_web_identity_cmd.set_defaults(func=setup_web_identity)
+
+    run_eks_pod_identity_cmd = sub.add_parser(
+        "eks-pod-identity", help="EKS pod identity test"
+    )
+    run_eks_pod_identity_cmd.set_defaults(func=setup_eks_pod_identity)
 
     args = parser.parse_args()
     func_name = args.func.__name__.replace("setup_", "").replace("_", "-")

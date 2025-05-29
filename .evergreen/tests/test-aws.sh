@@ -51,6 +51,11 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
+# NOTE: This has to be done last so teardown will tear down the EKS assets.
+bash aws_setup.sh eks-pod-identity
+cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
+rm test-env.sh
+
 bash ./teardown.sh
 
 popd
