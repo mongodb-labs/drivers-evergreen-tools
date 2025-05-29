@@ -52,6 +52,28 @@ cp ${PROJECT_DIRECTORY}/.evergreen/run-mongodb-aws-ecs-test.sh $ECS_SRC_DIR/.eve
 PROJECT_DIRECTORY="$ECS_SRC_DIR" MONGODB_BINARIES="/path/to/mongodb/bin" $AUTH_AWS_DIR/aws_setup.sh ecs
 ```
 
+## EKS Test Process
+
+The EKS Pod Identity test variant also requires a slightly different approach, since we need to run the code in a
+kubernetes pod.
+
+Set up a `run-mongodb-aws-eks-test.sh` script that will run on the pod.  This script should be
+copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.  The driver code and test code should
+be compiled if necessary, and then compressed into a `src.tgz` file that will be expanded and used in
+the pod.
+
+```bash
+# Set up the target directory.
+EKS_SRC_DIR=${DRIVERS_TOOLS}/.evergreen/auth_aws/src
+mkdir -p $EKS_SRC_DIR/.evergreen
+# Move the test script to the correct location.
+cp ${PROJECT_DIRECTORY}/.evergreen/run-mongodb-aws-eks-test.sh $EKS_SRC_DIR/.evergreen
+# Driver-specific - compile/build code if needed.
+# Driver-specific - move artifacts needed for test to $EKS_SRC_DIR
+# Run the test
+PROJECT_DIRECTORY="$EKS_SRC_DIR" $AUTH_AWS_DIR/aws_setup.sh eks-pod-identity
+```
+
 ## Deprecated Scripts
 
 The top-level JavaScript files in this directory are deprecated and no longer needed when
