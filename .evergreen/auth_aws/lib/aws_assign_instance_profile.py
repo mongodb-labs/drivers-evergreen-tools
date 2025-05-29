@@ -84,13 +84,14 @@ CONFIG, DEFAULT_ARN = _handle_config()
 
 
 def _assign_instance_policy(iam_instance_arn=DEFAULT_ARN):
-    os.environ.setdefault(
-        "AWS_ACCESS_KEY_ID", CONFIG[get_key("iam_auth_ec2_instance_account")]
-    )
-    os.environ.setdefault(
-        "AWS_SECRET_ACCESS_KEY",
-        CONFIG[get_key("iam_auth_ec2_instance_secret_access_key")],
-    )
+    if get_key("iam_auth_ec2_instance_account") in CONFIG:
+        os.environ.setdefault(
+            "AWS_ACCESS_KEY_ID", CONFIG[get_key("iam_auth_ec2_instance_account")]
+        )
+        os.environ.setdefault(
+            "AWS_SECRET_ACCESS_KEY",
+            CONFIG[get_key("iam_auth_ec2_instance_secret_access_key")],
+        )
     if _has_instance_profile():
         LOGGER.warning(
             "IMPORTANT: Found machine already has instance profile, skipping the assignment"
