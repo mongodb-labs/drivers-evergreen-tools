@@ -82,7 +82,9 @@ pushd $_SCRIPT_DIR
 # Set up the server.
 echo "Setting up the server..."
 set -x
-MONGODB_POD=$(kubectl get pods -l app=${NAME} -o jsonpath='{.items[0].metadata.name}' )
+MONGODB_POD=$(kubectl get pods -l app=${NAME} -o jsonpath='{.items[0].metadata.name}')
+# Wait for the pod to be ready.
+kubectl wait --for=condition=Ready pod/${MONGODB_POD} --timeout=2000s
 kubectl exec ${MONGODB_POD} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
 kubectl cp ./eks_pod_setup_server.js ${MONGODB_POD}:/tmp/test/setup_server.js
 kubectl exec ${MONGODB_POD} -- mongosh /tmp/test/setup_server.js
