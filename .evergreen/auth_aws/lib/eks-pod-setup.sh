@@ -81,7 +81,6 @@ pushd $_SCRIPT_DIR
 
 # Set up the server.
 echo "Setting up the server..."
-set -x
 MONGODB_POD=$(kubectl get pods -l app=${NAME} -o jsonpath='{.items[0].metadata.name}')
 # Wait for the pod to be ready.
 kubectl wait --for=condition=Ready pod/${MONGODB_POD} --timeout=2000s
@@ -92,10 +91,30 @@ echo "Setting up the server... done."
 
 # Run the self test.
 echo "Running self test on eks pod..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
-kubectl cp ./eks-pod-run-self-test.sh ${K8S_POD_NAME}:/tmp/test/run-self-test.sh
-kubectl cp ./eks_pod_self_test.py ${K8S_POD_NAME}:/tmp/test/test.py
-kubectl exec ${K8S_POD_NAME} -- /tmp/test/run-self-test.sh $MONGODB_URI
+kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/self-test && mkdir /tmp/self-test"
+kubectl cp ./eks-pod-run-self-test.sh ${K8S_POD_NAME}:/tmp/self-test/run-self-test.sh
+kubectl cp ./eks_pod_self_test.py ${K8S_POD_NAME}:/tmp/self-test/test.py
+kubectl exec ${K8S_POD_NAME} -- /tmp/self-test/run-self-test.sh $MONGODB_URI
 echo "Running self test on eks pod... done."
+
+popd
+
+# Set up driver test.
+echo "Setting up driver test files..."
+pushd $PROJECT_DIRECTORY
+kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
+if [ -f "src.tgz" ]; then
+  kubectl cp src.tgz ${K8S_POD_NAME}:/tmp/drivers-test.tgz
+  kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && tar -xf drivers-test.tgz -C test"
+fi
+echo "Running the driver test command... done."
+echo "export MONGODB_URI=${MONGODB_URI}" >> secrets-export.sh
+kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/test/secrets-export.sh
+echo "Setting up driver test files... done."
+
+# Run the driver test.
+echo "Running the driver test command..."
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash run-mongodb-aws-eks-test.sh"
+echo "Running the driver test command... done."
 
 popd

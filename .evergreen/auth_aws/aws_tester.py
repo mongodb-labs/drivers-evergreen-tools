@@ -237,6 +237,13 @@ def setup_web_identity():
 
 
 def setup_eks_pod_identity():
+    if "PROJECT_DIRECTORY" not in os.environ:
+        raise ValueError("Please define a PROJECT_DIRECTORY")
+
+    test_path = Path(os.environ["PROJECT_DIRECTORY"]) / "run-mongodb-aws-eks-test.sh"
+    if not test_path.exists():
+        raise ValueError(f"Please add the file {test_path}!")
+
     # Write the secrets-export.sh file to the k8s/eks directory.
     target_dir = HERE.parent / "k8s" / "eks"
     with (target_dir / "secrets-export.sh").open("w") as fid:
@@ -251,7 +258,7 @@ def setup_eks_pod_identity():
     name = f"mongodb-{random.randrange(0, 32767)}"
     subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
 
-    return dict(MONGODB_URI=f"mongodb://{name}:27017", EKS_APP_NAME=name)
+    return dict(EKS_APP_NAME=name)
 
 
 def handle_creds(creds: dict):
