@@ -35,7 +35,8 @@ if [ -f $SCRIPT_DIR/test-env.sh ]; then
     rm $SCRIPT_DIR/test-env.sh
 fi
 
-PROJECT_DIRECTORY=$PROJECT_DIRECTORY python aws_tester.py "$@"
+export PROJECT_DIRECTORY
+python aws_tester.py "$@"
 
 # Remove any AWS creds that might be set in the parent env.
 if [ $1 == "eks" ]; then

@@ -251,19 +251,9 @@ def setup_eks_pod_identity():
     if not test_path.exists():
         raise ValueError(f"Please add the file {test_path}!")
 
-    # Write the secrets-export.sh file to the k8s/eks directory.
-    target_dir = HERE.parent / "k8s" / "eks"
-    with (target_dir / "secrets-export.sh").open("w") as fid:
-        for name in "EKS_CLUSTER_NAME", "EKS_SERVICE_ACCOUNT_NAME", "EKS_REGION":
-            value = CONFIG[name]
-            fid.write(f"export {name}={value}\n")
-
     # Set the name for the deployment.
     name = f"mongodb-{random.randrange(0, 32767)}"
     try:
-        # Call setup.sh in the k8s/eks directory.
-        subprocess.check_call(["bash", target_dir / "setup.sh"])
-        # Set up the MongoDB deployment and run the self tests script.
         subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
     finally:
         # Tear down the EKS assets.

@@ -5,7 +5,18 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
 _SCRIPT_DIR=$SCRIPT_DIR
-source $DRIVERS_TOOLS/.evergreen/k8s/eks/secrets-export.sh
+
+# Write the secrets-export.sh file to the k8s/eks directory.
+EKS_DIR="$SCRIPT_DIR/../../k8s/eks"
+
+cat <<EOF >> $EKS_DIR/secrets-export.sh
+export EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
+export EKS_SERVICE_ACCOUNT_NAME=$EKS_SERVICE_ACCOUNT_NAME
+export EKS_REGION=$EKS_REGION
+EOF
+
+bash $EKS_DIR/setup.sh
+source $EKS_DIR/secrets-export.sh
 
 NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
