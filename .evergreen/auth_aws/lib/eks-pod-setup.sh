@@ -103,7 +103,7 @@ echo "Running self test on eks pod... done."
 
 # Set up driver test.
 echo "Setting up driver test files..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test"
+kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/src"
 kubectl cp $PROJECT_DIRECTORY ${K8S_POD_NAME}:/tmp/test/
 echo "Setting up driver test files... done."
 
@@ -114,5 +114,5 @@ echo "Setting up driver test files... done."
 
 # Run the driver test.
 echo "Running the driver test command..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash .evergreen/run-mongodb-aws-eks-test.sh $MONGODB_URI"
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && source src/secrets-export.sh && bash src/.evergreen/run-mongodb-aws-eks-test.sh $MONGODB_URI"
 echo "Running the driver test command... done."

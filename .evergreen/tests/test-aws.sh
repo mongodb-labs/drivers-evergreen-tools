@@ -51,7 +51,6 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
-echo "HELLO, $PROJECT_DIRECTORY"
 echo "ls" >> $PROJECT_DIRECTORY/.evergreen/run-mongodb-aws-eks-test.sh
 bash aws_setup.sh eks
 rm test-env.sh
