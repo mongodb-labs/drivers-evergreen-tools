@@ -36,6 +36,7 @@ if [ -f $SCRIPT_DIR/test-env.sh ]; then
 fi
 
 echo "HELLO2, $PROJECT_DIRECTORY"
+python -c "import os;print(sorted(os.environ))"
 python aws_tester.py "$@"
 
 # Remove any AWS creds that might be set in the parent env.
