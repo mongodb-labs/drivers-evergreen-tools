@@ -14,6 +14,8 @@ from functools import partial
 from pathlib import Path
 from urllib.parse import quote_plus
 
+print("HELLO3", sorted(os.environ))
+
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
