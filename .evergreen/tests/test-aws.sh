@@ -51,11 +51,10 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
-# NOTE: This has to be done last so teardown will tear down the EKS assets.
 mkdir src
 echo "ls" >> src/run-mongodb-aws-eks-test.sh
-PROJECT_DIRECTORY=$(pwd)/src bash aws_setup.sh eks-pod-identity
-cat test-env.sh | grep -q EKS_APP_NAME
+echo "PROJECT_DIRECTORY=$(pwd)/src" >> $DRIVERS_TOOLS/.env
+bash aws_setup.sh eks-pod-identity
 rm test-env.sh
 
 bash ./teardown.sh

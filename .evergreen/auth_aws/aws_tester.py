@@ -251,14 +251,18 @@ def setup_eks_pod_identity():
             value = CONFIG[name]
             fid.write(f"export {name}={value}\n")
 
-    # Call setup.sh in the k8s/eks directory.
-    subprocess.check_call(["bash", target_dir / "setup.sh"])
-
-    # Set up the MongoDB deployment and run the self tests script.
+    # Set the name for the deployment.
     name = f"mongodb-{random.randrange(0, 32767)}"
-    subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
+    try:
+        # Call setup.sh in the k8s/eks directory.
+        subprocess.check_call(["bash", target_dir / "setup.sh"])
+        # Set up the MongoDB deployment and run the self tests script.
+        subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
+    finally:
+        # Tear down the EKS assets.
+        subprocess.check_call(["bash", HERE / "lib" / "eks-pod-teardown.sh", name])
 
-    return dict(EKS_APP_NAME=name)
+    return dict()
 
 
 def handle_creds(creds: dict):
