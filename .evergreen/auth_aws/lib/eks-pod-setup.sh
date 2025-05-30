@@ -109,7 +109,7 @@ echo "Setting up driver test files... done."
 
 echo "Running the driver test command... done."
 echo "export MONGODB_URI=${MONGODB_URI}" >> secrets-export.sh
-kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/test/secrets-export.sh
+kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/src/secrets-export.sh
 echo "Setting up driver test files... done."
 
 # Run the driver test.
