@@ -67,7 +67,7 @@ cp ${PROJECT_DIRECTORY}/.evergreen/run-mongodb-aws-eks-test.sh $EKS_SRC_DIR/.eve
 # Driver-specific - compile/build code if needed.
 # Driver-specific - move artifacts needed for test to $EKS_SRC_DIR
 # Run the test
-PROJECT_DIRECTORY="$EKS_SRC_DIR" $AUTH_AWS_DIR/aws_setup.sh eks-pod-identity
+PROJECT_DIRECTORY="$EKS_SRC_DIR" $AUTH_AWS_DIR/aws_setup.sh eks
 ```
 
 ## Deprecated Scripts

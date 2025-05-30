@@ -22,8 +22,8 @@ if [ ! -f "./secrets-export.sh" ]; then
 fi
 
 # Remove any AWS creds that might be set in the parent env.
-# We will need those creds for eks-pod-identity to set up the cluster.
-if [ $1 != "eks-pod-identity" ]; then
+# We will need those creds for eks to set up the cluster.
+if [ $1 != "eks" ]; then
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN
@@ -40,7 +40,7 @@ python -c "import os;print(sorted(os.environ))"
 python aws_tester.py "$@"
 
 # Remove any AWS creds that might be set in the parent env.
-if [ $1 == "eks-pod-identity" ]; then
+if [ $1 == "eks" ]; then
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN
