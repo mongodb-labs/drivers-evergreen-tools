@@ -16,6 +16,7 @@ source $EKS_DIR/secrets-export.sh
 NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
 APP_LABEL=mongodb-deployment
+MONGODB_VERSION=${MONGODB_VERSION:-latest}
 
 . ../../ensure-binary.sh kubectl
 
@@ -51,7 +52,7 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: mongodb/mongodb-enterprise-server:latest
+        image: mongodb/mongodb-enterprise-server:${MONGODB_VERSION}
         ports:
         - containerPort: 27017
         env:
