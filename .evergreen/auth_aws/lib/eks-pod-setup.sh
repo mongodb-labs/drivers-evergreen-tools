@@ -104,7 +104,7 @@ echo "Running self test on eks pod... done."
 # Set up driver test.
 echo "Setting up driver test files..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/src"
-kubectl cp $PROJECT_DIRECTORY ${K8S_POD_NAME}:/tmp/test/
+kubectl cp $PROJECT_DIRECTORY ${K8S_POD_NAME}:/tmp/src/
 echo "Setting up driver test files... done."
 
 echo "Running the driver test command... done."
