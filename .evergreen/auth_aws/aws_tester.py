@@ -240,7 +240,11 @@ def setup_eks_pod_identity():
     if "PROJECT_DIRECTORY" not in os.environ:
         raise ValueError("Please define a PROJECT_DIRECTORY")
 
-    test_path = Path(os.environ["PROJECT_DIRECTORY"]) / "run-mongodb-aws-eks-test.sh"
+    test_path = (
+        Path(os.environ["PROJECT_DIRECTORY"])
+        / ".evergreen"
+        / "run-mongodb-aws-eks-test.sh"
+    )
     if not test_path.exists():
         raise ValueError(f"Please add the file {test_path}!")
 
