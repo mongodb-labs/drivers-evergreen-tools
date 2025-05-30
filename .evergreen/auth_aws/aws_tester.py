@@ -41,7 +41,7 @@ try:
         CONFIG = json.load(fid)
         get_key = partial(_get_key, uppercase=False)
 except FileNotFoundError:
-    CONFIG = os.environ
+    CONFIG = os.environ.copy()
     get_key = partial(_get_key, uppercase=True)
 
 
