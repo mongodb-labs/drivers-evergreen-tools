@@ -24,7 +24,6 @@ fi
 # Remove any AWS creds that might be set in the parent env.
 # We will need those creds for eks to set up the cluster.
 if [ $1 != "eks" ]; then
-    echo "UNSETTING THE VARIABLES"
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN
@@ -36,7 +35,6 @@ if [ -f $SCRIPT_DIR/test-env.sh ]; then
     rm $SCRIPT_DIR/test-env.sh
 fi
 
-echo "AWS KEY?: $AWS_ACCESS_KEY_ID"
 PROJECT_DIRECTORY=$PROJECT_DIRECTORY python aws_tester.py "$@"
 
 # Remove any AWS creds that might be set in the parent env.
