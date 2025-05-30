@@ -75,8 +75,7 @@ def _handle_config():
 
     try:
         return CONFIG, CONFIG[get_key("iam_auth_ec2_instance_profile")]
-    except Exception as e:
-        LOGGER.error(e)
+    except Exception:
         return CONFIG, ""
 
 
