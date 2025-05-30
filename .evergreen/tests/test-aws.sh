@@ -52,7 +52,7 @@ cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 echo "ls" >> $PROJECT_DIRECTORY/.evergreen/run-mongodb-aws-eks-test.sh
-bash aws_setup.sh eks-pod-identity
+bash aws_setup.sh eks
 rm test-env.sh
 
 bash ./teardown.sh
