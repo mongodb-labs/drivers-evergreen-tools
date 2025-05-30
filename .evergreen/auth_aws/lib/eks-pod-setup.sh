@@ -17,7 +17,7 @@ NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
 APP_LABEL=mongodb-deployment
 
-. $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+. ../../ensure-binary.sh kubectl
 
 # Delete mongodb servers over one hour old in case they were not torn down.
 echo "Deleting old mongodb servers..."
