@@ -254,10 +254,14 @@ def setup_eks_pod_identity():
     # Set the name for the deployment.
     name = f"mongodb-{random.randrange(0, 32767)}"
     try:
-        subprocess.check_call(["bash", HERE / "lib" / "eks-pod-setup.sh", name])
+        subprocess.check_call(
+            ["bash", HERE / "lib" / "eks-pod-setup.sh", name], cwd=HERE / "lib"
+        )
     finally:
         # Tear down the EKS assets.
-        subprocess.check_call(["bash", HERE / "lib" / "eks-pod-teardown.sh", name])
+        subprocess.check_call(
+            ["bash", HERE / "lib" / "eks-pod-teardown.sh", name], cwd=HERE / "lib"
+        )
 
     return dict()
 

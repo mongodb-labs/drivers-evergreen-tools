@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/../../handle-paths.sh
-
-_SCRIPT_DIR=$SCRIPT_DIR
-
 # Write the secrets-export.sh file to the k8s/eks directory.
-EKS_DIR="$SCRIPT_DIR/../../k8s/eks"
+EKS_DIR="../../k8s/eks"
 
 cat <<EOF >> $EKS_DIR/secrets-export.sh
 export EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME
@@ -88,8 +83,6 @@ spec:
   type: ClusterIP
 EOF
 
-pushd $_SCRIPT_DIR
-
 # Set up the server.
 echo "Setting up the server..."
 MONGODB_POD=$(kubectl get pods -l app=${NAME} -o jsonpath='{.items[0].metadata.name}')
@@ -107,8 +100,6 @@ kubectl cp ./eks-pod-run-self-test.sh ${K8S_POD_NAME}:/tmp/self-test/run-self-te
 kubectl cp ./eks_pod_self_test.py ${K8S_POD_NAME}:/tmp/self-test/test.py
 kubectl exec ${K8S_POD_NAME} -- /tmp/self-test/run-self-test.sh $MONGODB_URI
 echo "Running self test on eks pod... done."
-
-popd
 
 # Set up driver test.
 echo "Setting up driver test files..."
