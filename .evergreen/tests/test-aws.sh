@@ -51,9 +51,7 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
-mkdir src
-echo "ls" >> src/run-mongodb-aws-eks-test.sh
-export PROJECT_DIRECTORY=$PWD/src
+echo "ls" >> $PROJECT_DIRECTORY/.evergreen/run-mongodb-aws-eks-test.sh
 bash aws_setup.sh eks-pod-identity
 rm test-env.sh
 

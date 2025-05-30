@@ -101,12 +101,10 @@ popd
 
 # Set up driver test.
 echo "Setting up driver test files..."
-pushd $PROJECT_DIRECTORY
-kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
-if [ -f "src.tgz" ]; then
-  kubectl cp src.tgz ${K8S_POD_NAME}:/tmp/drivers-test.tgz
-  kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && tar -xf drivers-test.tgz -C test"
-fi
+kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test"
+kubectl cp $PROJECT_DIRECTORY ${K8S_POD_NAME}:/tmp/test/
+echo "Setting up driver test files... done."
+
 echo "Running the driver test command... done."
 echo "export MONGODB_URI=${MONGODB_URI}" >> secrets-export.sh
 kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/test/secrets-export.sh
@@ -114,7 +112,7 @@ echo "Setting up driver test files... done."
 
 # Run the driver test.
 echo "Running the driver test command..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash run-mongodb-aws-eks-test.sh"
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash .evergreen/run-mongodb-aws-eks-test.sh"
 echo "Running the driver test command... done."
 
 popd

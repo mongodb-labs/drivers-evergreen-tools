@@ -318,9 +318,7 @@ def main():
     run_web_identity_cmd = sub.add_parser("web-identity", help="Web identity test")
     run_web_identity_cmd.set_defaults(func=setup_web_identity)
 
-    run_eks_pod_identity_cmd = sub.add_parser(
-        "eks-pod-identity", help="EKS pod identity test"
-    )
+    run_eks_pod_identity_cmd = sub.add_parser("eks", help="EKS pod identity test")
     run_eks_pod_identity_cmd.set_defaults(func=setup_eks_pod_identity)
 
     args = parser.parse_args()

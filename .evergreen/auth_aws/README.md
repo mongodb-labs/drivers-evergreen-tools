@@ -36,9 +36,7 @@ for setting up local secrets handling are in the wiki page.
 The ECS test variant requires a slightly different approach, since we need to run the code in a container.
 
 Set up a `run-mongodb-aws-ecs-test.sh` script that will run on the container.  This script should be
-copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.  The driver code and test code should
-be compiled if necessary, and then compressed into a `src.tgz` file that will be expanded and used in
-the container.
+copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.
 
 ```bash
 # Set up the target directory.
@@ -58,9 +56,7 @@ The EKS Pod Identity test variant also requires a slightly different approach, s
 kubernetes pod.
 
 Set up a `run-mongodb-aws-eks-test.sh` script that will run on the pod.  This script should be
-copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.  The driver code and test code should
-be compiled if necessary, and then compressed into a `src.tgz` file that will be expanded and used in
-the pod.
+copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.
 
 ```bash
 # Set up the target directory.
