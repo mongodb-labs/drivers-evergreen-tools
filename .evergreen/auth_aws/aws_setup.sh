@@ -24,6 +24,7 @@ fi
 # Remove any AWS creds that might be set in the parent env.
 # We will need those creds for eks to set up the cluster.
 if [ $1 != "eks" ]; then
+    echo "UNSETTING THE VARIABLES"
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN

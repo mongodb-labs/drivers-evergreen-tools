@@ -5,7 +5,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../../handle-paths.sh
 
 _SCRIPT_DIR=$SCRIPT_DIR
-source $SCRIPT_DIR/../../k8s/eks/secrets-export.sh
+source $DRIVERS_TOOLS/.evergreen/k8s/eks/secrets-export.sh
 
 NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
