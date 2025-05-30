@@ -114,5 +114,5 @@ echo "Setting up driver test files... done."
 
 # Run the driver test.
 echo "Running the driver test command..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash .evergreen/run-mongodb-aws-eks-test.sh"
+kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && bash .evergreen/run-mongodb-aws-eks-test.sh $MONGODB_URI"
 echo "Running the driver test command... done."
