@@ -240,7 +240,6 @@ def setup_web_identity():
 
 
 def setup_eks_pod_identity():
-    print(sorted(os.environ))
     if "PROJECT_DIRECTORY" not in os.environ:
         raise ValueError("Please define a PROJECT_DIRECTORY")
 
