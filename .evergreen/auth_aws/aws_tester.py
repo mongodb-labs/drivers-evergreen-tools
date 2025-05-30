@@ -14,8 +14,6 @@ from functools import partial
 from pathlib import Path
 from urllib.parse import quote_plus
 
-print("HELLO3", sorted(os.environ))
-
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
@@ -29,9 +27,6 @@ def join(*parts):
 
 
 sys.path.insert(0, str(HERE / "lib"))
-from aws_assign_instance_profile import _assign_instance_policy
-from aws_assume_role import _assume_role
-from aws_assume_web_role import _assume_role_with_web_identity
 from util import get_key as _get_key
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
@@ -75,6 +70,8 @@ def create_user(user, kwargs):
 
 
 def setup_assume_role():
+    from aws_assume_role import _assume_role
+
     # Assume the role to get temp creds.
     os.environ["AWS_ACCESS_KEY_ID"] = CONFIG[get_key("iam_auth_assume_aws_account")]
     os.environ["AWS_SECRET_ACCESS_KEY"] = CONFIG[
@@ -103,6 +100,8 @@ def setup_assume_role():
 
 def setup_ec2():
     # Create the user.
+    from aws_assign_instance_profile import _assign_instance_policy
+
     _assign_instance_policy()
     os.environ.pop("AWS_ACCESS_KEY_ID", None)
     os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
@@ -182,6 +181,8 @@ def setup_env_creds():
 
 
 def setup_web_identity():
+    from aws_assume_web_role import _assume_role_with_web_identity
+
     # Unassign the instance profile.
     env = dict(
         AWS_ACCESS_KEY_ID=CONFIG[get_key("iam_auth_ec2_instance_account")],
