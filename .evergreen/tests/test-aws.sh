@@ -53,7 +53,7 @@ rm test-env.sh
 
 mkdir src
 echo "ls" >> src/run-mongodb-aws-eks-test.sh
-echo "PROJECT_DIRECTORY=$(pwd)/src" >> $DRIVERS_TOOLS/.env
+export PROJECT_DIRECTORY=$PWD/src
 bash aws_setup.sh eks-pod-identity
 rm test-env.sh
 
