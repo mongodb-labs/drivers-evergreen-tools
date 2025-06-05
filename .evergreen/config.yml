@@ -704,6 +704,7 @@ tasks:
         - command: subprocess.exec
           params:
             binary: bash
+            include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
             args:
               - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/delete_old_azure_resources.sh
 
@@ -1132,6 +1133,7 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           env:
             CLUSTER_PREFIX: dbx-drivers-tools
           args:
@@ -1165,6 +1167,7 @@ task_groups:
       - command: shell.exec
         params:
           shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
             # ensure HEAD points to current commit
@@ -1197,6 +1200,7 @@ task_groups:
       - command: shell.exec
         params:
           shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
             # ensure HEAD points to current commit
@@ -1229,6 +1233,7 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure_func/setup.sh
     teardown_group:
@@ -1255,6 +1260,7 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
@@ -1281,6 +1287,7 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
