@@ -1138,7 +1138,7 @@ task_groups:
       - command: subprocess.exec
         params:
           binary: "bash"
-          include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD", "SERVERLESS_ATLAS_USER", AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD", "SERVERLESS_ATLAS_USER"]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
     teardown_group:
