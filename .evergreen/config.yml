@@ -1002,11 +1002,6 @@ tasks:
             LOAD_BALANCER: "true"
         - func: "run tests"
 
-    - name: "test-serverless"
-      tags: ["serverless"]
-      commands:
-        - func: "run tests"
-
     - name: "test-atlas"
       tags: ["atlas"]
       commands:
@@ -1125,33 +1120,6 @@ tasks:
 # }}}
 
 task_groups:
-
-  - name: serverless_task_group
-    setup_group_can_fail_task: true
-    setup_group_timeout_secs: 1800 # 30 minutes
-    teardown_task_can_fail_task: true
-    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
-    setup_group:
-      - func: "fetch and prepare resources"
-      - func: "assume role"
-      - command: subprocess.exec
-        params:
-          binary: "bash"
-          include_expansions_in_env: ["SERVERLESS_ATLAS_PASSWORD", "SERVERLESS_ATLAS_USER"]
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/serverless/setup.sh
-    teardown_group:
-      - command: subprocess.exec
-        params:
-          binary: "bash"
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/serverless/teardown.sh
-      - func: "teardown assets"
-      - func: "upload logs"
-      - func: "upload test results"
-      - func: "cleanup"
-    tasks:
-      - ".serverless"
 
   - name: test_atlas_task_group
     setup_group_can_fail_task: true
@@ -1668,14 +1636,6 @@ buildvariants:
   display_name: "Atlas ${os-requires-50}"
   tasks:
     - test_atlas_task_group
-
-- matrix_name: "serverless"
-  matrix_spec:
-    os-requires-50:
-      - "ubuntu-20.04"
-  display_name: "Serverless ${os-requires-50}"
-  tasks:
-    - serverless_task_group
 
 - name: delete_old_azure_resources
   display_name: "Delete old Azure resources"

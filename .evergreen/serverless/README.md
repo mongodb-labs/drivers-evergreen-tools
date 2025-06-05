@@ -2,6 +2,8 @@
 
 The scripts in this directory are used to test MongoDB Serverless instances on Atlas.
 
+Note: This functionality is deprecated and will be removed after DRIVERS-3115 is complete.
+
 ## Prerequisites
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
