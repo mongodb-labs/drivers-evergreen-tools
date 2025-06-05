@@ -53,7 +53,7 @@ PROJECT_DIRECTORY="$ECS_SRC_DIR" MONGODB_BINARIES="/path/to/mongodb/bin" $AUTH_A
 ## EKS Test Process
 
 The EKS Pod Identity test variant also requires a slightly different approach, since we need to run the code in a
-kubernetes pod.  The MongoDB server version running in the k8s cluster can be set with `MONGODB_VERSION`.
+kubernetes pod. The MongoDB server version running in the k8s cluster can be set with `MONGODB_VERSION`.
 
 Set up a `run-mongodb-aws-eks-test.sh` script that will run on the pod.  This script should be
 copied to `${DRIVERS_TOOLS}/.evergreen/auth_aws/src/.evergreen`.
