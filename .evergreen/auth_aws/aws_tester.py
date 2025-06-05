@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import subprocess
 import sys
 from functools import partial
@@ -26,9 +27,6 @@ def join(*parts):
 
 
 sys.path.insert(0, str(HERE / "lib"))
-from aws_assign_instance_profile import _assign_instance_policy
-from aws_assume_role import _assume_role
-from aws_assume_web_role import _assume_role_with_web_identity
 from util import get_key as _get_key
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
@@ -43,7 +41,7 @@ try:
         CONFIG = json.load(fid)
         get_key = partial(_get_key, uppercase=False)
 except FileNotFoundError:
-    CONFIG = os.environ
+    CONFIG = os.environ.copy()
     get_key = partial(_get_key, uppercase=True)
 
 
@@ -72,6 +70,8 @@ def create_user(user, kwargs):
 
 
 def setup_assume_role():
+    from aws_assume_role import _assume_role
+
     # Assume the role to get temp creds.
     os.environ["AWS_ACCESS_KEY_ID"] = CONFIG[get_key("iam_auth_assume_aws_account")]
     os.environ["AWS_SECRET_ACCESS_KEY"] = CONFIG[
@@ -100,6 +100,8 @@ def setup_assume_role():
 
 def setup_ec2():
     # Create the user.
+    from aws_assign_instance_profile import _assign_instance_policy
+
     _assign_instance_policy()
     os.environ.pop("AWS_ACCESS_KEY_ID", None)
     os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
@@ -179,6 +181,8 @@ def setup_env_creds():
 
 
 def setup_web_identity():
+    from aws_assume_web_role import _assume_role_with_web_identity
+
     # Unassign the instance profile.
     env = dict(
         AWS_ACCESS_KEY_ID=CONFIG[get_key("iam_auth_ec2_instance_account")],
@@ -235,6 +239,33 @@ def setup_web_identity():
     return dict(AWS_WEB_IDENTITY_TOKEN_FILE=token_file, AWS_ROLE_ARN=role_arn)
 
 
+def setup_eks_pod_identity():
+    if "PROJECT_DIRECTORY" not in os.environ:
+        raise ValueError("Please define a PROJECT_DIRECTORY")
+
+    test_path = (
+        Path(os.environ["PROJECT_DIRECTORY"])
+        / ".evergreen"
+        / "run-mongodb-aws-eks-test.sh"
+    )
+    if not test_path.exists():
+        raise ValueError(f"Please add the file {test_path}!")
+
+    # Set the name for the deployment.
+    name = f"mongodb-{random.randrange(0, 32767)}"
+    try:
+        subprocess.check_call(
+            ["bash", HERE / "lib" / "eks-pod-setup.sh", name], cwd=HERE / "lib"
+        )
+    finally:
+        # Tear down the EKS assets.
+        subprocess.check_call(
+            ["bash", HERE / "lib" / "eks-pod-teardown.sh", name], cwd=HERE / "lib"
+        )
+
+    return dict()
+
+
 def handle_creds(creds: dict):
     if "USER" in creds:
         USER = quote_plus(creds["USER"])
@@ -243,6 +274,8 @@ def handle_creds(creds: dict):
             MONGODB_URI = f"mongodb://{USER}:{PASS}@localhost"
         else:
             MONGODB_URI = f"mongodb://{USER}@localhost"
+    elif "MONGODB_URI" in creds:
+        MONGODB_URI = creds.pop("MONGODB_URI")
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
@@ -285,6 +318,9 @@ def main():
 
     run_web_identity_cmd = sub.add_parser("web-identity", help="Web identity test")
     run_web_identity_cmd.set_defaults(func=setup_web_identity)
+
+    run_eks_pod_identity_cmd = sub.add_parser("eks", help="EKS pod identity test")
+    run_eks_pod_identity_cmd.set_defaults(func=setup_eks_pod_identity)
 
     args = parser.parse_args()
     func_name = args.func.__name__.replace("setup_", "").replace("_", "-")
