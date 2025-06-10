@@ -35,4 +35,7 @@ az login --service-principal \
     --password "$AZUREKMS_SECRET" \
     --tenant "$AZUREKMS_TENANTID" \
     >/dev/null
+
+echo "AZUREKMS_CLIENTID=$AZUREKMS_CLIENTID"
+echo "AZUREKMS_TENANTID=$AZUREKMS_TENANTID"
 echo "Log in to azure ... end"
