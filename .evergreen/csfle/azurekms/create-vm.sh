@@ -42,7 +42,7 @@ az vm create \
     >/dev/null
 
 # If applicable, set the machine size.
-if [ -n "$AZUREKMS_MACHINESIZE" ]; then
+if [ -n "${AZUREKMS_MACHINESIZE:-}" ]; then
     az vm resize -g "$AZUREKMS_RESOURCEGROUP" -n "$AZUREKMS_VMNAME" --size "$AZUREKMS_MACHINESIZE"
 fi
 
