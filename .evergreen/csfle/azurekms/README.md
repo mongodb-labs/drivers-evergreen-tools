@@ -23,6 +23,8 @@ echo "LATEST_DEBIAN_URN=$LATEST_DEBIAN_URN"
 ```
 The URN may be passed as `AZUREKMS_IMAGE`.
 
+If you need a larger Azure VM, set `AZUREKMS_MACHINESIZE` to a larger [size](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview).
+
 # Usage with AWS Vault
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
