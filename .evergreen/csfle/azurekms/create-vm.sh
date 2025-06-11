@@ -41,6 +41,11 @@ az vm create \
     --assign-identity $AZUREKMS_IDENTITY \
     >/dev/null
 
+# If applicable, set the machine size.
+if [ -n "${AZUREKMS_MACHINESIZE:-}" ]; then
+    az vm resize -g "$AZUREKMS_RESOURCEGROUP" -n "$AZUREKMS_VMNAME" --size "$AZUREKMS_MACHINESIZE"
+fi
+
 if [ "$(uname -s)" = "Darwin" ]; then
     SHUTDOWN_TIME=$(date -u -v+1H +"%H%M")
 else
