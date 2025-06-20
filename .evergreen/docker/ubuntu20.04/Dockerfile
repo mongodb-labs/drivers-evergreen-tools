@@ -1,4 +1,5 @@
-FROM 901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/library/ubuntu:20.04
+ARG IMAGE_NAME=ubuntu:20.04
+FROM $IMAGE_NAME
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
   apt-get -qq update && apt-get -qq -y install --no-install-recommends \
