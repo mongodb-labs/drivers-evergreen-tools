@@ -99,6 +99,7 @@ func ListenAndServe(opts ...Option) error {
 		if err != nil {
 			return fmt.Errorf("failed to accept connection: %v", err)
 		}
+
 		go handleConnection(clientConn, targetConnInfo)
 	}
 }
@@ -111,20 +112,19 @@ func handleConnection(clientConn net.Conn, targetConnInfo connInfo) {
 
 	targetCS := targetConnInfo.cs
 
-	// Let the driver build a clientoptions for us
+	// Let the driver build a clientoptions for us.
 	clientOpts := options.Client().ApplyURI(targetConnInfo.cs.Original)
 
-	// Decide TLS v plain TCP from cs.SSL
+	// Decide TLS v plain TCP from cs.SSL.
 	if targetCS.SSLSet && targetCS.SSL {
 		serverConn, err = tls.Dial("tcp", targetConnInfo.addr, clientOpts.TLSConfig)
-		log.Printf("dialing target %s with TLS", targetConnInfo.addr)
 	} else {
 		serverConn, err = net.Dial("tcp", targetConnInfo.addr)
 	}
 
 	if err != nil {
 		log.Printf("failed to dial target %s: %v", targetConnInfo.addr, err)
-		return // <— bail if we can’t reach the real server
+		return // bail if we can’t reach the real server.
 	}
 	defer serverConn.Close()
 
@@ -250,6 +250,7 @@ func readWireMessage(src io.Reader) ([]byte, error) {
 	if _, err := io.ReadFull(src, msg[4:]); err != nil {
 		return nil, err
 	}
+
 	return msg, nil
 }
 

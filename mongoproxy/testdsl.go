@@ -28,6 +28,7 @@ func parseProxy(cmdDoc bson.Raw) (cleanDoc bson.Raw, instr *testInstruction, err
 			Actions []bson.Raw `bson:"actions"`
 		} `bson:"proxyTest"`
 	}
+
 	if err := bson.Unmarshal(cmdDoc, &wrapper); err != nil {
 		return nil, nil, fmt.Errorf("failed to unmarshal command document: %w", err)
 	}
@@ -36,17 +37,18 @@ func parseProxy(cmdDoc bson.Raw) (cleanDoc bson.Raw, instr *testInstruction, err
 		return cmdDoc, nil, nil // no proxyTest actions, nothing to do
 	}
 
-	// 2) Decode each raw action
+	// Decode the actions into a testInstruction.
 	instr = &testInstruction{}
 	for i, raw := range wrapper.ProxyTest.Actions {
 		var a action
 		if err := bson.Unmarshal(raw, &a); err != nil {
 			return nil, nil, fmt.Errorf("failed to unmarshal action %d: %w", i, err)
 		}
+
 		instr.Actions = append(instr.Actions, a)
 	}
 
-	// 3) Remove the proxyTest key so the real server never sees it
+	// Remove the `proxyTest` field from the original command document.
 	cleanDoc = removeKey(cmdDoc, "proxyTest")
 	return cleanDoc, instr, nil
 }
@@ -55,14 +57,17 @@ func parseProxy(cmdDoc bson.Raw) (cleanDoc bson.Raw, instr *testInstruction, err
 func removeKey(doc bson.Raw, key string) bson.Raw {
 	// Convert to bsoncore.Document to iterate elements
 	elems, _ := bsoncore.Document(doc).Elements()
+
 	// Collect raw element bytes
 	rawElems := make([][]byte, 0, len(elems))
 	for _, e := range elems {
 		if e.Key() == key {
 			continue
 		}
+
 		rawElems = append(rawElems, []byte(e))
 	}
+
 	// Rebuild and return as bson.Raw
 	return bson.Raw(bsoncore.BuildDocument(nil, rawElems...))
 }
