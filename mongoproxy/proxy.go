@@ -161,8 +161,6 @@ func proxyClientToMongo(src net.Conn, dst net.Conn) {
 	for {
 		raw, err := readWireMessage(src)
 		if err != nil {
-			log.Printf("error reading from client: %v", err)
-
 			return
 		}
 
@@ -254,70 +252,65 @@ func readWireMessage(src io.Reader) ([]byte, error) {
 	return msg, nil
 }
 
-// applyActions processes a sequence of actions on the response buffer.
-func applyActions(buf []byte, dst net.Conn, actions []action) {
-	offset := 0
-	sendAction := false
-	for _, act := range actions {
-		if act.DelayMs != nil {
-			log.Printf("Delaying %d ms before sending next action", act.DelayMs)
-			time.Sleep(time.Duration(*act.DelayMs) * time.Millisecond)
-		}
-		if act.SendBytes != nil {
-			log.Printf("Sending %d bytes from offset %d", *act.SendBytes, offset)
-			end := offset + *act.SendBytes
-			if end > len(buf) {
-				end = len(buf)
-			}
-			dst.Write(buf[offset:end])
-			offset = end
-			sendAction = true
-		}
-		if act.SendAll != nil {
-			log.Printf("Sending remaining bytes from offset %d", offset)
-			dst.Write(buf[offset:])
-			offset = len(buf)
-			sendAction = true
-		}
-	}
-	if offset < len(buf) && !sendAction {
-		dst.Write(buf[offset:])
-	}
-}
-
 // proxyMongoToClient waits for an instruction on a matching connection, applies it to that first reply, then continues.
 func proxyMongoToClient(src net.Conn, dst net.Conn) {
 	for {
+		// 1) Read the next full wire message from MongoDB
 		raw, err := readWireMessage(src)
 		if err != nil {
-			log.Printf("error reading from MongoDB: %v", err)
-
 			return
 		}
 
+		// 2) Check if we have a proxyTest for this dst
 		instr := pendingMap.Take(dst)
 		if instr == nil {
-			// Not our target reply yet
+			// not our target reply yet, just forward unchanged
 			dst.Write(raw)
 			continue
 		}
 
-		// Apply actions to the raw reply
-		applyActions(raw, dst, instr.Actions)
-		break
-	}
+		// 3) We found our instructions—apply them
+		buf := raw
+		sentAll := false
 
-	// Forward remaining data
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Printf("error forwarding remaining data: %v", err)
+		for _, act := range instr.Actions {
+			// a) optional delay
+			if act.DelayMs != nil && *act.DelayMs > 0 {
+				log.Printf("delaying %d ms before sending next action", *act.DelayMs)
+				time.Sleep(time.Duration(*act.DelayMs) * time.Millisecond)
+			}
+			// b) sendBytes
+			if act.SendBytes != nil && *act.SendBytes > 0 {
+				log.Printf("sending %d bytes from action", *act.SendBytes)
+				n := *act.SendBytes
+				if n > len(buf) {
+					n = len(buf)
+				}
+				dst.Write(buf[:n])
+				buf = buf[n:]
+			}
+			// c) sendAll
+			if act.SendAll != nil && *act.SendAll {
+				log.Printf("sending all remaining bytes from action")
+				dst.Write(buf)
+				buf = buf[:0]
+				sentAll = true
+			}
+		}
 
+		// 4) If any sendAll happened, proxy the remainder of the stream
+		if sentAll {
+			if _, err := io.Copy(dst, src); err != nil {
+				log.Printf("error copying remaining data to client: %v", err)
+			}
+		}
+
+		// 5) In *all* cases half‐close the write side so the client sees EOF
+		if tcp, ok := dst.(*net.TCPConn); ok {
+			tcp.CloseWrite()
+		} else {
+			dst.Close()
+		}
 		return
-	}
-
-	// Half-close write side
-	if tcp, ok := dst.(*net.TCPConn); ok {
-		tcp.CloseWrite()
-	} else {
-		dst.Close()
 	}
 }
