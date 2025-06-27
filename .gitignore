@@ -137,3 +137,6 @@ container_id.txt
 .python_packages/
 appsettings.json
 local.settings.json
+
+# mongoproxy binaries 
+mongoproxy/bin
