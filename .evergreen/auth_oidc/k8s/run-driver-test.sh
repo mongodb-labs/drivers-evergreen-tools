@@ -46,9 +46,9 @@ EXIT_CODE=$?  # Capture the exit code
 set -e  # Re-enable `set -e`
 if [ $EXIT_CODE -ne 0 ]; then
    if [ $EXIT_CODE -eq 137 ]; then
-      echo -e "\n ERROR: Process was OOMKilled (Exit Code 137). Gathering diagnostics...\n"
+      echo -e "\n ERROR: Process was OOMKilled (Exit Code 137). Printing pod diagnostics...\n"
    else
-      echo -e "\n ERROR: Process failed with exit code $EXIT_CODE. Gathering diagnostics...\n"
+      echo -e "\n ERROR: Process failed with exit code $EXIT_CODE. Printing pod diagnostics...\n"
    fi
 
    print_pod_diagnostics
