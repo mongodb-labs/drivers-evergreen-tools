@@ -21,6 +21,13 @@ done
 source secrets-export.sh
 source $K8S_VARIANT_DIR/secrets-export.sh
 
+print_pod_diagnostics() {
+    echo -e "\n Pod logs:\n"
+    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
+    echo -e "\n Pod description:\n"
+    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
+}
+
 # Extract the tar file to the /tmp/test directory.
 echo "Setting up driver test files..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
@@ -50,10 +57,3 @@ fi
 echo "Running the driver test command... done."
 
 popd
-
-print_pod_diagnostics() {
-    echo -e "\n Pod logs:\n"
-    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
-    echo -e "\n Pod description:\n"
-    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
-}
