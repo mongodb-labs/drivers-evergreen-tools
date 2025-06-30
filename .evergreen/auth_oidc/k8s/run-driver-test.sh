@@ -21,13 +21,6 @@ done
 source secrets-export.sh
 source $K8S_VARIANT_DIR/secrets-export.sh
 
-print_pod_diagnostics() {
-    echo -e "\n Pod logs:\n"
-    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
-    echo -e "\n Pod description:\n"
-    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
-}
-
 # Extract the tar file to the /tmp/test directory.
 echo "Setting up driver test files..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/test && mkdir /tmp/test"
@@ -46,13 +39,16 @@ EXIT_CODE=$?  # Capture the exit code
 set -e  # Re-enable `set -e`
 if [ $EXIT_CODE -ne 0 ]; then
    if [ $EXIT_CODE -eq 137 ]; then
-      echo -e "\n ERROR: Process was OOMKilled (Exit Code 137). Printing pod diagnostics...\n"
+      echo -e "\n ERROR: Pod process was OOMKilled (Exit Code 137).\n"
    else
-      echo -e "\n ERROR: Process failed with exit code $EXIT_CODE. Printing pod diagnostics...\n"
+      echo -e "\n ERROR: Pod process failed with exit code $EXIT_CODE.\n"
    fi
 
-   print_pod_diagnostics
-   exit $EXIT_CODE
+    echo -e "\n Pod logs:\n"
+    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
+    echo -e "\n Pod description:\n"
+    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
+    exit $EXIT_CODE
 fi
 echo "Running the driver test command... done."
 
