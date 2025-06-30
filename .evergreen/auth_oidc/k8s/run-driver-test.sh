@@ -31,7 +31,29 @@ echo "Setting up driver test files... done."
 # Run the command.
 echo "Running the driver test command..."
 kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/test/secrets-export.sh
+
+# Temporarily disable `set -e` for this command to capture the exit code
+set +e
 kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp/test && source secrets-export.sh && ${K8S_TEST_CMD}"
+EXIT_CODE=$?  # Capture the exit code
+set -e  # Re-enable `set -e`
+if [ $EXIT_CODE -ne 0 ]; then
+   if [ $EXIT_CODE -eq 137 ]; then
+      echo -e "\n ERROR: Process was OOMKilled (Exit Code 137). Gathering diagnostics...\n"
+   else
+      echo -e "\n ERROR: Process failed with exit code $EXIT_CODE. Gathering diagnostics...\n"
+   fi
+
+   print_pod_diagnostics
+   exit $EXIT_CODE
+fi
 echo "Running the driver test command... done."
 
 popd
+
+print_pod_diagnostics() {
+    echo -e "\n Pod logs:\n"
+    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
+    echo -e "\n Pod description:\n"
+    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
+}
