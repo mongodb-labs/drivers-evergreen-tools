@@ -66,6 +66,11 @@ ARGS+=" -e REQUIRE_API_VERSION=$REQUIRE_API_VERSION"
 ARGS+=" -e DISABLE_TEST_COMMANDS=$DISABLE_TEST_COMMANDS"
 ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
 
+# Use the ECR pull-through registry for Ubuntu images when running in CI.
+if [[ "$IMAGE" =~ ^ubuntu.* ]] && [[ -n "${CI:-}" ]]; then
+    ARGS+=" -e IMAGE_NAME=901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/library/$IMAGE"
+fi
+
 # Expose the required ports.
 if [ "$TOPOLOGY" == "server" ]; then
     ARGS+=" -p 27017:27017"

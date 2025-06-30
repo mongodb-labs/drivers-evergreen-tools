@@ -174,7 +174,7 @@ def get_options():
 
 def get_docker_cmd():
     """Get the appropriate docker command."""
-    docker = shutil.which("docker") or shutil.which("podman")
+    docker = shutil.which("podman") or shutil.which("docker")
     if not docker:
         return None
     if "podman" in docker:

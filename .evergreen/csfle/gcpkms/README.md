@@ -10,6 +10,8 @@ The expected flow is:
 
 The included mock_server may be useful for local development. It simulates a [Metadata Server](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances#applications).
 
+If you need a larger GCP [VM](https://cloud.google.com/compute/docs/machine-resource), set `GCPKMS_MACHINETYPE`.
+
 # Usage with AWS Vault
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets

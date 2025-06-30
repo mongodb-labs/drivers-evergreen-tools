@@ -77,6 +77,8 @@ OIDC_TOKEN_DIR      # The directory containing the token files
 OIDC_TOKEN_FILE     # The default token file for use with Workload callbacks
 ```
 
+If you need a larger Azure VM, set `AZUREKMS_MACHINESIZE` to a larger [size](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview).
+
 Finally, we tear down the vm:
 
 ```bash

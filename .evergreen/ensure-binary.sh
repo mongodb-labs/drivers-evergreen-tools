@@ -8,8 +8,8 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
-NAME=$1
-if [ -z "$NAME" ]; then
+_NAME=$1
+if [ -z "$_NAME" ]; then
   echo "Must supply a binary name!"
   return 1
 fi
@@ -19,75 +19,75 @@ if [ -z "$DRIVERS_TOOLS" ]; then
   return 1
 fi
 
-if command -v $NAME &> /dev/null; then
-  echo "$NAME found in PATH!"
+if command -v $_NAME &> /dev/null; then
+  echo "$_NAME found in PATH!"
   return 0
 fi
 
-OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
-MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
-URL=""
+_OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+_MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
+_URL=""
 
-case $NAME in
+case $_NAME in
   kubectl)
-    VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-    BASE="https://dl.k8s.io/release/$VERSION/bin"
-    case "$OS_NAME-$MARCH" in
+    _VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+    _BASE="https://dl.k8s.io/release/$_VERSION/bin"
+    case "$_OS_NAME-$_MARCH" in
         linux-x86_64)
-          URL="$BASE/linux/amd64/kubectl"
+          _URL="$_BASE/linux/amd64/kubectl"
         ;;
         linux-aarch64)
-          URL="$BASE/linux/arm64/kubectl"
+          _URL="$_BASE/linux/arm64/kubectl"
         ;;
         darwin-x86_64)
-          URL="$BASE/darwin/amd64/kubectl"
+          _URL="$_BASE/darwin/amd64/kubectl"
         ;;
         darwin-arm64)
-          URL="$BASE/darwin/arm64/kubectl"
+          _URL="$_BASE/darwin/arm64/kubectl"
         ;;
     esac
   ;;
   gcloud)
-    BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
-    case "$OS_NAME-$MARCH" in
+    _BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
+    case "$_OS_NAME-$_MARCH" in
        linux-x86_64)
-          URL="$BASE/google-cloud-cli-linux-x86_64.tar.gz"
+          _URL="$_BASE/google-cloud-cli-linux-x86_64.tar.gz"
         ;;
         linux-aarch64)
-          URL="$BASE/google-cloud-cli-linux-arm.tar.gz"
+          _URL="$_BASE/google-cloud-cli-linux-arm.tar.gz"
         ;;
         darwin-x86_64)
-          URL="$BASE/google-cloud-cli-darwin-x86_64.tar.gz"
+          _URL="$_BASE/google-cloud-cli-darwin-x86_64.tar.gz"
         ;;
         darwin-arm64)
-          URL="$BASE/google-cloud-cli-darwin-arm.tar.gz"
+          _URL="$_BASE/google-cloud-cli-darwin-arm.tar.gz"
         ;;
       esac
 esac
 
-if [ -z "$URL" ]; then
-  echo "Unsupported for $NAME: $OS_NAME-$MARCH"
+if [ -z "$_URL" ]; then
+  echo "Unsupported for $_NAME: $_OS_NAME-$_MARCH"
   return 1
 fi
 
-echo "Installing $NAME..."
+echo "Installing $_NAME..."
 
-if [ "$NAME" != "gcloud" ]; then
+if [ "$_NAME" != "gcloud" ]; then
   mkdir -p ${DRIVERS_TOOLS}/.bin
-  TARGET=${DRIVERS_TOOLS}/.bin/$NAME
-  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $URL -o $TARGET
-  chmod +x $TARGET
+  _TARGET=${DRIVERS_TOOLS}/.bin/$_NAME
+  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $_URL -o $_TARGET
+  chmod +x $_TARGET
 
 else
   # Google Cloud needs special handling: we need a symlink to the source location.
   pushd /tmp
   rm -rf google-cloud-sdk
-  FNAME=/tmp/google-cloud-sdk.tgz
-  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $URL -o $FNAME
-  tar xfz $FNAME
+  _FNAME=/tmp/google-cloud-sdk.tgz
+  "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $_URL -o $_FNAME
+  tar xfz $_FNAME
   popd
   mkdir -p ${DRIVERS_TOOLS}/.bin
   ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
 fi
 
-echo "Installing $NAME... done."
+echo "Installing $_NAME... done."

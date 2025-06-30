@@ -49,6 +49,8 @@ OIDC_ADMIN_USER     # The username and password for use with an admin connection
 OIDC_ADMIN_PWD
 ```
 
+If you need a larger GCP [VM](https://cloud.google.com/compute/docs/machine-resource), set `GCPKMS_MACHINETYPE`.
+
 Finally, we tear down the vm:
 
 ```bash
