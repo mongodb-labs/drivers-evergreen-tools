@@ -41,14 +41,12 @@ EXIT_CODE=$?  # Capture the exit code
 set -e  # Re-enable `set -e` for safety
 if [ $EXIT_CODE -eq 137 ]; then
     echo -e "\n ERROR: Process was OOMKilled (Exit Code 137). Gathering diagnostics...\n"
-    echo -e "\n POD LOGS:\n"
+    echo -e "\n Pod logs:\n"
     kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
-    echo -e "\n POD DESCRIPTION:\n"
+    echo -e "\n Pod description:\n"
     kubectl describe pod ${K8S_POD_NAME}  # Print pod details
 elif [ $EXIT_CODE -ne 0 ]; then
-    echo -e "\n ERROR: Command failed with exit code $EXIT_CODE. Check above logs for details.\n"
-else
-    echo -e "\n SUCCESS: Process completed successfully.\n"
+  exit $EXIT_CODE
 fi
 echo "Running the driver test command... done."
 popd
