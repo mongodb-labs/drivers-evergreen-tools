@@ -44,10 +44,10 @@ if [ $EXIT_CODE -ne 0 ]; then
       echo -e "\n ERROR: Pod process failed with exit code $EXIT_CODE.\n"
    fi
 
-    echo -e "\n Pod logs:\n"
-    kubectl logs ${K8S_POD_NAME}  # Print pod logs to console
     echo -e "\n Pod description:\n"
     kubectl describe pod ${K8S_POD_NAME}  # Print pod details
+    echo -e "\n Pod logs:\n"
+    kubectl logs -p ${K8S_POD_NAME}  # Print pod logs to console
     exit $EXIT_CODE
 fi
 echo "Running the driver test command... done."
