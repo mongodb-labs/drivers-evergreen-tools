@@ -37,7 +37,7 @@ ecr_client.close()
 token = resp["authorizationData"][0]["authorizationToken"]
 _, _, token = base64.b64decode(token).partition(b":")
 
-docker = shutil.which("docker") or shutil.which("podman")
+docker = shutil.which("podman") or shutil.which("docker")
 if "podman" in docker:
     docker = f"sudo {docker}"
 
