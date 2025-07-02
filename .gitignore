@@ -129,6 +129,7 @@ mo-expansion.sh
 .evergreen/mongodl
 .evergreen/mongosh-dl
 .evergreen/run-mongodb-aws-eks-test.sh
+.evergreen/mongoproxy/bin
 .dockerignore
 .local
 container_id.txt
@@ -138,5 +139,3 @@ container_id.txt
 appsettings.json
 local.settings.json
 
-# mongoproxy binaries 
-mongoproxy/bin
