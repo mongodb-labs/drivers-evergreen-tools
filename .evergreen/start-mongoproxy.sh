@@ -42,7 +42,7 @@ test -x "${GOROOT}/bin/go" || {
 }
 
 # Enter the mongoproxy sub‐directory
-cd "mongoproxy"
+cd "${DRIVERS_TOOLS}/.evergreen/mongoproxy"
 
 # Build the mongproxy binary.
 bash build.sh
