@@ -45,11 +45,12 @@ if [ $EXIT_CODE -ne 0 ]; then
    fi
 
     echo -e "\n Pod description:\n"
-    kubectl describe pod ${K8S_POD_NAME}  # Print pod details
+    # Print pod details
+    kubectl describe pod ${K8S_POD_NAME}
     echo -e "\n Pod logs:\n"
-    kubectl logs -p ${K8S_POD_NAME}  # Print pod logs to console
+    # Print pod logs (current still active or previous pod)
+    kubectl logs ${K8S_POD_NAME} || kubectl logs -p ${K8S_POD_NAME}
     exit $EXIT_CODE
 fi
 echo "Running the driver test command... done."
-
 popd
