@@ -11,7 +11,14 @@ OS="$(uname -s)"
 # GOVERSION.
 if [[ -z "${GOROOT:-}" ]]; then
   case "$OS" in
-  Linux | Darwin)
+  Darwin)
+    if [[ -d "/usr/local/go" ]]; then
+      export GOROOT="/usr/local/go" # likely place for local development
+    else
+      export GOROOT="/opt/golang/go${GOVERSION}" # for spawn host
+    fi
+    ;;
+  Linux)
     GOROOT="/opt/golang/go${GOVERSION}"
     ;;
   MINGW* | MSYS* | CYGWIN*)
@@ -34,12 +41,8 @@ test -x "${GOROOT}/bin/go" || {
   exit 1
 }
 
-# Resolve this script’s dir, then go up one level
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
 # Enter the mongoproxy sub‐directory
-cd "$PROJECT_ROOT/mongoproxy"
+cd "mongoproxy"
 
 # Build the mongproxy binary.
 bash build.sh
