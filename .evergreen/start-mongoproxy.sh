@@ -41,8 +41,12 @@ test -x "${GOROOT}/bin/go" || {
   exit 1
 }
 
+# Resolve this script’s dir, then go up one level
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Enter the mongoproxy sub‐directory
-cd "${DRIVERS_TOOLS}/.evergreen/mongoproxy"
+cd "$PROJECT_ROOT/.evergreen/mongoproxy"
 
 # Build the mongproxy binary.
 bash build.sh
