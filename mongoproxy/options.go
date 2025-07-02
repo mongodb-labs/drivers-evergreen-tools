@@ -122,7 +122,11 @@ func findPrimary(baseURI string, hosts []string) (string, error) {
 			return "", fmt.Errorf("failed to run handshake on %s: %w", u.Host, err)
 		}
 
-		if helloResp.Primary != "" || helloResp.IsWritablePrimary {
+		if helloResp.Primary != "" && helloResp.IsWritablePrimary {
+			return helloResp.Primary, nil
+		}
+
+		if helloResp.IsWritablePrimary {
 			return h, nil
 		}
 	}
