@@ -24,7 +24,7 @@ func newProxyTestClient(t *testing.T, clientOpts *options.ClientOptions) (*mongo
 		clientOpts = options.Client()
 	}
 
-	// 1) Start a MongoDB container
+	// Start a MongoDB container
 	mongoReq := tc.ContainerRequest{
 		Image:        "mongo:6.0",
 		ExposedPorts: []string{"27017/tcp"},
@@ -43,13 +43,13 @@ func newProxyTestClient(t *testing.T, clientOpts *options.ClientOptions) (*mongo
 
 	targetAddr := fmt.Sprintf("%s:%s", host, port.Port())
 
-	// 2) Pick an ephemeral port for the proxy
+	// Pick an ephemeral port for the proxy
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	proxyAddr := ln.Addr().String()
 	ln.Close()
 
-	// 3) Launch proxy in background
+	// Launch proxy in background
 	go func() {
 		ListenAndServe(
 			WithListenAddr(proxyAddr),
@@ -59,7 +59,7 @@ func newProxyTestClient(t *testing.T, clientOpts *options.ClientOptions) (*mongo
 	// give it a moment to bind
 	time.Sleep(300 * time.Millisecond)
 
-	// 4) Connect client through proxy
+	// Connect client through proxy
 	uri := fmt.Sprintf("mongodb://%s/?directConnection=true", proxyAddr)
 	clientOpts = clientOpts.
 		ApplyURI(uri).
