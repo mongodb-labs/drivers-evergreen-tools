@@ -1,19 +1,13 @@
 # mongoproxy
 
-**mongoproxy** is a lightweight, programmable TCP proxy for MongoDB. It sits between your client and a real MongoDB server and allows you to simulate broken or delayed network behavior — useful for testing retry logic, timeouts, and error handling in database drivers or applications.
-
-- Inject millisecond-level delays into server responses
-- Send only part of a reply (`sendBytes`)
-- Flush the rest after a delay (`sendAll`)
-- Simulate mid-stream disconnects
-- Easily trigger timeouts, EOFs, or corrupted reads
+**mongoproxy** is a lightweight, programmable TCP proxy for MongoDB.
 
 ## 📦 Installation
 
 To install the latest version:
 
 ```bash
-go install github.com/prestonvasquez/mongoproxy/cmd/mongoproxy@latest
+go install github.com/mongodb-labs/drivers-evergreen-tools/.evergreen/mongoproxy/cmd/mongoproxy@latest
 ```
 
 Or build it locally in `bin/mongoproxy`:
