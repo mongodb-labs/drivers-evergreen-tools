@@ -67,4 +67,5 @@ repos:
     exclude: |
       (?x)(
           .evergreen/retry-with-backoff.sh
+          ^go\.sum$
         )
