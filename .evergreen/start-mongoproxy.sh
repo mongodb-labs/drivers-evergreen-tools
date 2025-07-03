@@ -13,9 +13,9 @@ if [[ -z "${GOROOT:-}" ]]; then
   case "$OS" in
   Darwin)
     if [[ -d "/usr/local/go" ]]; then
-      export GOROOT="/usr/local/go" # likely place for local development
+      GOROOT="/usr/local/go" # likely place for local development
     else
-      export GOROOT="/opt/golang/go${GOVERSION}" # for spawn host
+      GOROOT="/opt/golang/go${GOVERSION}" # for spawn host
     fi
     ;;
   Linux)
