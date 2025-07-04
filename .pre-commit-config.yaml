@@ -1,3 +1,5 @@
+# Ignore go.sum everwhree
+exclude: ^go\.sum$
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -45,7 +47,8 @@ repos:
         (?x)(
           .evergreen/github_app/package-lock.json|
           .evergreen/csfle/bottle.py|
-          .pem$
+          .pem$|
+          .evergreen/mongoproxy/go.sum
         )
     args: ["-L", "fle,aks"]
 
