@@ -87,6 +87,7 @@ node_archive="${node_directory}.${file_extension}"
 node_archive_path="$NODE_ARTIFACTS_PATH/${node_archive}"
 node_shasum_path="$NODE_ARTIFACTS_PATH/SHASUMS256.txt"
 node_download_url="https://nodejs.org/dist/${node_index_version}/${node_archive}"
+node_shasum_url="https://nodejs.org/dist/${node_index_version}/SHASUMS256.txt"
 
 echo "Node.js ${node_index_version} for ${operating_system}-${architecture} released on ${node_index_date}"
 
@@ -95,7 +96,7 @@ if [[ "$file_extension" = "zip" ]]; then
     echo "Node.js already installed!"
   else
     "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_shasum_path"
+    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path"
     pushd $NODE_ARTIFACTS_PATH
     sha256sum -c SHASUMS256.txt --ignore-missing
     popd
@@ -112,7 +113,7 @@ else
     echo "Node.js already installed!"
   else
     "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_shasum_path"
+    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path"
     pushd $NODE_ARTIFACTS_PATH
     sha256sum -c SHASUMS256.txt --ignore-missing
     popd
