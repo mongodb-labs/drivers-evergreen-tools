@@ -91,9 +91,12 @@ venvcreate() {
     #
     # These packages must be upgraded *after* pip, *separately*, as some old
     # versions of pip do not handle their simultaneous installation properly.
-    if ! python -m pip install -q -U setuptools; then
-      deactivate || return 1 # Deactivation should never fail!
-      continue
+    if ! python -m pip install -q -U setuptools ; then
+      # Fall back to setuptools<71.0 to handle this bug: https://github.com/pypa/setuptools/issues/4496
+      if ! python -m pip install -q -U 'setuptools<71.0'; then
+        deactivate || return 1 # Deactivation should never fail!
+        continue
+      fi
     fi
 
     # Success only if both activation and package upgrades are successful.
