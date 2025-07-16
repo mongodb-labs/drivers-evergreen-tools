@@ -78,20 +78,20 @@ venvcreate() {
 
     venvactivate "$venv_path" || continue
 
+    # NOTE: We explicitly do NOT use a lock file for pip and setuptools, as they
+    # are considered unsafe to pin by pip-compile.
     if ! python -m pip install -q -U pip; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi
 
-    # Ensure setuptools and wheel are installed in the virtual environment.
+    # Ensure setuptools is installed in the virtual environment.
     # virtualenv only guarantees "one or more of" the seed packages are
     # installed. venv only guarantees pip is installed via ensurepip.
     #
     # These packages must be upgraded *after* pip, *separately*, as some old
     # versions of pip do not handle their simultaneous installation properly.
-    # See: https://github.com/pypa/pip/issues/4253
-    # Pin to setuptools<71.0 to avoid this bug: https://github.com/pypa/setuptools/issues/4496
-    if ! python -m pip install -q -U 'setuptools<71.0' wheel; then
+    if ! python -m pip install -q -U setuptools; then
       deactivate || return 1 # Deactivation should never fail!
       continue
     fi

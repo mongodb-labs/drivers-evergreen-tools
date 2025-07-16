@@ -21,9 +21,7 @@ set -o nounset
         PYTHON=$(ensure_python3)
         echo "Creating virtual environment 'azure_deletion_venv'..."
         venvcreate "${PYTHON:?}" azure_deletion_venv
-        python -m pip install azure-identity
-        python -m pip install azure-mgmt-compute
-        python -m pip install azure-mgmt-network
+        pythom -m pip install requirements.txt
         echo "Creating virtual environment 'azure_deletion_venv'... done."
     fi
 }
