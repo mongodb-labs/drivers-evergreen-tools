@@ -37,7 +37,7 @@ activate_kmstlsvenv() {
     echo "Creating virtual environment 'kmstlsvenv'..."
     venvcreate "${PYTHON:?}" kmstlsvenv || return
 
-    if ! python -m pip install -q requirements.txt; then
+    if ! python -m pip install -q -r requirements.txt; then
       # Avoid `error: can't find Rust compiler`.
       # Assume install failure at this point is due to new versions of
       # cryptography require a Rust toolchain when a cryptography wheel is not
