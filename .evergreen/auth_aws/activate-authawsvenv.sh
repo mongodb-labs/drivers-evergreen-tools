@@ -36,13 +36,7 @@ activate_authawsvenv() {
 
     venvcreate "${PYTHON:?}" authawsvenv || return
 
-    local packages=(
-      "boto3~=1.35.0"
-      "pyop~=3.4.0"
-      "pymongo[aws]~=4.0"
-    )
-
-    python -m pip install -q -U "${packages[@]}" || {
+    python -m pip install -q -r requirements.txt || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"
