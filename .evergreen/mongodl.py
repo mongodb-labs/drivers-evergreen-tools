@@ -800,7 +800,7 @@ def _latest_build_url(
     edition: str,
     component: str,
     branch: "str|None",
-) -> tuple[str, str]:
+) -> str:
     """
     Get the URL and SHASUM for an "unpublished" "latest" build.
 
