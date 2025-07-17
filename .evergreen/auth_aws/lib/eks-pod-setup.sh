@@ -17,11 +17,8 @@ NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
 APP_LABEL=mongodb-deployment
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
-echo "K8S_POD_NAME=$K8S_POD_NAME"
 
 . ../../ensure-binary.sh kubectl
-
-echo "K8S_POD_NAME2=$K8S_POD_NAME"
 
 # Delete mongodb servers over one hour old in case they were not torn down.
 echo "Deleting old mongodb servers..."
@@ -87,8 +84,6 @@ spec:
   type: ClusterIP
 EOF
 
-echo "K8S_POD_NAME3=$K8S_POD_NAME"
-
 # Set up the server.
 echo "Setting up the server..."
 MONGODB_POD=$(kubectl get pods -l app=${NAME} -o jsonpath='{.items[0].metadata.name}')
@@ -101,25 +96,25 @@ echo "Setting up the server... done."
 
 # Run the self test.
 echo "Running self test on eks pod..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/self-test && mkdir /tmp/self-test"
-kubectl cp ./eks-pod-run-self-test.sh ${K8S_POD_NAME}:/tmp/self-test/run-self-test.sh
-kubectl cp ./eks_pod_self_test.py ${K8S_POD_NAME}:/tmp/self-test/test.py
-kubectl exec ${K8S_POD_NAME} -- /tmp/self-test/run-self-test.sh $MONGODB_URI
+kubectl exec ${MONGODB_POD} -- bash -c "rm -rf /tmp/self-test && mkdir /tmp/self-test"
+kubectl cp ./eks-pod-run-self-test.sh ${MONGODB_POD}:/tmp/self-test/run-self-test.sh
+kubectl cp ./eks_pod_self_test.py ${MONGODB_POD}:/tmp/self-test/test.py
+kubectl exec ${MONGODB_POD} -- /tmp/self-test/run-self-test.sh $MONGODB_URI
 echo "Running self test on eks pod... done."
 
 # Set up driver test.
 echo "Setting up driver test files..."
-kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/src"
-kubectl cp $PROJECT_DIRECTORY ${K8S_POD_NAME}:/tmp/src/
+kubectl exec ${MONGODB_POD} -- bash -c "rm -rf /tmp/src"
+kubectl cp $PROJECT_DIRECTORY ${MONGODB_POD}:/tmp/src/
 echo "Setting up driver test files... done."
 
 echo "Running the driver test command... done."
 echo "export MONGODB_URI=${MONGODB_URI}" >> secrets-export.sh
-kubectl cp ./secrets-export.sh ${K8S_POD_NAME}:/tmp/src/secrets-export.sh
+kubectl cp ./secrets-export.sh ${MONGODB_POD}:/tmp/src/secrets-export.sh
 echo "Setting up driver test files... done."
 
 # Run the driver test.
 echo "Running the driver test command..."
 MONGODB_URI="${MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
-kubectl exec ${K8S_POD_NAME} -- bash -c "cd /tmp && source src/secrets-export.sh && bash src/.evergreen/run-mongodb-aws-eks-test.sh $MONGODB_URI"
+kubectl exec ${MONGODB_POD} -- bash -c "cd /tmp && source src/secrets-export.sh && bash src/.evergreen/run-mongodb-aws-eks-test.sh $MONGODB_URI"
 echo "Running the driver test command... done."
