@@ -51,7 +51,7 @@ case $_NAME in
            return 1
         ;;
     esac
-    pushd ${DRIVERS_TOOLS}/.bin
+    pushd "${DRIVERS_TOOLS}/.bin"
     "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s -O $_URL
     "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s -O "$_URL.sha256"
     echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
