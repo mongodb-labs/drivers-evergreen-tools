@@ -41,6 +41,9 @@ venvcreate() {
   local -r venv_path="${2:?'venvcreate requires a path to the virtual environment to create'}"
 
   local real_path
+  local ver
+  local req
+
   if [[ "${OSTYPE:?}" == cygwin ]]; then
     real_path="$(cygpath -aw "$venv_path")" || return
   else
@@ -91,12 +94,15 @@ venvcreate() {
     #
     # These packages must be upgraded *after* pip, *separately*, as some old
     # versions of pip do not handle their simultaneous installation properly.
-    if ! python -m pip install -q -U setuptools ; then
-      # Fall back to setuptools<71.0 to handle this bug: https://github.com/pypa/setuptools/issues/4496
-      if ! python -m pip install -q -U 'setuptools<71.0'; then
+    req="setuptools"
+    ver=$(python -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+    # Workaround for https://github.com/pypa/setuptools/issues/4478
+    if [ $ver == "39" ]; then
+      req="setuptools==70.3.0"
+    fi
+    if ! python -m pip install -q -U $req ; then
         deactivate || return 1 # Deactivation should never fail!
         continue
-      fi
     fi
 
     # Success only if both activation and package upgrades are successful.
