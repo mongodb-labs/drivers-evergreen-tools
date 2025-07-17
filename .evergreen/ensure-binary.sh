@@ -87,7 +87,7 @@ case $_NAME in
     pushd /tmp
     rm -rf google-cloud-sdk
     _FNAME=google-cloud-sdk.tgz
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s $_URL -o /tmp/$_FNAME
+    "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s "$_URL" -o "/tmp/$_FNAME"
     echo "${_SHA_SUM} ${_FNAME}" | sha256sum -c
     tar xfz $_FNAME
     popd
