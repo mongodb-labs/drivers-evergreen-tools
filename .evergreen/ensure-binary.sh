@@ -27,7 +27,7 @@ fi
 _OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 _MARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 
-mkdir -p ${DRIVERS_TOOLS}/.bin
+mkdir -p "${DRIVERS_TOOLS}/.bin"
 
 case $_NAME in
   kubectl)
