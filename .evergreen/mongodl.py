@@ -771,12 +771,17 @@ class ExpandResult(enum.Enum):
 
 
 def _published_build_url(
-    cache: Cache, version: str, target: str, arch: str, edition: str, component: str
+    cache: Cache,
+    version: str,
+    target: str,
+    arch: str,
+    edition: str,
+    component: str,
+    value="url",
 ) -> str:
     """
     Get the URL for a "published" build (that is: a build that was published in full.json)
     """
-    value = "url"
     if component == "archive-debug":
         component = "archive"
         value = "debug_symbols"
@@ -890,6 +895,10 @@ def _dl_component(
 
     # This must go to stdout to be consumed by the calling program.
     print(dl_url)
+
+    sha256 = _published_build_url(
+        cache, version, target, arch, edition, component, value="sha256"
+    )
     LOGGER.info("Download url: %s", dl_url)
 
     if no_download:
@@ -899,6 +908,8 @@ def _dl_component(
     while True:
         try:
             cached = cache.download_file(dl_url).path
+            if not _check_shasum256(cached, sha256):
+                raise ValueError("Incorrect shasum256 for %s", cached)
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
@@ -906,6 +917,24 @@ def _dl_component(
             LOGGER.exception(e)
             if not retrier.retry():
                 raise
+
+
+def _check_shasum256(filename, shasum):
+    """Check if the file with the name "filename" matches the SHA-256 sum
+    in "shasum"."""
+    h = hashlib.sha256()
+    # This will raise an exception if the file doesn't exist. Catching
+    # and handling it is left as an exercise for the reader.
+    with open(filename, "rb") as fh:
+        # Read and hash the file in 4K chunks. Reading the whole
+        # file at once might consume a lot of memory if it is
+        # large.
+        while True:
+            data = fh.read(4096)
+            if len(data) == 0:
+                break
+            h.update(data)
+    return shasum == h.hexdigest()
 
 
 def _pathjoin(items: "Iterable[str]") -> PurePath:
