@@ -41,14 +41,11 @@ def _get_latest_version():
     }
     url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
     req = urllib.request.Request(url, headers=headers)
-    LOGGER.info("Making GitHub request")
     try:
         resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
     except Exception:
-        LOGGER.info("Github request failed")
         return _get_latest_version_git()
 
-    LOGGER.info("Github request succeeded")
     data = json.loads(resp.read().decode("utf-8"))
     for item in data:
         if item["prerelease"]:
@@ -61,18 +58,15 @@ def _get_latest_version():
 def _get_latest_version_git():
     with tempfile.TemporaryDirectory() as td:
         cmd = "git clone --depth 1 https://github.com/mongodb-js/mongosh.git"
-        LOGGER.info("Cloning the repo")
         subprocess.check_call(
             shlex.split(cmd), cwd=td, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         cmd = "git fetch origin --depth=100 --tags"
         path = os.path.join(td, "mongosh")
-        LOGGER.info("Fetching tags")
         subprocess.check_call(
             shlex.split(cmd), cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         cmd = "git --no-pager tag"
-        LOGGER.info("Listing tags")
         output = subprocess.check_output(
             shlex.split(cmd), cwd=path, stderr=subprocess.PIPE
         )
@@ -96,9 +90,7 @@ def _download(
 ) -> int:
     LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
-        LOGGER.info("Calling _get_latest_version")
         version = _get_latest_version()
-        LOGGER.info("Calling _get_latest_version...done")
     if arch == "x86_64":
         arch = "x64"
     elif arch == "aarch64":
