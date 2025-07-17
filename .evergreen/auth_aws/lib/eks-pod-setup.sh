@@ -17,8 +17,11 @@ NAME="$1"
 MONGODB_URI="mongodb://${NAME}:27017"
 APP_LABEL=mongodb-deployment
 MONGODB_VERSION=${MONGODB_VERSION:-latest}
+echo "K8S_POD_NAME=$K8S_POD_NAME"
 
 . ../../ensure-binary.sh kubectl
+
+echo "K8S_POD_NAME2=$K8S_POD_NAME"
 
 # Delete mongodb servers over one hour old in case they were not torn down.
 echo "Deleting old mongodb servers..."
@@ -83,6 +86,8 @@ spec:
     targetPort: 27017
   type: ClusterIP
 EOF
+
+echo "K8S_POD_NAME3=$K8S_POD_NAME"
 
 # Set up the server.
 echo "Setting up the server..."
