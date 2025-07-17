@@ -59,6 +59,7 @@ case $_NAME in
     popd
   ;;
   gcloud)
+    # NOTE: SHA_SUMs were copied from https://cloud.google.com/sdk/docs/install#installation_instructions
     _BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
     case "$_OS_NAME-$_MARCH" in
        linux-x86_64)
