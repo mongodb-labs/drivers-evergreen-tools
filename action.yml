@@ -28,6 +28,9 @@ inputs:
   skip-legacy-shell:
     description: "Whether to skip installing the legacy shell for 6.0+ servers (deprecated)"
     required: false
+  token:
+    description: "The GitHub token to use when making requests to the GitHub API"
+    required: false
 outputs:
   cluster-uri:
     description: "URI of the cluster"
@@ -72,4 +75,5 @@ runs:
         SKIP_LEGACY_SHELL: ${{ inputs.skip-legacy-shell }}
         INSTALL_LEGACY_SHELL: ${{ inputs.install-legacy-shell }}
         LOCAL_ATLAS: ${{ inputs.local-atlas }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       shell: bash

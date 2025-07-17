@@ -67,6 +67,7 @@ jobs:
           auth: ${{ matrix.auth }}
           ssl: ${{ matrix.ssl }}
           local-atlas: ${{ matrix.local-atlas }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - id: test-mongodb
         name: "Test GitHub Action"
