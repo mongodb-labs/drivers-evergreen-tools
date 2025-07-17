@@ -37,13 +37,7 @@ activate_authoidcvenv() {
     echo "Creating virtual environment 'authoidcvenv'..."
     venvcreate "${PYTHON:?}" authoidcvenv || return
 
-    local packages=(
-      "boto3~=1.35.0"
-      "pyop~=3.4.0"
-      "azure-identity"
-      "azure-keyvault-secrets"
-    )
-    python -m pip install -q -U "${packages[@]}" || {
+    python -m pip install -q -r requirements.txt || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"

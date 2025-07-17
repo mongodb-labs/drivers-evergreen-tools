@@ -12,26 +12,39 @@ botocore==1.35.99
     #   s3transfer
 certifi==2025.7.14
     # via requests
+cffi==1.17.1
+    # via cryptography
 charset-normalizer==3.4.2
     # via requests
-docker==7.1.0
-    # via -r requirements-in.txt
+cryptography==45.0.5
+    # via pykmip
+enum-compat==0.0.3
+    # via pykmip
 idna==3.10
     # via requests
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
+pycparser==2.22
+    # via cffi
+pykmip @ git+https://github.com/mongodb-forks/PyKMIP.git
+    # via -r requirements-in.txt
 python-dateutil==2.9.0.post0
     # via botocore
 requests==2.32.4
-    # via docker
+    # via pykmip
 s3transfer==0.10.4
     # via boto3
 six==1.17.0
-    # via python-dateutil
+    # via
+    #   pykmip
+    #   python-dateutil
+sqlalchemy==2.0.41
+    # via pykmip
+typing-extensions==4.14.1
+    # via sqlalchemy
 urllib3==1.26.20
     # via
     #   botocore
-    #   docker
     #   requests
