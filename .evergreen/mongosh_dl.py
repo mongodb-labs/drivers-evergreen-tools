@@ -65,7 +65,7 @@ def _get_latest_version_git():
         subprocess.check_call(
             shlex.split(cmd), cwd=td, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        cmd = "git fetch origin --tags"
+        cmd = "git fetch origin --depth=100 --tags"
         path = os.path.join(td, "mongosh")
         LOGGER.info("Fetching tags")
         subprocess.check_call(
