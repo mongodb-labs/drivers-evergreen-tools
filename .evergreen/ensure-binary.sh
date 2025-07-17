@@ -56,6 +56,7 @@ case $_NAME in
     "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s -O "$_URL.sha256"
     echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
     chmod +x kubectl
+    popd
   ;;
   gcloud)
     _BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
@@ -90,7 +91,6 @@ case $_NAME in
     echo "${_SHA_SUM} ${_FNAME}" | sha256sum -c
     tar xfz $_FNAME
     popd
-    mkdir -p ${DRIVERS_TOOLS}/.bin
     ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
   ;;
   *)
