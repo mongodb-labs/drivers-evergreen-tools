@@ -97,9 +97,7 @@ if [[ "$file_extension" = "zip" ]]; then
   else
     "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
     "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path"
-    pushd $NODE_ARTIFACTS_PATH
-    sha256sum -c SHASUMS256.txt --ignore-missing
-    popd
+    (cd "$NODE_ARTIFACTS_PATH" && sha256sum -c SHASUMS256.txt --ignore-missing)
     unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
     mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
     # Windows "bins" are at the top level
