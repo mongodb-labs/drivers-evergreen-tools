@@ -91,7 +91,7 @@ case $_NAME in
     echo "${_SHA_SUM} ${_FNAME}" | sha256sum -c
     tar xfz $_FNAME
     popd
-    ln -s /tmp/google-cloud-sdk/bin/gcloud $DRIVERS_TOOLS/.bin/gcloud
+    ln -s /tmp/google-cloud-sdk/bin/gcloud "$DRIVERS_TOOLS/.bin/gcloud"
   ;;
   *)
     echo "Unsupported download type $_NAME"
