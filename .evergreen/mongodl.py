@@ -802,7 +802,7 @@ def _latest_build_url(
     branch: "str|None",
 ) -> str:
     """
-    Get the URL and SHASUM for an "unpublished" "latest" build.
+    Get the URL for an "unpublished" "latest" build.
 
     These builds aren't published in a JSON manifest, so we have to form the URL
     according to the user's parameters. We might fail to download a build if
