@@ -37,7 +37,7 @@ activate_ocspvenv() {
     echo "Creating virtual environment 'ocspvenv'..."
     venvcreate "${PYTHON:?}" ocspvenv || return
 
-    python -m pip install -q -r mock-ocsp-responder-requirements.txt || {
+    python -m pip install -q -r requirements.txt || {
       local -r ret="$?"
       deactivate || return 1 # Deactivation should never fail!
       return "$ret"

@@ -37,13 +37,7 @@ activate_kmstlsvenv() {
     echo "Creating virtual environment 'kmstlsvenv'..."
     venvcreate "${PYTHON:?}" kmstlsvenv || return
 
-    local packages=(
-      "boto3~=1.35.0"
-      "git+https://github.com/mongodb-forks/PyKMIP.git"
-      "sqlalchemy<2.0.0" # sqlalchemy.exc.InvalidRequestError: Implicitly combining column managed_objects.uid with column crypto_objects.uid under attribute 'unique_identifier'.
-    )
-
-    if ! python -m pip install -q -U "${packages[@]}"; then
+    if ! python -m pip install -q -r requirements.txt; then
       # Avoid `error: can't find Rust compiler`.
       # Assume install failure at this point is due to new versions of
       # cryptography require a Rust toolchain when a cryptography wheel is not
@@ -53,9 +47,7 @@ activate_kmstlsvenv() {
       #  - All RHEL on powerpc64le or s390x.
       #  - OpenSUSE 12 on s390x.
       #  - Ubuntu 18.04 on powerpc64le or s390x
-      packages+=("cryptography<3.4")
-
-      python -m pip install -q -U "${packages[@]}" || {
+      python -m pip install -q -r requirements-legacy.txt || {
         local -r ret="$?"
         deactivate || return 1 # Deactivation should never fail!
         return "$ret"
