@@ -59,24 +59,22 @@ case $_NAME in
     popd
   ;;
   gcloud)
-    # NOTE: SHA_SUMs were copied from https://cloud.google.com/sdk/docs/install#installation_instructions
+    # NOTE: Google Cloud does not expose stable downloads with known shasums
+    # https://cloud.google.com/sdk/docs/install#installation_instructions lists
+    # shasums that change for every release.
     _BASE="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads"
     case "$_OS_NAME-$_MARCH" in
        linux-x86_64)
           _URL="$_BASE/google-cloud-cli-linux-x86_64.tar.gz"
-          _SHA_SUM=1ec7d351de14277c00c430f9fb939255c4b63940417da2f24ff6413a9e221c2f
         ;;
         linux-aarch64)
           _URL="$_BASE/google-cloud-cli-linux-arm.tar.gz"
-          _SHA_SUM=e6153461e3154ebce61d35b73005bdd14a0ecacd42e5008f66e25b4ad231e5c9
         ;;
         darwin-x86_64)
           _URL="$_BASE/google-cloud-cli-darwin-x86_64.tar.gz"
-          _SHA_SUM=0c0101a65f3473a5db6a2ebc1867c3294cdbd88fef34da91050869f76149a822
         ;;
         darwin-arm64)
           _URL="$_BASE/google-cloud-cli-darwin-arm.tar.gz"
-          _SHA_SUM=80cfba6da278d0ce8a8a0625bec9648ea5a39ea42daf2536068f19edb175dc70
         ;;
         *)
            echo "Unsupported for $_NAME: $_OS_NAME-$_MARCH"
@@ -89,7 +87,6 @@ case $_NAME in
     rm -rf google-cloud-sdk
     _FNAME=google-cloud-sdk.tgz
     "$SCRIPT_DIR/retry-with-backoff.sh" curl -L -s "$_URL" -o "/tmp/$_FNAME"
-    echo "${_SHA_SUM} ${_FNAME}" | sha256sum -c
     tar xfz $_FNAME
     popd
     ln -s /tmp/google-cloud-sdk/bin/gcloud "$DRIVERS_TOOLS/.bin/gcloud"
