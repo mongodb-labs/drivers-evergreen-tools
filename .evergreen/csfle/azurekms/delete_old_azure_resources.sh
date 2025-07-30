@@ -21,7 +21,7 @@ set -o nounset
         PYTHON=$(ensure_python3)
         echo "Creating virtual environment 'azure_deletion_venv'..."
         venvcreate "${PYTHON:?}" azure_deletion_venv
-        python -m pip install -r requirements.txt
+        python -m pip install -r "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/requirements.txt"
         echo "Creating virtual environment 'azure_deletion_venv'... done."
     fi
 }
