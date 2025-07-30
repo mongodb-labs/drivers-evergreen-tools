@@ -32,6 +32,7 @@ cryptography==45.0.5
     #   msal
     #   oic
     #   pyjwt
+    #   pyopenssl
 defusedxml==0.7.1
     # via oic
 future==1.0.0
@@ -77,6 +78,8 @@ pyjwt[crypto]==2.10.1
     #   pyjwt
 pyop==3.4.1
     # via -r requirements-in.txt
+pyopenssl==25.1.0
+    # via -r requirements-in.txt
 python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.1.1
@@ -101,6 +104,7 @@ typing-extensions==4.14.1
     #   azure-keyvault-secrets
     #   pydantic
     #   pydantic-core
+    #   pyopenssl
     #   typing-inspection
 typing-inspection==0.4.1
     # via
