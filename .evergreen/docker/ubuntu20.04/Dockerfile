@@ -23,7 +23,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 && add-apt-repository ppa:deadsnakes/ppa \
 && apt-get -qq update \
 && apt-get -qq -y install python3.10 python3.10-venv < /dev/null > /dev/null \
-&& ln -sf /usr/bin/python3.9 /usr/bin/python3 \
+&& ln -sf /usr/bin/python3.10 /usr/bin/python3 \
 && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID
