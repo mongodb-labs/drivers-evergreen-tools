@@ -18,5 +18,5 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install libcurl4 libgssapi-
 # Dependencies for drivers-evergreen-tools
 sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
-sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install python3.10-venv git < /dev/null > /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install python3.10 python3.10-venv git < /dev/null > /dev/null
 echo "Installing dependencies ... end"
