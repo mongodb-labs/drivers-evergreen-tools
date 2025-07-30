@@ -4,6 +4,7 @@ set -o pipefail
 # Do not error on unset variables. run-orchestration.sh accesses unset variables.
 
 echo "Installing dependencies ... begin"
+echo "*** is this thing on?"
 # Skip the "Processing triggers for man-db" step.
 echo "set man-db/auto-update false" | sudo debconf-communicate
 sudo dpkg-reconfigure -f noninteractive man-db || true  # This may fail if the lock file is held.
