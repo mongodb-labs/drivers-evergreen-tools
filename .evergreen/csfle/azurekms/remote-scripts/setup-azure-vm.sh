@@ -15,5 +15,5 @@ sudo sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
 # Dependencies for mongod: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-enterprise-on-debian-tarball/
 sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install libcurl4 libgssapi-krb5-2 libldap-common libwrap0 libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit openssl liblzma5 < /dev/null > /dev/null
 # Dependencies for drivers-evergreen-tools
-sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install build-essential python3 python3-venv git < /dev/null > /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get $OPTIONS install python3 python3-venv git < /dev/null > /dev/null
 echo "Installing dependencies ... end"
