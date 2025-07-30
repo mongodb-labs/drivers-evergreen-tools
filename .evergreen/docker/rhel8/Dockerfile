@@ -19,12 +19,12 @@ RUN dnf update -y && \
     sudo \
     make \
     gnupg \
-    python3.9 \
+    python3.10 \
     mongodb-enterprise \
     lsof < /dev/null > /dev/null
 
-# Alias python3 -> python3.9
-RUN ln -f -s /usr/bin/python3.9 /usr/bin/python3
+# Alias python3 -> python3.10
+RUN ln -f -s /usr/bin/python3.10 /usr/bin/python3
 
 ARG USER_ID
 ARG GROUP_ID
