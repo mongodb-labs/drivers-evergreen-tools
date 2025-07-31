@@ -31,7 +31,7 @@ if [[ "$(uname -s)" == CYGWIN* ]]; then
 fi
 
 # Test with supported pythons
-pythons="3.9 3.10 3.11 3.12 3.13"
+pythons="3.9 3.10 3.11 3.12 3.13 3.14"
 for python in $pythons; do
   if [ "$(uname -s)" = "Darwin" ]; then
     PYTHON_BINARY="/Library/Frameworks/Python.Framework/Versions/$python/bin/python3"

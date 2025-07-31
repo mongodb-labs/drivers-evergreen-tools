@@ -1,4 +1,5 @@
-boto3~=1.35.0
+boto3~=1.39.0
 pyop~=3.4.0
+PyOpenSSL>=23.2.0
 azure-identity
 azure-keyvault-secrets
