@@ -5,7 +5,7 @@ set -o pipefail
 
 if grep -qs "bullseye" /etc/os-release; then
     echo "Overwrite repositories to fix DRIVERS-3238 ... begin"
-    cat /etc/apt/sources.list | grep -v bullseye-backports | sudo tee /etc/apt/sources.list 
+    cat /etc/apt/sources.list | grep -v bullseye-backports | sudo tee /etc/apt/sources.list
     echo "Overwrite repositories to fix DRIVERS-3238 ... end"
 fi
 
