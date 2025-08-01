@@ -3,6 +3,12 @@ set -o errexit
 set -o pipefail
 # Do not error on unset variables. run-orchestration.sh accesses unset variables.
 
+if grep -qs "bullseye" /etc/os-release; then
+    echo "Overwrite repositories to fix DRIVERS-3238 ... begin"
+    cat /etc/apt/sources.list | grep -v bullseye-backports | sudo tee /etc/apt/sources.list
+    echo "Overwrite repositories to fix DRIVERS-3238 ... end"
+fi
+
 echo "Installing dependencies ... begin"
 # Skip the "Processing triggers for man-db" step.
 echo "set man-db/auto-update false" | sudo debconf-communicate
