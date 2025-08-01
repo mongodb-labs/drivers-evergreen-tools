@@ -5,9 +5,7 @@ set -o pipefail
 
 if grep -qs "bullseye" /etc/os-release; then
     echo "Overwrite repositories to fix DRIVERS-3238 ... begin"
-    echo "deb http://deb.debian.org/debian bullseye main" | sudo tee /etc/apt/sources.list
-    echo "deb http://deb.debian.org/debian-security bullseye-security main" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://deb.debian.org/debian bullseye-updates main" | sudo tee -a /etc/apt/sources.list
+    cat /etc/apt/sources.list | grep -v bullseye-backports | sudo tee /etc/apt/sources.list 
     echo "Overwrite repositories to fix DRIVERS-3238 ... end"
 fi
 
