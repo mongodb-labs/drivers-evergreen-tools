@@ -99,25 +99,32 @@ uv venv venv &>/dev/null
 popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
-# Add support for MongoDB 3.6, which was dropped in pymongo 4.11.
-EXTRA_ARGS=""
-if [ "${MONGODB_VERSION:-latest}" == "3.6" ]; then
-  EXTRA_ARGS_ARR=(--with "pymongo<4.11")
-  EXTRA_ARGS="${EXTRA_ARGS_ARR[*]}"
-fi
+declare uv_install_args
+uv_install_args=(
+  --quiet
+  --force
+  --editable
+  --with certifi
+)
+
+# Preserve pymongo compatibility with the requested server version.
+case "${MONGODB_VERSION:-"latest"}" in
+3.6) uv_install_args+=(--with "pymongo<4.11") ;;
+4.0) uv_install_args+=(--with "pymongo<4.14") ;;
+esac
 
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
   PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
-  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
+  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install "${uv_install_args[@]:?}" .
   filenames=$(ls ${TMP_DIR})
   for filename in $filenames; do
     mv $TMP_DIR/$filename "$1/${filename//.exe/}"
   done
   rm -rf $TMP_DIR
 else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install -q ${EXTRA_ARGS} --with certifi --force --editable .
+  UV_TOOL_BIN_DIR=$(pwd) uv tool install "${uv_install_args[@]:?}" .
 fi
 
 popd >/dev/null # "$TARGET_DIR"
