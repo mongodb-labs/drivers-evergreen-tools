@@ -133,6 +133,8 @@ mo-expansion.sh
 .dockerignore
 .local
 container_id.txt
+uv-requirements.txt
+uv-override-dependencies.txt
 
 # Azure functions.
 .python_packages/

@@ -99,17 +99,27 @@ uv venv venv &>/dev/null
 popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
+# Workaround for https://github.com/astral-sh/uv/issues/5815.
+uv run --quiet --frozen --isolated uv pip freeze >|"${TARGET_DIR:?}/uv-requirements.txt"
+
+# Support overriding lockfile dependencies.
+if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
+  printf "">|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="${TARGET_DIR:?}/uv-override-dependencies.txt"}"
+fi
+
 declare uv_install_args
 uv_install_args=(
   --quiet
   --force
   --editable
+  --with-requirements "${TARGET_DIR:?}/uv-requirements.txt"
+  --overrides "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 )
 
 # Preserve pymongo compatibility with the requested server version.
 case "${MONGODB_VERSION:-"latest"}" in
-3.6) uv_install_args+=(--with "pymongo<4.11") ;;
-4.0) uv_install_args+=(--with "pymongo<4.14") ;;
+3.6) echo "pymongo<4.11" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}";;
+4.0) echo "pymongo<4.14" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}";;
 esac
 
 # On Windows, we have to do a bit of path manipulation.
