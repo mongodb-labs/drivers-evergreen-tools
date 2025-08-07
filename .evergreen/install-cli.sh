@@ -108,7 +108,7 @@ fi
 export UV_TOOL_BIN_DIR
 
 # Pin the uv binary version used by subsequent commands.
-uv tool install -q "uv~=0.8.0"
+uv tool install -q --force "uv~=0.8.0"
 PATH="${UV_TOOL_BIN_DIR:?}:${PATH:-}"
 
 # Workaround for https://github.com/astral-sh/uv/issues/5815.
