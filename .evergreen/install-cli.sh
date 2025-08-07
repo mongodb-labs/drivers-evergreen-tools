@@ -116,12 +116,6 @@ uv_install_args=(
   --overrides "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 )
 
-# Preserve pymongo compatibility with the requested server version.
-case "${MONGODB_VERSION:-"latest"}" in
-3.6) echo "pymongo<4.11" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}";;
-4.0) echo "pymongo<4.14" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}";;
-esac
-
 # On Windows, we have to do a bit of path manipulation.
 if [ "Windows_NT" == "${OS:-}" ]; then
   TMP_DIR=$(cygpath -m "$(mktemp -d)")
