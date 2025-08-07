@@ -100,12 +100,12 @@ popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
 # Workaround for https://github.com/astral-sh/uv/issues/5815.
-printf "" >|"${TARGET_DIR:?}/uv-requirements.txt"
-uv run --quiet --frozen --isolated uv pip freeze >>"${TARGET_DIR:?}/uv-requirements.txt"
+printf "" >|uv-requirements.txt
+uv run --quiet --frozen --isolated uv pip freeze >>uv-requirements.txt
 
 # Support overriding lockfile dependencies.
 if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
-  printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="${TARGET_DIR:?}/uv-override-dependencies.txt"}"
+  printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="uv-override-dependencies.txt"}"
 fi
 
 declare uv_install_args
@@ -113,7 +113,7 @@ uv_install_args=(
   --quiet
   --force
   --editable
-  --with-requirements "${TARGET_DIR:?}/uv-requirements.txt"
+  --with-requirements uv-requirements.txt
   --overrides "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 )
 
