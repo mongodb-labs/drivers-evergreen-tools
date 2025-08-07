@@ -104,7 +104,6 @@ uv_install_args=(
   --quiet
   --force
   --editable
-  --with certifi
 )
 
 # Preserve pymongo compatibility with the requested server version.
