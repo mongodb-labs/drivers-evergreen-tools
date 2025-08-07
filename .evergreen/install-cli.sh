@@ -104,7 +104,7 @@ uv run --quiet --frozen --isolated uv pip freeze >|"${TARGET_DIR:?}/uv-requireme
 
 # Support overriding lockfile dependencies.
 if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
-  printf "">|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="${TARGET_DIR:?}/uv-override-dependencies.txt"}"
+  printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="${TARGET_DIR:?}/uv-override-dependencies.txt"}"
 fi
 
 declare uv_install_args

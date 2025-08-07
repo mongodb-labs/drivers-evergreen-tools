@@ -8,7 +8,7 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 export DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES
 DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES="${SCRIPT_DIR:?}/uv-override-dependencies.txt"
-printf "">|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
+printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 
 # Preserve pymongo compatibility with the requested server version.
 case "${MONGODB_VERSION:-"latest"}" in
