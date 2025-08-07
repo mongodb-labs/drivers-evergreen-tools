@@ -100,7 +100,8 @@ popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
 # Workaround for https://github.com/astral-sh/uv/issues/5815.
-uv run --quiet --frozen --isolated uv pip freeze >|"${TARGET_DIR:?}/uv-requirements.txt"
+printf "" >|"${TARGET_DIR:?}/uv-requirements.txt"
+uv run --quiet --frozen --isolated uv pip freeze >>"${TARGET_DIR:?}/uv-requirements.txt"
 
 # Support overriding lockfile dependencies.
 if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
