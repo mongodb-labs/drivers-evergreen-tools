@@ -13,16 +13,20 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type OverrideInfo struct {
-	OverrideMainline bool `bson:"override_mainline"`
-	BaseOrder        any  `bson:"base_order"`
-	Reason           any  `bson:"reason"`
-	User             any  `bson:"user"`
+// RawData defines the shape of the data in the raw_results collection.
+// raw_results stores results by benchmark, which holds the values of all its measurements.
+// A single measurement from a single benchmark is called a microbenchmark.
+type RawData struct {
+	Info                 Info
+	CreatedAt            any     `bson:"created_at"`
+	CompletedAt          any     `bson:"completed_at"`
+	Rollups              Rollups // List of all measurement results
+	FailedRollupAttempts int64   `bson:"failed_rollup_attempts"`
 }
 
 type Info struct {
 	Project      string `bson:"project"`
-	Version      string `bson:"version"`
+	Version      string `bson:"version"` // Evergreen version that produced the results
 	Variant      string `bson:"variant"`
 	Order        int64  `bson:"order"`
 	TaskName     string `bson:"task_name"`
@@ -30,42 +34,34 @@ type Info struct {
 	Execution    int64  `bson:"execution"`
 	Mainline     bool   `bson:"mainline"`
 	OverrideInfo OverrideInfo
-	TestName     string         `bson:"test_name"`
+	TestName     string         `bson:"test_name"` // Benchmark name
 	Args         map[string]any `bson:"args"`
 }
 
-type Stat struct {
-	Name     string  `bson:"name"`
-	Val      float64 `bson:"val"`
-	Metadata any     `bson:"metadata"`
+type OverrideInfo struct {
+	OverrideMainline bool `bson:"override_mainline"`
+	BaseOrder        any  `bson:"base_order"`
+	Reason           any  `bson:"reason"`
+	User             any  `bson:"user"`
 }
 
 type Rollups struct {
 	Stats []Stat
 }
 
-type RawData struct {
-	Info                 Info
-	CreatedAt            any `bson:"created_at"`
-	CompletedAt          any `bson:"completed_at"`
-	Rollups              Rollups
-	FailedRollupAttempts int64 `bson:"failed_rollup_attempts"`
+type Stat struct {
+	Name     string  `bson:"name"` // Measurement name
+	Val      float64 `bson:"val"`  // Microbenchmark result
+	Metadata any     `bson:"metadata"`
 }
 
-type TimeSeriesInfo struct {
-	Project     string         `bson:"project"`
-	Variant     string         `bson:"variant"`
-	Task        string         `bson:"task"`
-	Test        string         `bson:"test"`
-	Measurement string         `bson:"measurement"`
-	Args        map[string]any `bson:"args"`
-}
-
+// StableRegion defines the shape of the data in the stable_regions collection.
+// A stable region is a group of consecutive microbenchmark values between two change points.
 type StableRegion struct {
 	TimeSeriesInfo         TimeSeriesInfo
 	Start                  any       `bson:"start"`
 	End                    any       `bson:"end"`
-	Values                 []float64 `bson:"values"`
+	Values                 []float64 `bson:"values"` // All microbenchmark values that makes up the stable region
 	StartOrder             int64     `bson:"start_order"`
 	EndOrder               int64     `bson:"end_order"`
 	Mean                   float64   `bson:"mean"`
@@ -76,16 +72,27 @@ type StableRegion struct {
 	CoefficientOfVariation float64   `bson:"coefficient_of_variation"`
 	LastSuccessfulUpdate   any       `bson:"last_successful_update"`
 	Last                   bool      `bson:"last"`
-	Contexts               []any     `bson:"contexts"`
+	Contexts               []any     `bson:"contexts"` // Performance context (e.g. "Go Driver perf comp")
 }
 
+type TimeSeriesInfo struct {
+	Project     string         `bson:"project"`
+	Variant     string         `bson:"variant"`
+	Task        string         `bson:"task"`
+	Test        string         `bson:"test"`        // Benchmark name
+	Measurement string         `bson:"measurement"` // Measurement name
+	Args        map[string]any `bson:"args"`
+}
+
+// EnergyStats stores the calculated energy statistics for a patch version's specific
+// microbenchmark compared to the mainline's stable region for that same microbenchmark.
 type EnergyStats struct {
 	Project         string
 	Benchmark       string
 	Measurement     string
-	PatchVersion    string
-	StableRegion    StableRegion
-	MeasurementVal  float64
+	PatchVersion    string       // Evergreen version that produced the results
+	StableRegion    StableRegion // Latest stable region from the mainline this patch is comparing against
+	MeasurementVal  float64      // Microbenchmark result of the patch version
 	PercentChange   float64
 	EnergyStatistic float64
 	TestStatistic   float64
@@ -93,19 +100,22 @@ type EnergyStats struct {
 	ZScore          float64
 }
 
+// CompareResult is the collection of the energy statistics of all microbenchmarks with
+// statistically significant changes for this patch.
 type CompareResult struct {
-	CommitSHA      string
-	MainlineCommit string
-	Version        string
+	CommitSHA      string // Head commit SHA
+	MainlineCommit string // Base commit SHA
+	Version        string // Evergreen patch version
 	SigEnergyStats []EnergyStats
 }
 
+// Performance analytics node db and collection names
 const expandedMetricsDB = "expanded_metrics"
 const rawResultsColl = "raw_results"
 const stableRegionsColl = "stable_regions"
 
 // Compare will return statistical results for a patch version using the
-// stable region defined by the performance analyzer cluster.
+// stable region defined by the performance analytics cluster.
 func Compare(ctx context.Context, versionID string, perfAnalyzerConnString string, project string, perfContext string) (*CompareResult, error) {
 
 	// Connect to analytics node
@@ -156,6 +166,7 @@ func Compare(ctx context.Context, versionID string, perfAnalyzerConnString strin
 	return &compareResult, nil
 }
 
+// Gets all raw benchmark data for a specific Evergreen version.
 func findRawData(ctx context.Context, project string, version string, coll *mongo.Collection) ([]RawData, error) {
 	filter := bson.D{
 		{"info.project", project},
@@ -194,7 +205,7 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 	return rawData, err
 }
 
-// Find the most recent stable region of the mainline version for a specific test/measurement
+// Finds the most recent stable region of the mainline version for a specific microbenchmark.
 func findLastStableRegion(ctx context.Context, project string, testname string, measurement string, coll *mongo.Collection, perfContext string) (*StableRegion, error) {
 	filter := bson.D{
 		{"time_series_info.project", project},
@@ -216,7 +227,7 @@ func findLastStableRegion(ctx context.Context, project string, testname string, 
 	return sr, nil
 }
 
-// For a specific test and measurement
+// Calculate the energy statistics for all measurements in a benchmark.
 func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.Collection, perfContext string) ([]*EnergyStats, error) {
 	testname := rd.Info.TestName
 	var energyStats []*EnergyStats
@@ -241,7 +252,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 		stableRegionVec := mat.NewDense(len(stableRegion.Values), 1, stableRegion.Values)
 		measValVec := mat.NewDense(1, 1, []float64{measVal}) // singleton
 
-		estat, tstat, hscore, err := getEnergyStatistics(stableRegionVec, measValVec)
+		estat, tstat, hscore, err := calcEnergyStatistics(stableRegionVec, measValVec)
 		if err != nil {
 			log.Fatalf(
 				"Could not calculate energy stats for test %q, measurement %q: %v",
@@ -251,8 +262,8 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 			)
 		}
 
-		zscore := getZScore(measVal, stableRegion.Mean, stableRegion.Std)
-		pChange := getPercentageChange(measVal, stableRegion.Mean)
+		zscore := calcZScore(measVal, stableRegion.Mean, stableRegion.Std)
+		pChange := calcPercentChange(measVal, stableRegion.Mean)
 
 		es := EnergyStats{
 			Project:         project,
@@ -290,7 +301,7 @@ func getEnergyStatsForAllBenchMarks(ctx context.Context, patchRawData []RawData,
 	return allEnergyStats, nil
 }
 
-func getStatSigBenchmarks(energyStats []*EnergyStats) []EnergyStats { // TODO
+func getStatSigBenchmarks(energyStats []*EnergyStats) []EnergyStats {
 
 	var significantEnergyStats []EnergyStats
 	for _, es := range energyStats {
@@ -308,7 +319,7 @@ func getStatSigBenchmarks(energyStats []*EnergyStats) []EnergyStats { // TODO
 
 // Given two matrices, this function returns
 // (e, t, h) = (E-statistic, test statistic, e-coefficient of inhomogeneity)
-func getEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
+func calcEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
 	xrows, xcols := x.Dims()
 	yrows, ycols := y.Dims()
 
@@ -324,7 +335,7 @@ func getEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
 
 	var A float64 // E|X-Y|
 	if xrowsf > 0 && yrowsf > 0 {
-		dist, err := getDistance(x, y)
+		dist, err := calcDistance(x, y)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -335,7 +346,7 @@ func getEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
 
 	var B float64 // E|X-X'|
 	if xrowsf > 0 {
-		dist, err := getDistance(x, x)
+		dist, err := calcDistance(x, x)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -346,7 +357,7 @@ func getEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
 
 	var C float64 // E|Y-Y'|
 	if yrowsf > 0 {
-		dist, err := getDistance(y, y)
+		dist, err := calcDistance(y, y)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -368,7 +379,7 @@ func getEnergyStatistics(x, y *mat.Dense) (float64, float64, float64, error) {
 
 // Given two vectors (expected 1 col),
 // this function returns the sum of distances between each pair.
-func getDistance(x, y *mat.Dense) (float64, error) {
+func calcDistance(x, y *mat.Dense) (float64, error) {
 	xrows, xcols := x.Dims()
 	yrows, ycols := y.Dims()
 
@@ -386,16 +397,16 @@ func getDistance(x, y *mat.Dense) (float64, error) {
 	return sum, nil
 }
 
-// Get Z score for result x, compared to mean u and st dev o.
-func getZScore(x, mu, sigma float64) float64 {
+// Calculate the Z score for result x, compared to mean mu and st dev sigma.
+func calcZScore(x, mu, sigma float64) float64 {
 	if sigma == 0 {
 		return math.NaN()
 	}
 	return (x - mu) / sigma
 }
 
-// Get percentage change for result x compared to mean u.
-func getPercentageChange(x, mu float64) float64 {
+// Calculate the percentage change for result x compared to mean mu.
+func calcPercentChange(x, mu float64) float64 {
 	if mu == 0 {
 		return math.NaN()
 	}
