@@ -131,9 +131,6 @@ func Compare(ctx context.Context, versionID string, perfAnalyzerConnString strin
 		}
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error pinging MongoDB Analytics: %v", err)
