@@ -109,7 +109,7 @@ func generateEvgLink(version string, variant string) (string, error) {
 
 	u, err := url.Parse(baseUrl)
 	if err != nil {
-		return "", fmt.Errorf("Error parsing URL: %v", err)
+		return "", fmt.Errorf("error parsing URL: %v", err)
 	}
 
 	u.Path = fmt.Sprintf("version/%s/tasks", version)
