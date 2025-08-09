@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -8,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/mongodb-labs/drivers-evergreen-tools/perfcomp"
 	"github.com/spf13/cobra"
@@ -93,7 +95,10 @@ func runCompare(cmd *cobra.Command, args []string, project string, perfContext s
 	perfAnalyzerConnString := os.Getenv("PERF_URI_PRIVATE_ENDPOINT")
 	version := args[len(args)-1]
 
-	res, err := perfcomp.Compare(cmd.Context(), version, perfAnalyzerConnString, project, perfContext)
+	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Second)
+	defer cancel()
+
+	res, err := perfcomp.Compare(ctx, version, perfAnalyzerConnString, project, perfContext)
 	if err != nil {
 		log.Fatalf("failed to compare: %v", err)
 	}
