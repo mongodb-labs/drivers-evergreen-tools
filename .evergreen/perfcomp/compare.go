@@ -121,13 +121,13 @@ func Compare(ctx context.Context, versionID string, perfAnalyzerConnString strin
 	// Connect to analytics node
 	client, err := mongo.Connect(options.Client().ApplyURI(perfAnalyzerConnString))
 	if err != nil {
-		return nil, fmt.Errorf("Error connecting client: %v", err)
+		return nil, fmt.Errorf("error connecting client: %v", err)
 	}
 
 	defer func() { // Defer disconnect client
 		err = client.Disconnect(context.Background())
 		if err != nil {
-			log.Fatalf("Failed to disconnect client: %v", err)
+			log.Fatalf("failed to disconnect client: %v", err)
 		}
 	}()
 
@@ -136,7 +136,7 @@ func Compare(ctx context.Context, versionID string, perfAnalyzerConnString strin
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Error pinging MongoDB Analytics: %v", err)
+		return nil, fmt.Errorf("error pinging MongoDB Analytics: %v", err)
 	}
 	log.Println("Successfully connected to MongoDB Analytics node.")
 
@@ -148,12 +148,12 @@ func Compare(ctx context.Context, versionID string, perfAnalyzerConnString strin
 
 	patchRawData, err := findRawData(findCtx, project, versionID, db.Collection(rawResultsColl))
 	if err != nil {
-		return nil, fmt.Errorf("Error getting raw data: %v", err)
+		return nil, fmt.Errorf("error getting raw data: %v", err)
 	}
 
 	allEnergyStats, err := getEnergyStatsForAllBenchMarks(findCtx, patchRawData, db.Collection(stableRegionsColl), perfContext)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting energy statistics: %v", err)
+		return nil, fmt.Errorf("error getting energy statistics: %v", err)
 	}
 
 	// Get statistically significant benchmarks
@@ -178,7 +178,7 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 	cursor, err := coll.Find(ctx, filter)
 	if err != nil {
 		log.Fatalf(
-			"Error retrieving raw data for version %q: %v",
+			"error retrieving raw data for version %q: %v",
 			version,
 			err,
 		)
@@ -186,7 +186,7 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 	defer func() {
 		err = cursor.Close(ctx)
 		if err != nil {
-			log.Fatalf("Error closing cursor while retrieving raw data for version %q: %v", version, err)
+			log.Fatalf("error closing cursor while retrieving raw data for version %q: %v", version, err)
 		}
 	}()
 
@@ -196,7 +196,7 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 	err = cursor.All(ctx, &rawData)
 	if err != nil {
 		log.Fatalf(
-			"Error decoding raw data from version %q: %v",
+			"error decoding raw data from version %q: %v",
 			version,
 			err,
 		)
@@ -240,7 +240,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 		stableRegion, err := findLastStableRegion(ctx, project, testname, measName, coll, perfContext)
 		if err != nil {
 			log.Fatalf(
-				"Error finding last stable region for test %q, measurement %q: %v",
+				"error finding last stable region for test %q, measurement %q: %v",
 				testname,
 				measName,
 				err,
@@ -255,7 +255,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 		estat, tstat, hscore, err := calcEnergyStatistics(stableRegionVec, measValVec)
 		if err != nil {
 			log.Fatalf(
-				"Could not calculate energy stats for test %q, measurement %q: %v",
+				"could not calculate energy stats for test %q, measurement %q: %v",
 				testname,
 				measName,
 				err,
@@ -290,7 +290,7 @@ func getEnergyStatsForAllBenchMarks(ctx context.Context, patchRawData []RawData,
 		energyStats, err := getEnergyStatsForOneBenchmark(ctx, rd, coll, perfContext)
 		if err != nil {
 			log.Fatalf(
-				"Could not get energy stats for %q: %v",
+				"could not get energy stats for %q: %v",
 				rd.Info.TestName,
 				err,
 			)
