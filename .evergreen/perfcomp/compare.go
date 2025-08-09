@@ -116,10 +116,10 @@ const stableRegionsColl = "stable_regions"
 
 // Compare will return statistical results for a patch version using the
 // stable region defined by the performance analytics cluster.
-func Compare(ctx context.Context, versionID string, perfAnalyzerConnString string, project string, perfContext string) (*CompareResult, error) {
+func Compare(ctx context.Context, versionID string, perfAnalyticsConnString string, project string, perfContext string) (*CompareResult, error) {
 
 	// Connect to analytics node
-	client, err := mongo.Connect(options.Client().ApplyURI(perfAnalyzerConnString))
+	client, err := mongo.Connect(options.Client().ApplyURI(perfAnalyticsConnString))
 	if err != nil {
 		return nil, fmt.Errorf("error connecting client: %v", err)
 	}

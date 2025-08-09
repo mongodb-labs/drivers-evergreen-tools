@@ -92,13 +92,13 @@ func createComment(result perfcomp.CompareResult) string {
 }
 
 func runCompare(cmd *cobra.Command, args []string, project string, perfContext string) error {
-	perfAnalyzerConnString := os.Getenv("PERF_URI_PRIVATE_ENDPOINT")
+	perfAnalyticsConnString := os.Getenv("PERF_URI_PRIVATE_ENDPOINT")
 	version := args[len(args)-1]
 
 	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Second)
 	defer cancel()
 
-	res, err := perfcomp.Compare(ctx, version, perfAnalyzerConnString, project, perfContext)
+	res, err := perfcomp.Compare(ctx, version, perfAnalyticsConnString, project, perfContext)
 	if err != nil {
 		log.Fatalf("failed to compare: %v", err)
 	}
