@@ -67,24 +67,27 @@ func newCompareCommand() *cobra.Command {
 
 func createComment(result perfcomp.CompareResult) string {
 	var comment strings.Builder
-	fmt.Fprintf(&comment, "The following benchmark tests for version %s had statistically significant changes (i.e., |z-score| > 1.96):\n\n", result.Version)
-
-	w := tabwriter.NewWriter(&comment, 0, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "| Benchmark\t| Measurement\t| % Change\t| Patch Value\t| Stable Region\t| H-Score\t| Z-Score\t| ")
-	fmt.Fprintln(w, "| ---------\t| -----------\t| --------\t| -----------\t| -------------\t| -------\t| -------\t|")
 
 	if len(result.SigEnergyStats) == 0 {
 		comment.Reset()
 		fmt.Fprintf(&comment, "There were no significant changes to the performance to report for version %s.\n", result.Version)
 	} else {
+		fmt.Fprintf(&comment, "The following benchmark tests for version %s had statistically significant changes (i.e., |z-score| > 1.96):\n\n", result.Version)
+
+		w := tabwriter.NewWriter(&comment, 0, 0, 1, ' ', 0)
+
+		fmt.Fprintln(w, "| Benchmark\t| Measurement\t| % Change\t| Patch Value\t| Stable Region\t| H-Score\t| Z-Score\t| ")
+		fmt.Fprintln(w, "| ---------\t| -----------\t| --------\t| -----------\t| -------------\t| -------\t| -------\t|")
+
 		sort.Slice(result.SigEnergyStats, func(i, j int) bool {
 			return math.Abs(result.SigEnergyStats[i].PercentChange) > math.Abs(result.SigEnergyStats[j].PercentChange)
 		})
 		for _, es := range result.SigEnergyStats {
 			fmt.Fprintf(w, "| %s\t| %s\t| %.4f\t| %.4f\t| Avg: %.4f, Med: %.4f, Stdev: %.4f\t| %.4f\t| %.4f\t|\n", es.Benchmark, es.Measurement, es.PercentChange, es.MeasurementVal, es.StableRegion.Mean, es.StableRegion.Median, es.StableRegion.Std, es.HScore, es.ZScore)
 		}
+
+		w.Flush()
 	}
-	w.Flush()
 
 	comment.WriteString("\n*For a comprehensive view of all microbenchmark results for this PR's commit, please check out the Evergreen perf task for this patch.*")
 	return comment.String()
