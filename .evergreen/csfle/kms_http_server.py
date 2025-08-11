@@ -55,9 +55,7 @@ class AwsKmsHandler(kms_http_common.KmsHandlerBase):
         if path == "/":
             self._do_post()
         else:
-            self.send_response(http.HTTPStatus.NOT_FOUND)
-            self.end_headers()
-            self.wfile.write(b"Unknown URL")
+            self.send_error(http.HTTPStatus.NOT_FOUND, "Unknown URL")
 
     def _do_post(self):
         c_len = int(self.headers.get("content-length"))
