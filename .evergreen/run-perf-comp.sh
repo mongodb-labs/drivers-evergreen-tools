@@ -60,8 +60,9 @@ fi
 
 : "${PERF_URI_PRIVATE_ENDPOINT:?Error: PERF_URI_PRIVATE_ENDPOINT must be set}"
 : "${VERSION_ID:?Error: VERSION_ID must be set}"
+: "${PROJECT:?Error: PROJECT must be set}"
 
-./bin/perfcomp compare ${VERSION_ID}
+./bin/perfcomp compare --project ${PROJECT} ${VERSION_ID}
 
 if [[ -n "${HEAD_SHA+set}" ]]; then
   ./bin/perfcomp mdreport

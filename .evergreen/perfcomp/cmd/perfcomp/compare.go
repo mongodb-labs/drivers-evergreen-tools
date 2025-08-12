@@ -33,7 +33,8 @@ func newCompareCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("project", "mongo-go-driver", "specify the name of an existing Evergreen project")
+	cmd.Flags().String("project", "", "specify the name of an existing Evergreen project")
+	cmd.MarkFlagRequired("project")
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		// Check for variables

@@ -7,7 +7,7 @@
 To install the latest version:
 
 ```bash
-go install github.com/mongodb-labs/drivers-evergreen-tools/perfcomp
+go install github.com/mongodb-labs/drivers-evergreen-tools/perfcomp/cmd/perfcomp@latest  
 ```
 
 Or build it locally in `bin/perfcomp`:
@@ -43,7 +43,7 @@ Usage:
   perfcomp compare [version_id] [flags]
 
 Flags:
-  --project string   specify the name of an existing Evergreen project (default "mongo-go-driver")
+  --project string   specify the name of an existing Evergreen project (required)
 ```
 
 #### mdreport
@@ -59,7 +59,7 @@ Usage:
 Alternatively, you can run the perfcomp shell script. This script will run build and then run `compare`. From the root directory,
 
 ```bash
-PERF_URI_PRIVATE_ENDPOINT="<perf_uri>" VERSION_ID="<version>" .evergreen/run-perf-comp.sh
+PERF_URI_PRIVATE_ENDPOINT="<perf_uri>" VERSION_ID="<version>" PROJECT="<project>" .evergreen/run-perf-comp.sh
 ```
 
 If you would like to see a markdown preview of the report, you can also pass in `HEAD_SHA=""`. This will generate `.evergreen/perfcomp/perf-report.md`.
