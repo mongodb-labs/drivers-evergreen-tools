@@ -148,7 +148,7 @@ func Compare(ctx context.Context, versionID string, perfAnalyticsConnString stri
 		return nil, fmt.Errorf("error getting raw data: %v", err)
 	}
 
-	allEnergyStats, err := getEnergyStatsForAllBenchMarks(findCtx, patchRawData, db.Collection(stableRegionsColl), perfContext)
+	allEnergyStats, err := getEnergyStatsForAllBenchmarks(findCtx, patchRawData, db.Collection(stableRegionsColl), perfContext)
 	if err != nil {
 		return nil, fmt.Errorf("error getting energy statistics: %v", err)
 	}
@@ -174,7 +174,7 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 
 	cursor, err := coll.Find(ctx, filter)
 	if err != nil {
-		log.Fatalf(
+		return nil, fmt.Errorf(
 			"error retrieving raw data for version %q: %v",
 			version,
 			err,
@@ -187,18 +187,16 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 		}
 	}()
 
-	log.Printf("Successfully retrieved %d docs from version %s.\n", cursor.RemainingBatchLength(), version)
-
 	var rawData []RawData
 	err = cursor.All(ctx, &rawData)
 	if err != nil {
-		log.Fatalf(
+		return nil, fmt.Errorf(
 			"error decoding raw data from version %q: %v",
 			version,
 			err,
 		)
 	}
-
+	log.Printf("Successfully retrieved %d docs from version %s.\n", len(rawData), version)
 	return rawData, err
 }
 
@@ -216,12 +214,12 @@ func findLastStableRegion(ctx context.Context, project string, testname string, 
 
 	findOptions := options.FindOne().SetSort(bson.D{{"end", -1}})
 
-	var sr *StableRegion
+	var sr StableRegion
 	err := coll.FindOne(ctx, filter, findOptions).Decode(&sr)
 	if err != nil {
 		return nil, err
 	}
-	return sr, nil
+	return &sr, nil
 }
 
 // Calculate the energy statistics for all measurements in a benchmark.
@@ -236,7 +234,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 
 		stableRegion, err := findLastStableRegion(ctx, project, testname, measName, coll, perfContext)
 		if err != nil {
-			log.Fatalf(
+			return nil, fmt.Errorf(
 				"error finding last stable region for test %q, measurement %q: %v",
 				testname,
 				measName,
@@ -251,7 +249,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 
 		estat, tstat, hscore, err := calcEnergyStatistics(stableRegionVec, measValVec)
 		if err != nil {
-			log.Fatalf(
+			return nil, fmt.Errorf(
 				"could not calculate energy stats for test %q, measurement %q: %v",
 				testname,
 				measName,
@@ -281,12 +279,12 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 	return energyStats, nil
 }
 
-func getEnergyStatsForAllBenchMarks(ctx context.Context, patchRawData []RawData, coll *mongo.Collection, perfContext string) ([]*EnergyStats, error) {
+func getEnergyStatsForAllBenchmarks(ctx context.Context, patchRawData []RawData, coll *mongo.Collection, perfContext string) ([]*EnergyStats, error) {
 	var allEnergyStats []*EnergyStats
 	for _, rd := range patchRawData {
 		energyStats, err := getEnergyStatsForOneBenchmark(ctx, rd, coll, perfContext)
 		if err != nil {
-			log.Fatalf(
+			return nil, fmt.Errorf(
 				"could not get energy stats for %q: %v",
 				rd.Info.TestName,
 				err,

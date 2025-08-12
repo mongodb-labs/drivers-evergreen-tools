@@ -38,14 +38,14 @@ func runMdCommand(cmd *cobra.Command, args []string) error {
 	// open file to read
 	fRead, err := os.Open(perfReportFileTxt)
 	if err != nil {
-		log.Fatalf("Could not open %s: %v", perfReportFileTxt, err)
+		return fmt.Errorf("failed to open perf report file %s: %v", perfReportFileTxt, err)
 	}
 	defer fRead.Close()
 
 	// open file to write
 	fWrite, err := os.Create(perfReportFileMd)
 	if err != nil {
-		log.Fatalf("Could not create %s: %v", perfReportFileMd, err)
+		return fmt.Errorf("failed to create perf report file %s: %v", perfReportFileMd, err)
 	}
 	defer fWrite.Close()
 
@@ -126,10 +126,10 @@ func generateEvgLink(version string, variant string) (string, error) {
 	return u.String(), nil
 }
 
-func printUrlToLine(fWrite *os.File, line string, link string, targetWord string, step int) {
+func printUrlToLine(fWrite *os.File, line string, link string, targetWord string, shift int) {
 	words := strings.Split(line, " ")
 	for i, w := range words {
-		if i > 0 && words[i+step] == targetWord {
+		if i > 0 && i+shift < len(words) && words[i+shift] == targetWord {
 			fmt.Fprintf(fWrite, "[%s](%s)", w, link)
 		} else {
 			fmt.Fprint(fWrite, w)
