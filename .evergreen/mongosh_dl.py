@@ -59,6 +59,7 @@ def _get_latest_version():
         if item.get("draft"):
             continue
         return item["tag_name"].replace("v", "").strip()
+    raise RuntimeError(f"Could not find tag name in releases: {data}")
 
 
 def _get_latest_version_git():
