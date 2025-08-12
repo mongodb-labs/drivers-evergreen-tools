@@ -45,21 +45,24 @@ def _get_latest_version():
     req = urllib.request.Request(url, headers=headers)
     try:
         resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
+        raw = resp.read().decode("utf-8")
+        data = json.loads(raw)
+        if not data:
+            LOGGER.debug("Releases (raw): %s", raw)
+            raise RuntimeError("List of releases is empty")
+        for item in data:
+            if item["prerelease"]:
+                continue
+            if item.get("draft"):
+                continue
+            return item["tag_name"].replace("v", "").strip()
+        raise RuntimeError(f"Could not find tag name in releases: {data}")
     except Exception as e:
         LOGGER.warning(
             "Error fetching the latest version, falling back to using git tags"
         )
         LOGGER.warning(str(e))
         return _get_latest_version_git()
-
-    data = json.loads(resp.read().decode("utf-8"))
-    for item in data:
-        if item["prerelease"]:
-            continue
-        if item.get("draft"):
-            continue
-        return item["tag_name"].replace("v", "").strip()
-    raise RuntimeError(f"Could not find tag name in releases: {data}")
 
 
 def _get_latest_version_git():
