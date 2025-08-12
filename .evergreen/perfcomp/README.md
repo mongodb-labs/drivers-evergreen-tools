@@ -53,3 +53,13 @@ generates markdown output after compare run (must be run after `compare`)
 Usage:
   perfcomp mdreport
 ```
+
+### Run via shell script
+
+Alternatively, you can run the perfcomp shell script. This script will run build and then run `compare`. From the root directory,
+
+```bash
+PERF_URI_PRIVATE_ENDPOINT="<perf_uri>" VERSION_ID="<version>" .evergreen/run-perf-comp.sh
+```
+
+If you would like to see a markdown preview of the report, you can also pass in `HEAD_SHA=""`. This will generate `.evergreen/perfcomp/perf-report.md`.
