@@ -1,6 +1,6 @@
 module github.com/mongodb-labs/drivers-evergreen-tools/perfcomp
 
-go 1.24.4
+go 1.24
 
 require github.com/spf13/cobra v1.9.1
 

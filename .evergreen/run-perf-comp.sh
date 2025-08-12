@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux pipefail
 
-GOVERSION="${GOVERESION:-1.24}"
+GOVERSION="${GOVERSION:-1.24}"
 GOPATH="${GOPATH:-$HOME/go}"
 
 # Detect OS
@@ -48,7 +48,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Enter the perfcomp sub‐directory
 cd "$PROJECT_ROOT/.evergreen/perfcomp"
 
-# Build the mongproxy binary.
+# Build the perfcomp binary.
 bash build.sh
 
 if [[ ! -x "./bin/perfcomp" ]]; then
