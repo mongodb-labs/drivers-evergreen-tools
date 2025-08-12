@@ -61,7 +61,7 @@ type StableRegion struct {
 	TimeSeriesInfo         TimeSeriesInfo
 	Start                  any       `bson:"start"`
 	End                    any       `bson:"end"`
-	Values                 []float64 `bson:"values"` // All microbenchmark values that makes up the stable region
+	Values                 []float64 `bson:"values"` // All microbenchmark values that make up the stable region
 	StartOrder             int64     `bson:"start_order"`
 	EndOrder               int64     `bson:"end_order"`
 	Mean                   float64   `bson:"mean"`
@@ -209,7 +209,7 @@ func findLastStableRegion(ctx context.Context, project string, testname string, 
 		{"time_series_info.test", testname},
 		{"time_series_info.measurement", measurement},
 		{"last", true},
-		{"contexts", bson.D{{"$in", bson.A{perfContext}}}}, // TODO (GODRIVER-3102): Refactor perf context for project switching.
+		{"contexts", bson.D{{"$in", bson.A{perfContext}}}},
 	}
 
 	findOptions := options.FindOne().SetSort(bson.D{{"end", -1}})
