@@ -65,7 +65,7 @@ PLATFORM="--platform linux/amd64"
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
 $DOCKER build $PLATFORM -t drivers-evergreen-tools -f $SCRIPT_DIR/../docker/ubuntu20.04/Dockerfile $USER .
-$DOCKER build $PLATFORM -t oidc-test $VOL -f $SCRIPT_DIR/Dockerfile $USER .
+$DOCKER build $PLATFORM -t oidc-test -f $SCRIPT_DIR/Dockerfile $USER .
 popd
 
-$DOCKER run --rm -i $USE_TTY $ENV -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
+$DOCKER run --rm -i $USE_TTY $ENV $VOL -p 27017:27017 -p 27018:27018 oidc-test $ENTRYPOINT
