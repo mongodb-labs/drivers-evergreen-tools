@@ -20,7 +20,9 @@ bash build.sh
 
 To use `perfcomp`, you should have an analytics node URI env variable called `PERF_URI_PRIVATE_ENDPOINT`. You can request for it from the devprod performance team.
 
-To run in your project repository, you need to create a [performance context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/contexts) that captures all benchmarks in your project. Feel free to refer to the [Go Driver context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/context/name/GoDriver%20perf%20task) as a template. Then, add the context to the `projectToPerfContext` map in `./cmd/perfcomp/compare.go`. You will need to re-run `build.sh` after updating the map.
+To run in your project repository, you need to create a [performance context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/contexts) that captures all benchmarks in your project. This needs to be a triage context. Feel free to refer to the [Go Driver context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/context/name/GoDriver%20perf%20task) as a template. Then, add the context to the `projectToPerfContext` map in `./cmd/perfcomp/compare.go`. You will need to re-run `build.sh` after updating the map.
+
+>*If you are creating a triage context for the first time, it may take a few hours for your project's data to be tagged.*
 
 ```bash
 perfcomp is a cli that reports stat-sig results between evergreen patches with the mainline commit
