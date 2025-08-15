@@ -114,9 +114,82 @@ const expandedMetricsDB = "expanded_metrics"
 const rawResultsColl = "raw_results"
 const stableRegionsColl = "stable_regions"
 
+// CompareOptions stores the information for each project to use as filters.
+type CompareOptions struct {
+	Project string // Required
+	Context string // Required
+	Task    string // Required
+	Variant string // Required
+	Version string // Required
+}
+
+type CompareOption func(*CompareOptions)
+
+// WithProject sets the evergreen project on the CompareOptions, for example "mongo-go-driver".
+func WithProject(project string) CompareOption {
+	return func(opts *CompareOptions)  {
+		opts.Project = project
+	}
+}
+
+// WithContext sets the performance triage context on the CompareOptions, for example "GoDriver perf task".
+func WithContext(context string) CompareOption {
+	return func(opts *CompareOptions)  {
+		opts.Context = context
+	}
+}
+
+// WithTask sets the evergreen performance task on the CompareOptions, for example "perf".
+func WithTask(task string) CompareOption {
+	return func(opts *CompareOptions)  {
+		opts.Task = task
+	}
+}
+
+// WithTask sets the performance task variant on the CompareOptions, for example "perf".
+func WithVariant(variant string) CompareOption {
+	return func(opts *CompareOptions)  {
+		opts.Variant = variant
+	}
+}
+
+// WithVersion sets the evergreen version on the CompareOptions, for example "688a39d27d916e0007cf8723".
+func WithVersion(version string) CompareOption {
+	return func(opts *CompareOptions)  {
+		opts.Version = version
+	}
+}
+
+func validateOptions(copts CompareOptions) error {
+	if copts.Project == "" {
+		return fmt.Errorf("project is required")
+	}
+	if copts.Context == "" {
+		return fmt.Errorf("context is required")
+	}
+	if copts.Task == "" {
+		return fmt.Errorf("task is required")
+	}
+	if copts.Variant == "" {
+		return fmt.Errorf("variant is required")
+	}
+	if copts.Version == "" {
+		return fmt.Errorf("version is required")
+	}
+	return nil
+}
+
 // Compare will return statistical results for a patch version using the
 // stable region defined by the performance analytics cluster.
-func Compare(ctx context.Context, versionID string, perfAnalyticsConnString string, project string, perfContext string) (*CompareResult, error) {
+func Compare(ctx context.Context, perfAnalyticsConnString string, opts ...CompareOption) (*CompareResult, error) {
+	copts := &CompareOptions{}
+	for _, fn := range opts {
+		fn(copts)
+	}
+
+	if err := validateOptions(*copts); err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
 
 	// Connect to analytics node
 	client, err := mongo.Connect(options.Client().ApplyURI(perfAnalyticsConnString))
@@ -143,12 +216,12 @@ func Compare(ctx context.Context, versionID string, perfAnalyticsConnString stri
 	findCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	patchRawData, err := findRawData(findCtx, project, versionID, db.Collection(rawResultsColl))
+	patchRawData, err := findRawData(findCtx, db.Collection(rawResultsColl), copts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting raw data: %v", err)
 	}
 
-	allEnergyStats, err := getEnergyStatsForAllBenchmarks(findCtx, patchRawData, db.Collection(stableRegionsColl), perfContext)
+	allEnergyStats, err := getEnergyStatsForAllBenchmarks(findCtx, patchRawData, db.Collection(stableRegionsColl), copts)
 	if err != nil {
 		return nil, fmt.Errorf("error getting energy statistics: %v", err)
 	}
@@ -156,7 +229,7 @@ func Compare(ctx context.Context, versionID string, perfAnalyticsConnString stri
 	// Get statistically significant benchmarks
 	statSigBenchmarks := getStatSigBenchmarks(allEnergyStats)
 	compareResult := CompareResult{
-		Version:        versionID,
+		Version:        copts.Version,
 		SigEnergyStats: statSigBenchmarks,
 	}
 
@@ -164,26 +237,26 @@ func Compare(ctx context.Context, versionID string, perfAnalyticsConnString stri
 }
 
 // Gets all raw benchmark data for a specific Evergreen version.
-func findRawData(ctx context.Context, project string, version string, coll *mongo.Collection) ([]RawData, error) {
+func findRawData(ctx context.Context, coll *mongo.Collection, copts *CompareOptions) ([]RawData, error) {
 	filter := bson.D{
-		{"info.project", project},
-		{"info.version", version},
-		{"info.variant", "perf"},
-		{"info.task_name", "perf"},
+		{"info.project", copts.Project},
+		{"info.version", copts.Version},
+		{"info.variant", copts.Variant},
+		{"info.task_name", copts.Task},
 	}
 
 	cursor, err := coll.Find(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error retrieving raw data for version %q: %v",
-			version,
+			copts.Version,
 			err,
 		)
 	}
 	defer func() {
 		err = cursor.Close(ctx)
 		if err != nil {
-			log.Fatalf("error closing cursor while retrieving raw data for version %q: %v", version, err)
+			log.Fatalf("error closing cursor while retrieving raw data for version %q: %v", copts.Version, err)
 		}
 	}()
 
@@ -192,24 +265,24 @@ func findRawData(ctx context.Context, project string, version string, coll *mong
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error decoding raw data from version %q: %v",
-			version,
+			copts.Version,
 			err,
 		)
 	}
-	log.Printf("Successfully retrieved %d docs from version %s.\n", len(rawData), version)
+	log.Printf("Successfully retrieved %d docs from version %s.\n", len(rawData), copts.Version)
 	return rawData, err
 }
 
 // Finds the most recent stable region of the mainline version for a specific microbenchmark.
-func findLastStableRegion(ctx context.Context, project string, testname string, measurement string, coll *mongo.Collection, perfContext string) (*StableRegion, error) {
+func findLastStableRegion(ctx context.Context, testname string, measurement string, coll *mongo.Collection, copts *CompareOptions) (*StableRegion, error) {
 	filter := bson.D{
-		{"time_series_info.project", project},
-		{"time_series_info.variant", "perf"},
-		{"time_series_info.task", "perf"},
+		{"time_series_info.project", copts.Project},
+		{"time_series_info.variant", copts.Variant},
+		{"time_series_info.task", copts.Task},
 		{"time_series_info.test", testname},
 		{"time_series_info.measurement", measurement},
 		{"last", true},
-		{"contexts", bson.D{{"$in", bson.A{perfContext}}}},
+		{"contexts", bson.D{{"$in", bson.A{copts.Context}}}},
 	}
 
 	findOptions := options.FindOne().SetSort(bson.D{{"end", -1}})
@@ -223,7 +296,7 @@ func findLastStableRegion(ctx context.Context, project string, testname string, 
 }
 
 // Calculate the energy statistics for all measurements in a benchmark.
-func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.Collection, perfContext string) ([]*EnergyStats, error) {
+func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.Collection, copts *CompareOptions) ([]*EnergyStats, error) {
 	testname := rd.Info.TestName
 	var energyStats []*EnergyStats
 
@@ -232,7 +305,7 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 		measName := rd.Rollups.Stats[i].Name
 		measVal := rd.Rollups.Stats[i].Val
 
-		stableRegion, err := findLastStableRegion(ctx, project, testname, measName, coll, perfContext)
+		stableRegion, err := findLastStableRegion(ctx, testname, measName, coll, copts)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"error finding last stable region for test %q, measurement %q: %v",
@@ -279,10 +352,10 @@ func getEnergyStatsForOneBenchmark(ctx context.Context, rd RawData, coll *mongo.
 	return energyStats, nil
 }
 
-func getEnergyStatsForAllBenchmarks(ctx context.Context, patchRawData []RawData, coll *mongo.Collection, perfContext string) ([]*EnergyStats, error) {
+func getEnergyStatsForAllBenchmarks(ctx context.Context, patchRawData []RawData, coll *mongo.Collection, copts *CompareOptions) ([]*EnergyStats, error) {
 	var allEnergyStats []*EnergyStats
 	for _, rd := range patchRawData {
-		energyStats, err := getEnergyStatsForOneBenchmark(ctx, rd, coll, perfContext)
+		energyStats, err := getEnergyStatsForOneBenchmark(ctx, rd, coll, copts)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"could not get energy stats for %q: %v",

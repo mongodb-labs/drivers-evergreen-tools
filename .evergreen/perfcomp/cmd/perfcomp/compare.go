@@ -15,11 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// For support for other projects, a performance context needs to be created and added here.
-var projectToPerfContext = map[string]string{
-	"mongo-go-driver": "GoDriver perf task",
-}
-
 func newCompareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compare",
@@ -33,8 +28,14 @@ func newCompareCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("project", "", "specify the name of an existing Evergreen project")
-	cmd.MarkFlagRequired("project")
+	cmd.Flags().String("project", "", "specify the name of an existing Evergreen project, ex. \"mongo-go-driver\"")
+	cmd.Flags().String("task", "", "specify the evergreen perf task name, ex. \"perf\"")
+	cmd.Flags().String("variant", "", "specify the perf task variant, ex. \"perf\"")
+	cmd.Flags().String("context", "", "specify the performance triage context, ex. \"GoDriver perf task\"")
+
+	for _, flag := range []string{"project", "task", "variant", "context"} {
+		cmd.MarkFlagRequired(flag)
+	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		// Check for variables
@@ -43,22 +44,33 @@ func newCompareCommand() *cobra.Command {
 			log.Fatal("PERF_URI_PRIVATE_ENDPOINT env variable is not set")
 		}
 
-		// Retrieve the project flag value
+		// Retrieve and validate flag values
 		project, err := cmd.Flags().GetString("project")
 		if err != nil {
 			log.Fatalf("failed to get project flag: %v", err)
 		}
-
-		// Validate the project flag and perf context
-		if project == "" {
-			log.Fatal("must provide project")
+		task, err := cmd.Flags().GetString("task")
+		if err != nil {
+			log.Fatalf("failed to get task flag: %v", err)
 		}
-		perfContext, ok := projectToPerfContext[project]
-		if !ok {
-			log.Fatalf("support for project %q is not configured yet", project)
+		variant, err := cmd.Flags().GetString("variant")
+		if err != nil {
+			log.Fatalf("failed to get variant flag: %v", err)
+		}
+		context, err := cmd.Flags().GetString("context")
+		if err != nil {
+			log.Fatalf("failed to get context flag: %v", err)
 		}
 
-		if err := runCompare(cmd, args, project, perfContext); err != nil {
+		// Validate all flags
+		for _, flag := range []string{project, task, variant, context} {
+			if flag == "" {
+				log.Fatalf("must provide %s", flag)
+			}
+		}
+
+		// Run compare function
+		if err := runCompare(cmd, args, project, task, variant, context); err != nil {
 			log.Fatalf("failed to compare: %v", err)
 		}
 	}
@@ -95,17 +107,24 @@ func createComment(result perfcomp.CompareResult) string {
 
 }
 
-func runCompare(cmd *cobra.Command, args []string, project string, perfContext string) error {
+func runCompare(cmd *cobra.Command, args []string, project string, taskName string, variant string, perfContext string) error {
 	perfAnalyticsConnString := os.Getenv("PERF_URI_PRIVATE_ENDPOINT")
 	version := args[len(args)-1]
 
 	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Second)
 	defer cancel()
 
-	res, err := perfcomp.Compare(ctx, version, perfAnalyticsConnString, project, perfContext)
+	res, err := perfcomp.Compare(ctx, perfAnalyticsConnString,
+		perfcomp.WithVersion(version),
+		perfcomp.WithProject(project),
+		perfcomp.WithTask(taskName),
+		perfcomp.WithVariant(variant),
+		perfcomp.WithContext(perfContext),
+	)
 	if err != nil {
 		log.Fatalf("failed to compare: %v", err)
 	}
+
 	res.CommitSHA = os.Getenv("HEAD_SHA")
 	res.MainlineCommit = os.Getenv("BASE_SHA")
 
