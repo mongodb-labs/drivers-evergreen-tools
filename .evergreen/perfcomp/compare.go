@@ -116,46 +116,46 @@ const stableRegionsColl = "stable_regions"
 
 // CompareOptions stores the information for each project to use as filters.
 type CompareOptions struct {
-	Project string // Required
-	Context string // Required
-	Task    string // Required
-	Variant string // Required
-	Version string // Required
+	Project     string // Required
+	PerfContext string // Required
+	Task        string // Required
+	Variant     string // Required
+	Version     string // Required
 }
 
 type CompareOption func(*CompareOptions)
 
 // WithProject sets the evergreen project on the CompareOptions, for example "mongo-go-driver".
 func WithProject(project string) CompareOption {
-	return func(opts *CompareOptions)  {
+	return func(opts *CompareOptions) {
 		opts.Project = project
 	}
 }
 
 // WithContext sets the performance triage context on the CompareOptions, for example "GoDriver perf task".
 func WithContext(context string) CompareOption {
-	return func(opts *CompareOptions)  {
-		opts.Context = context
+	return func(opts *CompareOptions) {
+		opts.PerfContext = context
 	}
 }
 
 // WithTask sets the evergreen performance task on the CompareOptions, for example "perf".
 func WithTask(task string) CompareOption {
-	return func(opts *CompareOptions)  {
+	return func(opts *CompareOptions) {
 		opts.Task = task
 	}
 }
 
 // WithTask sets the performance task variant on the CompareOptions, for example "perf".
 func WithVariant(variant string) CompareOption {
-	return func(opts *CompareOptions)  {
+	return func(opts *CompareOptions) {
 		opts.Variant = variant
 	}
 }
 
 // WithVersion sets the evergreen version on the CompareOptions, for example "688a39d27d916e0007cf8723".
 func WithVersion(version string) CompareOption {
-	return func(opts *CompareOptions)  {
+	return func(opts *CompareOptions) {
 		opts.Version = version
 	}
 }
@@ -164,7 +164,7 @@ func validateOptions(copts CompareOptions) error {
 	if copts.Project == "" {
 		return fmt.Errorf("project is required")
 	}
-	if copts.Context == "" {
+	if copts.PerfContext == "" {
 		return fmt.Errorf("context is required")
 	}
 	if copts.Task == "" {
@@ -282,7 +282,7 @@ func findLastStableRegion(ctx context.Context, testname string, measurement stri
 		{"time_series_info.test", testname},
 		{"time_series_info.measurement", measurement},
 		{"last", true},
-		{"contexts", bson.D{{"$in", bson.A{copts.Context}}}},
+		{"contexts", bson.D{{"$in", bson.A{copts.PerfContext}}}},
 	}
 
 	findOptions := options.FindOne().SetSort(bson.D{{"end", -1}})

@@ -61,10 +61,10 @@ Usage:
   perfcomp compare [version_id] [flags]
 
 Flags:
-  --context string   specify the performance triage context, ex. "GoDriver perf task" (required)
-  --project string   specify the name of an existing Evergreen project, ex. "mongo-go-driver" (required)
-  --task string      specify the evergreen perf task name, ex. "perf" (required)
-  --variant string   specify the perf task variant, ex. "perf" (required)
+  --perf-context string   specify the performance triage context, ex. "GoDriver perf task" (required)
+  --project      string   specify the name of an existing Evergreen project, ex. "mongo-go-driver" (required)
+  --task         string   specify the evergreen perf task name, ex. "perf" (required)
+  --variant      string   specify the perf task variant, ex. "perf" (required)
 ```
 
 #### mdreport

@@ -28,10 +28,12 @@ func newCompareCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String("project", "", "specify the name of an existing Evergreen project, ex. \"mongo-go-driver\"")
-	cmd.Flags().String("task", "", "specify the evergreen perf task name, ex. \"perf\"")
-	cmd.Flags().String("variant", "", "specify the perf task variant, ex. \"perf\"")
-	cmd.Flags().String("context", "", "specify the performance triage context, ex. \"GoDriver perf task\"")
+	var project, task, variant, perfcontext string
+	cmd.Flags().StringVar(&project, "project", "", `specify the name of an existing Evergreen project, ex. "mongo-go-driver"`)
+	cmd.Flags().StringVar(&perfcontext, "perf-context", "", `specify the performance triage context, ex. "GoDriver perf task"`)
+	// TODO(DRIVERS-3264): Use first task / variant of the project by default for perf filtering
+	cmd.Flags().StringVar(&task, "task", "", `specify the evergreen performance task name, ex. "perf"`)
+	cmd.Flags().StringVar(&variant, "variant", "", `specify the performance variant, ex. "perf"`)
 
 	for _, flag := range []string{"project", "task", "variant", "context"} {
 		cmd.MarkFlagRequired(flag)
@@ -44,33 +46,21 @@ func newCompareCommand() *cobra.Command {
 			log.Fatal("PERF_URI_PRIVATE_ENDPOINT env variable is not set")
 		}
 
-		// Retrieve and validate flag values
-		project, err := cmd.Flags().GetString("project")
-		if err != nil {
-			log.Fatalf("failed to get project flag: %v", err)
-		}
-		task, err := cmd.Flags().GetString("task")
-		if err != nil {
-			log.Fatalf("failed to get task flag: %v", err)
-		}
-		variant, err := cmd.Flags().GetString("variant")
-		if err != nil {
-			log.Fatalf("failed to get variant flag: %v", err)
-		}
-		context, err := cmd.Flags().GetString("context")
-		if err != nil {
-			log.Fatalf("failed to get context flag: %v", err)
-		}
-
 		// Validate all flags
-		for _, flag := range []string{project, task, variant, context} {
+		for _, flag := range []string{project, task, variant, perfcontext} {
 			if flag == "" {
 				log.Fatalf("must provide %s", flag)
 			}
 		}
 
 		// Run compare function
-		if err := runCompare(cmd, args, project, task, variant, context); err != nil {
+		err := runCompare(cmd, args,
+			perfcomp.WithProject(project),
+			perfcomp.WithTask(task),
+			perfcomp.WithVariant(variant),
+			perfcomp.WithContext(perfcontext),
+		)
+		if err != nil {
 			log.Fatalf("failed to compare: %v", err)
 		}
 	}
@@ -96,7 +86,17 @@ func createComment(result perfcomp.CompareResult) string {
 			return math.Abs(result.SigEnergyStats[i].PercentChange) > math.Abs(result.SigEnergyStats[j].PercentChange)
 		})
 		for _, es := range result.SigEnergyStats {
-			fmt.Fprintf(w, "| %s\t| %s\t| %.4f\t| %.4f\t| Avg: %.4f, Med: %.4f, Stdev: %.4f\t| %.4f\t| %.4f\t|\n", es.Benchmark, es.Measurement, es.PercentChange, es.MeasurementVal, es.StableRegion.Mean, es.StableRegion.Median, es.StableRegion.Std, es.HScore, es.ZScore)
+			fmt.Fprintf(w, "| %s\t| %s\t| %.4f\t| %.4f\t| Avg: %.4f, Med: %.4f, Stdev: %.4f\t| %.4f\t| %.4f\t|\n",
+				es.Benchmark,
+				es.Measurement,
+				es.PercentChange,
+				es.MeasurementVal,
+				es.StableRegion.Mean,
+				es.StableRegion.Median,
+				es.StableRegion.Std,
+				es.HScore,
+				es.ZScore,
+			)
 		}
 
 		w.Flush()
@@ -107,20 +107,15 @@ func createComment(result perfcomp.CompareResult) string {
 
 }
 
-func runCompare(cmd *cobra.Command, args []string, project string, taskName string, variant string, perfContext string) error {
+func runCompare(cmd *cobra.Command, args []string, opts ...perfcomp.CompareOption) error {
 	perfAnalyticsConnString := os.Getenv("PERF_URI_PRIVATE_ENDPOINT")
 	version := args[len(args)-1]
+	opts = append(opts, perfcomp.WithVersion(version))
 
 	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Second)
 	defer cancel()
 
-	res, err := perfcomp.Compare(ctx, perfAnalyticsConnString,
-		perfcomp.WithVersion(version),
-		perfcomp.WithProject(project),
-		perfcomp.WithTask(taskName),
-		perfcomp.WithVariant(variant),
-		perfcomp.WithContext(perfContext),
-	)
+	res, err := perfcomp.Compare(ctx, perfAnalyticsConnString, opts...)
 	if err != nil {
 		log.Fatalf("failed to compare: %v", err)
 	}
