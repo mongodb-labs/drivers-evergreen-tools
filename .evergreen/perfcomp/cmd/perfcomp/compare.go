@@ -47,7 +47,7 @@ func newCompareCommand() *cobra.Command {
 		}
 
 		// Validate all flags
-		for _, flag := range []string{project, task, variant, perfcontext} {
+		for _, flag := range []string{"project", "task", "variant", "perf-context"} {
 			if flag == "" {
 				log.Fatalf("must provide %s", flag)
 			}
