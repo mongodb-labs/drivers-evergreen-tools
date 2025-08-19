@@ -133,6 +133,9 @@ mo-expansion.sh
 .dockerignore
 .local
 container_id.txt
+bin
+perf-report.md
+perf-report.txt
 uv-requirements.txt
 uv-override-dependencies.txt
 
