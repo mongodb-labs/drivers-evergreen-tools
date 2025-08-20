@@ -107,9 +107,11 @@ export TLS_CA_FILE=<path-to>/ca.pem
 
 ## Updating Dependencies
 
-The MongoDB server management scripts under `.evergreen` depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/).
-Package dependencies are pinned by the `.evergreen/uv.lock` lockfile. When the lockfile is updated, ensure the updated
-PyMongo version still supports old server versions.
+The MongoDB server management scripts under `.evergreen/orchestration` depend on
+[PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
+[`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
+lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
+still in use by downstream projects.
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo dropped support for an old
 server version that is still in use by downstream projects, add a package version override to
