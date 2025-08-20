@@ -107,17 +107,17 @@ export TLS_CA_FILE=<path-to>/ca.pem
 
 ## Updating Dependencies
 
-The MongoDB server management scripts under `.evergreen/orchestration` depend on
-[PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
+The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
+depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
 [`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
 lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
 still in use by downstream projects.
 
-If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo dropped support for an old
-server version that is still in use by downstream projects, add a package version override to
+If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
+server version that is still in use by downstream projects, add a dependency override to
 [`.evergreen/orchestration/setup.sh`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/setup.sh).
-Otherwise, an error similar to the following may occur during orchestration setup operations, e.g. with server 4.0 and
-PyMongo 4.14:
+Otherwise, an error similar to the following may occur during mongo-orchestration operations (e.g. with server 4.0 and
+PyMongo 4.14):
 
 ```
 [ERROR] mongo_orchestration.apps:68 - ...
@@ -131,7 +131,7 @@ Traceback (most recent call last):
 pymongo.errors.ConfigurationError: Server at localhost:27017 reports wire version 7, but this version of PyMongo requires at least 8 (MongoDB 4.2).
 ```
 
-The override may be removed once all downstream projects have also dropped support for the old server version.
+The dependency override may be removed once all downstream projects have also dropped support for the old server version.
 
 ## Linters and Formatters
 
