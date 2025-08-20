@@ -84,4 +84,4 @@ Alternatively, you can run the perfcomp shell script. This script will run build
 PERF_URI_PRIVATE_ENDPOINT="<perf_uri>" VERSION_ID="<version>" PROJECT="<project>" CONTEXT="<context>" TASK="<task>" VARIANT="<variant>" .evergreen/run-perf-comp.sh
 ```
 
-If you would like to see a markdown preview of the report, you can also pass in `HEAD_SHA=""`. This will generate `.evergreen/perfcomp/perf-report.md`.
+If you would like to see a markdown preview of the report, you can also pass in `HEAD_SHA="test"`. This will generate `.evergreen/perfcomp/perf-report.md`.
