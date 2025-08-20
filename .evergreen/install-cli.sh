@@ -114,8 +114,7 @@ command -V uv
 uv --version
 
 # Workaround for https://github.com/astral-sh/uv/issues/5815.
-printf "" >|uv-requirements.txt
-uv run --quiet --frozen --isolated uv pip freeze >>uv-requirements.txt
+uv export --quiet --frozen --format requirements.txt -o uv-requirements.txt
 
 # Support overriding lockfile dependencies.
 if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
