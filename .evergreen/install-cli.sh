@@ -69,7 +69,7 @@ if ! command -V uv &>/dev/null; then
   echo "Installing uv using pip..."
   venvcreate "$DRIVERS_TOOLS_PYTHON" "$_venv_dir"
   # Install uv into the newly created venv.
-  python -m pip install -q --force-reinstall -r requirements-cli.txt
+  python -m pip install -q --force-reinstall uv
   _suffix=""
   # Symlink uv and uvx binaries.
   _install_dir="${DRIVERS_TOOLS}/.bin"
