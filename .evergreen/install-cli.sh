@@ -46,17 +46,19 @@ fi
 # If uv is not on path, try see if it is available from the Python toolchain.
 if ! command -v uv &>/dev/null; then
   export PATH
+  declare python_path
   case "${OSTYPE:?}" in
   cygwin)
-    PATH="/cygdrive/c/Python/Current/Scripts:${PATH:-}"
+    python_path="/cygdrive/c/Python/Current/Scripts"
     ;;
   darwin*)
-    PATH="/Library/Frameworks/Python.Framework/Versions/Current/bin:${PATH:-}"
+    python_path="/Library/Frameworks/Python.Framework/Versions/Current/bin"
     ;;
   *)
-    PATH="/opt/python/Current/bin:${PATH:-}"
+    python_path="/opt/python/Current/bin"
     ;;
   esac
+  [[ "${PATH:-}" =~ (^|:)"${python_path:?}"(:|$) ]] || PATH="${python_path:?}:${PATH:-}"
 fi
 
 # If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
@@ -109,7 +111,7 @@ export UV_TOOL_BIN_DIR
 
 # Pin the uv binary version used by subsequent commands.
 uv tool install -q --force "uv~=0.8.0"
-PATH="${UV_TOOL_BIN_DIR:?}:${PATH:-}"
+[[ "${PATH:-}" =~ (^|:)"${UV_TOOL_BIN_DIR:?}"(:|$) ]] || PATH="${UV_TOOL_BIN_DIR:?}:${PATH:-}"
 command -V uv
 uv --version
 
