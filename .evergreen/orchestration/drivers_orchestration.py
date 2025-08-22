@@ -148,7 +148,7 @@ def get_options():
         )
 
     # Get the options, and then allow environment variable overrides.
-    opts = parser.parse_args()
+    opts = parser.parse_args(sys.argv[2:])
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
@@ -167,17 +167,19 @@ def get_options():
 
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
-    if opts.mongodb_binaries is None:
-        opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
-    if not opts.topology and opts.load_balancer:
-        opts.topology = "sharded_cluster"
-    if opts.auth_aws:
-        opts.auth = True
-        opts.orchestration_file = "auth-aws.json"
-    if opts.topology == "standalone" or not opts.topology:
-        opts.topology = "server"
-    if not opts.version:
-        opts.version = "latest"
+    if command in ["start", "run"]:
+        if opts.mongodb_binaries is None:
+            opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
+    if command == "run":
+        if not opts.topology and opts.load_balancer:
+            opts.topology = "sharded_cluster"
+        if opts.auth_aws:
+            opts.auth = True
+            opts.orchestration_file = "auth-aws.json"
+        if opts.topology == "standalone" or not opts.topology:
+            opts.topology = "server"
+        if not opts.version:
+            opts.version = "latest"
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
