@@ -137,7 +137,7 @@ def get_options():
         "--mongo-orchestration-home", help="The path to mongo-orchestration home"
     )
 
-    if command == "start":
+    if command in ["start", "run"]:
         other_group.add_argument(
             "--mongodb-binaries", help="The path to store the MongoDB binaries"
         )
