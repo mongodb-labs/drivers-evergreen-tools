@@ -105,6 +105,34 @@ export TLS_PEM_KEY_FILE=<path-to>/server.pem
 export TLS_CA_FILE=<path-to>/ca.pem
 ```
 
+## Updating Dependencies
+
+The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
+depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
+[`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
+lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
+still in use by downstream projects.
+
+If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
+server version that is still in use by downstream projects, add a dependency override to
+[`.evergreen/orchestration/setup.sh`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/setup.sh).
+Otherwise, an error similar to the following may occur during mongo-orchestration operations (e.g. with server 4.0 and
+PyMongo 4.14):
+
+```
+[ERROR] mongo_orchestration.apps:68 - ...
+Traceback (most recent call last):
+  ...
+  File ".../drivers-orchestration/lib/python3.13/site-packages/pymongo/synchronous/topology.py", line 369, in _select_servers_loop
+    self._description.check_compatible()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File ".../drivers-orchestration/lib/python3.13/site-packages/pymongo/topology_description.py", line 168, in check_compatible
+    raise ConfigurationError(self._incompatible_err)
+pymongo.errors.ConfigurationError: Server at localhost:27017 reports wire version 7, but this version of PyMongo requires at least 8 (MongoDB 4.2).
+```
+
+The dependency override may be removed once all downstream projects have also dropped support for the old server version.
+
 ## Linters and Formatters
 
 This repo uses [pre-commit](https://pre-commit.com/) for managing linting and formatting of the codebase.
