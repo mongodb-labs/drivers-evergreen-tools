@@ -133,10 +133,9 @@ def get_options():
             help="A .pem file that contains the root certificate chain for the server",
         )
 
-    if command in ["start", "stop"]:
-        other_group.add_argument(
-            "--mongo-orchestration-home", help="The path to mongo-orchestration home"
-        )
+    other_group.add_argument(
+        "--mongo-orchestration-home", help="The path to mongo-orchestration home"
+    )
 
     if command == "start":
         other_group.add_argument(
