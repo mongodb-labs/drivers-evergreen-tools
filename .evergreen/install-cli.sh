@@ -17,7 +17,7 @@ pushd $SCRIPT_DIR >/dev/null
 
 # First ensure we have a python binary.
 if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
-   . ./find-python3.sh
+  . ./find-python3.sh
 
   echo "Ensuring python binary..."
   DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
@@ -27,7 +27,7 @@ if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
     exit 1
   fi
   echo "Using python $DRIVERS_TOOLS_PYTHON"
-  echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
+  echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >>$DRIVERS_TOOLS/.env
   echo "Ensuring python binary... done."
 fi
 export UV_PYTHON=$DRIVERS_TOOLS_PYTHON
@@ -46,17 +46,19 @@ fi
 # If uv is not on path, try see if it is available from the Python toolchain.
 if ! command -v uv &>/dev/null; then
   export PATH
+  declare python_path
   case "${OSTYPE:?}" in
   cygwin)
-    PATH="/cygdrive/c/Python/Current/Scripts:${PATH:-}"
+    python_path="/cygdrive/c/Python/Current/Scripts"
     ;;
   darwin*)
-    PATH="/Library/Frameworks/Python.Framework/Versions/Current/bin:${PATH:-}"
+    python_path="/Library/Frameworks/Python.Framework/Versions/Current/bin"
     ;;
   *)
-    PATH="/opt/python/Current/bin:${PATH:-}"
+    python_path="/opt/python/Current/bin"
     ;;
   esac
+  [[ "${PATH:-}" =~ (^|:)"${python_path:?}"(:|$) ]] || PATH="${python_path:?}:${PATH:-}"
 fi
 
 # If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
@@ -69,7 +71,7 @@ if ! command -V uv &>/dev/null; then
   echo "Installing uv using pip..."
   venvcreate "$DRIVERS_TOOLS_PYTHON" "$_venv_dir"
   # Install uv into the newly created venv.
-  python -m pip install -q --force-reinstall -r requirements-cli.txt
+  python -m pip install -q --force-reinstall uv
   _suffix=""
   # Symlink uv and uvx binaries.
   _install_dir="${DRIVERS_TOOLS}/.bin"
@@ -99,32 +101,48 @@ uv venv venv &>/dev/null
 popd >/dev/null # $SCRIPT_DIR
 pushd "$TARGET_DIR" >/dev/null
 
+# uv requires UV_TOOL_BIN_DIR is `C:\a\b\c` instead of `/cygdrive/c/a/b/c` on Windows.
+if [[ "${OSTYPE:?}" == cygwin ]]; then
+  UV_TOOL_BIN_DIR="$(cygpath -aw .)"
+else
+  UV_TOOL_BIN_DIR="$(pwd)"
+fi
+export UV_TOOL_BIN_DIR
+
+# Pin the uv binary version used by subsequent commands.
+uv tool install -q --force "uv~=0.8.0"
+[[ "${PATH:-}" =~ (^|:)"${UV_TOOL_BIN_DIR:?}"(:|$) ]] || PATH="${UV_TOOL_BIN_DIR:?}:${PATH:-}"
+command -V uv
+uv --version
+
+# Workaround for https://github.com/astral-sh/uv/issues/5815.
+uv export --quiet --frozen --format requirements.txt -o uv-requirements.txt
+
+# Support overriding lockfile dependencies.
+if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
+  printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:="uv-override-dependencies.txt"}"
+fi
+
 declare uv_install_args
 uv_install_args=(
   --quiet
   --force
   --editable
-  --with certifi
+  --with-requirements uv-requirements.txt
+  --overrides "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 )
+uv tool install "${uv_install_args[@]:?}" .
 
-# Preserve pymongo compatibility with the requested server version.
-case "${MONGODB_VERSION:-"latest"}" in
-3.6) uv_install_args+=(--with "pymongo<4.11") ;;
-4.0) uv_install_args+=(--with "pymongo<4.14") ;;
-esac
-
-# On Windows, we have to do a bit of path manipulation.
-if [ "Windows_NT" == "${OS:-}" ]; then
-  TMP_DIR=$(cygpath -m "$(mktemp -d)")
-  PATH="$SCRIPT_DIR/venv/Scripts:$PATH"
-  UV_TOOL_BIN_DIR=${TMP_DIR} uv tool install "${uv_install_args[@]:?}" .
-  filenames=$(ls ${TMP_DIR})
-  for filename in $filenames; do
-    mv $TMP_DIR/$filename "$1/${filename//.exe/}"
+# Support running tool executables on Windows without including the ".exe" suffix.
+(
+  for name_exe in *.exe; do
+    # Skip files which do not exist or are not executable.
+    [[ -x "${name_exe:?}" ]] || continue
+    # Strip ".exe" at end of filename.
+    name="${name_exe%".exe"}"
+    # Only create a symlink if the symlink doesn't already exist.
+    [[ -x "${name:?}" ]] || ln -sf "${name_exe:?}" "${name:?}"
   done
-  rm -rf $TMP_DIR
-else
-  UV_TOOL_BIN_DIR=$(pwd) uv tool install "${uv_install_args[@]:?}" .
-fi
+)
 
 popd >/dev/null # "$TARGET_DIR"
