@@ -48,6 +48,10 @@ bash install-cli.sh "$(pwd)/orchestration"
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 ./orchestration/drivers-orchestration stop
 
+# Ensure we can use a downloaded mongodb directory in start-orchestration.
+./orchestration/drivers-orchestration start --mongodb-binaries=${DOWNLOAD_DIR}
+./orchestration/drivers-orchestration stop
+
 if [ ${1:-} == "partial" ]; then
   popd
   make -C ${DRIVERS_TOOLS} test
