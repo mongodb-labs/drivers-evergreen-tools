@@ -137,7 +137,7 @@ uv tool install "${uv_install_args[@]:?}" .
 (
   for name_exe in *.exe; do
     # Skip files which do not exist or are not executable.
-    [[ -x "${f:?}" ]] || continue
+    [[ -x "${name_exe:?}" ]] || continue
     # Strip ".exe" at end of filename.
     name="${name_exe%".exe"}"
     # Only create a symlink if the symlink doesn't already exist.
