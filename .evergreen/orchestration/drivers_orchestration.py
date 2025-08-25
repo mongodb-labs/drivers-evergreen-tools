@@ -132,6 +132,10 @@ def get_options():
         "--tls-ca-file",
         help="A .pem file that contains the root certificate chain for the server",
     )
+    other_group.add_argument(
+        "--arch",
+        help="the architecture.  if unspecified, the arch will be inferred.",
+    )
 
     # Get the options, and then allow environment variable overrides.
     opts = parser.parse_args()
@@ -383,6 +387,9 @@ def run(opts):
         default_args += " -q"
     elif opts.verbose:
         default_args += " -v"
+
+    if opts.arch:
+        default_args += f" --arch={opts.arch}"
 
     if not opts.local_atlas:
         # Download the archive.
