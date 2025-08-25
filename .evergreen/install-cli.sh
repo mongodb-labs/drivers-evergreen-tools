@@ -134,7 +134,15 @@ uv_install_args=(
 uv tool install "${uv_install_args[@]:?}" .
 
 # Support running tool executables on Windows without including the ".exe" suffix.
-find . -maxdepth 1 -type f -name '*.exe' -exec \
-  bash -c "ln -sf \"\$0\" \"\$(echo \"\$0\" | sed -E -e 's|(.*)\.exe|\1|')\"" {} \;
+(
+  for f in *.exe; do
+    # Skip files which do not exist or are not executable.
+    [[ -x "${f:?}" ]] || continue
+    # Strip ".exe" at end of filename.
+    name="$(echo "${f:?}" | sed -E -e 's|(.*)\.exe|\1|')"
+    # Only create a symlink if the symlink doesn't already exist.
+    [[ -x "${name:?}" ]] || ln -sf "${f:?}" "${name:?}"
+  done
+)
 
 popd >/dev/null # "$TARGET_DIR"
