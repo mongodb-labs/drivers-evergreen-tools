@@ -31,11 +31,10 @@ func newCompareCommand() *cobra.Command {
 	var project, task, variant, perfcontext string
 	cmd.Flags().StringVar(&project, "project", "", `specify the name of an existing Evergreen project, ex. "mongo-go-driver"`)
 	cmd.Flags().StringVar(&perfcontext, "perf-context", "", `specify the performance triage context, ex. "GoDriver perf task"`)
-	// TODO(DRIVERS-3264): Use first task / variant of the project by default for perf filtering
 	cmd.Flags().StringVar(&task, "task", "", `specify the evergreen performance task name, ex. "perf"`)
 	cmd.Flags().StringVar(&variant, "variant", "", `specify the performance variant, ex. "perf"`)
 
-	for _, flag := range []string{"project", "task", "variant", "context"} {
+	for _, flag := range []string{"project", "context"} {
 		cmd.MarkFlagRequired(flag)
 	}
 
@@ -47,7 +46,7 @@ func newCompareCommand() *cobra.Command {
 		}
 
 		// Validate all flags
-		for _, flag := range []string{"project", "task", "variant", "perf-context"} {
+		for _, flag := range []string{"project", "perf-context"} {
 			if flag == "" {
 				log.Fatalf("must provide %s", flag)
 			}

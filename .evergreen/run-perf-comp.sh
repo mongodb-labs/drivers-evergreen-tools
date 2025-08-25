@@ -62,10 +62,8 @@ fi
 : "${VERSION_ID:?Error: VERSION_ID must be set}"
 : "${PROJECT:?Error: PROJECT must be set}"
 : "${CONTEXT:?Error: CONTEXT must be set}"
-: "${TASK:?Error: TASKNAME must be set}"
-: "${VARIANT:?Error: VARIANT must be set}"
 
-./bin/perfcomp compare --project ${PROJECT} --perf-context "${CONTEXT}" --task ${TASK} --variant ${VARIANT} ${VERSION_ID}
+./bin/perfcomp compare --project ${PROJECT} --perf-context "${CONTEXT}" --task ${TASK:-} --variant ${VARIANT:-} ${VERSION_ID}
 
 if [[ -n "${HEAD_SHA+set}" ]]; then
   ./bin/perfcomp mdreport
