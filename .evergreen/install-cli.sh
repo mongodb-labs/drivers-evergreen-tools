@@ -17,7 +17,7 @@ pushd $SCRIPT_DIR >/dev/null
 
 # First ensure we have a python binary.
 if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
-   . ./find-python3.sh
+  . ./find-python3.sh
 
   echo "Ensuring python binary..."
   DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
@@ -27,7 +27,7 @@ if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
     exit 1
   fi
   echo "Using python $DRIVERS_TOOLS_PYTHON"
-  echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
+  echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >>$DRIVERS_TOOLS/.env
   echo "Ensuring python binary... done."
 fi
 export UV_PYTHON=$DRIVERS_TOOLS_PYTHON
