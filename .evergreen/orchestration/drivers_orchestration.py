@@ -387,7 +387,7 @@ def run(opts):
         default_args += " -q"
     elif opts.verbose:
         default_args += " -v"
-    
+
     if opts.arch:
         default_args += f" --arch={opts.arch}"
 
