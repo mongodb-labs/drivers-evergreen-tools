@@ -96,6 +96,7 @@ TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 You can also run:  `make run-local-atlas` to run a local atlas server in a container.
 
 See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+Run `bash ./evergreen/run-orchestration.sh --help` for usage of command line flags.
 
 In order to use custom certificates in your server, set the following environment variables:
 
@@ -104,6 +105,17 @@ export TLS_CERT_KEY_FILE=<path-to>/client.pem
 export TLS_PEM_KEY_FILE=<path-to>/server.pem
 export TLS_CA_FILE=<path-to>/ca.pem
 ```
+
+### Manual use of start-orchestration
+
+The (start-orchestration.sh)[./evergreen/start-orchestration.sh] script can be used directly as a way to
+start the orchestration server without downloading binaries or starting a local server.
+You are still responsible for having a directory containing the MongoDB binaries in the default
+MONGODB_BINARIES folder or setting MONGODB_BINARIES to the appropriate folder.
+
+See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+
+Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
 ## Updating Dependencies
 

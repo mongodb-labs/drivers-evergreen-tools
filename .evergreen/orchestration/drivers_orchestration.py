@@ -42,103 +42,116 @@ MO_EXPANSION_YML = Path("mo-expansion.yml")
 
 
 def get_options():
+    command = sys.argv[1]
+    if command == "run":
+        description = __doc__
+    else:
+        description = f"{sys.argv[1].capitalize()} mongo-orchestration"
+
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=description, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("command", choices=["run", "start", "stop", "clean"])
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Whether to log at the DEBUG level"
     )
     parser.add_argument(
         "--quiet", "-q", action="store_true", help="Whether to log at the WARNING level"
     )
-    parser.add_argument(
-        "--version",
-        default="latest",
-        help='The version to download. Use "latest" to download '
-        "the newest available version (including release candidates).",
-    )
-    parser.add_argument(
-        "--topology",
-        choices=["standalone", "replica_set", "sharded_cluster"],
-        help="The topology of the server deployment (defaults to standalone unless another flag like load_balancer is set)",
-    )
-    parser.add_argument(
-        "--auth", action="store_true", help="Whether to add authentication"
-    )
-    parser.add_argument(
-        "--ssl", action="store_true", help="Whether to add TLS configuration"
-    )
-    parser.add_argument(
-        "--local-atlas",
-        action="store_true",
-        help="Whether to use mongodb-atlas-local to start the server",
-    )
-    parser.add_argument(
-        "--orchestration-file", help="The name of the orchestration config file"
-    )
+
+    if command == "run":
+        parser.add_argument(
+            "--version",
+            default="latest",
+            help='The version to download. Use "latest" to download '
+            "the newest available version (including release candidates).",
+        )
+        parser.add_argument(
+            "--topology",
+            choices=["standalone", "replica_set", "sharded_cluster"],
+            help="The topology of the server deployment (defaults to standalone unless another flag like load_balancer is set)",
+        )
+        parser.add_argument(
+            "--auth", action="store_true", help="Whether to add authentication"
+        )
+        parser.add_argument(
+            "--ssl", action="store_true", help="Whether to add TLS configuration"
+        )
+        parser.add_argument(
+            "--local-atlas",
+            action="store_true",
+            help="Whether to use mongodb-atlas-local to start the server",
+        )
+        parser.add_argument(
+            "--orchestration-file", help="The name of the orchestration config file"
+        )
 
     other_group = parser.add_argument_group("Other options")
-    other_group.add_argument(
-        "--load-balancer", action="store_true", help="Whether to use a load balancer"
-    )
-    other_group.add_argument(
-        "--auth-aws", action="store_true", help="Whether to use MONGODB-AWS auth"
-    )
-    other_group.add_argument(
-        "--skip-crypt-shared",
-        action="store_true",
-        help="Whether to skip installing crypt_shared lib",
-    )
-    other_group.add_argument(
-        "--install-legacy-shell",
-        action="store_true",
-        help="Whether to install the legacy shell",
-    )
-    other_group.add_argument(
-        "--disable-test-commands",
-        action="store_true",
-        help="Whether to disable test commands",
-    )
-    other_group.add_argument(
-        "--storage-engine",
-        choices=["", "mmapv1", "wiredtiger", "inmemory"],
-        help="The storage engine to use",
-    )
-    other_group.add_argument(
-        "--require-api-version",
-        action="store_true",
-        help="Whether to set requireApiVersion",
-    )
+    if command == "run":
+        other_group.add_argument(
+            "--load-balancer",
+            action="store_true",
+            help="Whether to use a load balancer",
+        )
+        other_group.add_argument(
+            "--auth-aws", action="store_true", help="Whether to use MONGODB-AWS auth"
+        )
+        other_group.add_argument(
+            "--skip-crypt-shared",
+            action="store_true",
+            help="Whether to skip installing crypt_shared lib",
+        )
+        other_group.add_argument(
+            "--install-legacy-shell",
+            action="store_true",
+            help="Whether to install the legacy shell",
+        )
+        other_group.add_argument(
+            "--disable-test-commands",
+            action="store_true",
+            help="Whether to disable test commands",
+        )
+        other_group.add_argument(
+            "--storage-engine",
+            choices=["", "mmapv1", "wiredtiger", "inmemory"],
+            help="The storage engine to use",
+        )
+        other_group.add_argument(
+            "--require-api-version",
+            action="store_true",
+            help="Whether to set requireApiVersion",
+        )
+        other_group.add_argument(
+            "--existing-binaries-dir",
+            help="A directory containing existing mongodb binaries to use instead of downloading new ones",
+        )
+        other_group.add_argument(
+            "--tls-pem-key-file",
+            help="A .pem file that contains the TLS certificate and key for the server",
+        )
+        other_group.add_argument(
+            "--tls-ca-file",
+            help="A .pem file that contains the root certificate chain for the server",
+        )
+        other_group.add_argument(
+            "--arch",
+            help="the architecture.  if unspecified, the arch will be inferred.",
+        )
+
     other_group.add_argument(
         "--mongo-orchestration-home", help="The path to mongo-orchestration home"
     )
-    other_group.add_argument(
-        "--mongodb-binaries", help="The path to store the MongoDB binaries"
-    )
-    other_group.add_argument(
-        "--existing-binaries-dir",
-        help="A directory containing existing mongodb binaries to use instead of downloading new ones",
-    )
-    other_group.add_argument(
-        "--tls-cert-key-file",
-        help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
-    )
-    other_group.add_argument(
-        "--tls-pem-key-file",
-        help="A .pem file that contains the TLS certificate and key for the server",
-    )
-    other_group.add_argument(
-        "--tls-ca-file",
-        help="A .pem file that contains the root certificate chain for the server",
-    )
-    other_group.add_argument(
-        "--arch",
-        help="the architecture.  if unspecified, the arch will be inferred.",
-    )
+
+    if command in ["start", "run"]:
+        other_group.add_argument(
+            "--mongodb-binaries", help="The path to store the MongoDB binaries"
+        )
+        other_group.add_argument(
+            "--tls-cert-key-file",
+            help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
+        )
 
     # Get the options, and then allow environment variable overrides.
-    opts = parser.parse_args()
+    opts = parser.parse_args(sys.argv[2:])
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
@@ -157,23 +170,25 @@ def get_options():
 
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
-    if opts.mongodb_binaries is None:
-        opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
-    if not opts.topology and opts.load_balancer:
-        opts.topology = "sharded_cluster"
-    if opts.auth_aws:
-        opts.auth = True
-        opts.orchestration_file = "auth-aws.json"
-    if opts.topology == "standalone" or not opts.topology:
-        opts.topology = "server"
-    if not opts.version:
-        opts.version = "latest"
+    if command in ["start", "run"]:
+        if opts.mongodb_binaries is None:
+            opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
+    if command == "run":
+        if not opts.topology and opts.load_balancer:
+            opts.topology = "sharded_cluster"
+        if opts.auth_aws:
+            opts.auth = True
+            opts.orchestration_file = "auth-aws.json"
+        if opts.topology == "standalone" or not opts.topology:
+            opts.topology = "server"
+        if not opts.version:
+            opts.version = "latest"
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
     elif opts.quiet:
         LOGGER.setLevel(logging.WARNING)
-    return opts
+    return opts, command
 
 
 def get_docker_cmd():
@@ -653,14 +668,14 @@ def stop(opts):
 
 
 def main():
-    opts = get_options()
-    if opts.command == "run":
+    opts, command = get_options()
+    if command == "run":
         run(opts)
-    elif opts.command == "start":
+    elif command == "start":
         start(opts)
-    elif opts.command == "stop":
+    elif command == "stop":
         stop(opts)
-    elif opts.command == "clean":
+    elif command == "clean":
         clean_run(opts)
         clean_start(opts)
 
