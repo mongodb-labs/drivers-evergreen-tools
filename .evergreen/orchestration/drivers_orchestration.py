@@ -477,6 +477,8 @@ def run(opts):
         orch_file = Path(mo_home / "config.json")
         orch_file.write_text(json.dumps(data, indent=2))
 
+        # Stop orchestration, if it is running, to prevent issues launching it again.
+        stop(opts)
         # Start the orchestration.
         start(opts)
 
