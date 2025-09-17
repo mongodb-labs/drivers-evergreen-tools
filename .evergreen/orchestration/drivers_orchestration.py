@@ -477,8 +477,6 @@ def run(opts):
         orch_file = Path(mo_home / "config.json")
         orch_file.write_text(json.dumps(data, indent=2))
 
-        # Stop orchestration, if it is running, to prevent issues launching it again.
-        stop(opts)
         # Start the orchestration.
         start(opts)
 
@@ -552,12 +550,12 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = Path(opts.mongo_orchestration_home)
-    if (mo_home / "server.pid").exists():
-        stop(opts)
+    stop(opts)
 
     # Clean up previous files.
     clean_start(opts)
+
+    mo_home = Path(opts.mongo_orchestration_home)
 
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
