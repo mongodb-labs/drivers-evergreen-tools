@@ -10,13 +10,13 @@ from aws_common import (
     HERE,
     LOGGER,
     setup_assume_role,
-    setup_eks_pod_identity,
-    setup_env_creds,
     setup_ec2,
     setup_ecs,
+    setup_eks_pod_identity,
+    setup_env_creds,
     setup_regular,
     setup_session_creds,
-    setup_web_identity
+    setup_web_identity,
 )
 
 
