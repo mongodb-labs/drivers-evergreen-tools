@@ -44,11 +44,13 @@ shopt -s nocasematch
 
 while IFS=$'\t' read -r -a row; do
   node_index_version="${row[0]}"
+  echo $node_index_version >> "versions.txt"
   node_index_major_version=$(echo $node_index_version | sed -E 's/^v([0-9]+).*$/\1/')
   node_index_date="${row[1]}"
   [[ "$node_index_version" = "version" ]] && continue # skip tsv header
   [[ "$NODE_LTS_VERSION" = "latest" ]] && break # first line is latest
-  [[ "$NODE_LTS_VERSION" = "$node_index_version" ]] && break # match full version if specified
+  [[ "$NODE_LTS_VERSION" = "$node_index_version" ]] && break # match full version if specified (v<major>.<minor>.<patch>)
+  [[ "v$NODE_LTS_VERSION" = "$node_index_version" ]] && break # match full version if specified (without leading `v`)
   [[ "$NODE_LTS_VERSION" = "$node_index_major_version" ]] && break # case insensitive compare
 done < node_index.tab
 
