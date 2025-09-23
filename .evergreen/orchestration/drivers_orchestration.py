@@ -149,15 +149,21 @@ def get_options():
             "--tls-cert-key-file",
             help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
         )
+        other_group.add_argument(
+            "--custom-orch-file",
+            help="The path to a custom orchestration config file",
+        )
 
-    # Get the options, and then allow environment variable overrides.
+    # Get the options, and then allow environment variables to override defaults.
     opts = parser.parse_args(sys.argv[2:])
     for key in vars(opts).keys():
         env_var = key.upper()
         if env_var == "VERSION":
             env_var = "MONGODB_VERSION"
         if env_var in os.environ:
-            if env_var == "AUTH":
+            if parser.get_default(key) != getattr(opts, key):
+                LOGGER.info("Overriding env var '%s' with cli option", env_var)
+            elif env_var == "AUTH":
                 opts.auth = os.environ.get("AUTH") == "auth"
             elif env_var == "SSL":
                 ssl_opt = os.environ.get("SSL", "")
@@ -538,7 +544,6 @@ def clean_start(opts):
     for fname in [
         "out.log",
         "server.log",
-        "orchestration.config",
         "config.json",
         "server.pid",
     ]:
@@ -559,10 +564,13 @@ def start(opts):
 
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
-    mo_config = mo_home / "orchestration.config"
-    mdb_binaries = Path(opts.mongodb_binaries)
-    config = dict(releases=dict(default=normalize_path(mdb_binaries)))
-    mo_config.write_text(json.dumps(config, indent=2))
+    if opts.custom_orch_file:
+        mo_config = Path(opts.custom_orch_file)
+    else:
+        mo_config = mo_home / "orchestration.config"
+        mdb_binaries = Path(opts.mongodb_binaries)
+        config = dict(releases=dict(default=normalize_path(mdb_binaries)))
+        mo_config.write_text(json.dumps(config, indent=2))
     mo_config_str = normalize_path(mo_config)
     sys_executable = normalize_path(sys.executable)
     command = f"{sys_executable} -m mongo_orchestration.server"
