@@ -150,8 +150,8 @@ def get_options():
             help="A .pem to be used as the tlsCertificateKeyFile option in mongo-orchestration",
         )
         other_group.add_argument(
-            "--custom-orch-file",
-            help="The path to a custom orchestration config file",
+            "--custom-mo-config",
+            help="The path to a custom mongo orchestration config file",
         )
 
     # Get the options, and then allow environment variables to override defaults.
@@ -564,8 +564,8 @@ def start(opts):
 
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
-    if opts.custom_orch_file:
-        mo_config = Path(opts.custom_orch_file)
+    if opts.custom_mo_config:
+        mo_config = Path(opts.custom_mo_config)
     else:
         mo_config = mo_home / "orchestration.config"
         mdb_binaries = Path(opts.mongodb_binaries)
