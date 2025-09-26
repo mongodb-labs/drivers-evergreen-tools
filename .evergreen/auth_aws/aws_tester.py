@@ -327,7 +327,7 @@ def main():
     func_name = args.func.__name__.replace("setup_", "").replace("_", "-")
     LOGGER.info("Running aws_tester.py with %s...", func_name)
     creds = args.func()
-    handle_creds(creds, args.no_uri)
+    handle_creds(creds, args.nouri)
     LOGGER.info("Running aws_tester.py with %s... done.", func_name)
 
 
