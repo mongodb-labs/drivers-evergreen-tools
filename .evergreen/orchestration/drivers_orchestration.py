@@ -550,12 +550,12 @@ def start(opts):
     # Start mongo-orchestration
 
     # Stop a running server.
-    mo_home = Path(opts.mongo_orchestration_home)
-    if (mo_home / "server.pid").exists():
-        stop(opts)
+    stop(opts)
 
     # Clean up previous files.
     clean_start(opts)
+
+    mo_home = Path(opts.mongo_orchestration_home)
 
     # Set up the mongo orchestration config.
     os.makedirs(mo_home / "lib", exist_ok=True)
