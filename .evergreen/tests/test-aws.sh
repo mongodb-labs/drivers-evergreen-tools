@@ -19,7 +19,7 @@ cat test-env.sh | grep -q SESSION_TOKEN
 cat test-env.sh | grep MONGODB_URI | grep -q "@"
 rm test-env.sh
 
-bash aws_setup.sh assume-role --nouri
+bash aws_setup.sh --nouri assume-role
 cat test-env.sh | grep -q USER
 cat test-env.sh | grep -q PASS
 cat test-env.sh | grep -q SESSION_TOKEN
@@ -42,7 +42,7 @@ cat test-env.sh | grep -v -q SESSION_TOKEN
 cat test-env.sh | grep MONGODB_URI | grep -q "@"
 rm test-env.sh
 
-bash aws_setup.sh regular --nouri
+bash aws_setup.sh --nouri regular
 cat test-env.sh | grep -q USER
 cat test-env.sh | grep -q PASS
 cat test-env.sh | grep -q SESSION_TOKEN
