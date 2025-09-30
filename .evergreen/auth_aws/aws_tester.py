@@ -95,6 +95,9 @@ def setup_assume_role():
         USER=kwargs["username"],
         PASS=kwargs["password"],
         SESSION_TOKEN=creds["SessionToken"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+        AWS_SESSION_TOKEN=creds["SessionToken"],
     )
 
 
@@ -171,7 +174,12 @@ def setup_regular():
     )
     create_user(CONFIG[get_key("iam_auth_ecs_account_arn")], kwargs)
 
-    return dict(USER=kwargs["username"], PASS=kwargs["password"])
+    return dict(
+        USER=kwargs["username"],
+        PASS=kwargs["password"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+    )
 
 
 def setup_env_creds():
@@ -266,8 +274,8 @@ def setup_eks_pod_identity():
     return dict()
 
 
-def handle_creds(creds: dict):
-    if "USER" in creds:
+def handle_creds(creds: dict, nouri: bool):
+    if "USER" in creds and not nouri:
         USER = quote_plus(creds["USER"])
         if "PASS" in creds:
             PASS = quote_plus(creds["PASS"])
@@ -279,7 +287,7 @@ def handle_creds(creds: dict):
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
-    if "SESSION_TOKEN" in creds:
+    if "SESSION_TOKEN" in creds and not nouri:
         SESSION_TOKEN = quote_plus(creds["SESSION_TOKEN"])
         MONGODB_URI = (
             f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
@@ -296,6 +304,7 @@ def handle_creds(creds: dict):
 
 def main():
     parser = argparse.ArgumentParser(description="MONGODB-AWS tester.")
+    parser.add_argument("--nouri", action="store_true", default=False)
     sub = parser.add_subparsers(title="Tester subcommands", help="sub-command help")
 
     run_assume_role_cmd = sub.add_parser("assume-role", help="Assume role test")
@@ -326,7 +335,7 @@ def main():
     func_name = args.func.__name__.replace("setup_", "").replace("_", "-")
     LOGGER.info("Running aws_tester.py with %s...", func_name)
     creds = args.func()
-    handle_creds(creds)
+    handle_creds(creds, args.nouri)
     LOGGER.info("Running aws_tester.py with %s... done.", func_name)
 
 
