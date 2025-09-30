@@ -23,6 +23,9 @@ bash aws_setup.sh --nouri assume-role
 cat test-env.sh | grep -q USER
 cat test-env.sh | grep -q PASS
 cat test-env.sh | grep -q SESSION_TOKEN
+cat test-env.sh | grep -q AWS_ACCESS_KEY_ID
+cat test-env.sh | grep -q AWS_SECRET_ACCESS_KEY
+cat test-env.sh | grep -q AWS_SESSION_TOKEN
 # Ensure there is no password in the URI.
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh

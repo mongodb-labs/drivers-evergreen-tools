@@ -95,6 +95,9 @@ def setup_assume_role():
         USER=kwargs["username"],
         PASS=kwargs["password"],
         SESSION_TOKEN=creds["SessionToken"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+        AWS_SESSION_TOKEN=creds["SessionToken"],
     )
 
 
