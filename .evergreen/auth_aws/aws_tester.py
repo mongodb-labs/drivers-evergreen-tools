@@ -174,7 +174,12 @@ def setup_regular():
     )
     create_user(CONFIG[get_key("iam_auth_ecs_account_arn")], kwargs)
 
-    return dict(USER=kwargs["username"], PASS=kwargs["password"])
+    return dict(
+        USER=kwargs["username"],
+        PASS=kwargs["password"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+    )
 
 
 def setup_env_creds():
