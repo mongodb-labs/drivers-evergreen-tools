@@ -198,6 +198,8 @@ def get_docker_cmd():
     docker = shutil.which("podman") or shutil.which("docker")
     if not docker:
         return None
+    if os.name == "nt":
+        docker = docker.replace(os.sep, "/")
     if "podman" in docker:
         docker = f"sudo {docker}"
     return docker
