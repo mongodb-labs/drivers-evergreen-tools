@@ -704,7 +704,7 @@ def stop(opts):
 
     # Next look for running docker images.
     if docker:
-        cmd = f"{docker} ps --format '" "{{.Image}}\t{{.ID}} " "'"
+        cmd = f"{docker} ps --format '{{{{.Image}}}}\t{{{{.ID}}}}'"
         response = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         for line in response.splitlines():
             image, container_id = line.split("\t")
