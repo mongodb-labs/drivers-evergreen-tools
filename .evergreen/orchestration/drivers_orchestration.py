@@ -638,14 +638,14 @@ def start(opts):
 
 
 def shutdown_proc(proc: psutil.Process) -> None:
-	try:
-		proc.terminate()
-		try:
-		    proc.wait(10) # Wait up to 10 seconds.
-		except psutil.TimeoutExpired:
-		    proc.kill()
-	except psutil.NoSuchProcess:
-		pass
+    try:
+        proc.terminate()
+        try:
+            proc.wait(10)  # Wait up to 10 seconds.
+        except psutil.TimeoutExpired:
+            proc.kill()
+    except psutil.NoSuchProcess:
+        pass
 
 
 def shutdown_docker(docker: str, container_id: str) -> None:
@@ -686,15 +686,20 @@ def stop(opts):
             cmdline = proc.cmdline()
         except (psutil.AccessDenied, psutil.NoSuchProcess):
             continue
-        if "mongo_orchestration.server" in cmdline:
-            LOGGER.info("Stopping mongo-orchestration by process info...")
-            shutdown_proc(proc)
-            LOGGER.info("Stopping mongo-orchestration by process info... done.")
+        found = False
+        for item in cmdline:
+            if item == "mongo_orchestration.server" or "mongo-orchestration" in item:
+                found = True
+        if not found:
+            continue
+        LOGGER.info("Stopping mongo-orchestration by process info...")
+        shutdown_proc(proc)
+        LOGGER.info("Stopping mongo-orchestration by process info... done.")
 
     # Next look for running docker images.
     if docker:
-        cmd = f"{docker} ps --format '{{.Image}}\t{{.ID}}'"
-        response = subprocess.check_output(cmd, encoding="utf-8").strip()
+        cmd = f"{docker} ps --format '" "{{.Image}}\t{{.ID}} " "'"
+        response = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
         for line in response.splitlines():
             image, container_id = line.split("\t")
             if image in ["mongodb/mongodb-atlas-local", "mongo"]:
