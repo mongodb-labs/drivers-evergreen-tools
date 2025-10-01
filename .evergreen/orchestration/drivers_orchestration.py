@@ -22,6 +22,8 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+import psutil
+
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
@@ -633,9 +635,6 @@ def start(opts):
         time.sleep(attempt * 1000)
 
     LOGGER.info("Starting mongo-orchestration... done.")
-
-
-import psutil
 
 
 def shutdown_proc(proc: psutil.Process) -> None:
