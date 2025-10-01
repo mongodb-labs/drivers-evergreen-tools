@@ -638,12 +638,14 @@ def start(opts):
 
 
 def shutdown_proc(proc: psutil.Process) -> None:
-    proc.terminate()
-    if proc.wait(1) is None:
-        try:
-            proc.kill()
-        except psutil.NoSuchProcess:
-            pass
+	try:
+		proc.terminate()
+		try:
+		    proc.wait(10) # Wait up to 10 seconds.
+		except psutil.TimeoutExpired:
+		    proc.kill()
+	except psutil.NoSuchProcess:
+		pass
 
 
 def shutdown_docker(docker: str, container_id: str) -> None:
