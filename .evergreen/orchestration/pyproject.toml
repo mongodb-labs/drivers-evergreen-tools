@@ -17,7 +17,10 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ["drivers-evergreen-tools @ {root:parent:uri}", "mongo-orchestration @ https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz"]
+dependencies = [
+  "drivers-evergreen-tools @ {root:parent:uri}",
+  "mongo-orchestration @ https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz",
+  "psutil>=6.0"]
 
 [project.scripts]
 drivers-orchestration = "drivers_orchestration:main"
