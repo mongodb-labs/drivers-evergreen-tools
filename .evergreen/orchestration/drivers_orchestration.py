@@ -689,7 +689,7 @@ def stop(opts):
             shutdown_proc(proc)
             LOGGER.info("Stopping mongo-orchestration by process info... done.")
 
-    # Next look for runner docker images.
+    # Next look for running docker images.
     if docker:
         cmd = "docker ps --format '{{.Image}}\t{{.ID}}'"
         response = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
@@ -700,8 +700,7 @@ def stop(opts):
                 shutdown_docker(docker, container_id)
                 LOGGER.info(f"Stopping {image} by image name... done.")
 
-    # Finally, look for any processes that are mongod or mongos,
-    # and shut them down.
+    # Finally, look for any processes that are named mongod or mongos.
     for proc in all_procs:
         try:
             name = proc.name()
