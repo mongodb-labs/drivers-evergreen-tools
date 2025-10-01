@@ -692,7 +692,7 @@ def stop(opts):
     # Next look for running docker images.
     if docker:
         cmd = f"{docker} ps --format '{{.Image}}\t{{.ID}}'"
-        response = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
+        response = subprocess.check_output(cmd, encoding="utf-8").strip()
         for line in response.splitlines():
             image, container_id = line.split("\t")
             if image in ["mongodb/mongodb-atlas-local", "mongo"]:
