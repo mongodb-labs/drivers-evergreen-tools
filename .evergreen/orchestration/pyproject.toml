@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
   "drivers-evergreen-tools @ {root:parent:uri}",
   "mongo-orchestration @ https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz",
-  "psutil>=6.0"
+  "psutil>=7.1"
 ]
 
 [project.scripts]

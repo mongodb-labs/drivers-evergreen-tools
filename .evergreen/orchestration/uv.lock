@@ -135,7 +135,7 @@ dependencies = [
 requires-dist = [
     { name = "drivers-evergreen-tools", directory = "../" },
     { name = "mongo-orchestration", url = "https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz" },
-    { name = "psutil", specifier = ">=6.0" },
+    { name = "psutil", specifier = ">=7.1" },
 ]
 
 [[package]]
