@@ -670,7 +670,7 @@ def stop(opts):
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
 
     # Next try using a docker container file.
-    if container_file.exists():
+    if docker is not None and container_file.exists():
         LOGGER.info("Stopping mongodb_atlas_local using container file...")
         shutdown_docker(docker, container_file.read_text())
         container_file.unlink()
