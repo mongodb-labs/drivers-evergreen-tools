@@ -649,8 +649,8 @@ def shutdown_proc(proc: psutil.Process) -> None:
             proc.wait(10)  # Wait up to 10 seconds.
         except psutil.TimeoutExpired:
             proc.kill()
-    except psutil.NoSuchProcess:
-        pass
+    except Exception as e:
+        LOGGER.exception(e)
 
 
 def shutdown_docker(docker: str, container_id: str) -> None:
