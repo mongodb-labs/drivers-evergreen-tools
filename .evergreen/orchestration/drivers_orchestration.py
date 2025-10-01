@@ -547,7 +547,10 @@ def clean_start(opts):
         "server.pid",
     ]:
         if (mo_home / fname).exists():
-            (mo_home / fname).unlink()
+            try:
+                (mo_home / fname).unlink()
+            except PermissionError:
+                pass
 
 
 def start(opts):
