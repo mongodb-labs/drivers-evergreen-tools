@@ -688,7 +688,7 @@ def stop(opts):
             continue
         found = False
         for item in cmdline:
-            if item == "mongo_orchestration.server" or "mongo-orchestration" in item:
+            if "mongo_orchestration.server" in item or "mongo-orchestration" in item:
                 found = True
                 break
         if not found:
