@@ -690,6 +690,7 @@ def stop(opts):
         for item in cmdline:
             if item == "mongo_orchestration.server" or "mongo-orchestration" in item:
                 found = True
+                break
         if not found:
             continue
         LOGGER.info("Stopping mongo-orchestration by process info...")
