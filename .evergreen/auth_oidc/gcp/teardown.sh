@@ -20,6 +20,4 @@ bash ../../atlas/teardown-atlas-cluster.sh
 
 popd
 
-if [ -n "$delete_failed" ]; then
-  exit 1
-fi
+[[ "${delete_success:?}" == "1" ]]
