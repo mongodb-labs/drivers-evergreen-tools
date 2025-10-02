@@ -25,7 +25,7 @@ pushd $SCRIPT_DIR
 # Handle secrets from vault.
 . ./setup-secrets.sh
 
-# Add preliminary variables.
+# Add preliminary variables. Unconditionally used by teardown.sh.
 cat <<EOF >> "secrets-export.sh"
 export OIDC_SERVER_TYPE=atlas
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
