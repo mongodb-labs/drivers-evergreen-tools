@@ -1018,7 +1018,7 @@ tasks:
       commands:
       - func: "run docker test"
         vars:
-          TARGET_IMAGE: ubuntu18.04
+          TARGET_IMAGE: rhel8
           MONGODB_VERSION: 3.6
           ARCH: amd64
 

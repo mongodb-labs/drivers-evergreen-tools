@@ -10,7 +10,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   make \
   sudo \
   gnupg \
-  python \
   lsof \
   software-properties-common \
   libsnmp35 \
