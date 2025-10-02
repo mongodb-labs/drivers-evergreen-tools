@@ -28,6 +28,9 @@ RUN dnf update -y && \
 ARG USER_ID
 ARG GROUP_ID
 
+# Alias python3 -> installed python
+RUN ln -f -s /usr/bin/$PYTHON /usr/bin/python3
+
 ENV DRIVERS_TOOLS=/root/drivers-tools
 ENV MONGO_ORCHESTRATION_HOME=/root/drivers-tools/.evergreen/orchestration
 ENV MONGODB_BINARIES=/root/drivers-tools/mongodb/bin

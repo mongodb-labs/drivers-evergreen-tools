@@ -27,9 +27,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 && ln -sf /usr/bin/$PYTHON /usr/bin/python3 \
 && rm -rf /var/lib/apt/lists/*
 
-# Alias python3 -> python3.11
-RUN ln -f -s /usr/bin/$PYTHON /usr/bin/python3
-
 ARG USER_ID
 ARG GROUP_ID
 
