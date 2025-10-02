@@ -25,6 +25,13 @@ pushd $SCRIPT_DIR
 # Handle secrets from vault.
 . ./setup-secrets.sh
 
+# Add preliminary variables. Unconditionally used by teardown.sh.
+cat <<EOF >> "secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
+export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
+EOF
+
 ########################
 # Start an Atlas Cluster
 
@@ -95,11 +102,8 @@ create_deployment
 URI=$(check_deployment)
 
 cat <<EOF >> "secrets-export.sh"
-export OIDC_SERVER_TYPE=atlas
 export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s&authSource=%24external"
-export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
-export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF
 
 popd
