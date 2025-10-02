@@ -9,7 +9,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
-IMAGE=${TARGET_IMAGE:-ubuntu20.04}
+IMAGE=${TARGET_IMAGE:-ubuntu22.04}
 PLATFORM=${DOCKER_PLATFORM:-}
 ARCH=${ARCH:-}
 # e.g. --platform linux/amd64
