@@ -25,9 +25,6 @@ RUN dnf update -y && \
     mongodb-enterprise \
     lsof < /dev/null > /dev/null
 
-# Alias python3 -> python3.11
-RUN ln -f -s /usr/bin/$PYTHON /usr/bin/python3
-
 ARG USER_ID
 ARG GROUP_ID
 
