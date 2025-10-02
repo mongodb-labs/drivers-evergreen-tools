@@ -10,10 +10,7 @@ pushd $SCRIPT_DIR
 source ./secrets-export.sh
 
 # Tear down the VM.  Do not let a failure prevent tearing down the cluster.
-delete_failed=""
-bash $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/delete-instance.sh || {
-  delete_failed="1"
-}
+bash "$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/delete-instance.sh" && delete_success="1" || delete_success="0"
 
 # Tear down the Atlas Cluster
 export DRIVERS_ATLAS_PUBLIC_API_KEY=$OIDC_ATLAS_PUBLIC_API_KEY
