@@ -20,7 +20,9 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+
+import psutil
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
@@ -196,6 +198,7 @@ def get_docker_cmd():
     docker = shutil.which("podman") or shutil.which("docker")
     if not docker:
         return None
+    docker = PureWindowsPath(docker).as_posix()
     if "podman" in docker:
         docker = f"sudo {docker}"
     return docker
@@ -543,7 +546,10 @@ def clean_start(opts):
         "server.pid",
     ]:
         if (mo_home / fname).exists():
-            (mo_home / fname).unlink()
+            try:
+                (mo_home / fname).unlink()
+            except PermissionError:
+                pass
 
 
 def start(opts):
@@ -635,36 +641,93 @@ def start(opts):
     LOGGER.info("Starting mongo-orchestration... done.")
 
 
+def shutdown_proc(proc: psutil.Process) -> None:
+    try:
+        proc.terminate()
+        try:
+            proc.wait(10)  # Wait up to 10 seconds.
+        except psutil.TimeoutExpired:
+            proc.kill()
+    except Exception as e:
+        LOGGER.exception(e)
+
+
+def shutdown_docker(docker: str, container_id: str) -> None:
+    if "podman" in docker:
+        cmd = f"{docker} rm -f {container_id}"
+    else:
+        cmd = f"{docker} kill {container_id}"
+    run_command(cmd, exit_on_error=False)
+
+
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
+
+    # First try to shut down using pid file.
     if pid_file.exists():
-        LOGGER.info("Stopping mongo-orchestration...")
-        py_exe = normalize_path(sys.executable)
-        run_command(f"{py_exe} -m mongo_orchestration.server stop")
+        pid = int(pid_file.read_text().strip())
         pid_file.unlink(missing_ok=True)
-        LOGGER.info("Stopping mongo-orchestration... done.")
-    if container_file.exists():
-        LOGGER.info("Stopping mongodb_atlas_local...")
-        container_id = container_file.read_text()
-        run_command(f"{docker} kill {container_id}", exit_on_error=False)
+        if psutil.pid_exists(pid):
+            LOGGER.info("Stopping mongo-orchestration using pid file...")
+            shutdown_proc(psutil.Process(pid))
+            LOGGER.info("Stopping mongo-orchestration using pid file... done.")
+
+    # Next try using a docker container file.
+    if docker is not None and container_file.exists():
+        LOGGER.info("Stopping mongodb_atlas_local using container file...")
+        shutdown_docker(docker, container_file.read_text())
         container_file.unlink()
-        LOGGER.info("Stopping mongodb_atlas_local... done.")
-    elif docker:
-        cmd = f"{docker} ps -a -q -f name=mongodb_atlas_local"
+        LOGGER.info("Stopping mongodb_atlas_local using container file ... done.")
+
+    all_procs = list(psutil.process_iter())
+
+    # Next look for mongo-orchestration by command line arguments.
+    for proc in all_procs:
         try:
-            result = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
-        except Exception:
-            result = None
-        if result:
-            LOGGER.info("Stopping mongodb_atlas_local...")
-            if "podman" in docker:
-                run_command(f"{docker} rm -f {result}")
-            else:
-                run_command(f"{docker} kill {result}")
-            LOGGER.info("Stopping mongodb_atlas_local... done.")
+            cmdline = proc.cmdline()
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            continue
+        found = False
+        for item in cmdline:
+            if "mongo_orchestration.server" in item or "mongo-orchestration" in item:
+                found = True
+                break
+        if not found:
+            continue
+        LOGGER.info("Stopping mongo-orchestration by process info...")
+        shutdown_proc(proc)
+        LOGGER.info("Stopping mongo-orchestration by process info... done.")
+
+    # Next look for running docker images.
+    if docker:
+        cmd = f"{docker} ps --format '{{{{.Image}}}}\t{{{{.ID}}}}'"
+        try:
+            response = subprocess.check_output(
+                shlex.split(cmd), encoding="utf-8"
+            ).strip()
+        except subprocess.CalledProcessError as e:
+            LOGGER.exception(e)
+            response = ""
+        for line in response.splitlines():
+            image, container_id = line.split("\t")
+            if image in ["mongodb/mongodb-atlas-local", "mongo"]:
+                LOGGER.info(f"Stopping {image} by image name...")
+                shutdown_docker(docker, container_id)
+                LOGGER.info(f"Stopping {image} by image name... done.")
+
+    # Finally, look for any processes that are named mongod or mongos.
+    for proc in all_procs:
+        try:
+            name = proc.name()
+        except psutil.NoSuchProcess:
+            continue
+        if name in ["mongod", "mongos"]:
+            LOGGER.info(f"Stopping {name} by process name...")
+            shutdown_proc(proc)
+            LOGGER.info(f"Stopping {name} by process name... done.")
 
 
 def main():
