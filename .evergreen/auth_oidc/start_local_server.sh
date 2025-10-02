@@ -64,7 +64,7 @@ pushd $DRIVERS_TOOLS
 PLATFORM="--platform linux/amd64"
 cp .gitignore .dockerignore
 USER="--build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g)"
-$DOCKER build $PLATFORM -t drivers-evergreen-tools -f $SCRIPT_DIR/../docker/ubuntu20.04/Dockerfile $USER .
+$DOCKER build $PLATFORM -t drivers-evergreen-tools -f $SCRIPT_DIR/../docker/ubuntu22.04/Dockerfile $USER .
 $DOCKER build $PLATFORM -t oidc-test -f $SCRIPT_DIR/Dockerfile $USER .
 popd
 
