@@ -7,6 +7,7 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
+set -x
 NAME=drivers-evergreen-tools
 ENTRYPOINT=${ENTRYPOINT:-/root/local-entrypoint.sh}
 IMAGE=${TARGET_IMAGE:-ubuntu22.04}

@@ -12,7 +12,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   gnupg \
   lsof \
   software-properties-common \
-  libsnmp35 \
+  libsnmp40 \
   net-tools < /dev/null > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
