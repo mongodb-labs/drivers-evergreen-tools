@@ -4,6 +4,7 @@ set -eu
 
 # Supported environment variables:
 #   AUTH                   Set to "auth" to enable authentication. Defaults to "noauth"
+#   ARCH                   Set to "x86_64" or "arm64". Defaults to the architecture of the machine running the script.
 #   SSL                    Set to "yes" to enable SSL. Defaults to "nossl"
 #   TOPOLOGY               Set to "server", "replica_set", or "sharded_cluster". Defaults to "server" (i.e. standalone).
 #   MONGODB_VERSION        Set the MongoDB version to use. Defaults to "latest".

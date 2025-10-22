@@ -117,6 +117,33 @@ See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available e
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
+### Testing Against Different Versions
+
+Sometimes you'll need to run tests against a specific version, such as "7.0", and to do that you can use the `VERSION` env var.
+
+```sh
+VERSION=7.0 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
+```
+
+Older versions of MongoDB may not have Mac binaries, so you may also need to specify a different architecture:
+
+```sh
+VERSION=4.2 ARCH=x86_64 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
+```
+
+#### "Bad CPU type in executable" error
+
+You may encounter this error if Rosetta isn't properly configured on your system.
+```txt
+OSError: [Errno 86] Bad CPU type in executable: '.../node-mongodb-native/drivers-evergreen-tools/mongodb/bin/mongod'
+```
+
+To fix it, simply run:
+
+```sh
+softwareupdate --install-rosetta
+```
+
 ## Updating Dependencies
 
 The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
