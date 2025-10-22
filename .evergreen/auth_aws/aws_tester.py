@@ -122,7 +122,6 @@ def setup_ecs():
     # Get the appropriate task definition based on the version of Ubuntu.
     with open("/etc/lsb-release") as fid:
         text = fid.read()
-    print("****", text)
     if "focal" in text:
         task_definition = CONFIG.get(
             get_key("iam_auth_ecs_task_definition_focal"), None
