@@ -125,7 +125,7 @@ Sometimes you'll need to run tests against a specific version, such as "7.0", an
 VERSION=7.0 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
 ```
 
-Older versions of MongoDB may not have Mac binaries, so you may also need to specify a different architecture:
+Older versions of MongoDB may not have arm64 macOS binaries, so you may also need to install the x86_64 binary (note: this will use Rosetta to run the binary):
 
 ```sh
 VERSION=4.2 ARCH=x86_64 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
