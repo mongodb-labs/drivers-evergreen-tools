@@ -436,7 +436,7 @@ async function createCluster(input: any, opts: CliOptions) {
   }
 
   // Handle top level options.
-  const skipKeys = ["shards", "sslParams", "routers", "login", "password", "id", "name", "procParams"];
+  const skipKeys = ["shards", "sslParams", "routers", "members", "login", "password", "id", "name", "procParams"];
   for (const key in input) {
     if (skipKeys.includes(key)) {
       continue;
