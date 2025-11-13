@@ -336,7 +336,10 @@ function getOrchestrationData(opts: CliOptions): any {
   }
 
   // 2. Build config path
-  const topology = opts.topology ?? 'server';
+  let topology: str = opts.topology ?? 'standalone';
+  if (topology === "standalone") {
+    topology = "server";
+  }
   const moHome = opts.mongoOrchestrationHome ?? path.join(DRIVERS_TOOLS, '.evergreen', 'orchestration');
   const orchPath = path.join(moHome, 'configs', `${topology}s`, orchestrationFile);
   console.log(`Using orchestration file: ${orchPath}`);
@@ -674,7 +677,7 @@ async function run(opts: CliOptions) {
 }
 
 const program = new Command();
-const TOPOLOGIES = ["server", "replica_set", "sharded_cluster"];
+const TOPOLOGIES = ["standalone", "replica_set", "sharded_cluster"];
 program
   .name('mongo-orchestration-tool')
   .description('Run mongo-orchestration and launch a deployment');
@@ -683,7 +686,7 @@ program.command('run')
   .option('-v, --verbose', 'Verbose', process.env.VERBOSE === 'true')
   .option('--quiet', 'Quiet', process.env.QUIET === 'true')
   .option('--version <version>', 'MongoDB version', process.env.VERSION || 'latest')
-  .option('--topology <topology>', `Topology (${TOPOLOGIES.join(', ')})`, process.env.TOPOLOGY || 'server')
+  .option('--topology <topology>', `Topology (${TOPOLOGIES.join(', ')})`, process.env.TOPOLOGY || 'standalone')
   .option('--auth', 'Use authentication', process.env.AUTH === "auth")
   .option('--ssl', 'Enable TLS', process.env.SSL !== undefined)
   .option('--local-atlas', 'Use mongodb-atlas-local', process.env.LOCAL_ATLAS !== undefined)
