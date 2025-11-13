@@ -22,6 +22,7 @@ const __dirname = dirname(__filename);
 const HERE = __dirname;
 const EVG_PATH = path.resolve(HERE, '..');
 const DRIVERS_TOOLS = path.resolve(EVG_PATH, '..');
+console.log('DRIVERS_TOOLS IS', DRIVERS_TOOLS);
 const PLATFORM = os.platform();
 const CACHE_DIR = path.join(DRIVERS_TOOLS, ".local/cache");
 const VERSION_LIST_URL = process.env["MONGODB_DOWNLOAD_SOURCE"] || "https://downloads.mongodb.org/full.json";
