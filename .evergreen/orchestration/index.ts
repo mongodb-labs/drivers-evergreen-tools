@@ -336,7 +336,7 @@ function getOrchestrationData(opts: CliOptions): any {
   }
 
   // 2. Build config path
-  let topology: str = opts.topology ?? 'standalone';
+  let topology: string = opts.topology ?? 'standalone';
   if (topology === "standalone") {
     topology = "server";
   }
