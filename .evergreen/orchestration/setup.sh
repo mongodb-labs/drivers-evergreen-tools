@@ -16,11 +16,12 @@ if [ -n "${CI:-}" ]; then
   npm config set -L project registry "https://registry.npmjs.org"
 fi
 
+
+npm install .
 # TODO: remove after installing runner from npm registry.
 pushd node_modules/mongodb-runner
 npm install .
 npm run compile
 popd
-npm install .
 npm run compile
 popd
