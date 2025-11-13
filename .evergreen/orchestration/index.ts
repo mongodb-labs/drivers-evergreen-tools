@@ -547,9 +547,15 @@ async function createCluster(input: any, opts: CliOptions) {
     roles
   });
 
-  console.log(cluster.connectionString);
+  // Handle the cluster uri.
+  const uri = cluster.connectionString
+  console.log("Cluster URI: ", uri);
+  await fs.appendFile(MO_EXPANSION_YML, `\nMONGODB_URI: "${uri}"`);
+  await fs.appendFile(MO_EXPANSION_SH, `\nMONGODB_URI="${uri}"`);
+  await fs.writeFile(URI_TXT, uri);
   await fs.writeFile(path.join(HERE, "server.log"), JSON.stringify(cluster.serialize(), null, 2));
   cluster.unref();
+
 }
 
 async function downloadCryptShared(version: string) {
