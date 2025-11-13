@@ -18,7 +18,7 @@ fi
 
 set -x
 
-if [ ! -f $SCRIPT_DIR/index.js ]; then
+
   (
     cd $SCRIPT_DIR
     npm install .
@@ -28,4 +28,3 @@ if [ ! -f $SCRIPT_DIR/index.js ]; then
     npm install .
     npm run compile
   )
-fi
