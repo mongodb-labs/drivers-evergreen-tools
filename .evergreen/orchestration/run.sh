@@ -7,12 +7,5 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 . "${SCRIPT_DIR:?}/../handle-paths.sh"
 
 (
-  cd $SCRIPT_DIR/..
-  bash init-node-and-npm-env.sh
-)
-
-(
-  cd $SCRIPT_DIR
-  npm install .
-  npm run compile
+  node index.js "$@"
 )

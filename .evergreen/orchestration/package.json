@@ -1,0 +1,33 @@
+{
+  "name": "test-mongodb-runner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc -p tsconfig.json",
+    "cli": "ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@mongodb-js/mongodb-downloader": "^1.0.0",
+    "commander": "^14.0.2",
+    "cross-spawn": "^7.0.6",
+    "debug": "^4.4.3",
+    "fs-extra": "^11.3.2",
+    "mongodb-runner": "file:///Users/steve.silvester/workspace/devtools-shared/packages/mongodb-runner",
+    "mongosh": "^2.5.9",
+    "ps-list": "^9.0.0",
+    "ts-node": "^10.9.2",
+    "which": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.10.1",
+    "@types/which": "^3.0.4"
+  }
+}
