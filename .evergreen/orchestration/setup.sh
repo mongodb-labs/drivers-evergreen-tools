@@ -16,6 +16,7 @@ if [ -n "${CI:-}" ]; then
   npm config set -L project registry "https://registry.npmjs.org"
 fi
 
+set -x
 npm install .
 npm run compile
 # TODO: remove after installing runner from npm registry.
