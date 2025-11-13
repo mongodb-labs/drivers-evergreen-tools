@@ -16,6 +16,8 @@ if [ -n "${CI:-}" ]; then
   )
 fi
 
+set -x
+
 if [ ! -f $SCRIPT_DIR/index.js ]; then
   (
     cd $SCRIPT_DIR
