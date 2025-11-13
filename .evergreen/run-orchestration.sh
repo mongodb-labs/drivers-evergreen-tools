@@ -35,4 +35,5 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 
 # Ensure the CLIs are up to date.
 bash $SCRIPT_DIR/orchestration/setup.sh
-bash $SCRIPT_DIR/orchestration/run.sh "$@"
+set -x
+bash $SCRIPT_DIR/orchestration/run.sh run "$@"
