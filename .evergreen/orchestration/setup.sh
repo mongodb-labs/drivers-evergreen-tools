@@ -8,8 +8,8 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 if [ -n "${CI:-}" ]; then
   (
     cd $SCRIPT_DIR/..
-    bash ../install-node.sh
-    source ../init-node-and-npm-env.sh
+    bash ./install-node.sh
+    source ./init-node-and-npm-env.sh
 
     # Use the standard registry.
     npm config set -L project registry "https://registry.npmjs.org"

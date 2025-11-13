@@ -8,8 +8,8 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 if [ -n "${CI:-}" ]; then
   (
-    cd $SCRIPT_DIR
-    source ../init-node-and-npm-env.sh
+    cd $SCRIPT_DIR/..
+    source ./init-node-and-npm-env.sh
   )
 fi
 
