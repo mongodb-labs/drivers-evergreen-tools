@@ -574,6 +574,7 @@ async function downloadCryptShared(version: string) {
     const targetPath = path.join(DRIVERS_TOOLS, targetFile);
     await fs.copyFile(path.join(downloadPath, targetFile), targetPath);
     const cryptText = `CRYPT_SHARED_LIB_PATH: "${normalizePath(targetPath)}"`;
+    console.log("writing expansion file to", MO_EXPANSION_YML);
     await fs.writeFile(MO_EXPANSION_YML, cryptText, "utf8");
     await fs.writeFile(MO_EXPANSION_SH, cryptText.replace(": ", "="), "utf8");
 }
