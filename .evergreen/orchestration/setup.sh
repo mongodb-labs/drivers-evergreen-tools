@@ -21,5 +21,9 @@ if [ ! -f $SCRIPT_DIR/index.js ]; then
     cd $SCRIPT_DIR
     npm install .
     npm run compile
+    # TODO: remove after installing runner from npm registry.
+    cd node_modules/mongodb-runner
+    npm install .
+    npm run compile
   )
 fi
