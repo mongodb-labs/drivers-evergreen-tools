@@ -618,8 +618,13 @@ async function downloadBinaries(opts: CliOptions) {
     });
     // Copy mongod and mongos to bin dir
     await fs.mkdirpSync(binDir);
-    await fs.copyFile(path.join(downloadPath, "mongod"), path.join(binDir, "mongod"));
-    await fs.copyFile(path.join(downloadPath, "mongos"),  path.join(binDir, "mongos"));
+    let binaries = ["mongod", "mongos"];
+    if (process.platform === 'win32') {
+      binaries = ["mongod.exe", "mongo.exe"];
+    }
+    for (const binary of binaries) {
+      await fs.copyFile(path.join(downloadPath, binary), path.join(binDir, binary));
+    }
   }
 
   return binDir;
