@@ -120,11 +120,32 @@ function runCommand(cmd: string, exitOnError = true, options: {}) {
   logDebug(`Running command ${cmd}... done.`);
 }
 
-// Shutdown Mongo Orchestration by pid/process name
+// Shut down process by pid and wait for it to exit.
 async function shutdownProc(proc: any) {
   try {
     process.kill(proc.pid, 'SIGTERM');
-    logInfo(`Terminated process ${proc.pid} (${proc.name})`);
+    logInfo(`Terminated process ${proc.pid} (${proc.name ?? "unknown"})`);
+
+    // Wait for process to exit
+    const maxWaitMs = 10000;
+    const pollInterval = 250;
+    let waited = 0;
+
+    while (true) {
+      try {
+        // Throws if process no longer exists
+        process.kill(proc.pid, 0);
+      } catch (err) {
+        logInfo(`Process ${proc.pid} has exited.`);
+        break;
+      }
+      if (waited >= maxWaitMs) {
+        logError(`Process ${proc.pid} did not exit after SIGTERM`);
+        break;
+      }
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      waited += pollInterval;
+    }
   } catch (err) {
     logError(`Failed to terminate process ${proc.pid}`, err);
   }
