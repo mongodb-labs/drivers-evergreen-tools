@@ -573,12 +573,6 @@ async function createCluster(input: any, opts: CliOptions) {
 
   // Handle the cluster uri.
   const uri = cluster.connectionString
-  await cluster.withClient(async (client) => {
-    const status = await client.db('admin').command({
-            replSetGetStatus: 1
-    });
-    console.log(status);
-  });
   console.log("Cluster URI: ", uri);
   await fs.appendFile(MO_EXPANSION_YML, `\nMONGODB_URI: "${uri}"`);
   await fs.appendFile(MO_EXPANSION_SH, `\nMONGODB_URI="${uri}"`);
