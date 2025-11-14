@@ -127,14 +127,14 @@ async function shutdownProc(proc: any) {
     logInfo(`Terminated process ${proc.pid} (${proc.name ?? "unknown"})`);
 
     // Wait for process to exit
-    const maxWaitMs = 10000;
+    const maxWaitMs = 20000;
     const pollInterval = 250;
     let waited = 0;
 
     while (true) {
       try {
         // Throws if process no longer exists
-        process.kill(proc.pid, 0);
+        process.kill(proc.pid, 15);
       } catch (err) {
         logInfo(`Process ${proc.pid} has exited.`);
         break;
@@ -253,14 +253,16 @@ async function startAtlas(opts: CliOptions): Promise<string> {
 async function stop(opts: CliOptions) {
     // Kill by process name.
     const allProcs = await psList();
+    const tasks = [];
     for (const proc of allProcs) {
         if (
             proc.name === 'mongod' ||
             proc.name === 'mongos'
         ) {
-            await shutdownProc(proc);
+            tasks.push(shutdownProc(proc));
         }
     }
+    await Promise.all(tasks);
 
     // Kill by image name.
     const docker = getDockerCmd();
