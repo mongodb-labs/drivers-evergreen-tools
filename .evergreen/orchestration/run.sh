@@ -11,5 +11,7 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
   if [ -n "${CI:-}" ]; then
     source ../init-node-and-npm-env.sh
   fi
-  node index.js "$@"
+  DEBUG=mongodb-runner node index.js "$@"
 )
+
+exit 1
