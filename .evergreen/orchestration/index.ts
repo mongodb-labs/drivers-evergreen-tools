@@ -10,7 +10,7 @@ import which from 'which';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
-import { MongoCluster } from 'mongodb-runner';
+import { MongoCluster, RSMemberOptions } from 'mongodb-runner';
 import * as fsNode from 'fs';
 const { S_IRUSR } = fsNode.constants;
 import { downloadMongoDb } from '@mongodb-js/mongodb-downloader';
@@ -433,8 +433,7 @@ function handleProcParams(params: any, args: string[]) {
 
 async function createCluster(input: any, opts: CliOptions) {
   const id = randomBytes(12).toString('hex');
-  const rsTags: any[] = [];
-  const rsArgs: string[][] = [];
+  const rsMemberOptions: RSMemberOptions[] = [];
   const shardArgs: string[][] = [];
   const mongosArgs: string[][] = [];
   const tmpDir = TMPDIR;
@@ -486,15 +485,18 @@ async function createCluster(input: any, opts: CliOptions) {
   if (topology === "replset") {
     args.push("--replSet", input["id"])
     input.members.forEach((member: any) => {
-      const memberArgs: string[] = [];
+      const memberRSOptions = {
+        args: [],
+        tags: {},
+        priority: 1
+      }
       if ("rsParams" in member && "tags" in member["rsParams"]) {
-        rsTags.push(member["rsParams"]["tags"]);
-      } else {
-        rsTags.push({})
+        memberRSOptions.tags = member["rsParams"]["tags"];
       }
       if ("rsParams" in member && "arbiterOnly" in member["rsParams"]) {
         if (member["rsParams"]["arbiterOnly"]) {
           arbiters += 1;
+          memberRSOptions.priority = 0;
         } else {
           secondaries += 1;
         }
@@ -502,9 +504,9 @@ async function createCluster(input: any, opts: CliOptions) {
         secondaries += 1;
       }
       if ("procParams" in member) {
-        handleProcParams(member["procParams"], memberArgs);
+        handleProcParams(member["procParams"], memberRSOptions.args);
       }
-      rsArgs.push(memberArgs);
+      rsMemberOptions.push(memberRSOptions);
     })
   }
 
@@ -561,8 +563,7 @@ async function createCluster(input: any, opts: CliOptions) {
     args,
     secondaries,
     arbiters,
-    rsArgs,
-    rsTags,
+    rsMemberOptions,
     shardArgs,
     mongosArgs,
     clientOptions,
