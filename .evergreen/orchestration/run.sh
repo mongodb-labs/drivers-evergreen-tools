@@ -13,5 +13,3 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
   fi
   DEBUG=mongodb-runner node index.js "$@"
 )
-
-exit 1
