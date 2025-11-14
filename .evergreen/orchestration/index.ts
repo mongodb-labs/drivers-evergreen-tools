@@ -579,7 +579,6 @@ async function createCluster(input: any, opts: CliOptions) {
     });
     console.log(status);
   });
-  process.exit(1);
   console.log("Cluster URI: ", uri);
   await fs.appendFile(MO_EXPANSION_YML, `\nMONGODB_URI: "${uri}"`);
   await fs.appendFile(MO_EXPANSION_SH, `\nMONGODB_URI="${uri}"`);
