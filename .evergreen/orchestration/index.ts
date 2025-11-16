@@ -36,6 +36,13 @@ const URI_TXT = path.join(DRIVERS_TOOLS, 'uri.txt');
 const MO_EXPANSION_SH = path.join(DRIVERS_TOOLS, 'mo-expansion.sh');
 const MO_EXPANSION_YML = path.join(DRIVERS_TOOLS, 'mo-expansion.yml');
 
+const MONGOSH_SHIM = `#!/usr/bin/env bash
+set -eu
+_SCRIPT_DIR=$(dirname \${BASH_SOURCE[0]})
+source \$_SCRIPT_DIR/../../.evergreen/init-node-and-npm-env.sh
+\$_SCRIPT_DIR/../../.evergreen/orchestration/node_modules/.bin/mongosh "\$@"
+`;
+
 function logInfo(msg: string, ...args: unknown[]) {
   // Simple info logger
   console.log(`INFO: ${msg}`, ...args);
@@ -434,7 +441,7 @@ function handleProcParams(params: any, args: string[]) {
 
 async function createCluster(input: any, opts: CliOptions) {
   const id = randomBytes(12).toString('hex');
-  const members: RSMemberOptions[] = [];
+  const memberOptions: RSMemberOptions[] = [];
   const shardOptions: RSOptions[] = [];
   const routerArgs: string[][] = [];
   const tmpDir = TMPDIR;
@@ -517,7 +524,7 @@ async function createCluster(input: any, opts: CliOptions) {
       if ("procParams" in member) {
         handleProcParams(member["procParams"], memberRSOptions.args);
       }
-      members.push(memberRSOptions);
+      memberOptions.push(memberRSOptions);
     })
   }
 
@@ -525,11 +532,11 @@ async function createCluster(input: any, opts: CliOptions) {
   if (topology == "sharded" ) {
     input.shards.forEach(shard => {
       shards += 1;
-      let thisShardOptions: RSOptions = { members: [], secondaries: 0, arbiters: 0}
+      let thisShardOptions: RSOptions = { memberOptions: [], secondaries: 0, arbiters: 0}
       shard.shardParams.members.forEach((member) => {
         const memberArgs = [];
         handleProcParams(member["procParams"], memberArgs);
-        thisShardOptions.members.push({args: memberArgs});
+        thisShardOptions.memberOptions.push({args: memberArgs});
         console.log("member args?", memberArgs);
         if (!gotPrimary) {
           gotPrimary = true;
@@ -541,9 +548,9 @@ async function createCluster(input: any, opts: CliOptions) {
     });
     input.routers.forEach((router) => {
       routers += 1;
-      const routerArgs = [];
-      handleProcParams(router, routerArgs);
-      routerArgs.push(routerArgs);
+      const thisRouterArgs = [];
+      handleProcParams(router, thisRouterArgs);
+      routerArgs.push(thisRouterArgs);
     });
   }
 
@@ -583,7 +590,7 @@ async function createCluster(input: any, opts: CliOptions) {
     secondaries,
     arbiters,
     shardOptions,
-    members,
+    memberOptions,
     routers,
     shards,
     routerArgs,
@@ -663,7 +670,13 @@ async function downloadBinaries(opts: CliOptions) {
     await fs.mkdirpSync(binDir);
     let binaries = ["mongod", "mongos"];
     if (process.platform === 'win32') {
-      binaries = ["mongod.exe", "mongo.exe"];
+      // On windows grab all the dll files as well.
+      binaries = ["mongod.exe", "mongos.exe"]
+      fs.readdirSync(downloadPath).forEach(file => {
+        if (file.endsWith('.dll')) {
+            binaries.push(file);
+        }
+      });
     }
     for (const binary of binaries) {
       await fs.copyFile(path.join(downloadPath, binary), path.join(binDir, binary));
@@ -709,10 +722,11 @@ async function run(opts: CliOptions) {
         downloadCryptShared("latest")
     }
   }
-  // Create a mongosh runner.
+  // Create a mongosh runner using the shim.
   const binDir = opts.mongodbBinaries;
   await fs.mkdirp(binDir);
-  await fs.ensureSymlink(path.join(HERE, "node_modules/@mongosh/cli-repl/bin/mongosh.js"), path.join(binDir, "mongosh"), "file");
+  await fs.writeFile(path.join(binDir, "mongosh"), MONGOSH_SHIM);
+  fs.chmod(path.join(binDir, "mongosh"), 0o755)
 
   if (opts.localAtlas) {
     await startAtlas(opts);
