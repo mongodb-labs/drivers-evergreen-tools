@@ -10,7 +10,7 @@ import which from 'which';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
-import { MongoCluster, RSMemberOptions } from 'mongodb-runner';
+import { MongoCluster, RSMemberOptions, RSOptions } from 'mongodb-runner';
 import * as fsNode from 'fs';
 const { S_IRUSR } = fsNode.constants;
 import { downloadMongoDb } from '@mongodb-js/mongodb-downloader';
@@ -22,7 +22,6 @@ const __dirname = dirname(__filename);
 const HERE = __dirname;
 const EVG_PATH = path.resolve(HERE, '..');
 const DRIVERS_TOOLS = path.resolve(EVG_PATH, '..');
-console.log('DRIVERS_TOOLS IS', DRIVERS_TOOLS);
 const PLATFORM = os.platform();
 const CACHE_DIR = path.join(DRIVERS_TOOLS, ".local/cache");
 const VERSION_LIST_URL = process.env["MONGODB_DOWNLOAD_SOURCE"] || "https://downloads.mongodb.org/full.json";
@@ -343,7 +342,7 @@ export function handleDockerConfig(data: any): void {
 }
 
 /**
- * Load and process orchestration config data
+ * Load and process orchestration config data.
  */
 function getOrchestrationData(opts: CliOptions): any {
   // 1. Calculate config file name
@@ -435,12 +434,15 @@ function handleProcParams(params: any, args: string[]) {
 
 async function createCluster(input: any, opts: CliOptions) {
   const id = randomBytes(12).toString('hex');
-  const rsMemberOptions: RSMemberOptions[] = [];
-  const shardArgs: string[][] = [];
-  const mongosArgs: string[][] = [];
+  const members: RSMemberOptions[] = [];
+  const shardOptions: RSOptions[] = [];
+  const routerArgs: string[][] = [];
   const tmpDir = TMPDIR;
-  let secondaries = -1;
+  let secondaries = 0;
+  let gotPrimary = false;
   let arbiters = 0;
+  let routers = 0;
+  let shards = 0;
   const args: string[] = [];
   const roles = [
       {'role': 'userAdminAnyDatabase', 'db': 'admin'},
@@ -500,34 +502,49 @@ async function createCluster(input: any, opts: CliOptions) {
           arbiters += 1;
           memberRSOptions.priority = 0;
         } else {
-          secondaries += 1;
+          if (!gotPrimary) {
+            gotPrimary = true
+          } else {
+            secondaries += 1;
+          }
         }
       } else {
+        if (!gotPrimary) {
+          gotPrimary = true;
+        }
         secondaries += 1;
       }
       if ("procParams" in member) {
         handleProcParams(member["procParams"], memberRSOptions.args);
       }
-      rsMemberOptions.push(memberRSOptions);
+      members.push(memberRSOptions);
     })
   }
 
   // Handle shards and routers.
   if (topology == "sharded" ) {
-    input.shards[0].shardParams.members.forEach((member: any) => {
-      const memberArgs: string[] = [];
-      if ("procParams" in member) {
+    input.shards.forEach(shard => {
+      shards += 1;
+      let thisShardOptions: RSOptions = { members: [], secondaries: 0, arbiters: 0}
+      shard.shardParams.members.forEach((member) => {
+        const memberArgs = [];
         handleProcParams(member["procParams"], memberArgs);
-      }
-      shardArgs.push(memberArgs);
+        thisShardOptions.members.push({args: memberArgs});
+        console.log("member args?", memberArgs);
+        if (!gotPrimary) {
+          gotPrimary = true;
+        } else {
+          thisShardOptions.secondaries += 1;
+        }
+      });
+      shardOptions.push(thisShardOptions);
     });
-    input.routers.forEach((router: any) => {
-      const routerArgs: string[] = [];
+    input.routers.forEach((router) => {
+      routers += 1;
+      const routerArgs = [];
       handleProcParams(router, routerArgs);
-      mongosArgs.push(routerArgs);
+      routerArgs.push(routerArgs);
     });
-    secondaries = 0;
-    arbiters = 0;
   }
 
   // Handle tls options.
@@ -565,9 +582,11 @@ async function createCluster(input: any, opts: CliOptions) {
     args,
     secondaries,
     arbiters,
-    rsMemberOptions,
-    shardArgs,
-    mongosArgs,
+    shardOptions,
+    members,
+    routers,
+    shards,
+    routerArgs,
     clientOptions,
     login: input.login,
     password: input.password,
@@ -759,4 +778,5 @@ if (!process.argv.slice(2).length) {
 
 // TODO
 // See how this works on Windows - especially with mongosh.
+// Need to rsync both libraries and then run with a file:// dependency, see setup-spawn-host.sh in pymongo.
 // Test this with pymongo in CI.
