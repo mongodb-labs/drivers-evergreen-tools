@@ -549,7 +549,7 @@ async function createCluster(input: any, opts: CliOptions) {
     // On Windows we need to copy the file explicitly.
     if (process.platform === 'win32') {
       const src = path.join(DRIVERS_TOOLS, '.evergreen/x509gen/client.pem');
-      // Copy the file
+      // Copy the file.
       try {
         fs.copyFileSync(src, clientCert, fs.constants.COPYFILE_EXCL);
       } catch (err) {
@@ -558,6 +558,7 @@ async function createCluster(input: any, opts: CliOptions) {
           throw err;
         }
       }
+    }
 
     clientOptions.ssl = true;
     clientOptions.tlsCertificateKeyFile = clientCert;
