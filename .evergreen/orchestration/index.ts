@@ -559,6 +559,7 @@ async function createCluster(input: any, opts: CliOptions) {
         if (err.code !== 'EEXIST' && err.code !== 'EACCES' && err.code !== 'EPERM') {
           throw err;
         }
+        console.log("failed to copy the file!", err);
       }
     }
 
