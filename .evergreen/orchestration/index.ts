@@ -782,14 +782,3 @@ program.parse(process.argv);
 if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
-
-// Let's make this a new thing going forward - people can continue to use the old tag if they need a transition
-// Remove legacy shell - no one is using it
-// Require 4.0+ - no one is using 3.6
-// Restore the old start-orchestration for mongomirror/mongosync
-// Then we can deprecate and move on without breaking everyone
-
-// TODO
-// See how this works on Windows - especially with mongosh.
-// Need to rsync both libraries and then run with a file:// dependency, see setup-spawn-host.sh in pymongo.
-// Test this with pymongo in CI.
