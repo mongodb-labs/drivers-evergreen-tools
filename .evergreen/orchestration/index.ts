@@ -552,6 +552,7 @@ async function createCluster(input: any, opts: CliOptions) {
       // Copy the file.
       try {
         fs.copyFileSync(src, clientCert, fs.constants.COPYFILE_EXCL);
+        console.log("Copied the file!");
       } catch (err) {
         // Ignore "file already exists" (EEXIST) and "permission denied" (EACCES, EPERM) errors
         if (err.code !== 'EEXIST' && err.code !== 'EACCES' && err.code !== 'EPERM') {
