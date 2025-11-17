@@ -549,6 +549,7 @@ async function createCluster(input: any, opts: CliOptions) {
     // On Windows we need to copy the file explicitly.
     if (process.platform === 'win32') {
       const src = path.join(DRIVERS_TOOLS, '.evergreen/x509gen/client.pem');
+      console.log("Copying the file?", src);
       // Copy the file.
       try {
         fs.copyFileSync(src, clientCert, fs.constants.COPYFILE_EXCL);
