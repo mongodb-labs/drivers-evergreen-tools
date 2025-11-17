@@ -545,9 +545,24 @@ async function createCluster(input: any, opts: CliOptions) {
       throw new Error("Missing environment variable DRIVERS_TOOLS!")
     }
     const clientCert = path.join(process.env["MONGO_ORCHESTRATION_HOME"], "lib", "client.pem");
+
+    // On Windows we need to copy the file explicitly.
+    if (process.platform === 'win32') {
+      const src = path.join(DRIVERS_TOOLS, '.evergreen/x509gen/client.pem');
+      // Copy the file
+      try {
+        fs.copyFileSync(src, clientCert, fs.constants.COPYFILE_EXCL);
+      } catch (err) {
+        // Ignore "file already exists" (EEXIST) and "permission denied" (EACCES, EPERM) errors
+        if (err.code !== 'EEXIST' && err.code !== 'EACCES' && err.code !== 'EPERM') {
+          throw err;
+        }
+      }
+
     clientOptions.ssl = true;
     clientOptions.tlsCertificateKeyFile = clientCert;
     clientOptions.tlsAllowInvalidCertificates = true;
+
     console.log("DEBUG clientOptions", clientOptions);
 
     for (const key in input["sslParams"]) {
