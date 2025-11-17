@@ -548,6 +548,7 @@ async function createCluster(input: any, opts: CliOptions) {
     clientOptions.ssl = true;
     clientOptions.tlsCertificateKeyFile = clientCert;
     clientOptions.tlsAllowInvalidCertificates = true;
+    console.log("DEBUG clientOptions", clientOptions);
 
     for (const key in input["sslParams"]) {
       let value = input["sslParams"][key];
