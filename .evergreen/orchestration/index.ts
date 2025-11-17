@@ -498,8 +498,9 @@ async function createCluster(input: any, opts: CliOptions) {
       } else {
         if (!gotPrimary) {
           gotPrimary = true;
+        } else {
+          secondaries += 1;
         }
-        secondaries += 1;
       }
       if ("procParams" in member) {
         handleProcParams(member["procParams"], memberRSOptions.args);
@@ -729,8 +730,8 @@ program.command('run')
   .option('--quiet', 'Quiet', process.env.QUIET === 'true')
   .option('--version <version>', 'MongoDB version', process.env.VERSION || 'latest')
   .option('--topology <topology>', `Topology (${TOPOLOGIES.join(', ')})`, process.env.TOPOLOGY || 'standalone')
-  .option('--auth', 'Use authentication', process.env.AUTH === "auth")
-  .option('--ssl', 'Enable TLS', process.env.SSL !== undefined)
+  .option('--auth', 'Use authentication', process.env.AUTH !== undefined && process.env.AUTH.toLocaleLowerCase() != "noauth")
+  .option('--ssl', 'Enable TLS', process.env.SSL !== undefined && process.env.SSL.toLocaleLowerCase() != "nossl")
   .option('--local-atlas', 'Use mongodb-atlas-local', process.env.LOCAL_ATLAS !== undefined)
   .option('--orchestration-file <file>', 'Orchestration file', process.env.ORCHESTRATION_FILE)
   .option('--load-balancer', 'Use load balancer', process.env.LOAD_BALANCER !== undefined)
