@@ -1,6 +1,7 @@
 {
-  "name": "test-mongodb-runner",
+  "name": "drivers-mongodb-runner",
   "version": "1.0.0",
+  "private": true,
   "main": "index.js",
   "type": "module",
   "scripts": {
