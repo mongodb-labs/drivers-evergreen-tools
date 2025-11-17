@@ -546,20 +546,16 @@ async function createCluster(input: any, opts: CliOptions) {
     }
     const clientCert = path.join(process.env["MONGO_ORCHESTRATION_HOME"], "lib", "client.pem");
 
-    // On Windows we need to copy the file explicitly.
+    // On Windows we need to copy the file pem explicitly.
     if (process.platform === 'win32') {
       const src = path.join(DRIVERS_TOOLS, '.evergreen/x509gen/client.pem');
-      console.log("Copying the file?", src);
-      // Copy the file.
       try {
-        fs.copyFileSync(src, clientCert, fs.constants.COPYFILE_EXCL);
-        console.log("Copied the file!");
+        await fs.copyFile(src, clientCert);
       } catch (err) {
-        // Ignore "file already exists" (EEXIST) and "permission denied" (EACCES, EPERM) errors
-        if (err.code !== 'EEXIST' && err.code !== 'EACCES' && err.code !== 'EPERM') {
+        // Ignore "permission denied" (EACCES, EPERM) errors
+        if (err.code !== 'EACCES' && err.code !== 'EPERM') {
           throw err;
         }
-        console.log("failed to copy the file!", err);
       }
     }
 
