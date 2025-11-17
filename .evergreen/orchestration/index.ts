@@ -346,6 +346,7 @@ function getOrchestrationData(opts: CliOptions): any {
     if (opts.loadBalancer) fname += '-load-balancer';
     else if (opts.disableTestCommands) fname = 'disableTestCommands';
     else if (opts.storageEngine) fname = opts.storageEngine;
+    else if (opts.authAws) fname = "-aws";
     orchestrationFile = `${fname}.json`;
   }
 
