@@ -86,19 +86,24 @@ interface CliOptions {
 function getDockerCmd(): string | null {
   let dockerPath: string | string[] | null = null;
 
-  // Prefer podman if available
-  try {
-    dockerPath = which.sync('podman') as string;
-    // On Unix-like systems, podman often requires sudo
-    if (os.platform() !== 'win32') {
-      return `sudo ${dockerPath}`;
-    }
-    return dockerPath;
-  } catch { /* not found */ }
+  // Do not use podman on macos.
+  if (process.platform !== "darwin") {
+    try {
+      dockerPath = which.sync('podman') as string;
+      // On Unix-like systems, podman often requires sudo
+      if (process.platform !== 'win32') {
+        return `sudo ${dockerPath}`;
+      }
+      return dockerPath.split('/').join('\\');
+    } catch { /* not found */ }
+  }
 
-  // Fallback to docker
+  // Check for docker.
   try {
     dockerPath = which.sync('docker') as string;
+    if (process.platform === 'win32') {
+      return dockerPath.split('/').join('\\');
+    }
     return dockerPath;
   } catch { /* not found */ }
 
