@@ -18,7 +18,7 @@
     "cross-spawn": "^7.0.6",
     "debug": "^4.4.3",
     "fs-extra": "^11.3.2",
-    "mongodb-runner": "file:///Users/steve.silvester/workspace/devtools-shared/node_modules/mongodb-runner",
+    "mongodb-runner": "https://gitpkg.now.sh/blink1073/devtools-shared/packages/mongodb-runner?extra-params",
     "mongosh": "^2.5.9",
     "ps-list": "^9.0.0",
     "ts-node": "^10.9.2",
