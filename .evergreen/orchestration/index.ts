@@ -129,33 +129,13 @@ function runCommand(cmd: string, exitOnError = true, options: {}) {
 // Shut down process by pid and wait for it to exit.
 async function shutdownProc(proc: any) {
   try {
-    process.kill(proc.pid, 'SIGTERM');
+    process.kill(proc.pid, 'SIGKILL');
     logInfo(`Terminated process ${proc.pid} (${proc.name ?? "unknown"})`);
-
-    // Wait for process to exit
-    const maxWaitMs = 20000;
-    const pollInterval = 250;
-    let waited = 0;
-
-    while (true) {
-      try {
-        // Throws if process no longer exists
-        process.kill(proc.pid, 15);
-      } catch (err) {
-        logInfo(`Process ${proc.pid} has exited.`);
-        break;
-      }
-      if (waited >= maxWaitMs) {
-        logError(`Process ${proc.pid} did not exit after SIGTERM`);
-        break;
-      }
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-      waited += pollInterval;
-    }
   } catch (err) {
     logError(`Failed to terminate process ${proc.pid}`, err);
   }
 }
+
 
 function shutdownDocker(docker: string, containerId: string): void {
   let cmd: string;
