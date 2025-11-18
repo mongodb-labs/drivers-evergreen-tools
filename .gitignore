@@ -140,6 +140,8 @@ uv-requirements.txt
 uv-override-dependencies.txt
 .evergreen/orchestration/uv
 .evergreen/orchestration/uvx
+.evergreen/orchestration/index.js
+node_modules
 
 # Azure functions.
 .python_packages/
