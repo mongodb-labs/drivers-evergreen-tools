@@ -10,7 +10,8 @@ import which from 'which';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { randomBytes } from 'crypto';
-import { MongoCluster, RSMemberOptions, RSOptions } from 'mongodb-runner';
+import { MongoCluster } from 'mongodb-runner';
+import type { MongoClusterShardedOptions, MongoClusterRSMemberOptions, MongoDBUserDoc, MongoClusterRSOptions} from 'mongodb-runner';
 import * as fsNode from 'fs';
 const { S_IRUSR } = fsNode.constants;
 import { downloadMongoDb } from '@mongodb-js/mongodb-downloader';
@@ -422,15 +423,11 @@ function handleProcParams(params: any, args: string[]) {
 
 async function createCluster(input: any, opts: CliOptions) {
   const id = randomBytes(12).toString('hex');
-  const memberOptions: RSMemberOptions[] = [];
-  const shardOptions: RSOptions[] = [];
-  const routerArgs: string[][] = [];
+  const rsMembers: MongoClusterRSMemberOptions[] = [];
+  const users: MongoDBUserDoc[] = [];
+  const shardArgs: MongoClusterRSMemberOptions[] = [];
+  const mongosArgs: string[][] = [];
   const tmpDir = TMPDIR;
-  let secondaries = 0;
-  let gotPrimary = false;
-  let arbiters = 0;
-  let routers = 0;
-  let shards = 0;
   const args: string[] = [];
   const roles = [
       {'role': 'userAdminAnyDatabase', 'db': 'admin'},
@@ -487,53 +484,33 @@ async function createCluster(input: any, opts: CliOptions) {
       }
       if ("rsParams" in member && "arbiterOnly" in member["rsParams"]) {
         if (member["rsParams"]["arbiterOnly"]) {
-          arbiters += 1;
           memberRSOptions.priority = 0;
-        } else {
-          if (!gotPrimary) {
-            gotPrimary = true
-          } else {
-            secondaries += 1;
-          }
-        }
-      } else {
-        if (!gotPrimary) {
-          gotPrimary = true;
-        } else {
-          secondaries += 1;
         }
       }
       if ("procParams" in member) {
         handleProcParams(member["procParams"], memberRSOptions.args);
       }
-      memberOptions.push(memberRSOptions);
+      rsMembers.push(memberRSOptions);
     })
   }
 
   // Handle shards and routers.
-  if (topology == "sharded" ) {
-    input.shards.forEach(shard => {
-      shards += 1;
-      let thisShardOptions: RSOptions = { memberOptions: [], secondaries: 0, arbiters: 0}
-      shard.shardParams.members.forEach((member) => {
-        const memberArgs = [];
-        handleProcParams(member["procParams"], memberArgs);
-        thisShardOptions.memberOptions.push({args: memberArgs});
-        if (!gotPrimary) {
-          gotPrimary = true;
-        } else {
-          thisShardOptions.secondaries += 1;
-        }
-      });
-      shardOptions.push(thisShardOptions);
-    });
-    input.routers.forEach((router) => {
-      routers += 1;
-      const thisRouterArgs = [];
-      handleProcParams(router, thisRouterArgs);
-      routerArgs.push(thisRouterArgs);
-    });
-  }
+  // if (topology == "sharded" ) {
+  //   input.shards.forEach(shard => {
+  //     let thisShardOptions: MongoClusterRSOptions = { rsMembers: [] }
+  //     shard.shardParams.members.forEach((member) => {
+  //       const memberArgs = [];
+  //       handleProcParams(member["procParams"], memberArgs);
+  //       thisShardOptions.rsMembers.push({args: memberArgs});
+  //     });
+  //     shardOptions.push(thisShardOptions);
+  //   });
+  //   input.routers.forEach((router) => {
+  //     const thisRouterArgs = [];
+  //     handleProcParams(router, thisRouterArgs);
+  //     mongosArgs.push(thisRouterArgs);
+  //   });
+  // }
 
   // Handle tls options.
   const clientOptions: any = {};
@@ -576,23 +553,23 @@ async function createCluster(input: any, opts: CliOptions) {
     }
   }
 
+  if (input.login) {
+    users.push({
+      username: input.login,
+      password: input.password,
+      roles
+    })
+  }
+
   // Start the cluster with the desired options.
   const cluster = await MongoCluster.start({
     topology,
     tmpDir,
     binDir: opts.mongodbBinaries,
     args,
-    secondaries,
-    arbiters,
-    shardOptions,
-    memberOptions,
-    routers,
-    shards,
-    routerArgs,
-    clientOptions,
-    login: input.login,
-    password: input.password,
-    roles
+    rsMembers,
+    mongosArgs,
+    users
   });
 
   // Handle the cluster uri.
@@ -681,7 +658,7 @@ async function downloadBinaries(opts: CliOptions) {
   return binDir;
 }
 
-function setupDebugLogging() {
+function setupDebugLogging(verbose = false) {
     const logFilePath = path.join(__dirname, 'out.log');
     const logStream = fs.createWriteStream(logFilePath, { flags: 'w' });
     debug.enable("mongodb-downloader,mongodb-runner,drivers-orchestration");
@@ -697,6 +674,9 @@ function setupDebugLogging() {
     // Custom logger function
     function fileLogger(...args: unknown[]): void {
         logStream.write(args.map(stripAnsi).join(' ') + '\n');
+        if (verbose) {
+          console.log("DEBUG:", ...args);
+        }
     }
 
     debug.log = fileLogger;
@@ -706,7 +686,7 @@ function setupDebugLogging() {
 // Run mongo orchestration.
 async function run(opts: CliOptions) {
   logInfo('Starting orchestration');
-  setupDebugLogging();
+  setupDebugLogging(opts.verbose);
   await stop(opts);
   cleanRun(opts);
   if (opts.skipCryptShared !== true) {
