@@ -15,10 +15,12 @@ import * as fsNode from 'fs';
 const { S_IRUSR } = fsNode.constants;
 import { downloadMongoDb } from '@mongodb-js/mongodb-downloader';
 import debug from 'debug';
+import createDebug from 'debug';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const debugLogger = createDebug('drivers-orchestration');
 const HERE = __dirname;
 const EVG_PATH = path.resolve(HERE, '..');
 const DRIVERS_TOOLS = path.resolve(EVG_PATH, '..');
@@ -46,13 +48,14 @@ source \$_SCRIPT_DIR/../../.evergreen/init-node-and-npm-env.sh
 function logInfo(msg: string, ...args: unknown[]) {
   // Simple info logger
   console.log(`INFO: ${msg}`, ...args);
+  debugLogger(`INFO: ${msg}`, ...args);
 }
 function logDebug(msg: string, ...args: unknown[]) {
-  // Debug logger, toggle by env
-  if (process.env.DEBUG) console.log(`DEBUG: ${msg}`, ...args);
+  debugLogger(`DEBUG: ${msg}`, ...args);
 }
 function logError(msg: string, ...args: unknown[]) {
   console.error(`ERROR: ${msg}`, ...args);
+  debugLogger(`ERROR: ${msg}`, ...args);
 }
 
 // Options Interface
@@ -117,18 +120,24 @@ function normalizePath(filepath: string): string {
 }
 
 // Run a command helper
-function runCommand(cmd: string, exitOnError = true, options: {}) {
+function runCommand(cmd: string, exitOnError = false, options: {} = {}): string {
   logDebug(`Running command ${cmd}...`);
-  const result = spawn.sync(cmd, { shell: true, stdio: 'pipe', ...options });
+  const [command, ...args] = cmd.split(" ");
+  const result = spawn.sync(command, args, { stdio: 'pipe', ...options });
   if (result.error) {
     logError(result.error.message);
     if (exitOnError) process.exit(result.status ?? 1);
+    throw result.error;
   }
   const stdout = result.stdout?.toString().trim();
   const stderr = result.stderr?.toString().trim();
   if (stdout) logInfo(stdout);
   if (stderr) logError(stderr);
+  if (result.status !== 0) {
+    throw new Error(`Running command ${cmd}... failed!.`);
+  }
   logDebug(`Running command ${cmd}... done.`);
+  return stdout;
 }
 
 // Shut down process by pid and wait for it to exit.
@@ -150,10 +159,10 @@ function shutdownDocker(docker: string, containerId: string): void {
     cmd = `${docker} kill ${containerId}`;
   }
   try {
-    spawn.sync(cmd, { shell: true, stdio: 'inherit' });
-    console.log(`Stopped container: ${containerId}`);
+    runCommand(cmd)
+    logInfo(`Stopped container: ${containerId}`);
   } catch (err) {
-    console.error(`Failed to stop container ${containerId}:`, err);
+    logError(`Failed to stop container ${containerId}:`, err);
   }
 }
 
@@ -183,47 +192,38 @@ async function startAtlas(opts: CliOptions): Promise<string> {
 
   cmd += ` -P ${image}`;
 
-  console.log('Starting Atlas Local...');
-  console.debug('Using command:', cmd);
+  logInfo('Starting Atlas Local...');
 
   // Start container and save container ID
-  let containerId: string;
+  let containerId = '';
   try {
-    const result = spawn.sync(cmd, { shell: true, encoding: 'utf8' });
-    if (result.error) throw result.error;
-    if (result.status !== 0) {
-        throw new Error(result.stderr);
-    }
-    containerId = (result.stdout ?? '').trim();
-    console.log("Created container", containerId);
+    containerId = runCommand(cmd);
+    logInfo("Created container", containerId);
   } catch (err) {
-    console.log('Failed to start Atlas container:', String(err));
+    logInfo('Failed to start Atlas container:', String(err));
     process.exit(1);
   }
 
   // Wait for container to become healthy
-  console.log('Waiting for container to be healthy...');
+  logInfo('Waiting for container to be healthy...');
   let tries = 0;
-  const inspectCmd = `${dockerCmd} inspect -f '{{.State.Health.Status}}' ${containerId}`;
+  let resp = ''
+  const inspectCmd = `${dockerCmd} inspect -f {{.State.Health.Status}} ${containerId}`;
   while (true) {
-    let resp = '';
     try {
-      const result = spawn.sync(inspectCmd, { shell: true, encoding: 'utf8' });
-      if (result.error) throw result.error;
-      resp = (result.stdout ?? '').trim();
+      resp = runCommand(inspectCmd);
     } catch (err) {
       resp = '';
     }
-
     if (resp === 'healthy') break;
     if (tries >= 60) {
-      console.error('Timed out waiting for container to become healthy');
+      logError('Timed out waiting for container to become healthy');
       process.exit(1);
     }
     await new Promise(res => setTimeout(res, 1000));
     tries++;
   }
-  console.log('Atlas Local container is healthy.');
+  logInfo('Atlas Local container is healthy.');
 
   // Compose Mongo URI and ping using mongosh
   let uri = 'mongodb://127.0.0.1:27017?directConnection=true';
@@ -235,7 +235,7 @@ async function startAtlas(opts: CliOptions): Promise<string> {
   const pingCmd = `${mongoshPath} ${uri} --eval 'db.runCommand({ping:1})'`;
   runCommand(pingCmd, false, {});
 
-  console.log('Atlas Local started.');
+  logInfo('Atlas Local started.');
   return uri;
 }
 
@@ -260,29 +260,24 @@ async function stop(opts: CliOptions) {
     if (!docker) {
         return;
     }
-    const cmd = `${docker} ps --format '{{.Image}}\t{{.ID}}'`;
-    let response = '';
-
+    const cmd = `${docker} ps --format {{.Image}}\t{{.ID}}`;
+    let response = ''
     try {
-        const result = spawn.sync(cmd, { shell: true, encoding: 'utf-8' });
-        if (result.error) throw result.error;
-        if (result.status !== 0) throw result.stderr;
-        response = (result.stdout ?? '').trim();
+      response = runCommand(cmd, false, {});
     } catch (e) {
-        console.error('Failed to list running containers:', String(e));
-        response = '';
+      logError(String(e));
+      response = '';
     }
     if (!response) return;
 
     for (const line of response.split('\n')) {
-        console.log("line", line)
         // Sometimes an empty line could sneak in
         if (line.trim() === '') continue;
         const [image, containerId] = line.split('\t');
         if (['mongodb/mongodb-atlas-local', 'mongo'].some(prefix => image.startsWith(prefix))) {
-        console.log(`Stopping container for image ${image}...`);
+        logInfo(`Stopping container for image ${image}...`);
         shutdownDocker(docker, containerId);
-        console.log(`Stopped container for image ${image}.`);
+        logInfo(`Stopped container for image ${image}.`);
         }
     }
 
@@ -357,7 +352,7 @@ function getOrchestrationData(opts: CliOptions): any {
   }
   const moHome = opts.mongoOrchestrationHome ?? path.join(DRIVERS_TOOLS, '.evergreen', 'orchestration');
   const orchPath = path.join(moHome, 'configs', `${topology}s`, orchestrationFile);
-  console.log(`Using orchestration file: ${orchPath}`);
+  logInfo(`Using orchestration file: ${orchPath}`);
 
   // 3. Read file
   if (!fs.existsSync(orchPath)) {
@@ -524,7 +519,6 @@ async function createCluster(input: any, opts: CliOptions) {
         const memberArgs = [];
         handleProcParams(member["procParams"], memberArgs);
         thisShardOptions.memberOptions.push({args: memberArgs});
-        console.log("member args?", memberArgs);
         if (!gotPrimary) {
           gotPrimary = true;
         } else {
@@ -569,8 +563,6 @@ async function createCluster(input: any, opts: CliOptions) {
     clientOptions.tlsCertificateKeyFile = clientCert;
     clientOptions.tlsAllowInvalidCertificates = true;
 
-    console.log("DEBUG clientOptions", clientOptions);
-
     for (const key in input["sslParams"]) {
       let value = input["sslParams"][key];
       if ( String(value).includes("ABSOLUTE_PATH_REPLACEMENT_TOKEN")) {
@@ -605,7 +597,7 @@ async function createCluster(input: any, opts: CliOptions) {
 
   // Handle the cluster uri.
   const uri = cluster.connectionString
-  console.log("Cluster URI: ", uri);
+  logInfo("Cluster URI: ", uri);
   await fs.appendFile(MO_EXPANSION_YML, `\nMONGODB_URI: "${uri}"`);
   await fs.appendFile(MO_EXPANSION_SH, `\nMONGODB_URI="${uri}"`);
   await fs.writeFile(URI_TXT, uri);
@@ -636,7 +628,7 @@ async function downloadCryptShared(version: string) {
     const targetPath = path.join(DRIVERS_TOOLS, targetFile);
     await fs.copyFile(path.join(downloadPath, targetFile), targetPath);
     const cryptText = `CRYPT_SHARED_LIB_PATH: "${normalizePath(targetPath)}"`;
-    console.log("writing expansion file to", MO_EXPANSION_YML);
+    logInfo("writing expansion file to", MO_EXPANSION_YML);
     await fs.writeFile(MO_EXPANSION_YML, cryptText, "utf8");
     await fs.writeFile(MO_EXPANSION_SH, cryptText.replace(": ", "="), "utf8");
 }
@@ -690,10 +682,9 @@ async function downloadBinaries(opts: CliOptions) {
 }
 
 function setupDebugLogging() {
-    debug.enable("mongodb-downloader,mongodb-runner");
     const logFilePath = path.join(__dirname, 'out.log');
-    const stream = fs.createWriteStream(logFilePath, { flags: 'w' });
-
+    const logStream = fs.createWriteStream(logFilePath, { flags: 'w' });
+    debug.enable("mongodb-downloader,mongodb-runner,drivers-orchestration");
     function stripAnsi(input: unknown) {
         // Matches and removes most ANSI escape codes
         return String(input).replace(
@@ -705,7 +696,7 @@ function setupDebugLogging() {
 
     // Custom logger function
     function fileLogger(...args: unknown[]): void {
-        stream.write(args.map(stripAnsi).join(' ') + '\n');
+        logStream.write(args.map(stripAnsi).join(' ') + '\n');
     }
 
     debug.log = fileLogger;
