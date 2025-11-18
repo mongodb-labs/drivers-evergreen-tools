@@ -17,6 +17,7 @@ const { S_IRUSR } = fsNode.constants;
 import { downloadMongoDb } from '@mongodb-js/mongodb-downloader';
 import debug from 'debug';
 import createDebug from 'debug';
+import { env } from 'process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -515,13 +516,7 @@ async function createCluster(input: any, opts: CliOptions) {
   // Handle tls options.
   const clientOptions: any = {};
   if ("sslParams" in input) {
-    if (!process.env.MONGO_ORCHESTRATION_HOME) {
-      throw new Error("Missing environment variable MONGO_ORCHESTRATION_HOME!")
-    }
-    if (!process.env.DRIVERS_TOOLS) {
-      throw new Error("Missing environment variable DRIVERS_TOOLS!")
-    }
-    const clientCert = path.join(process.env["MONGO_ORCHESTRATION_HOME"], "lib", "client.pem");
+    const clientCert = path.join(opts.mongoOrchestrationHome, "lib", "client.pem");
 
     // On Windows we need to copy the file pem explicitly.
     if (process.platform === 'win32') {
@@ -543,7 +538,7 @@ async function createCluster(input: any, opts: CliOptions) {
     for (const key in input["sslParams"]) {
       let value = input["sslParams"][key];
       if ( String(value).includes("ABSOLUTE_PATH_REPLACEMENT_TOKEN")) {
-        value = value.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", process.env["DRIVERS_TOOLS"])
+        value = value.replace("ABSOLUTE_PATH_REPLACEMENT_TOKEN", DRIVERS_TOOLS)
       }
       if (value === true) {
         args.push(`--${key}`);
@@ -712,6 +707,11 @@ async function run(opts: CliOptions) {
   logInfo('Running orchestration... done.');
 }
 
+function isEnvSet(envVar: string): boolean {
+  const value = process.env[envVar];
+  return (typeof value === 'string' && value.trim() !== '')
+}
+
 const program = new Command();
 const TOPOLOGIES = ["standalone", "replica_set", "sharded_cluster"];
 program
@@ -725,14 +725,14 @@ program.command('run')
   .option('--topology <topology>', `Topology (${TOPOLOGIES.join(', ')})`, process.env.TOPOLOGY || 'standalone')
   .option('--auth', 'Use authentication', process.env.AUTH !== undefined && process.env.AUTH.toLocaleLowerCase() != "noauth")
   .option('--ssl', 'Enable TLS', process.env.SSL !== undefined && process.env.SSL.toLocaleLowerCase() != "nossl")
-  .option('--local-atlas', 'Use mongodb-atlas-local', process.env.LOCAL_ATLAS !== undefined)
+  .option('--local-atlas', 'Use mongodb-atlas-local', isEnvSet('LOCAL_ATLAS'))
   .option('--orchestration-file <file>', 'Orchestration file', process.env.ORCHESTRATION_FILE)
-  .option('--load-balancer', 'Use load balancer', process.env.LOAD_BALANCER !== undefined)
-  .option('--auth-aws', 'Use MONGODB-AWS auth', process.env.AUTH_AWS !== undefined)
-  .option('--skip-crypt-shared', 'Skip crypt_shared lib', process.env.SKIP_CRYPT_SHARED !== undefined)
-  .option('--disable-test-commands', 'Disable test commands', process.env.DISABLE_TEST_COMMANDS !== undefined)
+  .option('--load-balancer', 'Use load balancer', isEnvSet('LOAD_BALANCER'))
+  .option('--auth-aws', 'Use MONGODB-AWS auth',isEnvSet('AUTH_AWS'))
+  .option('--skip-crypt-shared', 'Skip crypt_shared lib', isEnvSet('SKIP_CRYPT_SHARED'))
+  .option('--disable-test-commands', 'Disable test commands', isEnvSet('DISABLE_TEST_COMMANDS'))
   .option('--storage-engine <engine>', 'Storage engine', process.env.STORAGE_ENGINE || '')
-  .option('--require-api-version', 'Set requireApiVersion', process.env.REQUIRE_API_VERSION !== undefined)
+  .option('--require-api-version', 'Set requireApiVersion', isEnvSet('REQUIRE_API_VERSION'))
   .option('--existing-binaries-dir <dir>', 'Use existing mongodb binaries dir', process.env.EXISTING_BINARIES_DIR)
   .option('--tls-pem-key-file <file>', 'TLS cert/key PEM', process.env.TLS_PEM_KEY_FILE)
   .option('--tls-ca-file <file>', 'TLS CA file', process.env.TLS_CA_FILE)
