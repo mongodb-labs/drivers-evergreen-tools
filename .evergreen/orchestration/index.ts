@@ -741,8 +741,11 @@ program.command('run')
   .option('--mongo-orchestration-home <path>', 'Mongo-orchestration home', process.env.MONGO_ORCHESTRATION_HOME || HERE)
   .option('--mongodb-binaries <path>', 'MongoDB binaries path', process.env.MONGODB_BINARIES || path.join(DRIVERS_TOOLS, 'mongodb', 'bin'))
   .action(async (opts) => {
+    if (opts.topology === "server") {
+      opts.topology = "standalone";
+    }
     if (!TOPOLOGIES.includes(opts.topology)) {
-        throw new Error("invalid topology")!
+        throw new Error(`invalid topology: ${opts.topology}`)!
     }
     await run(opts as CliOptions);
   });
