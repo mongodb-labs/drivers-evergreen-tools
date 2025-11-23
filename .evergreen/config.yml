@@ -504,7 +504,9 @@ functions:
           cd ${DRIVERS_TOOLS}
           .evergreen/install-node.sh
           .evergreen/install-rust.sh
-          PATH=.bin:$PATH
+          source .evergreen/find-python3.sh
+          export PYTHON=$(ensure_python3 2>/dev/null)
+          export PATH=.bin:$(dirname $PYTHON):$PATH
           if [ $OS == "Windows_NT" ]; then
             exit 0
           fi
