@@ -21,7 +21,7 @@ else
 fi
 export NPM_VERSION=${NPM_VERSION}
 
-source "./init-node-and-npm-env.sh"
+source "$SCRIPT_DIR/init-node-and-npm-env.sh"
 
 if [[ -z "${npm_global_prefix}" ]]; then echo "npm_global_prefix is unset" && exit 1; fi
 if [[ -z "${NODE_ARTIFACTS_PATH}" ]]; then echo "NODE_ARTIFACTS_PATH is unset" && exit 1; fi
