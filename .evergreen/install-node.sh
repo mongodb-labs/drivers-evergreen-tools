@@ -31,6 +31,7 @@ function debug_output {
   echo "node version: $(node -v)"
   echo "npm location: $(which npm)"
   echo "npm version: $(npm -v)"
+  echo "Run 'source init-node-and-npm-env.sh' to handle environment setup."
 }
 
 # Bail early if this version of node was already installed.
