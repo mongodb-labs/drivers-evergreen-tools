@@ -24,6 +24,9 @@ from pathlib import Path, PureWindowsPath
 
 import psutil
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mongodb_runner import get_cluster_options
+
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
@@ -82,6 +85,11 @@ def get_options():
             "--local-atlas",
             action="store_true",
             help="Whether to use mongodb-atlas-local to start the server",
+        )
+        parser.add_argument(
+            "--mongodb-runner",
+            action="store_true",
+            help="Whether to use mongodb-runner to start the server",
         )
         parser.add_argument(
             "--orchestration-file", help="The name of the orchestration config file"
@@ -246,7 +254,9 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run_command(cmd: str, exit_on_error=True, **kwargs):
+def run_command(
+    cmd: str, exit_on_error=True, silent=False, raise_on_error=False, **kwargs
+):
     LOGGER.debug(f"Running command {cmd}...")
     try:
         proc = subprocess.run(
@@ -257,13 +267,56 @@ def run_command(cmd: str, exit_on_error=True, **kwargs):
             stdout=subprocess.PIPE,
             **kwargs,
         )
-        LOGGER.info(proc.stdout)
+        if not silent:
+            LOGGER.info(proc.stdout)
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
         if exit_on_error:
             sys.exit(e.returncode)
+        if raise_on_error:
+            raise e
     LOGGER.debug(f"Running command {cmd}... done.")
+    return proc.stdout, proc.stderr
+
+
+def start_mongodb_runner(opts):
+    mo_home = Path(opts.mongo_orchestration_home)
+    server_log = mo_home / "server.log"
+    out_log = mo_home / "out.log"
+    stop(opts)
+    data = get_orchestration_data(opts)
+    config = get_cluster_options(data, opts)
+    config["runnerDir"] = config["tmpDir"]
+    # TODO: we shouldn't need to extract args this way.
+    args = []
+    if "args" in config:
+        args = config.pop("args")
+    # Write the config file.
+    config_file = mo_home / "config.json"
+    config_file.write_text(json.dumps(config, indent=2))
+    # Start the runner using node.
+    # TODO: this will use npx once it is ready.
+    node = shutil.which("node")
+    target = HERE / "node_modules/mongodb-runner/bin/runner.js"
+    cmd = f"{node} {target} start --config {config_file}"
+    if args:
+        cmd += f" --debug -- {' '.join(args)}"
+    err = None
+    try:
+        output, stderr = run_command(cmd, silent=True, raise_on_error=True)
+    except Exception as e:
+        output = ""
+        stderr = str(e)
+        err = e
+    out_log.write_text(f"OUTPUT:\n{output}\nSTDERR:\n{stderr}")
+    if err:
+        raise err
+    cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+    server_info = json.loads(cluster_file.read_text())
+    cluster_file.unlink()
+    server_log.write_text(json.dumps(server_info, indent=2))
+    return server_info["connectionString"]
 
 
 def start_atlas(opts):
@@ -472,6 +525,8 @@ def run(opts):
 
     if opts.local_atlas:
         uri = start_atlas(opts)
+    elif opts.mongodb_runner:
+        uri = start_mongodb_runner(opts)
     else:
         mo_home = Path(opts.mongo_orchestration_home)
         data = get_orchestration_data(opts)
@@ -724,7 +779,7 @@ def stop(opts):
             name = proc.name()
         except psutil.NoSuchProcess:
             continue
-        if name in ["mongod", "mongos"]:
+        if name in ["mongod", "mongos", "mongod.exe", "mongos.exe"]:
             LOGGER.info(f"Stopping {name} by process name...")
             shutdown_proc(proc)
             LOGGER.info(f"Stopping {name} by process name... done.")
