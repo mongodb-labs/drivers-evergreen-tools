@@ -502,9 +502,7 @@ functions:
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
-          if [ -z "${SKIP_NODE}" ]; then
-            .evergreen/install-node.sh
-          fi
+          .evergreen/install-node.sh
           .evergreen/install-rust.sh
           PATH=.bin:$PATH
           if [ $OS == "Windows_NT" ]; then
@@ -1406,8 +1404,6 @@ axes:
       - id: rhel7
         display_name: "RHEL 7"
         run_on: rhel70-small
-        variables:
-          SKIP_NODE: 1
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
