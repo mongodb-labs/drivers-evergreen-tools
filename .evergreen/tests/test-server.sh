@@ -38,7 +38,7 @@ function connect_mongodb() {
 bash ./run-server.sh
 connect_mongodb
 
-bash ./run-server.sh --topology server --auth
+bash ./run-server.sh --topology standalone --auth
 connect_mongodb
 
 # bash ./run-server.sh --version 7.0 --topology replica_set --ssl
