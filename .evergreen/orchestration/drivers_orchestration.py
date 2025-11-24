@@ -13,6 +13,7 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -718,7 +719,7 @@ def shutdown_docker(docker: str, container_id: str) -> None:
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
-    # server_log = mo_home / "server.log"
+    server_log = mo_home / "server.log"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
 
@@ -731,12 +732,22 @@ def stop(opts):
             shutdown_proc(psutil.Process(pid))
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
 
-    # Next try and use the server.log file
-    # if server_log.exists():
-    #     try:
-    #         data = json.loads(server_log.read_text())
-    #     except Exception:
-    #         pass
+    # Next try and use the server.log file as a serialized json file.
+    if server_log.exists():
+        try:
+            data = json.loads(server_log.read_text())
+        except Exception:
+            data = None
+        if data:
+            LOGGER.info("Stopping mongodb-runner cluster...")
+            # TODO: handle sharded clusters
+            for server in data["serialized"]["servers"]:
+                if psutil.pid_exists(server["pid"]):
+                    os.kill(server["pid"], signal.SIGKILL)
+                if Path(server["dbPath"]).exists():
+                    shutil.rmtree(server["dbPath"])
+            LOGGER.info("Stopping mongodb-runner cluster... done.")
+            server_log.unlink()
 
     # Next try using a docker container file.
     if docker is not None and container_file.exists():
