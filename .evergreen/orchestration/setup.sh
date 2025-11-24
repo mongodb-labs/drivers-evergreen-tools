@@ -4,6 +4,7 @@
 set -o errexit
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+_SCRIPT_DIR=${SCRIPT_DIR}
 . "${SCRIPT_DIR:?}/../handle-paths.sh"
 
 export DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES
@@ -22,14 +23,12 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner.
-if [ ! -d $SCRIPT_DIR/devtools-shared ]; then
-  bash $SCRIPT_DIR/../install-node.sh
-  source $SCRIPT_DIR/../init-node-and-npm-env.sh
-  git clone -b extra-params https://github.com/mongodb-js/devtools-shared $SCRIPT_DIR/devtools-shared
-  npm init -y
-  pushd $SCRIPT_DIR/devtools-shared
+if [ ! -d $_SCRIPT_DIR/devtools-shared ]; then
+  bash $_SCRIPT_DIR/../install-node.sh
+  source $_SCRIPT_DIR/../init-node-and-npm-env.sh
+  git clone -b extra-params https://github.com/mongodb-js/devtools-shared $_SCRIPT_DIR/devtools-shared
+  pushd $_SCRIPT_DIR/devtools-shared
   npm run bootstrap-ci -- --scope @mongodb-js/monorepo-tools --stream --include-dependencies
   npm run bootstrap-ci -- --stream --include-dependencies
   popd
-  npm install ./devtools-shared/packages/mongodb-runner
 fi

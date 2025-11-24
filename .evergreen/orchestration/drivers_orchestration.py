@@ -298,7 +298,7 @@ def start_mongodb_runner(opts):
     # Start the runner using node.
     # TODO: this will use npx once it is ready.
     node = shutil.which("node")
-    target = HERE / "node_modules/mongodb-runner/bin/runner.js"
+    target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
     cmd = f"{node} {target} start --config {config_file}"
     if args:
         cmd += f" --debug -- {' '.join(args)}"
@@ -718,6 +718,7 @@ def shutdown_docker(docker: str, container_id: str) -> None:
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
+    # server_log = mo_home / "server.log"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
 
@@ -729,6 +730,13 @@ def stop(opts):
             LOGGER.info("Stopping mongo-orchestration using pid file...")
             shutdown_proc(psutil.Process(pid))
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
+
+    # Next try and use the server.log file
+    # if server_log.exists():
+    #     try:
+    #         data = json.loads(server_log.read_text())
+    #     except Exception:
+    #         pass
 
     # Next try using a docker container file.
     if docker is not None and container_file.exists():
