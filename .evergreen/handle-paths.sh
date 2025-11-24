@@ -17,8 +17,8 @@ set -o | grep -q '^nounset.*on$' && nounset_was_set=true || nounset_was_set=fals
 set -eu
 
 restore_flags() {
-  errexit_was_set && set -e || set +e
-  nounset_was_set && set -u || set +u
+  $errexit_was_set && set -e || set +e
+  $nounset_was_set && set -u || set +u
 }
 
 trap restore_flags EXIT

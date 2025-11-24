@@ -9,7 +9,7 @@
 
 # Avoid overwriting the caller's SCRIPT_DIR.
 ORIG_SCRIPT_DIR=${SCRIPT_DIR:-}
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 . $SCRIPT_DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$SCRIPT_DIR/node-artifacts"
 if [[ "${OS:-}" == "Windows_NT" ]]; then
