@@ -23,7 +23,7 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner.
 if [ ! -d $SCRIPT_DIR/devtools-shared ]; then
-  git clone -b extra-params https://github.com/mongodb-js/devtools-shared
+  git clone -b extra-params https://github.com/mongodb-js/devtools-shared $SCRIPT_DIR/devtools-shared
   npm init -y
   pushd $SCRIPT_DIR/devtools-shared
   npm run bootstrap-ci -- --scope @mongodb-js/monorepo-tools --stream --include-dependencies
