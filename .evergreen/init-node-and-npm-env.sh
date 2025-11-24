@@ -7,9 +7,8 @@
 ## access to `npm`, `node`, or need to install something globally from
 ## npm.
 
-# Store errexit state.
-[[ $- == *e* ]] && errexit_was_set=true || errexit_was_set=false
-
+# Avoid overwriting the caller's SCRIPT_DIR.
+ORIG_SCRIPT_DIR=${SCRIPT_DIR:-}
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$SCRIPT_DIR/node-artifacts"
@@ -24,6 +23,4 @@ export PATH="$npm_global_prefix/bin:$NODE_ARTIFACTS_PATH/nodejs/bin:$PATH"
 hash -r
 
 export NODE_OPTIONS="--trace-deprecation --trace-warnings"
-
-# Restore errexit state.
-$errexit_was_set && set -e || set +e
+SCRIPT_DIR=${ORIG_SCRIPT_DIR}
