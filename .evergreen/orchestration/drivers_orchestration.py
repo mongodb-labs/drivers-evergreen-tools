@@ -301,6 +301,7 @@ def start_mongodb_runner(opts):
     node = shutil.which("node")
     node = normalize_path(node)
     target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
+    target = normalize_path(target)
     cmd = f"{node} {target} start --config {config_file}"
     if args:
         cmd += f" --debug -- {' '.join(args)}"
