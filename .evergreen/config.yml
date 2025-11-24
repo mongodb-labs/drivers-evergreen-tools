@@ -505,7 +505,7 @@ functions:
           .evergreen/install-node.sh
           source .evergreen/init-node-and-npm-env.sh
           npx mongodb-runner start
-          npx mongodb-runner stop
+          npx mongodb-runner stop --all
           .evergreen/install-rust.sh
           source .evergreen/find-python3.sh
           export PYTHON=$(ensure_python3 2>/dev/null)
