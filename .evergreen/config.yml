@@ -568,6 +568,20 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
+  "run server test partial":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-server.sh, partial]
+
+  "run server test full":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-server.sh]
+
   "run cli test partial":
     - command: subprocess.exec
       type: test
@@ -1103,6 +1117,11 @@ tasks:
       commands:
         - func: "run cli test full"
 
+    - name: "test-server-full"
+      tags: ["pr"]
+      commands:
+        - func: "run server test full"
+
     - name: "test-ocsp"
       tags: ["pr", "ocsp"]
       commands:
@@ -1117,6 +1136,11 @@ tasks:
       tags: ["pr"]
       commands:
         - func: "run cli test partial"
+
+    - name: "test-server-partial"
+      tags: ["pr"]
+      commands:
+        - func: "run server test partial"
 
 # }}}
 
@@ -1556,6 +1580,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-server-full"
           - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
@@ -1585,6 +1610,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
+          - "test-server-partal"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1608,6 +1634,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
+          - "test-server-partial"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"
