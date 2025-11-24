@@ -502,11 +502,13 @@ functions:
         script: |-
           set -o errexit
           cd ${DRIVERS_TOOLS}
-          if [ -z "${SKIP_NODE}" ]; then
-            .evergreen/install-node.sh
-          fi
+          .evergreen/install-node.sh
+          source .evergreen/init-node-and-npm-env.sh
+          npx -y mongodb-runner --help
           .evergreen/install-rust.sh
-          PATH=.bin:$PATH
+          source .evergreen/find-python3.sh
+          export PYTHON=$(ensure_python3 2>/dev/null)
+          export PATH=.bin:$(dirname $PYTHON):$PATH
           if [ $OS == "Windows_NT" ]; then
             exit 0
           fi
@@ -1406,8 +1408,6 @@ axes:
       - id: rhel7
         display_name: "RHEL 7"
         run_on: rhel70-small
-        variables:
-          SKIP_NODE: 1
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
