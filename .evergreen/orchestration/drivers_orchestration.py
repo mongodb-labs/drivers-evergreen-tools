@@ -299,6 +299,7 @@ def start_mongodb_runner(opts):
     # Start the runner using node.
     # TODO: this will use npx once it is ready.
     node = shutil.which("node")
+    node = normalize_path(node)
     target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
     cmd = f"{node} {target} start --config {config_file}"
     if args:
