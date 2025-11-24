@@ -504,7 +504,7 @@ functions:
           cd ${DRIVERS_TOOLS}
           .evergreen/install-node.sh
           source .evergreen/init-node-and-npm-env.sh
-          npx -y mongodb-runner ls --runnerDir .
+          npx -y mongodb-runner --help
           .evergreen/install-rust.sh
           source .evergreen/find-python3.sh
           export PYTHON=$(ensure_python3 2>/dev/null)
