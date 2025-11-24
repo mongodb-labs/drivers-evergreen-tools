@@ -23,6 +23,8 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner.
 if [ ! -d $SCRIPT_DIR/devtools-shared ]; then
+  bash $SCRIPT_DIR/../install-node.sh
+  source $SCRIPT_DIR/../init-node-and-npm-env.sh
   git clone -b extra-params https://github.com/mongodb-js/devtools-shared $SCRIPT_DIR/devtools-shared
   npm init -y
   pushd $SCRIPT_DIR/devtools-shared
