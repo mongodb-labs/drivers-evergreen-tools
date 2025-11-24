@@ -36,4 +36,4 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 # Ensure the CLIs are up to date.
 bash $SCRIPT_DIR/orchestration/setup.sh
 
-$SCRIPT_DIR/orchestration/drivers-orchestration run "$@"
+$SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
