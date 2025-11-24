@@ -8,23 +8,10 @@
 # SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 # . $SCRIPT_DIR/../handle-path.sh
 
-# Avoid overwriting caller's flags.
-# shellcheck disable=SC2034
-set -o | grep -q '^errexit.*on$' && errexit_was_set=true || errexit_was_set=false
-# shellcheck disable=SC2034
-set -o | grep -q '^nounset.*on$' && nounset_was_set=true || nounset_was_set=false
+set -o errexit  # Exit the script with error if any of the commands fail
 
-set -eu
-
-restore_flags() {
-  $errexit_was_set && set -e || set +e
-  $nounset_was_set && set -u || set +u
-}
-
-trap restore_flags EXIT
-
-if [ -z "${SCRIPT_DIR:-}" ]; then
-  echo "Please set SCRIPT_DIR first"
+if [ -z "$SCRIPT_DIR" ]; then
+  echo "Please set $SCRIPT_DIR first"
   exit 1
 fi
 
