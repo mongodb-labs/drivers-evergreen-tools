@@ -13,6 +13,7 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -21,8 +22,12 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import psutil
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mongodb_runner import get_cluster_options
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
@@ -82,6 +87,11 @@ def get_options():
             "--local-atlas",
             action="store_true",
             help="Whether to use mongodb-atlas-local to start the server",
+        )
+        parser.add_argument(
+            "--mongodb-runner",
+            action="store_true",
+            help="Whether to use mongodb-runner to start the server",
         )
         parser.add_argument(
             "--orchestration-file", help="The name of the orchestration config file"
@@ -246,7 +256,9 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run_command(cmd: str, exit_on_error=True, **kwargs):
+def run_command(
+    cmd: str, exit_on_error=True, silent=False, raise_on_error=False, **kwargs
+):
     LOGGER.debug(f"Running command {cmd}...")
     try:
         proc = subprocess.run(
@@ -257,13 +269,65 @@ def run_command(cmd: str, exit_on_error=True, **kwargs):
             stdout=subprocess.PIPE,
             **kwargs,
         )
-        LOGGER.info(proc.stdout)
+        if not silent:
+            LOGGER.info(proc.stdout)
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
         if exit_on_error:
             sys.exit(e.returncode)
+        if raise_on_error:
+            raise e
     LOGGER.debug(f"Running command {cmd}... done.")
+    return proc.stdout, proc.stderr
+
+
+def start_mongodb_runner(opts):
+    mo_home = Path(opts.mongo_orchestration_home)
+    server_log = mo_home / "server.log"
+    out_log = mo_home / "out.log"
+    stop(opts)
+    data = get_orchestration_data(opts)
+    config = get_cluster_options(data, opts)
+    config["runnerDir"] = config["tmpDir"]
+    # TODO: we shouldn't need to extract args this way.
+    args = []
+    if "args" in config:
+        args = config.pop("args")
+    # Write the config file.
+    config_file = mo_home / "config.json"
+    config_file.write_text(json.dumps(config, indent=2))
+    # Start the runner using node.
+    # TODO: this will use npx once it is ready.
+    node = shutil.which("node")
+    node = normalize_path(node)
+    target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
+    target = normalize_path(target)
+    cmd = f"{node} {target} start --config {config_file}"
+    if args:
+        cmd += f" --debug -- {' '.join(args)}"
+    err = None
+    LOGGER.info("Running mongodb-runner...")
+    try:
+        output, stderr = run_command(cmd, silent=True, raise_on_error=True)
+    except Exception as e:
+        output = ""
+        stderr = str(e)
+        err = e
+    LOGGER.info("Running mongodb-runner... done.")
+    out_log.write_text(f"OUTPUT:\n{output}\nSTDERR:\n{stderr}")
+    if err:
+        raise err
+    cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+    server_info = json.loads(cluster_file.read_text())
+    cluster_file.unlink()
+    server_log.write_text(json.dumps(server_info, indent=2))
+
+    # Get the connection string, keeping only the replicaSet query param.
+    parsed = urlparse(server_info["connectionString"])
+    query_params = dict(parse_qsl(parsed.query))
+    new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
+    return urlunparse(parsed._replace(query=urlencode(new_query)))
 
 
 def start_atlas(opts):
@@ -472,6 +536,8 @@ def run(opts):
 
     if opts.local_atlas:
         uri = start_atlas(opts)
+    elif opts.mongodb_runner:
+        uri = start_mongodb_runner(opts)
     else:
         mo_home = Path(opts.mongo_orchestration_home)
         data = get_orchestration_data(opts)
@@ -645,7 +711,7 @@ def shutdown_proc(proc: psutil.Process) -> None:
     try:
         proc.terminate()
         try:
-            proc.wait(10)  # Wait up to 10 seconds.
+            proc.wait(2)  # Wait up to 2 seconds.
         except psutil.TimeoutExpired:
             proc.kill()
     except Exception as e:
@@ -663,6 +729,7 @@ def shutdown_docker(docker: str, container_id: str) -> None:
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
+    server_log = mo_home / "server.log"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
 
@@ -674,6 +741,25 @@ def stop(opts):
             LOGGER.info("Stopping mongo-orchestration using pid file...")
             shutdown_proc(psutil.Process(pid))
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
+
+    # Next try and use the server.log file as a serialized json file.
+    if server_log.exists():
+        try:
+            data = json.loads(server_log.read_text())
+        except Exception:
+            data = None
+        if data:
+            LOGGER.info("Stopping mongodb-runner cluster...")
+            all_servers = data["serialized"]["servers"]
+            for shard in data["serialized"].get("shards", []):
+                all_servers.extend(shard["servers"])
+            for server in all_servers:
+                if psutil.pid_exists(server["pid"]):
+                    os.kill(server["pid"], signal.SIGKILL)
+                if Path(server["dbPath"]).exists():
+                    shutil.rmtree(server["dbPath"])
+            LOGGER.info("Stopping mongodb-runner cluster... done.")
+            server_log.unlink()
 
     # Next try using a docker container file.
     if docker is not None and container_file.exists():
@@ -724,7 +810,7 @@ def stop(opts):
             name = proc.name()
         except psutil.NoSuchProcess:
             continue
-        if name in ["mongod", "mongos"]:
+        if name in ["mongod", "mongos", "mongod.exe", "mongos.exe"]:
             LOGGER.info(f"Stopping {name} by process name...")
             shutdown_proc(proc)
             LOGGER.info(f"Stopping {name} by process name... done.")
