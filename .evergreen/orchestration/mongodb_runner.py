@@ -1,8 +1,6 @@
 import argparse
 import json
 import os
-import platform
-import shutil
 import stat
 import tempfile
 import uuid
@@ -40,7 +38,6 @@ def get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
     rs_members = []
     users = []
     shard_args = []
-    default_connection_options = {}
     mongos_args = []
     tmp_dir = TMPDIR
     args: List[str] = []
@@ -118,13 +115,24 @@ def get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
 
     # Sharded/topology code
     if topology == "sharded":
+        # Add a blank config srv to start, it must be the first shard.
+        shard_args = [{"args": [], "rsMembers": [{}]}]
         for shard in input["shards"]:
-            this_shard_options = {"rsMembers": []}
+            is_config_srv = False
+            this_shard_options = {"args": [], "rsMembers": []}
             for member in shard["shardParams"]["members"]:
                 member_args = []
                 _handle_proc_params(member["procParams"], member_args)
+                if "--shardsvr" in member_args:
+                    member_args.remove("--shardsvr")
+                elif "--configsvr" in member_args:
+                    is_config_srv = True
+                    member_args.remove("--configsvr")
                 this_shard_options["rsMembers"].append({"args": member_args})
-            shard_args.append(this_shard_options)
+            if is_config_srv:
+                shard_args[0] = this_shard_options
+            else:
+                shard_args.append(this_shard_options)
         for router in input["routers"]:
             this_router_args = []
             _handle_proc_params(router, this_router_args)
@@ -132,28 +140,11 @@ def get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
 
     # TLS/SSL options
     if "sslParams" in input:
-        client_cert = os.path.join(
-            opts.mongo_orchestration_home or "ORCHESTRATION_HOME", "lib", "client.pem"
-        )
-
-        # On windows, copy the pem explicitly
-        if platform.system().lower() == "windows":
-            src = os.path.join(DRIVERS_TOOLS, ".evergreen", "x509gen", "client.pem")
-            try:
-                shutil.copyfile(src, client_cert)
-            except Exception as err:
-                if getattr(err, "errno", None) not in ["EACCES", "EPERM"]:
-                    raise
-
-        # Override cert file if specified in opts
-        if opts.tls_cert_key_file:
-            client_cert = os.path.normpath(opts.tls_cert_key_file)
-
-        default_connection_options["ssl"] = True
-        default_connection_options["tlsCertificateKeyFile"] = client_cert
-        default_connection_options["tlsAllowInvalidCertificates"] = True
-
         for key, value in input["sslParams"].items():
+            if key == "sslPEMKeyFile":
+                key = "tlsCertificateKeyFile"  # noqa: PLW2901
+            if key == "sslCAFile":
+                key = "tlsCAFile"  # noqa: PLW2901
             if value is True:
                 args.append(f"--{key}")
             elif value is not False:
@@ -183,12 +174,11 @@ def get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
         output["tmpDir"] = str(tmp_dir)
         output["binDir"] = str(opts.mongodb_binaries)
 
-    # TODO: test sharded and tls support
     return output
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MongoDB Orchestration CLI")
+    parser = argparse.ArgumentParser(description="MongoDB Runner Config Migrator")
 
     parser.add_argument(
         "--input-file", type=str, required=True, help="Path to the input file"
@@ -208,12 +198,6 @@ def main():
         required=True,
         choices=["standalone", "replica_set", "sharded_cluster"],
         help="Server deployment topology (standalone, replica_set, sharded_cluster)",
-    )
-    parser.add_argument(
-        "--tls-cert-key-file",
-        type=str,
-        required=False,
-        help="Path to the .pem for tlsCertificateKeyFile",
     )
 
     opts = parser.parse_args()

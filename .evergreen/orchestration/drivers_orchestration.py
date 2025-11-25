@@ -22,6 +22,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import psutil
 
@@ -306,12 +307,14 @@ def start_mongodb_runner(opts):
     if args:
         cmd += f" --debug -- {' '.join(args)}"
     err = None
+    LOGGER.info("Running mongodb-runner...")
     try:
         output, stderr = run_command(cmd, silent=True, raise_on_error=True)
     except Exception as e:
         output = ""
         stderr = str(e)
         err = e
+    LOGGER.info("Running mongodb-runner... done.")
     out_log.write_text(f"OUTPUT:\n{output}\nSTDERR:\n{stderr}")
     if err:
         raise err
@@ -319,7 +322,12 @@ def start_mongodb_runner(opts):
     server_info = json.loads(cluster_file.read_text())
     cluster_file.unlink()
     server_log.write_text(json.dumps(server_info, indent=2))
-    return server_info["connectionString"]
+
+    # Get the connection string, keeping only the replicaSet query param.
+    parsed = urlparse(server_info["connectionString"])
+    query_params = dict(parse_qsl(parsed.query))
+    new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
+    return urlunparse(parsed._replace(query=urlencode(new_query)))
 
 
 def start_atlas(opts):
@@ -703,7 +711,7 @@ def shutdown_proc(proc: psutil.Process) -> None:
     try:
         proc.terminate()
         try:
-            proc.wait(10)  # Wait up to 10 seconds.
+            proc.wait(2)  # Wait up to 2 seconds.
         except psutil.TimeoutExpired:
             proc.kill()
     except Exception as e:
@@ -742,8 +750,10 @@ def stop(opts):
             data = None
         if data:
             LOGGER.info("Stopping mongodb-runner cluster...")
-            # TODO: handle sharded clusters
-            for server in data["serialized"]["servers"]:
+            all_servers = data["serialized"]["servers"]
+            for shard in data["serialized"].get("shards", []):
+                all_servers.extend(shard["servers"])
+            for server in all_servers:
                 if psutil.pid_exists(server["pid"]):
                     os.kill(server["pid"], signal.SIGKILL)
                 if Path(server["dbPath"]).exists():
