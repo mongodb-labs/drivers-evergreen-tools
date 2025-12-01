@@ -1,17 +1,26 @@
 import argparse
 import json
+import logging
 import os
+import re
+import shlex
+import shutil
 import stat
+import subprocess
+import sys
 import tempfile
 import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Literal
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 TMPDIR = Path(tempfile.gettempdir()) / "drivers_orchestration"
 TMPDIR.mkdir(exist_ok=True)
 HERE = Path(__file__).absolute().parent
 DRIVERS_TOOLS = HERE.parent.parent
 S_IRUSR = stat.S_IRUSR  # Unix owner read
+LOGGER = logging.getLogger("drivers_orchestration")
+PLATFORM = sys.platform.lower()
 
 
 def _handle_proc_params(params: dict, args: List[str]):
@@ -33,7 +42,58 @@ def _handle_proc_params(params: dict, args: List[str]):
         args.append("enableTestCommands=true")
 
 
-def get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
+def _normalize_path(path: Path | str) -> str:
+    if PLATFORM != "win32":
+        return str(path)
+    path = Path(path).as_posix()
+    return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
+
+
+def start_mongodb_runner(opts, data):
+    mo_home = Path(opts.mongo_orchestration_home)
+    server_log = mo_home / "server.log"
+    out_log = mo_home / "out.log"
+    config = _get_cluster_options(data, opts)
+    config["runnerDir"] = config["tmpDir"]
+    # TODO: we shouldn't need to extract args this way.
+    args = []
+    if "args" in config:
+        args = config.pop("args")
+    # Write the config file.
+    config_file = mo_home / "config.json"
+    config_file.write_text(json.dumps(config, indent=2))
+    # Start the runner using node.
+    # TODO: this will use npx once it is ready.
+    node = shutil.which("node")
+    node = _normalize_path(node)
+    target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
+    target = _normalize_path(target)
+    cmd = f"{node} {target} start --debug --config {config_file}"
+    if args:
+        cmd += f" -- {' '.join(args)}"
+    LOGGER.info("Running mongodb-runner...")
+    try:
+        with out_log.open("w") as fid:
+            subprocess.check_call(
+                shlex.split(cmd), stdout=fid, stderr=subprocess.STDOUT
+            )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error(str(e))
+        sys.exit(1)
+    LOGGER.info("Running mongodb-runner... done.")
+    cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+    server_info = json.loads(cluster_file.read_text())
+    cluster_file.unlink()
+    server_log.write_text(json.dumps(server_info, indent=2))
+
+    # Get the connection string, keeping only the replicaSet query param.
+    parsed = urlparse(server_info["connectionString"])
+    query_params = dict(parse_qsl(parsed.query))
+    new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
+    return urlunparse(parsed._replace(query=urlencode(new_query)))
+
+
+def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]:
     id_ = uuid.uuid4().hex
     rs_members = []
     users = []
@@ -204,7 +264,7 @@ def main():
     with open(opts.input_file) as fid:
         data = json.load(fid)
 
-    new_data = get_cluster_options(data, opts, static=True)
+    new_data = _get_cluster_options(data, opts, static=True)
     with open(opts.output_file, "w") as fid:
         json.dump(new_data, fid, indent=2)
 

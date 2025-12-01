@@ -28,7 +28,7 @@ if [ ! -d $_SCRIPT_DIR/devtools-shared ]; then
   source $_SCRIPT_DIR/../init-node-and-npm-env.sh
   git clone -b extra-params https://github.com/mongodb-js/devtools-shared $_SCRIPT_DIR/devtools-shared
   pushd $_SCRIPT_DIR/devtools-shared
-  npm run bootstrap-ci -- --scope @mongodb-js/monorepo-tools --stream --include-dependencies
-  npm run bootstrap-ci -- --stream --include-dependencies
+  npm install --ignore-scripts
+  npx -y lerna run --scope=mongodb-runner --include-dependencies compile
   popd
 fi

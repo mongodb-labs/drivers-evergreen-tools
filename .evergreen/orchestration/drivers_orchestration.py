@@ -22,18 +22,17 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mongodb_runner import get_cluster_options
+from mongodb_runner import start_mongodb_runner
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("drivers_orchestration")
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 PLATFORM = sys.platform.lower()
 CRYPT_NAME_MAP = {
@@ -256,9 +255,7 @@ def normalize_path(path: Path | str) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-def run_command(
-    cmd: str, exit_on_error=True, silent=False, raise_on_error=False, **kwargs
-):
+def run_command(cmd: str, exit_on_error=True, **kwargs):
     LOGGER.debug(f"Running command {cmd}...")
     try:
         proc = subprocess.run(
@@ -269,65 +266,13 @@ def run_command(
             stdout=subprocess.PIPE,
             **kwargs,
         )
-        if not silent:
-            LOGGER.info(proc.stdout)
+        LOGGER.info(proc.stdout)
     except subprocess.CalledProcessError as e:
         LOGGER.error(e.output)
         LOGGER.error(str(e))
         if exit_on_error:
             sys.exit(e.returncode)
-        if raise_on_error:
-            raise e
     LOGGER.debug(f"Running command {cmd}... done.")
-    return proc.stdout, proc.stderr
-
-
-def start_mongodb_runner(opts):
-    mo_home = Path(opts.mongo_orchestration_home)
-    server_log = mo_home / "server.log"
-    out_log = mo_home / "out.log"
-    stop(opts)
-    data = get_orchestration_data(opts)
-    config = get_cluster_options(data, opts)
-    config["runnerDir"] = config["tmpDir"]
-    # TODO: we shouldn't need to extract args this way.
-    args = []
-    if "args" in config:
-        args = config.pop("args")
-    # Write the config file.
-    config_file = mo_home / "config.json"
-    config_file.write_text(json.dumps(config, indent=2))
-    # Start the runner using node.
-    # TODO: this will use npx once it is ready.
-    node = shutil.which("node")
-    node = normalize_path(node)
-    target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
-    target = normalize_path(target)
-    cmd = f"{node} {target} start --config {config_file}"
-    if args:
-        cmd += f" --debug -- {' '.join(args)}"
-    err = None
-    LOGGER.info("Running mongodb-runner...")
-    try:
-        output, stderr = run_command(cmd, silent=True, raise_on_error=True)
-    except Exception as e:
-        output = ""
-        stderr = str(e)
-        err = e
-    LOGGER.info("Running mongodb-runner... done.")
-    out_log.write_text(f"OUTPUT:\n{output}\nSTDERR:\n{stderr}")
-    if err:
-        raise err
-    cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
-    server_info = json.loads(cluster_file.read_text())
-    cluster_file.unlink()
-    server_log.write_text(json.dumps(server_info, indent=2))
-
-    # Get the connection string, keeping only the replicaSet query param.
-    parsed = urlparse(server_info["connectionString"])
-    query_params = dict(parse_qsl(parsed.query))
-    new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
-    return urlunparse(parsed._replace(query=urlencode(new_query)))
 
 
 def start_atlas(opts):
@@ -534,13 +479,15 @@ def run(opts):
     dl_end = datetime.now()
     mo_start = datetime.now()
 
+    data = get_orchestration_data(opts)
+
     if opts.local_atlas:
         uri = start_atlas(opts)
     elif opts.mongodb_runner:
-        uri = start_mongodb_runner(opts)
+        stop(opts)
+        uri = start_mongodb_runner(opts, data)
     else:
         mo_home = Path(opts.mongo_orchestration_home)
-        data = get_orchestration_data(opts)
 
         # Write the config file.
         orch_file = Path(mo_home / "config.json")
