@@ -62,6 +62,7 @@ def start_mongodb_runner(opts, data):
     # Write the config file.
     config_file = mo_home / "config.json"
     config_file.write_text(json.dumps(config, indent=2))
+    config_file = _normalize_path(config_file)
     # Start the runner using node.
     # TODO: this will use npx once it is ready.
     node = shutil.which("node")
