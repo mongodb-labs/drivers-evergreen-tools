@@ -9,6 +9,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR/.. > /dev/null
 
+. ./init-node-and-npm-env.sh
+
 # Connect to the MongoDB server using tls
 # shellcheck disable=SC2120
 function connect_mongodb() {
