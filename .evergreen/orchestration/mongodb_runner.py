@@ -141,7 +141,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                 with open(key_file, "w") as f:
                     f.write(input["auth_key"])
                 os.chmod(key_file, S_IRUSR)
-            args.extend(["--keyFile", key_file])
+            args.extend(["--keyFile", _normalize_path(key_file)])
         elif value is True:
             args.append(f"--{key}")
         elif value is not False:
