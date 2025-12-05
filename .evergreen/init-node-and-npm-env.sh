@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# shellcheck shell=sh
 ##
 ## This script add the location of `npm` and `node` to the path.
 ## This is necessary because evergreen uses separate bash scripts for
@@ -7,10 +8,12 @@
 ## access to `npm`, `node`, or need to install something globally from
 ## npm.
 
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-. $SCRIPT_DIR/handle-paths.sh
-NODE_ARTIFACTS_PATH="$SCRIPT_DIR/node-artifacts"
-if [[ "${OS:-}" == "Windows_NT" ]]; then
+# See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
+# Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
+# shellcheck disable=SC3028
+_SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+NODE_ARTIFACTS_PATH="$_SCRIPT_DIR/node-artifacts"
+if [ "${OS:-}" = "Windows_NT" ]; then
   NODE_ARTIFACTS_PATH=$(cygpath --unix "$NODE_ARTIFACTS_PATH")
 fi
 

@@ -29,14 +29,14 @@ def _handle_proc_params(params: dict, args: List[str]):
         if isinstance(value, dict):
             for subkey, subvalue in value.items():
                 args.append(f"--{key}")
-                args.append(f"{subkey}={subvalue}")
+                args.append(f"{subkey}={shlex.quote(subvalue)}")
                 if subkey == "enableTestCommands":
                     found_enable_test_commands = True
         elif value is True:
             args.append(f"--{key}")
         elif value is not False:
             args.append(f"--{key}")
-            args.append(str(value))
+            args.append(shlex.quote(str(value)))
     if not found_enable_test_commands:
         args.append("--setParameter")
         args.append("enableTestCommands=true")
@@ -146,7 +146,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
             args.append(f"--{key}")
         elif value is not False:
             args.append(f"--{key}")
-            args.append(str(value))
+            args.append(shlex.quote(str(value)))
 
     if topology == "standalone":
         if "procParams" in input:
@@ -210,7 +210,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                 args.append(f"--{key}")
             elif value is not False:
                 args.append(f"--{key}")
-                args.append(str(value))
+                args.append(shlex.quote(str(value)))
 
     if input.get("login"):
         users.append(
