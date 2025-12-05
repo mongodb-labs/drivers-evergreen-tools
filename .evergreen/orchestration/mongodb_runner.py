@@ -24,7 +24,10 @@ PLATFORM = sys.platform.lower()
 
 
 def _format_value(value):
-    return shlex.quote(str(value)).replace('"', '\\"')
+    value = shlex.quote(str(value)).replace('"', '\\"')
+    if value in ["True", "False"]:
+        value = value.lower()
+    return value
 
 
 def _handle_proc_params(params: dict, args: List[str]):
