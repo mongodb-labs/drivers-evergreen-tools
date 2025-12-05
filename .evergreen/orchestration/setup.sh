@@ -4,6 +4,7 @@
 set -o errexit
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+_HERE=${SCRIPT_DIR}
 . "${SCRIPT_DIR:?}/../handle-paths.sh"
 
 export DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES
@@ -20,3 +21,14 @@ esac
 # and $MONGO_ORCHESTRATION_HOME) and the parent directory ($DRIVERS_TOOLS).
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
+
+# Install the in-progress branch of mongodb-runner.
+if [ ! -d $_HERE/devtools-shared ]; then
+  NODE_LTS_VERSION=22 bash $_HERE/../install-node.sh
+  source $_HERE/../init-node-and-npm-env.sh
+  git clone -b main https://github.com/mongodb-js/devtools-shared $_HERE/devtools-shared
+  pushd $_HERE/devtools-shared
+  npm install --ignore-scripts
+  npx -y lerna run --scope=mongodb-runner --include-dependencies compile
+  popd
+fi
