@@ -23,20 +23,24 @@ LOGGER = logging.getLogger("drivers_orchestration")
 PLATFORM = sys.platform.lower()
 
 
+def _format_value(value):
+    return shlex.quote(str(value)).replace('"', '\\"')
+
+
 def _handle_proc_params(params: dict, args: List[str]):
     found_enable_test_commands = False
     for key, value in params.items():
         if isinstance(value, dict):
             for subkey, subvalue in value.items():
                 args.append(f"--{key}")
-                args.append(f"{subkey}={shlex.quote(str(subvalue))}")
+                args.append(f"{subkey}={_format_value(subvalue)}")
                 if subkey == "enableTestCommands":
                     found_enable_test_commands = True
         elif value is True:
             args.append(f"--{key}")
         elif value is not False:
             args.append(f"--{key}")
-            args.append(shlex.quote(str(value)))
+            args.append(_format_value(value))
     if not found_enable_test_commands:
         args.append("--setParameter")
         args.append("enableTestCommands=true")
@@ -146,7 +150,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
             args.append(f"--{key}")
         elif value is not False:
             args.append(f"--{key}")
-            args.append(shlex.quote(str(value)))
+            args.append(_format_value(value))
 
     if topology == "standalone":
         if "procParams" in input:
@@ -210,7 +214,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                 args.append(f"--{key}")
             elif value is not False:
                 args.append(f"--{key}")
-                args.append(shlex.quote(str(value)))
+                args.append(_format_value(value))
 
     if input.get("login"):
         users.append(
