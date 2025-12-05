@@ -27,8 +27,6 @@ def _format_value(value):
     value = shlex.quote(str(value))
     if value in ["True", "False"]:
         value = value.lower()
-    elif '"' in value:
-        value = f"'{value}'"
     return value
 
 
