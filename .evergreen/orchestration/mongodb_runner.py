@@ -24,9 +24,11 @@ PLATFORM = sys.platform.lower()
 
 
 def _format_value(value):
-    value = shlex.quote(str(value)).replace('"', '\\"')
+    value = shlex.quote(str(value))
     if value in ["True", "False"]:
         value = value.lower()
+    else:
+        value = f"'{value}'"
     return value
 
 
