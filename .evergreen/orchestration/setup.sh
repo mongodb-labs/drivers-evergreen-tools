@@ -26,7 +26,7 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 if [ ! -d $_SCRIPT_DIR/devtools-shared ]; then
   NODE_LTS_VERSION=22 bash $_SCRIPT_DIR/../install-node.sh
   source $_SCRIPT_DIR/../init-node-and-npm-env.sh
-  git clone -b extra-params https://github.com/mongodb-js/devtools-shared $_SCRIPT_DIR/devtools-shared
+  git clone -b main https://github.com/mongodb-js/devtools-shared $_SCRIPT_DIR/devtools-shared
   pushd $_SCRIPT_DIR/devtools-shared
   npm install --ignore-scripts
   npx -y lerna run --scope=mongodb-runner --include-dependencies compile
