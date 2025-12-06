@@ -39,7 +39,7 @@ functions:
     # Applies the submitted patch, if any
     # Deprecated. Should be removed. But still needed for certain agents (ZAP)
     - command: git.apply_patch
-    # Make an evergreen exapanstion file with dynamic values
+    # Make an evergreen expansion file with dynamic values
     - command: subprocess.exec
       params:
         include_expansions_in_env: ["is_patch", "version_id", "project"]
