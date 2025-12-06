@@ -24,7 +24,7 @@ PLATFORM = sys.platform.lower()
 
 
 def _format_value(value):
-    value = shlex.quote(str(value))
+    value = str(value)
     if value in ["True", "False"]:
         value = value.lower()
     return value
@@ -86,8 +86,11 @@ def start_mongodb_runner(opts, data):
                 shlex.split(cmd), stdout=fid, stderr=subprocess.STDOUT
             )
     except subprocess.CalledProcessError as e:
+        LOGGER.error("out.log: %s", out_log.read_text())
+        if server_log.exists():
+            LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
-        sys.exit(1)
+        raise e
     LOGGER.info("Running mongodb-runner... done.")
     cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
     server_info = json.loads(cluster_file.read_text())

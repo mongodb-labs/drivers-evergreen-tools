@@ -240,6 +240,7 @@ def handle_docker_config(data):
         item["ipv6"] = False
         item["bind_ip"] = "0.0.0.0,::1"
         item["dbpath"] = f"/tmp/mongo-{item['port']}"
+        os.makedirs(item["dbpath"], exist_ok=True)
 
     if "routers" in data:
         for router in data["routers"]:
@@ -423,9 +424,9 @@ def run(opts):
         args = f"{default_args} --version {version}"
         args += " --strip-path-components 2 --component archive"
         if not opts.existing_binaries_dir:
-            LOGGER.info(f"Downloading mongodb {version}...")
+            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}...")
             mongodl(shlex.split(args))
-            LOGGER.info(f"Downloading mongodb {version}... done.")
+            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}... done.")
         else:
             LOGGER.info(
                 f"Using existing mongod binaries dir: {opts.existing_binaries_dir}"
