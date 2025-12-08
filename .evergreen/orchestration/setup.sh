@@ -29,11 +29,11 @@ fi
 
 # Install the in-progress branch of mongodb-runner.
 # TODO: remove once we can use npx.
-if [ ! -d $_HERE/devtools-shared ]; then
-  source $_HERE/../init-node-and-npm-env.sh
-  git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
-  pushd $_HERE/devtools-shared
-  npm install --ignore-scripts
-  npx -y lerna run --scope=mongodb-runner --include-dependencies compile
-  popd
-fi
+# if [ ! -d $_HERE/devtools-shared ]; then
+#   source $_HERE/../init-node-and-npm-env.sh
+#   git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
+#   pushd $_HERE/devtools-shared
+#   npm install --ignore-scripts
+#   npx -y lerna run --scope=mongodb-runner --include-dependencies compile
+#   popd
+# fi
