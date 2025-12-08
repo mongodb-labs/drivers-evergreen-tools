@@ -239,7 +239,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
         output["tmpDir"] = str(tmp_dir)
         output["binDir"] = str(opts.mongodb_binaries)
         if sys.platform != "win32":
-            args.extend(["--unixSocketPrefix", tempfile.gettempdir()])
+            args.extend(["--unixSocketPrefix", "/tmp"])
 
     return output
 
