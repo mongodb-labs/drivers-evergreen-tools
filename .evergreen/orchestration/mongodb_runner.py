@@ -124,6 +124,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
     # Top level options
     skip_keys = [
         "shards",
+        "requireApiVersion",
         "sslParams",
         "routers",
         "members",
@@ -233,6 +234,8 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
     elif topology == "sharded":
         output["mongosArgs"] = mongos_args
         output["shards"] = shard_args
+    if "requireApiVersion" in input:
+        output["requireApiVersion"] = input["requireApiVersion"]
 
     if not static:
         output["id"] = uuid.uuid4().hex
