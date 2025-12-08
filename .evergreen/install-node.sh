@@ -134,6 +134,7 @@ if [[ "$file_extension" = "zip" ]]; then
     chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/node.exe"
     chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npm"
     chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npx"
+    chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npx.CMD"
 else
     tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
     mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
