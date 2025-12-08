@@ -3,7 +3,7 @@
 [JIRA TICKET]: Issue Title
 -->
 
-[JIRA TICKET](https://jira.mongodb.org/browse/{ISSUE_KEY})
+JIRA TICKET
 
 ## Summary
 
