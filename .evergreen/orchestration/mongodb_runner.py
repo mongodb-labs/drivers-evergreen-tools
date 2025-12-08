@@ -74,9 +74,6 @@ def start_mongodb_runner(opts, data):
     node = _normalize_path(node)
     target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
     target = _normalize_path(target)
-    node = shutil.which("npx")
-    node = _normalize_path(node)
-    target = "-y mongodb-runner"
     cmd = f"{node} {target} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {node} {target}...")
     try:
