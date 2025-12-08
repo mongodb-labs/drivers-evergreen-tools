@@ -3,9 +3,13 @@ set -o errexit  # Exit the script with error if any of the commands fail
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
-pushd $SCRIPT_DIR
 
-NODE_LTS_VERSION=${NODE_LTS_VERSION:-20}
+DEFAULT_NODE_VERSION=20
+if grep -q "release 7" /etc/redhat-release 2> /dev/null; then
+  DEFAULT_NODE_VERSION=16
+fi
+NODE_LTS_VERSION=${NODE_LTS_VERSION:-$DEFAULT_NODE_VERSION}
+
 # If NODE_LTS_VERSION is numeric and less than 18, default to 9, if less than 20, default to 10.
 # Do not override if it is already set.
 if [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 18 ]]; then
@@ -17,10 +21,31 @@ else
 fi
 export NPM_VERSION=${NPM_VERSION}
 
-source "./init-node-and-npm-env.sh"
+source "$SCRIPT_DIR/init-node-and-npm-env.sh"
 
 if [[ -z "${npm_global_prefix}" ]]; then echo "npm_global_prefix is unset" && exit 1; fi
 if [[ -z "${NODE_ARTIFACTS_PATH}" ]]; then echo "NODE_ARTIFACTS_PATH is unset" && exit 1; fi
+
+function debug_output {
+  echo "node location: $(which node)"
+  echo "node version: $(node -v)"
+  echo "npm location: $(which npm)"
+  echo "npm version: $(npm -v)"
+  echo "Run 'source init-node-and-npm-env.sh' to handle environment setup."
+}
+
+# Bail early if this version of node was already installed.
+if grep -Fxq "$NODE_LTS_VERSION" $NODE_ARTIFACTS_PATH/node-version.txt 2> /dev/null; then
+  echo "Node $NODE_LTS_VERSION already installed!"
+  debug_output
+  exit 0
+fi
+
+# Ensure a clean directory.
+rm -rf $NODE_ARTIFACTS_PATH
+mkdir -p "$NODE_ARTIFACTS_PATH/npm_global"
+
+echo "Installing Node.js $NODE_LTS_VERSION..."
 
 CURL_FLAGS=(
   --fail          # Exit code 1 if request fails
@@ -32,19 +57,16 @@ CURL_FLAGS=(
   --max-time 900  # 900 seconds is 15 minutes, evergreen times out at 20
 )
 
-mkdir -p "$NODE_ARTIFACTS_PATH/npm_global"
-
 # Comparisons are all case insensitive
 shopt -s nocasematch
 
 # index.tab is a sorted tab separated values file with the following headers
 # 0       1    2     3   4  5  6    7       8       9   10
 # version date files npm v8 uv zlib openssl modules lts security
-"$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab
+"$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "https://nodejs.org/dist/index.tab" --output node_index.tab > /dev/null 2>&1
 
 while IFS=$'\t' read -r -a row; do
   node_index_version="${row[0]}"
-  echo $node_index_version >> "versions.txt"
   node_index_major_version=$(echo $node_index_version | sed -E 's/^v([0-9]+).*$/\1/')
   node_index_date="${row[1]}"
   [[ "$node_index_version" = "version" ]] && continue # skip tsv header
@@ -93,13 +115,17 @@ node_shasum_url="https://nodejs.org/dist/${node_index_version}/SHASUMS256.txt"
 
 echo "Node.js ${node_index_version} for ${operating_system}-${architecture} released on ${node_index_date}"
 
+"$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path" > /dev/null 2>&1
+"$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path" > /dev/null 2>&1
+
+# Remove extra entries from the SHASUMS256.txt file. Not every OS supports the --ignore-missing flag.
+(
+  cd "$NODE_ARTIFACTS_PATH"
+  awk '{ if (system("[ -e \"" $2 "\" ]") == 0) print $0 }' SHASUMS256.txt > SHASUMS256.filtered.txt
+  sha256sum -c SHASUMS256.filtered.txt > /dev/null 2>&1 || sha256sum -c SHASUMS256.filtered.txt
+)
+
 if [[ "$file_extension" = "zip" ]]; then
-  if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/bin/${node_directory}" ]]; then
-    echo "Node.js already installed!"
-  else
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path"
-    (cd "$NODE_ARTIFACTS_PATH" && sha256sum -c SHASUMS256.txt --ignore-missing)
     unzip -q "$node_archive_path" -d "${NODE_ARTIFACTS_PATH}"
     mkdir -p "${NODE_ARTIFACTS_PATH}/nodejs"
     # Windows "bins" are at the top level
@@ -107,28 +133,20 @@ if [[ "$file_extension" = "zip" ]]; then
     # Need to add executable flag ourselves
     chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/node.exe"
     chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npm"
-  fi
+    chmod +x "${NODE_ARTIFACTS_PATH}/nodejs/bin/npx"
 else
-  if [[ -d "${NODE_ARTIFACTS_PATH}/nodejs/${node_directory}" ]]; then
-    echo "Node.js already installed!"
-  else
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_download_url}" --output "$node_archive_path"
-    "$SCRIPT_DIR/retry-with-backoff.sh" curl "${CURL_FLAGS[@]}" "${node_shasum_url}" --output "$node_shasum_path"
-    pushd $NODE_ARTIFACTS_PATH
-    sha256sum -c SHASUMS256.txt --ignore-missing
-    popd
     tar -xf "$node_archive_path" -C "${NODE_ARTIFACTS_PATH}"
     mv "${NODE_ARTIFACTS_PATH}/${node_directory}" "${NODE_ARTIFACTS_PATH}/nodejs"
-  fi
 fi
+echo "$NODE_LTS_VERSION" > $NODE_ARTIFACTS_PATH/node-version.txt
+echo "Installing Node.js $NODE_LTS_VERSION... done."
 
 if [[ $operating_system != "win" ]]; then
   # Update npm to latest when we can
-  npm install --global npm@$NPM_VERSION
+  echo "Installing npm $NPM_VERSION..."
+  npm install --silent --global npm@$NPM_VERSION
   hash -r
+  echo "Installing npm $NPM_VERSION... done."
 fi
 
-echo "npm location: $(which npm)"
-echo "npm version: $(npm -v)"
-
-popd
+debug_output
