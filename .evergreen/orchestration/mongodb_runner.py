@@ -78,7 +78,7 @@ def start_mongodb_runner(opts, data):
     node = _normalize_path(node)
     target = "-y mongodb-runner"
     cmd = f"{node} {target} start --debug --config {config_file}"
-    LOGGER.info("Running mongodb-runner...")
+    LOGGER.info(f"Running mongodb-runner using {node} {target}...")
     try:
         with out_log.open("w") as fid:
             subprocess.check_call(
@@ -88,7 +88,7 @@ def start_mongodb_runner(opts, data):
         LOGGER.error("out.log: %s", out_log.read_text())
         LOGGER.error(str(e))
         raise e
-    LOGGER.info("Running mongodb-runner... done.")
+    LOGGER.info(f"Running mongodb-runner using {node} {target}... done.")
     cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
     server_info = json.loads(cluster_file.read_text())
     cluster_file.unlink()
