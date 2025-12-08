@@ -11,7 +11,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Union
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 TMPDIR = Path(tempfile.gettempdir()) / "drivers_orchestration"
@@ -49,7 +49,7 @@ def _handle_proc_params(params: dict, args: List[str]):
         args.append("enableTestCommands=true")
 
 
-def _normalize_path(path: Path | str) -> str:
+def _normalize_path(path: Union[Path, str]) -> str:
     if PLATFORM != "win32":
         return str(path)
     path = Path(path).as_posix()
