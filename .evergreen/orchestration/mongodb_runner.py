@@ -59,13 +59,11 @@ def _normalize_path(path: Path | str) -> str:
 def start_mongodb_runner(opts, data):
     mo_home = Path(opts.mongo_orchestration_home)
     server_log = mo_home / "server.log"
+    if server_log.exists():
+        server_log.unlink()
     out_log = mo_home / "out.log"
     config = _get_cluster_options(data, opts)
     config["runnerDir"] = config["tmpDir"]
-    # TODO: we shouldn't need to extract args this way.
-    args = []
-    if "args" in config:
-        args = config.pop("args")
     # Write the config file.
     config_file = mo_home / "config.json"
     config_file.write_text(json.dumps(config, indent=2))
@@ -77,8 +75,6 @@ def start_mongodb_runner(opts, data):
     target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
     target = _normalize_path(target)
     cmd = f"{node} {target} start --debug --config {config_file}"
-    if args:
-        cmd += f" -- {' '.join(args)}"
     LOGGER.info("Running mongodb-runner...")
     try:
         with out_log.open("w") as fid:
@@ -87,8 +83,6 @@ def start_mongodb_runner(opts, data):
             )
     except subprocess.CalledProcessError as e:
         LOGGER.error("out.log: %s", out_log.read_text())
-        if server_log.exists():
-            LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
         raise e
     LOGGER.info("Running mongodb-runner... done.")
@@ -120,6 +114,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
         {"role": "restore", "db": "admin"},
         {"role": "backup", "db": "admin"},
     ]
+
     topology: Literal["standalone", "replset", "sharded"] = "standalone"
     if opts.topology == "replica_set":
         topology = "replset"
@@ -142,7 +137,6 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
         if key in skip_keys:
             continue
         if key == "auth_key":
-            # TODO: this needs to be built in to mongodb-runner
             if static:
                 key_file = "KEY_FILE_PATH"
             else:
@@ -244,6 +238,8 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
         output["id"] = uuid.uuid4().hex
         output["tmpDir"] = str(tmp_dir)
         output["binDir"] = str(opts.mongodb_binaries)
+        if sys.platform != "win32":
+            args.extend(["--unixSocketPrefix", tempfile.gettempdir()])
 
     return output
 
