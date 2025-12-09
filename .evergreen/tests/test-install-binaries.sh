@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -eu
-set -x
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
@@ -13,7 +12,7 @@ fi
 
 ./install-rust.sh
 
-if [ $OS != "Windows_NT" ]; then
+if [ ${OS:-} != "Windows_NT" ]; then
   # Add a suitable python3 to the path.
   PYTHON_BINARY=$(bash -c ". $SCRIPT_DIR/../find-python3.sh && ensure_python3 2>/dev/null")
   PATH="$(dirname $PYTHON_BINARY):$PATH"
@@ -28,4 +27,4 @@ if [ $OS != "Windows_NT" ]; then
 fi
 
 popd
-make -C ${DRIVERS_TOOLS} test
+make -C ${SCRIPT_DIR}/.. test
