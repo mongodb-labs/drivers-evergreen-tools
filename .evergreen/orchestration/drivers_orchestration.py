@@ -701,7 +701,9 @@ def stop(opts):
             for shard in data["serialized"].get("shards", []):
                 all_servers.extend(shard["servers"])
             for server in all_servers:
-                shutdown_proc(psutil.Process(server["pid"]))
+                pid = server["pid"]
+                if psutil.pid_exists(pid):
+                    shutdown_proc(psutil.Process(pid))
                 if Path(server["dbPath"]).exists():
                     shutil.rmtree(server["dbPath"])
             LOGGER.info("Stopping mongodb-runner cluster... done.")
