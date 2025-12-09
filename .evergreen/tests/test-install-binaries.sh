@@ -18,9 +18,9 @@ if [ $OS != "Windows_NT" ]; then
   PATH="$(dirname $PYTHON_BINARY):$PATH"
   case $(uname -m) in
     aarch64 | x86_64 | arm64)
-      . ./.evergreen/ensure-binary.sh gcloud
+      . ./ensure-binary.sh gcloud
       gcloud --version
-      . ./.evergreen/ensure-binary.sh kubectl
+      . ./ensure-binary.sh kubectl
       which kubectl
       ;;
   esac
