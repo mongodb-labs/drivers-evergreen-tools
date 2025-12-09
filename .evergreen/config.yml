@@ -498,7 +498,7 @@ functions:
     - command: subprocess.exec
       type: test
       params:
-        shell: bash
+        binary: bash
         include_expansions_in_env: [SKIP_NODE]
         args: [src/.evergreen/tests/test-install-binaries.sh]
 
