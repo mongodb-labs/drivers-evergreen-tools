@@ -396,6 +396,7 @@ def run(opts):
 
     LOGGER.info("Running orchestration...")
     clean_run(opts)
+    stop(opts)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries = Path(opts.mongodb_binaries)
@@ -484,7 +485,6 @@ def run(opts):
     if opts.local_atlas:
         uri = start_atlas(opts)
     elif opts.mongodb_runner:
-        stop(opts)
         uri = start_mongodb_runner(opts, data)
     else:
         mo_home = Path(opts.mongo_orchestration_home)
