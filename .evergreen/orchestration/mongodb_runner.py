@@ -59,9 +59,9 @@ def _normalize_path(path: Union[Path, str]) -> str:
 def start_mongodb_runner(opts, data):
     mo_home = Path(opts.mongo_orchestration_home)
     server_log = mo_home / "server.log"
-    if server_log.exists():
-        server_log.unlink()
     out_log = mo_home / "out.log"
+    if out_log.exists():
+        out_log.unlink()
     config = _get_cluster_options(data, opts)
     config["runnerDir"] = config["tmpDir"]
     # Write the config file.
@@ -77,19 +77,19 @@ def start_mongodb_runner(opts, data):
     cmd = f"{node} {target} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {node} {target}...")
     try:
-        with out_log.open("w") as fid:
+        with server_log.open("w") as fid:
             subprocess.check_call(
                 shlex.split(cmd), stdout=fid, stderr=subprocess.STDOUT
             )
     except subprocess.CalledProcessError as e:
-        LOGGER.error("out.log: %s", out_log.read_text())
+        LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
         raise e
     LOGGER.info(f"Running mongodb-runner using {node} {target}... done.")
     cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
     server_info = json.loads(cluster_file.read_text())
     cluster_file.unlink()
-    server_log.write_text(json.dumps(server_info, indent=2))
+    out_log.write_text(json.dumps(server_info, indent=2))
 
     # Get the connection string, keeping only the replicaSet query param.
     parsed = urlparse(server_info["connectionString"])

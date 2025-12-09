@@ -13,7 +13,6 @@ import os
 import re
 import shlex
 import shutil
-import signal
 import socket
 import subprocess
 import sys
@@ -677,7 +676,7 @@ def shutdown_docker(docker: str, container_id: str) -> None:
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
-    server_log = mo_home / "server.log"
+    out_log = mo_home / "out.log"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
 
@@ -690,10 +689,10 @@ def stop(opts):
             shutdown_proc(psutil.Process(pid))
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
 
-    # Next try and use the server.log file as a serialized json file.
-    if server_log.exists():
+    # Next try and use the output.log file as a serialized json file.
+    if out_log.exists():
         try:
-            data = json.loads(server_log.read_text())
+            data = json.loads(out_log.read_text())
         except Exception:
             data = None
         if data:
@@ -702,12 +701,11 @@ def stop(opts):
             for shard in data["serialized"].get("shards", []):
                 all_servers.extend(shard["servers"])
             for server in all_servers:
-                if psutil.pid_exists(server["pid"]):
-                    os.kill(server["pid"], signal.SIGKILL)
+                shutdown_proc(psutil.Process(server["pid"]))
                 if Path(server["dbPath"]).exists():
                     shutil.rmtree(server["dbPath"])
             LOGGER.info("Stopping mongodb-runner cluster... done.")
-            server_log.unlink()
+            out_log.unlink()
 
     # Next try using a docker container file.
     if docker is not None and container_file.exists():
@@ -742,7 +740,7 @@ def stop(opts):
             response = subprocess.check_output(
                 shlex.split(cmd), encoding="utf-8"
             ).strip()
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
             LOGGER.exception(e)
             response = ""
         for line in response.splitlines():
