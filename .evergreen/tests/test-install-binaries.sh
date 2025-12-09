@@ -27,4 +27,4 @@ if [ ${OS:-} != "Windows_NT" ]; then
 fi
 
 popd
-make -C ${SCRIPT_DIR}/.. test
+make -C ${DRIVERS_TOOLS} test
