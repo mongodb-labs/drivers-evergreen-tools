@@ -482,6 +482,12 @@ def run(opts):
 
     data = get_orchestration_data(opts)
 
+    if opts.mongodb_runner and version in ("3.6", "4.0"):
+        LOGGER.warning(
+            "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
+        )
+        opts.mongodb_runner = False
+
     if opts.local_atlas:
         uri = start_atlas(opts)
     elif opts.mongodb_runner:
