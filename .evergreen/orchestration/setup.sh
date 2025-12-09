@@ -22,15 +22,18 @@ esac
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
-# Install node for mongodb-runner.
-bash $_HERE/../install-node.sh
+# TODO: this won't be necessary once #704 is merged.
+if [ ! -d "$HERE/../node-artifacts" ]; then
+  NODE_LTS_VERSION=22 bash $_HERE/../install-node.sh
+fi
 
 # Install the in-progress branch of mongodb-runner.
 # TODO: remove once we can use npx.
-source $_HERE/../init-node-and-npm-env.sh
-rm -rf $_HERE/devtools-shared
-git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
-pushd $_HERE/devtools-shared
-npm install --ignore-scripts
-npx -y lerna run --scope=mongodb-runner --include-dependencies compile
-popd
+if [ ! -d $_HERE/devtools-shared ]; then
+  source $_HERE/../init-node-and-npm-env.sh
+  git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
+  pushd $_HERE/devtools-shared
+  npm install --ignore-scripts
+  npx -y lerna run --scope=mongodb-runner --include-dependencies compile
+  popd
+fi
