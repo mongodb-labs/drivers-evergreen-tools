@@ -7,10 +7,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR/..
 
 if [ -z "${SKIP_NODE:-}" ]; then
-  .evergreen/install-node.sh
+  ./install-node.sh
 fi
 
-.evergreen/install-rust.sh
+./install-rust.sh
 
 if [ $OS != "Windows_NT" ]; then
   # Add a suitable python3 to the path.
