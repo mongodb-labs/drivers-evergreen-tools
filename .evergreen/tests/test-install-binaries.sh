@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eu
+set -x
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
