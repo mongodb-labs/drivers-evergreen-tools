@@ -395,8 +395,8 @@ def run(opts):
     from mongosh_dl import main as mongosh_dl
 
     LOGGER.info("Running orchestration...")
-    clean_run(opts)
     stop(opts)
+    clean_run(opts)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries = Path(opts.mongodb_binaries)
