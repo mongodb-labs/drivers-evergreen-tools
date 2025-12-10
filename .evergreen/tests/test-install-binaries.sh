@@ -10,7 +10,8 @@ pushd $SCRIPT_DIR/..
 npx -y mongodb-runner --help
 
 ./install-rust.sh
-PATH="$DRIVERS_TOOLS/.cargo/bin:$PATH" cargo --version
+source ${DRIVERS_TOOLS}/.cargo/env
+rustup default stable
 
 if [ ${OS:-} != "Windows_NT" ]; then
   # Add a suitable python3 to the path.
