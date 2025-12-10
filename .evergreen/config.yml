@@ -39,7 +39,7 @@ functions:
     # Applies the submitted patch, if any
     # Deprecated. Should be removed. But still needed for certain agents (ZAP)
     - command: git.apply_patch
-    # Make an evergreen exapanstion file with dynamic values
+    # Make an evergreen expansion file with dynamic values
     - command: subprocess.exec
       params:
         include_expansions_in_env: ["is_patch", "version_id", "project"]
@@ -495,34 +495,11 @@ functions:
           make test
 
   "run install binaries test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          .evergreen/install-node.sh
-          source .evergreen/init-node-and-npm-env.sh
-          npx -y mongodb-runner --help
-          .evergreen/install-rust.sh
-          source .evergreen/find-python3.sh
-          export PYTHON=$(ensure_python3 2>/dev/null)
-          export PATH=.bin:$(dirname $PYTHON):$PATH
-          if [ $OS == "Windows_NT" ]; then
-            exit 0
-          fi
-          case $(uname -m) in
-            aarch64 | x86_64 | arm64)
-              . ./.evergreen/ensure-binary.sh gcloud
-              gcloud --version
-              . ./.evergreen/ensure-binary.sh kubectl
-              which kubectl
-              ;;
-          esac
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        binary: bash
+        args: [src/.evergreen/tests/test-install-binaries.sh]
 
   "run aws test":
     - command: subprocess.exec

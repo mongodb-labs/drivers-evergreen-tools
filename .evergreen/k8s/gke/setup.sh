@@ -47,7 +47,7 @@ spec:
     image: debian:12
     resources:
       limits:
-        memory: "4Gi"
+        memory: "8Gi"
         cpu: "1"
         ephemeral-storage: "8Gi"
     command: ["/bin/sleep", "3650d"]
