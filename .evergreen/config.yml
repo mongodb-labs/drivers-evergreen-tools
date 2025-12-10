@@ -495,32 +495,12 @@ functions:
           make test
 
   "run install binaries test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          if [ -z "${SKIP_NODE}" ]; then
-            .evergreen/install-node.sh
-          fi
-          .evergreen/install-rust.sh
-          PATH=.bin:$PATH
-          if [ $OS == "Windows_NT" ]; then
-            exit 0
-          fi
-          case $(uname -m) in
-            aarch64 | x86_64 | arm64)
-              . ./.evergreen/ensure-binary.sh gcloud
-              gcloud --version
-              . ./.evergreen/ensure-binary.sh kubectl
-              which kubectl
-              ;;
-          esac
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        binary: bash
+        include_expansions_in_env: [SKIP_NODE]
+        args: [src/.evergreen/tests/test-install-binaries.sh]
 
   "run aws test":
     - command: subprocess.exec
