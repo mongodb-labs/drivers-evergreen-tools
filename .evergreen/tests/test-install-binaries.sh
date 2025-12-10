@@ -9,8 +9,7 @@ pushd $SCRIPT_DIR/..
 ./install-node.sh
 npx -y mongodb-runner --help
 
-./install-rust.sh
-source ${DRIVERS_TOOLS}/.cargo/env
+source ./install-rust.sh
 rustup install stable
 
 if [ ${OS:-} != "Windows_NT" ]; then
