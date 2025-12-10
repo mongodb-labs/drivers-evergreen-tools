@@ -3,8 +3,8 @@ set -eu
 
 echo "Installing dependencies ... begin"
 # Skip the "Processing triggers for man-db" step.
-echo "set man-db/auto-update false" | sudo debconf-communicate
-sudo dpkg-reconfigure -f noninteractive man-db || true  # This may fail if the lock file is held.
+echo "set man-db/auto-update false" | debconf-communicate
+dpkg-reconfigure -f noninteractive man-db || true  # This may fail if the lock file is held.
 apt-get -qq -o DPkg::Lock::Timeout=-1 update
 # Same dependencies used in KMS testing.
 export DEBIAN_FRONTEND=noninteractive
