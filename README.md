@@ -96,6 +96,7 @@ TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 You can also run:  `make run-local-atlas` to run a local atlas server in a container.
 
 See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+Run `bash ./evergreen/run-orchestration.sh --help` for usage of command line flags.
 
 In order to use custom certificates in your server, set the following environment variables:
 
@@ -103,6 +104,44 @@ In order to use custom certificates in your server, set the following environmen
 export TLS_CERT_KEY_FILE=<path-to>/client.pem
 export TLS_PEM_KEY_FILE=<path-to>/server.pem
 export TLS_CA_FILE=<path-to>/ca.pem
+```
+
+### Manual use of start-orchestration
+
+The (start-orchestration.sh)[./evergreen/start-orchestration.sh] script can be used directly as a way to
+start the orchestration server without downloading binaries or starting a local server.
+You are still responsible for having a directory containing the MongoDB binaries in the default
+MONGODB_BINARIES folder or setting MONGODB_BINARIES to the appropriate folder.
+
+See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+
+Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
+
+### Testing Against Different Versions
+
+Sometimes you'll need to run tests against a specific version, such as "7.0", and to do that you can use the `VERSION` env var.
+
+```sh
+VERSION=7.0 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
+```
+
+Older versions of MongoDB may not have arm64 macOS binaries, so you may also need to install the x86_64 binary (note: this will use Rosetta to run the binary):
+
+```sh
+VERSION=4.2 ARCH=x86_64 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
+```
+
+#### "Bad CPU type in executable" error
+
+You may encounter this error if Rosetta isn't properly configured on your system.
+```txt
+OSError: [Errno 86] Bad CPU type in executable: '.../node-mongodb-native/drivers-evergreen-tools/mongodb/bin/mongod'
+```
+
+To fix it, simply run:
+
+```sh
+softwareupdate --install-rosetta
 ```
 
 ## Updating Dependencies

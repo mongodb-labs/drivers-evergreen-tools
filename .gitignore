@@ -138,6 +138,8 @@ perf-report.md
 perf-report.txt
 uv-requirements.txt
 uv-override-dependencies.txt
+.evergreen/orchestration/uv
+.evergreen/orchestration/uvx
 
 # Azure functions.
 .python_packages/

@@ -2,7 +2,7 @@
 set -eu
 
 echo "Installing dependencies ... begin"
-apt-get -qq update
+apt-get -qq -o DPkg::Lock::Timeout=-1 update
 # Same dependencies used in KMS testing.
 export DEBIAN_FRONTEND=noninteractive
 apt-get -qq -y -o DPkg::Lock::Timeout=-1 install libcurl4 libgssapi-krb5-2 libldap-common libwrap0 libsasl2-2 \

@@ -95,6 +95,9 @@ def setup_assume_role():
         USER=kwargs["username"],
         PASS=kwargs["password"],
         SESSION_TOKEN=creds["SessionToken"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+        AWS_SESSION_TOKEN=creds["SessionToken"],
     )
 
 
@@ -119,19 +122,19 @@ def setup_ecs():
     # Get the appropriate task definition based on the version of Ubuntu.
     with open("/etc/lsb-release") as fid:
         text = fid.read()
-    if "jammy" in text:
-        task_definition = CONFIG.get(
-            get_key("iam_auth_ecs_task_definition_jammy"), None
-        )
-        if task_definition is None:
-            raise ValueError('Please set "iam_auth_ecs_task_definition_jammy" variable')
-    elif "focal" in text:
+    if "focal" in text:
         task_definition = CONFIG.get(
             get_key("iam_auth_ecs_task_definition_focal"), None
         )
         # Fall back to previous task definition for backward compat.
         if task_definition is None:
             task_definition = CONFIG[get_key("iam_auth_ecs_task_definition")]
+    elif "noble" in text:
+        task_definition = CONFIG.get(
+            get_key("iam_auth_ecs_task_definition_noble"), None
+        )
+        if task_definition is None:
+            raise ValueError('Please set "iam_auth_ecs_task_definition_noble" variable')
     else:
         raise ValueError("Unsupported ubuntu release")
     run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {task_definition} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
@@ -171,7 +174,12 @@ def setup_regular():
     )
     create_user(CONFIG[get_key("iam_auth_ecs_account_arn")], kwargs)
 
-    return dict(USER=kwargs["username"], PASS=kwargs["password"])
+    return dict(
+        USER=kwargs["username"],
+        PASS=kwargs["password"],
+        AWS_ACCESS_KEY_ID=kwargs["username"],
+        AWS_SECRET_ACCESS_KEY=kwargs["password"],
+    )
 
 
 def setup_env_creds():
@@ -266,8 +274,8 @@ def setup_eks_pod_identity():
     return dict()
 
 
-def handle_creds(creds: dict):
-    if "USER" in creds:
+def handle_creds(creds: dict, nouri: bool):
+    if "USER" in creds and not nouri:
         USER = quote_plus(creds["USER"])
         if "PASS" in creds:
             PASS = quote_plus(creds["PASS"])
@@ -279,7 +287,7 @@ def handle_creds(creds: dict):
     else:
         MONGODB_URI = "mongodb://localhost"
     MONGODB_URI = f"{MONGODB_URI}/aws?authMechanism=MONGODB-AWS"
-    if "SESSION_TOKEN" in creds:
+    if "SESSION_TOKEN" in creds and not nouri:
         SESSION_TOKEN = quote_plus(creds["SESSION_TOKEN"])
         MONGODB_URI = (
             f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
@@ -296,6 +304,7 @@ def handle_creds(creds: dict):
 
 def main():
     parser = argparse.ArgumentParser(description="MONGODB-AWS tester.")
+    parser.add_argument("--nouri", action="store_true", default=False)
     sub = parser.add_subparsers(title="Tester subcommands", help="sub-command help")
 
     run_assume_role_cmd = sub.add_parser("assume-role", help="Assume role test")
@@ -326,7 +335,7 @@ def main():
     func_name = args.func.__name__.replace("setup_", "").replace("_", "-")
     LOGGER.info("Running aws_tester.py with %s...", func_name)
     creds = args.func()
-    handle_creds(creds)
+    handle_creds(creds, args.nouri)
     LOGGER.info("Running aws_tester.py with %s... done.", func_name)
 
 

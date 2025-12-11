@@ -33,7 +33,7 @@ oscrypto @ git+https://github.com/wbond/oscrypto.git@d5f3437
     # via -r requirements-in.txt
 waitress==3.0.2
     # via -r requirements-in.txt
-werkzeug==3.0.6
+werkzeug==3.1.4
     # via
     #   -r requirements-in.txt
     #   flask
