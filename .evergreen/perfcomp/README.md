@@ -37,6 +37,9 @@ db.raw_results.find({
 
 and look for the `variant` and `task_name` properties.
 
+If you do not provide either the `variant` or `task_name`, they will be inferred by looking for the most recent
+perf data for the given `project`.
+
 ### perfcomp CLI
 
 ```bash
@@ -63,8 +66,8 @@ Usage:
 Flags:
   --perf-context string   specify the performance triage context, ex. "GoDriver perf task" (required)
   --project      string   specify the name of an existing Evergreen project, ex. "mongo-go-driver" (required)
-  --task         string   specify the evergreen perf task name, ex. "perf" (required)
-  --variant      string   specify the perf task variant, ex. "perf" (required)
+  --task         string   specify the evergreen perf task name, ex. "perf" (optional)
+  --variant      string   specify the perf task variant, ex. "perf" (optional)
 ```
 
 #### mdreport
