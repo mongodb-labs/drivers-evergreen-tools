@@ -114,6 +114,17 @@ const expandedMetricsDB = "expanded_metrics"
 const rawResultsColl = "raw_results"
 const stableRegionsColl = "stable_regions"
 
+// RawResult is the result from the raw_results collection used to find the
+// default variant and task name.
+type RawResult struct {
+	Info struct {
+		Project string `bson:"project"`   // Nested project field
+		Task    string `bson:"task_name"` // Nested task field
+		Variant string `bson:"variant"`   // Nested variant field
+	} `bson:"info"`
+	Date time.Time `bson:"date"` // Top-level date field
+}
+
 // CompareOptions stores the information for each project to use as filters.
 type CompareOptions struct {
 	Project     string // Required
@@ -177,6 +188,60 @@ func validateOptions(copts CompareOptions) error {
 		return fmt.Errorf("version is required")
 	}
 	return nil
+}
+
+// GetDefaultTaskAndVariant will find the default task and/or variant for a given project
+// using the most recent result in the raw_results collection.
+func GetDefaultTaskAndVariant(perfAnalyticsConnString, project, task, variant string) (string, string, error) {
+	// Connect to analytics node
+	client, err := mongo.Connect(options.Client().ApplyURI(perfAnalyticsConnString))
+	if err != nil {
+		return "", "", fmt.Errorf("error connecting client: %v", err)
+	}
+
+	fmt.Println("Successfully connected to MongoDB")
+
+	defer func() { // Defer disconnect client
+		err = client.Disconnect(context.Background())
+		if err != nil {
+			log.Fatalf("failed to disconnect client: %v", err)
+		}
+	}()
+
+	// Reference the collection in the database
+	collection := client.Database(expandedMetricsDB).Collection(rawResultsColl)
+
+	// Build filter for querying raw_results
+	filter := bson.M{
+		"info.project": project,
+	}
+	if task != "" {
+		filter["info.task_name"] = task
+	}
+	if variant != "" {
+		filter["info.variant"] = variant
+	}
+
+	// Set sort options for the query
+	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}}) // Sort by latest date
+
+	// Execute the query
+	var result RawResult
+	findCtx, findCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer findCancel()
+
+	err = collection.FindOne(findCtx, filter, opts).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			fmt.Printf("No matching raw results found for project: %s\n", project)
+			return "", "", fmt.Errorf("no matching raw results found for project: %s", project)
+		}
+		fmt.Printf("Failed to fetch defaults for project %s. Error: %v\n", project, err)
+		return "", "", fmt.Errorf("failed to fetch defaults for project %s: %v", project, err)
+	}
+
+	// Return the extracted values
+	return result.Info.Task, result.Info.Variant, nil
 }
 
 // Compare will return statistical results for a patch version using the

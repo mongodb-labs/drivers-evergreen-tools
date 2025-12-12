@@ -34,8 +34,10 @@ func newCompareCommand() *cobra.Command {
 	cmd.Flags().StringVar(&task, "task", "", `specify the evergreen performance task name, ex. "perf"`)
 	cmd.Flags().StringVar(&variant, "variant", "", `specify the performance variant, ex. "perf"`)
 
-	for _, flag := range []string{"project", "context"} {
-		cmd.MarkFlagRequired(flag)
+	for _, flag := range []string{"project", "perf-context"} {
+		if flag == "" {
+			log.Fatalf("must provide %s", flag)
+		}
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
@@ -49,6 +51,21 @@ func newCompareCommand() *cobra.Command {
 		for _, flag := range []string{"project", "perf-context"} {
 			if flag == "" {
 				log.Fatalf("must provide %s", flag)
+			}
+		}
+
+		// Fetch default task and variant if either not are provided
+		if task == "" || variant == "" {
+			var err error
+			task, variant, err = perfcomp.GetDefaultTaskAndVariant(uri, project, task, variant)
+			if err != nil {
+				log.Fatalf("failed to fetch task/variant defaults: %v", err)
+			}
+			if task != "" {
+				log.Printf("using task: %s\n", task)
+			}
+			if variant != "" {
+				log.Printf("using variant: %s\n", variant)
 			}
 		}
 
