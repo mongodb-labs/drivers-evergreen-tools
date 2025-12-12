@@ -114,17 +114,6 @@ const expandedMetricsDB = "expanded_metrics"
 const rawResultsColl = "raw_results"
 const stableRegionsColl = "stable_regions"
 
-// RawResult is the result from the raw_results collection used to find the
-// default variant and task name.
-type RawResult struct {
-	Info struct {
-		Project string `bson:"project"`   // Nested project field
-		Task    string `bson:"task_name"` // Nested task field
-		Variant string `bson:"variant"`   // Nested variant field
-	} `bson:"info"`
-	Date time.Time `bson:"date"` // Top-level date field
-}
-
 // CompareOptions stores the information for each project to use as filters.
 type CompareOptions struct {
 	Project     string // Required
@@ -226,7 +215,7 @@ func GetDefaultTaskAndVariant(perfAnalyticsConnString, project, task, variant st
 	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}}) // Sort by latest date
 
 	// Execute the query
-	var result RawResult
+	var result RawData
 	findCtx, findCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer findCancel()
 
@@ -241,7 +230,7 @@ func GetDefaultTaskAndVariant(perfAnalyticsConnString, project, task, variant st
 	}
 
 	// Return the extracted values
-	return result.Info.Task, result.Info.Variant, nil
+	return result.Info.TaskName, result.Info.Variant, nil
 }
 
 // Compare will return statistical results for a patch version using the
