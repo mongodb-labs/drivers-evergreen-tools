@@ -292,7 +292,6 @@ func Compare(ctx context.Context, perfAnalyticsConnString string, opts ...Compar
 
 // Gets all raw benchmark data for a specific Evergreen version.
 func findRawData(ctx context.Context, coll *mongo.Collection, copts *CompareOptions) ([]RawData, error) {
-	// TODO: By default get the first task/variant of the project's raw results and use that for filtering.
 	filter := bson.D{
 		{"info.project", copts.Project},
 		{"info.version", copts.Version},
