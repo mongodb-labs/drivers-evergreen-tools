@@ -62,10 +62,10 @@ func newCompareCommand() *cobra.Command {
 				log.Fatalf("failed to fetch task/variant defaults: %v", err)
 			}
 			if task != "" {
-				log.Printf("using task: %s\n", task)
+				log.Printf("Using task: %s\n", task)
 			}
 			if variant != "" {
-				log.Printf("using variant: %s\n", variant)
+				log.Printf("Using variant: %s\n", variant)
 			}
 		}
 
