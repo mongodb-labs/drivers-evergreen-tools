@@ -20,8 +20,6 @@ bash build.sh
 
 ### Parameters
 
-To use `perfcomp`, you should have an analytics node URI env variable called `PERF_URI_PRIVATE_ENDPOINT`. You can request for it from the devprod performance team.
-
 To run in your project repository, you need to create a [performance context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/contexts) that captures all benchmarks in your project. This needs to be a triage context. Feel free to refer to the [Go Driver context](https://performance-monitoring-and-analysis.server-tig.prod.corp.mongodb.com/context/name/GoDriver%20perf%20task) as a template.
 
 > _If you are creating a triage context for the first time, it may take a few hours for your project's data to be tagged._
@@ -39,6 +37,11 @@ and look for the `variant` and `task_name` properties.
 
 If you do not provide either the `variant` or `task_name`, they will be inferred by looking for the most recent
 perf data for the given `project`.
+
+### Setup
+
+Run the `setup.sh` script to get the `PERF_URI_PRIVATE_ENDPOINT` from the AWS secrets vault and
+build the `perfcomp` CLI.
 
 ### perfcomp CLI
 
@@ -84,7 +87,7 @@ Usage:
 Alternatively, you can run the perfcomp shell script. This script will run build and then run `compare`. From the root directory,
 
 ```bash
-PERF_URI_PRIVATE_ENDPOINT="<perf_uri>" VERSION_ID="<version>" PROJECT="<project>" CONTEXT="<context>" TASK="<task>" VARIANT="<variant>" .evergreen/run-perf-comp.sh
+VERSION_ID="<version>" PROJECT="<project>" CONTEXT="<context>" TASK="<task-optional>" VARIANT="<variant-optional>" .evergreen/run-perf-comp.sh
 ```
 
 If you would like to see a markdown preview of the report, you can also pass in `HEAD_SHA="test"`. This will generate `.evergreen/perfcomp/perf-report.md`.
