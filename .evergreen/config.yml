@@ -131,7 +131,7 @@ functions:
       params:
         working_dir: "src"
         script: |
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && PROJECT=${project} bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
     - command: ec2.assume_role
