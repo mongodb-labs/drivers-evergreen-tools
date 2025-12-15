@@ -69,7 +69,7 @@ done
 . $SCRIPT_DIR/atlas-utils.sh
 
 # The cluster server version.
-export VERSION="${MONGODB_VERSION:-6.0}"
+export VERSION="${MONGODB_VERSION:-7.0}"
 
 # Set the create cluster configuration.
 DEPLOYMENT_DATA=$(cat <<EOF
