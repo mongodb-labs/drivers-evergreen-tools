@@ -6,6 +6,7 @@ Use '--help' for more information.
 """
 
 import argparse
+import json
 import logging
 import re
 import subprocess
@@ -28,21 +29,18 @@ from mongodl import (
 )
 
 
-def _get_latest_version():
-    result = subprocess.run(
-        ["git", "ls-remote", "--tags", "https://github.com/mongodb-js/mongosh.git"],
-        stdout=subprocess.PIPE,
-        text=True,
-        check=False,
-    )
-    for line in reversed(result.stdout.splitlines()):
-        _, tag = line.split("refs/tags/")
-        match = re.match(r"^v(\d+\.\d+\.\d+)$", tag)
-        if match is not None:
-            tag = match.groups()[0]
-            LOGGER.debug("Found version %s", tag)
-            return tag
-    raise ValueError("Could not find tag!")
+def _get_latest_version(cache: Cache, retries: int) -> str:
+    dl_url = "https://downloads.mongodb.com/compass/mongosh.json"
+    retrier = DownloadRetrier(retries)
+    while True:
+        try:
+            cached = cache.download_file(dl_url).path
+            data = json.loads(cached.read_text())
+            return data["versions"][0]["version"]
+        except Exception as e:
+            LOGGER.exception(e)
+            if not retrier.retry():
+                raise
 
 
 def _download(
@@ -59,7 +57,7 @@ def _download(
 ) -> int:
     LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
-        version = _get_latest_version()
+        version = _get_latest_version(cache, retries)
     if arch == "x86_64":
         arch = "x64"
     elif arch == "aarch64":
