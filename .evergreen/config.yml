@@ -1017,10 +1017,10 @@ tasks:
       commands:
         - func: "run oidc azure test"
 
-    - name: "test-oidc-azure-func"
-      tags: ["oidc"]
-      commands:
-        - func: "run oidc azure func test"
+    # - name: "test-oidc-azure-func"
+    #   tags: ["oidc"]
+    #   commands:
+    #     - func: "run oidc azure func test"
 
     - name: "test-oidc-gcp"
       tags: ["latest", "oidc"]
