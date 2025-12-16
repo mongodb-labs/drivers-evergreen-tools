@@ -60,6 +60,10 @@ fi
 
 source ./secrets-export.sh
 
+if [ -z "${CI:-}" ]; then
+  export PERF_URI_PRIVATE_ENDPOINT=$PERF_URI_PRIVATE_ENDPOINT_LOCAL
+fi
+
 : "${PERF_URI_PRIVATE_ENDPOINT:?Error: PERF_URI_PRIVATE_ENDPOINT must be set}"
 : "${VERSION_ID:?Error: VERSION_ID must be set}"
 : "${PROJECT:?Error: PROJECT must be set}"

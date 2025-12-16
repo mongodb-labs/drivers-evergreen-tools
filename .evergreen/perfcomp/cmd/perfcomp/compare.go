@@ -133,7 +133,7 @@ func runCompare(cmd *cobra.Command, args []string, opts ...perfcomp.CompareOptio
 
 	res, err := perfcomp.Compare(ctx, perfAnalyticsConnString, opts...)
 	if err != nil {
-		log.Fatalf("failed to compare: %v", err)
+		log.Fatalf("failed to compare, make sure you're using the VPN if running locally: %v", err)
 	}
 
 	res.CommitSHA = os.Getenv("HEAD_SHA")

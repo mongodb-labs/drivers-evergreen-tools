@@ -41,7 +41,8 @@ perf data for the given `project`.
 ### Setup
 
 Run the `setup.sh` script to get the `PERF_URI_PRIVATE_ENDPOINT` from the AWS secrets vault and
-build the `perfcomp` CLI.
+build the `perfcomp` CLI.  If running locally, the `PERF_URI_PRIVATE_ENDPOINT_LOCAL` URI must
+be used, and the VPN must be enabled.
 
 ### perfcomp CLI
 
