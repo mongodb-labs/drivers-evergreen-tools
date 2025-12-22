@@ -47,9 +47,11 @@ spec:
     image: debian:12
     resources:
       limits:
-        memory: "8Gi"
+        memory: "16Gi"
         cpu: "1"
         ephemeral-storage: "8Gi"
+      requests:
+        memory: "32Gi"
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
   nodeSelector:
