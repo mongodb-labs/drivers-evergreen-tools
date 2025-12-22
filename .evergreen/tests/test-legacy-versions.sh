@@ -9,7 +9,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $DRIVERS_TOOLS/.evergreen > /dev/null
 
 for v in 3.6 4.0; do
-  URI=$(bash run-orchestration.sh --version $v)
+  export MONGODB_VERSION=$v
+  URI=$(bash run-orchestration.sh)
   $MONGODB_BINARIES/mongosh $URI --eval "db.runCommand({\"ping\":1})"
   bash stop-orchesration.sh
 done

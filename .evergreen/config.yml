@@ -1016,7 +1016,7 @@ tasks:
       commands:
         - func: "run csfle test"
 
-    - name: "test-legacy"
+    - name: "test-legacy-versions"
       commands:
         - func: "run legacy versions test"
 
