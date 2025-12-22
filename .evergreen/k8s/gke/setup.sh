@@ -49,7 +49,7 @@ spec:
       limits:
         memory: "16Gi"
         cpu: "1"
-        ephemeral-storage: "8Gi"
+        ephemeral-storage: "16Gi"
       requests:
         memory: "32Gi"
     command: ["/bin/sleep", "3650d"]
