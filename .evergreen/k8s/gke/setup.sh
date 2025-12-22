@@ -47,15 +47,15 @@ spec:
     image: debian:12
     resources:
       limits:
-        memory: "16Gi"
+        memory: "4Gi"
         cpu: "1"
-        ephemeral-storage: "10Gi"
+        ephemeral-storage: "4Gi"
       requests:
-        memory: "32Gi"
+        memory: "8Gi"
     command: ["/bin/sleep", "3650d"]
     imagePullPolicy: IfNotPresent
   nodeSelector:
-    kubernetes.io/os: linux
+    cloud.google.com/compute-class: autopilot
 EOF
 
 # Set up the pod - run directly so PATH is passed in.
