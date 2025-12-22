@@ -527,7 +527,7 @@ functions:
         args: [src/.evergreen/tests/test-github-app.sh]
 
   "run legacy versions test":
-    - command: subproces.exec
+    - command: subprocess.exec
       type: test
       params:
         binary: bash
