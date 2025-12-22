@@ -1482,7 +1482,7 @@ buildvariants:
           - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
-          - "test-legacy"
+          - "test-legacy-versions"
 
 - matrix_name: "tests-os-requires-50"
   matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
