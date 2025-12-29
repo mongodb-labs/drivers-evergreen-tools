@@ -1,0 +1,33 @@
+name: "Markdown Check"
+
+on:
+  pull_request:
+    branches:
+      - "master"
+  push:
+    branches:
+      - "master"
+
+concurrency:
+  group: markdown-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-markdown:
+    name: "Check Markdown Files"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v6"
+
+      - name: "Check Markdown"
+        uses: "john0isaac/action-check-markdown@274ad7e69a147c37274e1a94fb01ddb175c57bed"
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          command: check_broken_paths
+          directory: ./
