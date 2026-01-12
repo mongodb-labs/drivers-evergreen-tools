@@ -1,4 +1,4 @@
-module github.com/mongodb-labs/drivers-evergreen-tools/mongoproxy
+module github.com/mongodb-labs/drivers-evergreen-tools/.evergreen/mongoproxy
 
 go 1.24.0
 
