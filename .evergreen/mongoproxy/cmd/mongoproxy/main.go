@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mongodb-labs/drivers-evergreen-tools/mongoproxy"
+	"github.com/mongodb-labs/drivers-evergreen-tools/.evergreen/mongoproxy"
 )
 
 func main() {
