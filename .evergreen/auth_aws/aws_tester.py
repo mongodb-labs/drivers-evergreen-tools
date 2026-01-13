@@ -292,6 +292,8 @@ def handle_creds(creds: dict, nouri: bool):
         MONGODB_URI = (
             f"{MONGODB_URI}&authMechanismProperties=AWS_SESSION_TOKEN:{SESSION_TOKEN}"
         )
+    if "USER" in creds and nouri:
+        LOGGER.info("Not adding credentials to URI due to '--nouri' being set")
     with (HERE / "test-env.sh").open("w", newline="\n") as fid:
         fid.write("#!/usr/bin/env bash\n\n")
         fid.write("set +x\n")
