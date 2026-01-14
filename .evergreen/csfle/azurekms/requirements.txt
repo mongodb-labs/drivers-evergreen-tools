@@ -63,5 +63,5 @@ typing-extensions==4.14.1
     #   azure-identity
     #   azure-mgmt-compute
     #   azure-mgmt-network
-urllib3==2.6.0
+urllib3==2.6.3
     # via requests
