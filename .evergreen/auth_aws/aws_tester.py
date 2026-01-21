@@ -297,7 +297,11 @@ def handle_creds(creds: dict, nouri: bool):
         fid.write("set +x\n")
         for key, value in creds.items():
             # Only export AWS env vars if nouri=True OR there are no URI credentials
-            if key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"]:
+            if key in [
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+                "AWS_SESSION_TOKEN",
+            ]:
                 if not nouri and "USER" in creds:
                     continue  # Skip AWS env vars when using URI credentials
             if key in ["USER", "PASS", "SESSION_TOKEN"]:
