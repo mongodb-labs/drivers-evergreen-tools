@@ -37,4 +37,4 @@ ENV MONGODB_BINARIES=/root/drivers-tools/mongodb/bin
 ENV DOCKER_RUNNING=true
 
 COPY . /root/drivers-tools
-COPY .evergreen/docker/rhel8/*.sh /root
+COPY .evergreen/docker/rhel8/*.sh /root/
