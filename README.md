@@ -131,6 +131,14 @@ Older versions of MongoDB may not have arm64 macOS binaries, so you may also nee
 VERSION=4.2 ARCH=x86_64 TOPOLOGY='replica_set' bash .evergreen/run-orchestration.sh
 ```
 
+The named versions that we support are:
+
+- `latest` - the most recent server build from Evergreen (e.g. `8.3.0-alpha1-8-g9a81264`)
+- `rapid` - the most recent published server minor release, including release candidates (e.g. `8.2.0rc1` or `8.3.2`, but not `8.0.1`).
+- `latest-stable` - the most recently published stable server release, excluding release candidates (e.g. `8.3.4`)
+- `v6.0-perf` - the pinned 6.x server version for performance testing
+- `v8.0-perf` - the pinned 8.x server version for performance testing
+
 #### "Bad CPU type in executable" error
 
 You may encounter this error if Rosetta isn't properly configured on your system.
