@@ -14,7 +14,7 @@ If you need a larger GCP [VM](https://cloud.google.com/compute/docs/machine-reso
 
 # Usage with AWS Vault
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
+See [Secrets Handling](../../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/gcpkms` vault.
 
 ```yaml
