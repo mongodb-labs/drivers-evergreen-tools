@@ -31,12 +31,13 @@ func newCompareCommand() *cobra.Command {
 	var project, task, variant, perfcontext string
 	cmd.Flags().StringVar(&project, "project", "", `specify the name of an existing Evergreen project, ex. "mongo-go-driver"`)
 	cmd.Flags().StringVar(&perfcontext, "perf-context", "", `specify the performance triage context, ex. "GoDriver perf task"`)
-	// TODO(DRIVERS-3264): Use first task / variant of the project by default for perf filtering
 	cmd.Flags().StringVar(&task, "task", "", `specify the evergreen performance task name, ex. "perf"`)
 	cmd.Flags().StringVar(&variant, "variant", "", `specify the performance variant, ex. "perf"`)
 
-	for _, flag := range []string{"project", "task", "variant", "context"} {
-		cmd.MarkFlagRequired(flag)
+	for _, flag := range []string{"project", "perf-context"} {
+		if flag == "" {
+			log.Fatalf("must provide %s", flag)
+		}
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
@@ -47,9 +48,24 @@ func newCompareCommand() *cobra.Command {
 		}
 
 		// Validate all flags
-		for _, flag := range []string{"project", "task", "variant", "perf-context"} {
+		for _, flag := range []string{"project", "perf-context"} {
 			if flag == "" {
 				log.Fatalf("must provide %s", flag)
+			}
+		}
+
+		// Fetch default task and variant if either not are provided
+		if task == "" || variant == "" {
+			var err error
+			task, variant, err = perfcomp.GetDefaultTaskAndVariant(uri, project, task, variant)
+			if err != nil {
+				log.Fatalf("failed to fetch task/variant defaults: %v", err)
+			}
+			if task != "" {
+				log.Printf("Using task: %s\n", task)
+			}
+			if variant != "" {
+				log.Printf("Using variant: %s\n", variant)
 			}
 		}
 
@@ -117,7 +133,7 @@ func runCompare(cmd *cobra.Command, args []string, opts ...perfcomp.CompareOptio
 
 	res, err := perfcomp.Compare(ctx, perfAnalyticsConnString, opts...)
 	if err != nil {
-		log.Fatalf("failed to compare: %v", err)
+		log.Fatalf("failed to compare, make sure you're using the VPN if running locally: %v", err)
 	}
 
 	res.CommitSHA = os.Getenv("HEAD_SHA")

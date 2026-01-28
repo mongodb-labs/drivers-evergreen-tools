@@ -36,4 +36,4 @@ ENV MONGODB_BINARIES=/root/drivers-tools/mongodb/bin
 ENV DOCKER_RUNNING=true
 
 COPY . /root/drivers-tools
-COPY .evergreen/docker/ubuntu22.04/*.sh /root
+COPY .evergreen/docker/ubuntu22.04/*.sh /root/

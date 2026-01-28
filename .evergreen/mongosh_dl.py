@@ -8,13 +8,9 @@ Use '--help' for more information.
 import argparse
 import json
 import logging
-import os
 import re
-import shlex
 import subprocess
 import sys
-import tempfile
-import urllib.request
 from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
@@ -24,7 +20,6 @@ HERE = Path(__file__).absolute().parent
 sys.path.insert(0, str(HERE))
 from mongodl import LOGGER as DL_LOGGER
 from mongodl import (
-    SSL_CONTEXT,
     Cache,
     DownloadRetrier,
     ExpandResult,
@@ -34,56 +29,18 @@ from mongodl import (
 )
 
 
-def _get_latest_version():
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    if os.environ.get("GITHUB_TOKEN"):
-        headers["authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
-    url = "https://api.github.com/repos/mongodb-js/mongosh/releases"
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
-        raw = resp.read().decode("utf-8")
-        data = json.loads(raw)
-        if not data:
-            LOGGER.debug("Releases (raw): %s", raw)
-            raise RuntimeError("List of releases is empty")
-        for item in data:
-            if item["prerelease"]:
-                continue
-            if item.get("draft"):
-                continue
-            return item["tag_name"].replace("v", "").strip()
-        raise RuntimeError(f"Could not find tag name in releases: {data}")
-    except Exception as e:
-        LOGGER.warning(
-            "Error fetching the latest version, falling back to using git tags"
-        )
-        LOGGER.warning(str(e))
-        return _get_latest_version_git()
-
-
-def _get_latest_version_git():
-    with tempfile.TemporaryDirectory() as td:
-        cmd = "git clone --depth 1 https://github.com/mongodb-js/mongosh.git"
-        subprocess.check_call(
-            shlex.split(cmd), cwd=td, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        cmd = "git fetch origin --depth=100 --tags"
-        path = os.path.join(td, "mongosh")
-        subprocess.check_call(
-            shlex.split(cmd), cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        cmd = "git --no-pager tag"
-        output = subprocess.check_output(
-            shlex.split(cmd), cwd=path, stderr=subprocess.PIPE
-        )
-        for line in reversed(output.decode("utf-8").splitlines()):
-            if re.match(r"^v\d+\.\d+\.\d+$", line):
-                LOGGER.debug("Found version %s", line)
-                return line.replace("v", "").strip()
+def _get_latest_version(cache: Cache, retries: int) -> str:
+    dl_url = "https://downloads.mongodb.com/compass/mongosh.json"
+    retrier = DownloadRetrier(retries)
+    while True:
+        try:
+            cached = cache.download_file(dl_url).path
+            data = json.loads(cached.read_text())
+            return data["versions"][0]["version"]
+        except Exception as e:
+            LOGGER.exception(e)
+            if not retrier.retry():
+                raise
 
 
 def _download(
@@ -100,7 +57,7 @@ def _download(
 ) -> int:
     LOGGER.info(f"Download {version} mongosh for {target}-{arch}")
     if version == "latest":
-        version = _get_latest_version()
+        version = _get_latest_version(cache, retries)
     if arch == "x86_64":
         arch = "x64"
     elif arch == "aarch64":

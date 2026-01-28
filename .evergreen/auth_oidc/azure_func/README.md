@@ -4,6 +4,13 @@ Scripts to handle testing an OIDC on Azure Functions.
 
 https://learn.microsoft.com/en-us/azure/azure-functions/
 
+## Note (12/15/2025)
+
+The existing Azure function has expired, so we have disabled the test in `config.yml`.
+The instructions for creating a new Azure function have changed slightly.
+We will need to follow the instructions at the link above and update the Overall
+prerequisites below in order to revive DRIVERS-2883.
+
 ## Prerequisites
 
 ### Overall

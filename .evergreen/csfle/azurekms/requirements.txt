@@ -8,7 +8,7 @@ azure-common==1.1.28
     # via
     #   azure-mgmt-compute
     #   azure-mgmt-network
-azure-core==1.35.0
+azure-core==1.38.0
     # via
     #   azure-identity
     #   azure-mgmt-core
@@ -63,5 +63,5 @@ typing-extensions==4.14.1
     #   azure-identity
     #   azure-mgmt-compute
     #   azure-mgmt-network
-urllib3==2.6.0
+urllib3==2.6.3
     # via requests

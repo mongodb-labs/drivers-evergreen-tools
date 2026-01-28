@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.35.0
+azure-core==1.38.0
     # via
     #   azure-identity
     #   azure-keyvault-secrets

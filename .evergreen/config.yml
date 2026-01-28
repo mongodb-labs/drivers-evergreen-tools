@@ -131,7 +131,7 @@ functions:
       params:
         working_dir: "src"
         script: |
-          [ -f ${PROJECT_DIRECTORY}/${file} ] && bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
+          [ -f ${PROJECT_DIRECTORY}/${file} ] && PROJECT=${project} bash ${PROJECT_DIRECTORY}/${file} || echo "${PROJECT_DIRECTORY}/${file} not available, skipping"
 
   "upload docs" :
     - command: ec2.assume_role
@@ -495,32 +495,12 @@ functions:
           make test
 
   "run install binaries test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          if [ -z "${SKIP_NODE}" ]; then
-            .evergreen/install-node.sh
-          fi
-          .evergreen/install-rust.sh
-          PATH=.bin:$PATH
-          if [ $OS == "Windows_NT" ]; then
-            exit 0
-          fi
-          case $(uname -m) in
-            aarch64 | x86_64 | arm64)
-              . ./.evergreen/ensure-binary.sh gcloud
-              gcloud --version
-              . ./.evergreen/ensure-binary.sh kubectl
-              which kubectl
-              ;;
-          esac
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        binary: bash
+        include_expansions_in_env: [SKIP_NODE]
+        args: [src/.evergreen/tests/test-install-binaries.sh]
 
   "run aws test":
     - command: subprocess.exec
@@ -545,6 +525,13 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-github-app.sh]
+
+  "run legacy versions test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-legacy-versions.sh]
 
   "run csfle test":
     # Ensure that we can run setup and teardown commands in the foreground without hanging.
@@ -917,60 +904,6 @@ tasks:
             TOPOLOGY: "sharded_cluster"
         - func: "run tests"
 
-    - name: "test-4.0-standalone"
-      tags: ["4.0", "standalone"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "4.0"
-            TOPOLOGY: "server"
-        - func: "run tests"
-
-    - name: "test-4.0-replica_set"
-      tags: ["4.0", "replica_set"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "4.0"
-            TOPOLOGY: "replica_set"
-        - func: "run tests"
-
-    - name: "test-4.0-sharded_cluster"
-      tags: ["4.0", "sharded_cluster"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "4.0"
-            TOPOLOGY: "sharded_cluster"
-        - func: "run tests"
-
-    - name: "test-3.6-standalone"
-      tags: ["3.6", "standalone"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "3.6"
-            TOPOLOGY: "server"
-        - func: "run tests"
-
-    - name: "test-3.6-replica_set"
-      tags: ["3.6", "replica_set"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "3.6"
-            TOPOLOGY: "replica_set"
-        - func: "run tests"
-
-    - name: "test-3.6-sharded_cluster"
-      tags: ["3.6", "sharded_cluster"]
-      commands:
-        - func: "bootstrap mongo-orchestration"
-          vars:
-            VERSION: "3.6"
-            TOPOLOGY: "sharded_cluster"
-        - func: "run tests"
-
     - name: "test-latest-local-atlas"
       tags: ["latest", "local-atlas"]
       commands:
@@ -1027,13 +960,13 @@ tasks:
       commands:
         - func: "run docker test"
 
-    - name: "test-docker-3.6"
+    - name: "test-docker-4.2"
       tags: ["latest", "docker", "pr"]
       commands:
       - func: "run docker test"
         vars:
           TARGET_IMAGE: rhel8
-          MONGODB_VERSION: 3.6
+          MONGODB_VERSION: 4.2
           ARCH: amd64
 
     - name: "test-oidc-local"
@@ -1096,6 +1029,10 @@ tasks:
       tags: ["pr"]
       commands:
         - func: "run csfle test"
+
+    - name: "test-legacy-versions"
+      commands:
+        - func: "run legacy versions test"
 
     - name: "test-auth-aws"
       tags: ["pr", "aws"]
@@ -1355,14 +1292,6 @@ axes:
         display_name: "4.2"
         variables:
            VERSION: "4.2"
-      - id: "4.0"
-        display_name: "4.0"
-        variables:
-           VERSION: "4.0"
-      - id: "3.6"
-        display_name: "3.6"
-        variables:
-           VERSION: "3.6"
 
   # OSes that support versions of MongoDB>=3.6 with SSL.
   - id: os-fully-featured
@@ -1534,7 +1463,7 @@ buildvariants:
     - "test-oidc-docker"
     - "testgcpoidc_task_group"
     - "testazureoidc_task_group"
-    - "test_oidc_azure_func_task_group"
+    # - "test_oidc_azure_func_task_group"
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
 
@@ -1564,12 +1493,6 @@ buildvariants:
      - name: "test-4.2-replica_set"
      - name: "test-4.2-sharded_cluster"
      - name: "test-4.2-standalone"
-     - name: "test-4.0-replica_set"
-     - name: "test-4.0-sharded_cluster"
-     - name: "test-4.0-standalone"
-     - name: "test-3.6-replica_set"
-     - name: "test-3.6-sharded_cluster"
-     - name: "test-3.6-standalone"
   rules:
     - if:
         auth: "auth"
@@ -1584,6 +1507,7 @@ buildvariants:
           - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
+          - "test-legacy-versions"
 
 - matrix_name: "tests-os-requires-50"
   matrix_spec: {"os-requires-50": "*", auth: "*", ssl: "*" }
@@ -1646,7 +1570,7 @@ buildvariants:
         storage-engine: ["mmapv1"]
       then:
         add_tasks:
-          - "test-3.6-standalone"
+          - "test-4.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: ["inmemory"]
@@ -1655,13 +1579,13 @@ buildvariants:
           - "test-latest-standalone"
           - "test-8.0-standalone"
           - "test-7.0-standalone"
-          - "test-3.6-standalone"
+          - "test-4.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: "wiredtiger"
       then:
         add_tasks:
-          - "test-3.6-standalone"
+          - "test-4.2-standalone"
 
 - matrix_name: "atlas"
   matrix_spec:

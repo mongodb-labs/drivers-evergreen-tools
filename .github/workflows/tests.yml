@@ -92,7 +92,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
       - id: cache-restore
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./.evergreen/github_app/node_modules
           key: npm-${{ hashFiles('./.evergreen/github_app/package-lock.json') }}

@@ -49,23 +49,27 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT/.evergreen/perfcomp"
 
 # Build the perfcomp binary.
-bash build.sh
+bash setup.sh
 
 if [[ ! -x "./bin/perfcomp" ]]; then
-  echo "Error: ./bin/perfcomp not found or not executable. Please run 'bash build.sh' first." >&2
+  echo "Error: ./bin/perfcomp not found or not executable. Please run 'bash setup.sh' first." >&2
   exit 1
 else
   echo "Found ./bin/perfcomp"
+fi
+
+source ./secrets-export.sh
+
+if [ -z "${CI:-}" ]; then
+  export PERF_URI_PRIVATE_ENDPOINT=$PERF_URI_PRIVATE_ENDPOINT_LOCAL
 fi
 
 : "${PERF_URI_PRIVATE_ENDPOINT:?Error: PERF_URI_PRIVATE_ENDPOINT must be set}"
 : "${VERSION_ID:?Error: VERSION_ID must be set}"
 : "${PROJECT:?Error: PROJECT must be set}"
 : "${CONTEXT:?Error: CONTEXT must be set}"
-: "${TASK:?Error: TASKNAME must be set}"
-: "${VARIANT:?Error: VARIANT must be set}"
 
-./bin/perfcomp compare --project ${PROJECT} --perf-context "${CONTEXT}" --task ${TASK} --variant ${VARIANT} ${VERSION_ID}
+./bin/perfcomp compare --project ${PROJECT} --perf-context "${CONTEXT}" --task ${TASK:-} --variant ${VARIANT:-} ${VERSION_ID}
 
 if [[ -n "${HEAD_SHA+set}" ]]; then
   ./bin/perfcomp mdreport
