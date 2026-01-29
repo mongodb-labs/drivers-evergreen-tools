@@ -5,9 +5,9 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 pushd $SCRIPT_DIR
 
-export RUSTUP_HOME="${RUSTUP_HOME:-"${DRIVERS_TOOLS}/.rustup"}"
-export CARGO_HOME="${CARGO_HOME:-"${DRIVERS_TOOLS}/.cargo"}"
-export PATH="${CARGO_HOME}/bin:$PATH"
+RUSTUP_HOME="${RUSTUP_HOME:-"${DRIVERS_TOOLS}/.rustup"}"
+CARGO_HOME="${CARGO_HOME:-"${DRIVERS_TOOLS}/.cargo"}"
+PATH="${CARGO_HOME}/bin:$PATH"
 
 # Make sure to use msvc toolchain rather than gnu, which is the default for cygwin
 if [ "Windows_NT" == "${OS:-}" ]; then
@@ -29,5 +29,9 @@ echo "cargo location: $(which cargo)"
 echo "cargo version: $(cargo --version)"
 echo "rustc location: $(which rustc)"
 echo "rustc version: $(rustc --version)"
+
+export RUSTUP_HOME
+export CARGO_HOME
+export PATH
 
 popd
