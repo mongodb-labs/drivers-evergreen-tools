@@ -145,3 +145,7 @@ uv-override-dependencies.txt
 .python_packages/
 appsettings.json
 local.settings.json
+
+
+# TODO: remove before merging
+devtools-shared

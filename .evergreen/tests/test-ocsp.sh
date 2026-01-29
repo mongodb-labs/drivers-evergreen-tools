@@ -20,6 +20,8 @@ export ORCHESTRATION_FILE
 export OCSP_ALGORITHM
 export SERVER_TYPE
 
+. $SCRIPT_DIR/../init-node-and-npm-env.sh
+
 # # Start a MongoDB server with ocsp enabled.
 SSL="ssl" make -C ${DRIVERS_TOOLS} run-server
 
