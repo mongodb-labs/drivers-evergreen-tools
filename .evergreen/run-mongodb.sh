@@ -28,27 +28,27 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -lt 1 ]; then
   echo "Usage: $0 {start|stop}" >&2
   exit 1
 fi
 
 action="$1"
+# Remove the first arg in a way compatible with sh so we can pass to the next script.
 shift
-rest="$*"
 
 case "$action" in
   start)
     # Ensure the CLIs are up to date.
     bash $SCRIPT_DIR/orchestration/setup.sh
     # Start the server.
-    $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$rest"
+    $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
     ;;
   stop)
     # Ensure the CLIs are up to date.
     bash $SCRIPT_DIR/orchestration/setup.sh
     # Stop the server.
-    $SCRIPT_DIR/orchestration/drivers-orchestration stop "$rest"
+    $SCRIPT_DIR/orchestration/drivers-orchestration stop "$@"
     ;;
   *)
     echo "Error: invalid command '$action'. Expected 'start' or 'stop'." >&2
