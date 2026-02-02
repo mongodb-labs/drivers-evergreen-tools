@@ -28,7 +28,7 @@ if [ ! -d "$HERE/../node-artifacts" ]; then
 fi
 
 # Install the in-progress branch of mongodb-runner if USE_DEV_MONGODB_RUNNER is set.
-if [ -z "${USE_DEV_MONGODB_RUNNER:-}" ]; then
+if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
   if [ ! -d $_HERE/devtools-shared ]; then
     source $_HERE/../init-node-and-npm-env.sh
     git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
