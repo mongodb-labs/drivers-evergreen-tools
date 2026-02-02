@@ -34,19 +34,21 @@ if [ "$#" -ne 1 ]; then
 fi
 
 action="$1"
+shift
+rest="$*"
 
 case "$action" in
   start)
     # Ensure the CLIs are up to date.
     bash $SCRIPT_DIR/orchestration/setup.sh
     # Start the server.
-    $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
+    $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$rest"
     ;;
   stop)
     # Ensure the CLIs are up to date.
     bash $SCRIPT_DIR/orchestration/setup.sh
     # Stop the server.
-    $SCRIPT_DIR/orchestration/drivers-orchestration stop "$@"
+    $SCRIPT_DIR/orchestration/drivers-orchestration stop "$rest"
     ;;
   *)
     echo "Error: invalid command '$action'. Expected 'start' or 'stop'." >&2
