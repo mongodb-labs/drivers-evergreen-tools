@@ -6,11 +6,11 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR/..
 
-if [ -z "${SKIP_NODE:-}" ]; then
-  ./install-node.sh
-fi
+./install-node.sh
+npx -y mongodb-runner --help
 
-./install-rust.sh
+source ./install-rust.sh
+rustup install stable
 
 if [ ${OS:-} != "Windows_NT" ]; then
   # Add a suitable python3 to the path.
