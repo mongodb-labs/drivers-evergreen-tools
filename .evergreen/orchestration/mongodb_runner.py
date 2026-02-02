@@ -52,7 +52,7 @@ def _handle_proc_params(params: dict, args: List[str]):
 def _normalize_path(path: Union[Path, str]) -> str:
     if PLATFORM != "win32":
         return str(path)
-    path = Path(path).as_posix()
+    path = Path(path).absolute().as_posix()
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
