@@ -37,16 +37,16 @@ function connect_mongodb() {
 }
 
 # Test for default, then test cli options.
-bash ./run-server.sh
+bash ./run-mongodb.sh start
 connect_mongodb
 
-bash ./run-server.sh --topology standalone --auth
+bash ./run-mongodb.sh start --topology standalone --auth
 connect_mongodb
 
-bash ./run-server.sh --version 7.0 --topology replica_set --ssl
+bash ./run-mongodb.sh start --version 7.0 --topology replica_set --ssl
 connect_mongodb --ssl
 
-bash ./run-server.sh --version latest --topology sharded_cluster --auth --ssl
+bash ./run-mongodb.sh start --version latest --topology sharded_cluster --auth --ssl
 connect_mongodb --ssl
 
 # Ensure that we can use a downloaded mongodb directory.
@@ -55,7 +55,7 @@ rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
 PYTHON="$(ensure_python3 2>/dev/null)"
 $PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
-bash ./run-server.sh --existing-binaries-dir=${DOWNLOAD_DIR}
+bash ./run-mongodb.sh start --existing-binaries-dir=${DOWNLOAD_DIR}
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 
 if [ "${1:-}" == "partial" ]; then
@@ -66,7 +66,7 @@ fi
 
 for version in rapid 8.0 6.0 5.0 4.4 4.2
 do
-  bash ./run-server.sh --version "$version"
+  bash ./run-mongodb.sh start --version "$version"
   connect_mongodb
 done
 

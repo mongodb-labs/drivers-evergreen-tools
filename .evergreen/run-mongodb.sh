@@ -22,18 +22,35 @@ set -eu
 #   TLS_PEM_KEY_FILE       Set a .pem file that contains the TLS certificate and key for the server
 #   TLS_CA_FILE            Set a .pem file that contains the root certificate chain for the server
 
-# The following variables affect the mongo-orchestration server:
-#  MONGO_ORCHESTRATION_HOME  Set the path where the files used by mongo-orchestration will be located.
-#  MONGODB_BINARIES          Set the path to the MONGODB_BINARIES for mongo-orchestration.
-#  TLS_CERT_KEY_FILE         Set a .pem file to be used as the tlsCertificateKeyFile option in mongo-orchestration.
-
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
 # shellcheck disable=SC3028
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh
 
-# Ensure the CLIs are up to date.
-bash $SCRIPT_DIR/orchestration/setup.sh
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 {start|stop}" >&2
+  exit 1
+fi
 
-$SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
+action="$1"
+
+case "$action" in
+  start)
+    # Ensure the CLIs are up to date.
+    bash $SCRIPT_DIR/orchestration/setup.sh
+    # Start the server.
+    $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
+    ;;
+  stop)
+    # Ensure the CLIs are up to date.
+    bash $SCRIPT_DIR/orchestration/setup.sh
+    # Stop the server.
+    $SCRIPT_DIR/orchestration/drivers-orchestration stop "$@"
+    ;;
+  *)
+    echo "Error: invalid command '$action'. Expected 'start' or 'stop'." >&2
+    echo "Usage: $0 {start|stop}" >&2
+    exit 1
+    ;;
+esac

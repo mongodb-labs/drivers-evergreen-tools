@@ -117,6 +117,22 @@ See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available e
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
+### Usage of MongoDB Runner
+
+As part of [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335) we are migrating away from
+using `mongo-orchestration` and its associated scripts (`run-orchestration.sh`, `stop-orchestration.sh`,
+and `start-orchestration.sh`).
+
+We are instead using [mongodb-runner](https://www.npmjs.com/package/mongodb-runner) using the new script
+`run-mongodb.sh` script with either `start` or `stop` as the argument, e.g.:
+
+```bash
+TOPOLOGY=replica_set bash .evergreen/run-mongodb.sh start
+```
+
+The `mongodb-runner` cli is maintained by the DevTools team in the [devtools-shared](https://github.com/mongodb-js/devtools-shared/tree/main/packages/mongodb-runner) repo.
+
+
 ### Testing Against Different Versions
 
 Sometimes you'll need to run tests against a specific version, such as "7.0", and to do that you can use the `VERSION` env var.
@@ -222,7 +238,6 @@ Subfolders that have setup and teardown requirements are encouraged to also prov
 
 NOTE: The subfolder setup/teardown scripts requires users to have configured
 support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
-
 
 ## Secrets Handling
 
