@@ -42,6 +42,8 @@ case "$action" in
     # Ensure the CLIs are up to date.
     bash $SCRIPT_DIR/orchestration/setup.sh
     # Start the server.
+    export DEBUG=mongodb-runner
+    . $SCRIPT_DIR/init-node-and-npm-env.sh
     $SCRIPT_DIR/orchestration/drivers-orchestration run --mongodb-runner "$@"
     ;;
   stop)

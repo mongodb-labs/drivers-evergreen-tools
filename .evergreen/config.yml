@@ -354,7 +354,7 @@ functions:
           ENTRYPOINT: /root/test-entrypoint.sh
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, TARGET_IMAGE, ARCH]
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/docker/run-mongodb.sh
+          - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
           - start
     - command: subprocess.exec
       type: test

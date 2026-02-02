@@ -69,7 +69,7 @@ def start_mongodb_runner(opts, data):
     config_file.write_text(json.dumps(config, indent=2))
     config_file = _normalize_path(config_file)
     # Start the runner using node.
-    # TODO: this will use npx once it is ready.
+    # Use npx unless dev version of mongodb runner is being used.
     if os.environ.get("USE_DEV_MONGODB_RUNNER"):
         binary = shutil.which("node")
         target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
