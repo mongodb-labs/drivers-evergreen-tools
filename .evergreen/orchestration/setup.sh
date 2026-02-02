@@ -27,13 +27,14 @@ if [ ! -d "$HERE/../node-artifacts" ]; then
   NODE_LTS_VERSION=22 bash $_HERE/../install-node.sh
 fi
 
-# Install the in-progress branch of mongodb-runner.
-# TODO: remove once we can use npx.
-if [ ! -d $_HERE/devtools-shared ]; then
-  source $_HERE/../init-node-and-npm-env.sh
-  git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
-  pushd $_HERE/devtools-shared
-  npm install --ignore-scripts
-  npx -y lerna run --scope=mongodb-runner --include-dependencies compile
-  popd
+# Install the in-progress branch of mongodb-runner if USE_DEV_MONGODB_RUNNER is set.
+if [ -z "${USE_DEV_MONGODB_RUNNER:-}" ]; then
+  if [ ! -d $_HERE/devtools-shared ]; then
+    source $_HERE/../init-node-and-npm-env.sh
+    git clone -b drivers-tools-followup https://github.com/blink1073/devtools-shared $_HERE/devtools-shared
+    pushd $_HERE/devtools-shared
+    npm install --ignore-scripts
+    npx -y lerna run --scope=mongodb-runner --include-dependencies compile
+    popd
+  fi
 fi

@@ -70,12 +70,16 @@ def start_mongodb_runner(opts, data):
     config_file = _normalize_path(config_file)
     # Start the runner using node.
     # TODO: this will use npx once it is ready.
-    node = shutil.which("node")
-    node = _normalize_path(node)
-    target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
-    target = _normalize_path(target)
-    cmd = f"{node} {target} start --debug --config {config_file}"
-    LOGGER.info(f"Running mongodb-runner using {node} {target}...")
+    if os.environ.get("USE_DEV_MONGODB_RUNNER"):
+        binary = shutil.which("node")
+        target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
+        target = _normalize_path(target)
+    else:
+        binary = shutil.which("npx")
+        target = "mongodb-runner@^6.6.0"
+    binary = _normalize_path(binary)
+    cmd = f"{binary} {target} start --debug --config {config_file}"
+    LOGGER.info(f"Running mongodb-runner using {binary} {target}...")
     try:
         with server_log.open("w") as fid:
             subprocess.check_call(
@@ -85,7 +89,7 @@ def start_mongodb_runner(opts, data):
         LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
         raise e
-    LOGGER.info(f"Running mongodb-runner using {node} {target}... done.")
+    LOGGER.info(f"Running mongodb-runner using {binary} {target}... done.")
     cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
     server_info = json.loads(cluster_file.read_text())
     cluster_file.unlink()
