@@ -37,4 +37,6 @@ if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
     npx -y lerna run --scope=mongodb-runner --include-dependencies compile
     popd
   fi
+else
+  bash $_HERE/../install-node.sh
 fi
