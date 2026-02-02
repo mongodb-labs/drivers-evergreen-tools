@@ -499,7 +499,6 @@ functions:
       type: test
       params:
         binary: bash
-        include_expansions_in_env: [SKIP_NODE]
         args: [src/.evergreen/tests/test-install-binaries.sh]
 
   "run aws test":
@@ -1359,8 +1358,6 @@ axes:
       - id: rhel7
         display_name: "RHEL 7"
         run_on: rhel70-small
-        variables:
-          SKIP_NODE: 1
 
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"

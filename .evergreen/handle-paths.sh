@@ -8,10 +8,16 @@
 # SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 # . $SCRIPT_DIR/../handle-path.sh
 
-set -o errexit  # Exit the script with error if any of the commands fail
+# Avoid overwriting caller's flags.
+# shellcheck disable=SC2034
+set -o | grep -q '^errexit.*on$' && errexit_was_set=true || errexit_was_set=false
+# shellcheck disable=SC2034
+set -o | grep -q '^nounset.*on$' && nounset_was_set=true || nounset_was_set=false
 
-if [ -z "$SCRIPT_DIR" ]; then
-  echo "Please set $SCRIPT_DIR first"
+set -eu
+
+if [ -z "${SCRIPT_DIR:-}" ]; then
+  echo "Please set SCRIPT_DIR first"
   exit 1
 fi
 
@@ -65,3 +71,7 @@ case "$PATH" in
     PATH="$PATH:$DRIVERS_TOOLS/.bin"
   ;;
 esac
+
+# Restore flags.
+$errexit_was_set && set -e || set +e
+$nounset_was_set && set -u || set +u
