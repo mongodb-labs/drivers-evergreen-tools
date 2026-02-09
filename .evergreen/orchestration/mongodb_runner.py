@@ -76,7 +76,7 @@ def start_mongodb_runner(opts, data):
         target = _normalize_path(target)
     else:
         binary = shutil.which("npx")
-        target = "mongodb-runner@^6.6.0"
+        target = "-y mongodb-runner@^6.6.0"
     binary = _normalize_path(binary)
     cmd = f"{binary} {target} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {binary} {target}...")
@@ -96,7 +96,8 @@ def start_mongodb_runner(opts, data):
     out_log.write_text(json.dumps(server_info, indent=2))
 
     # Get the connection string, keeping only the replicaSet query param.
-    parsed = urlparse(server_info["connectionString"])
+    conn_string = server_info["connectionString"].replace("127.0.0.1", "localhost")
+    parsed = urlparse(conn_string)
     query_params = dict(parse_qsl(parsed.query))
     new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
     return urlunparse(parsed._replace(query=urlencode(new_query)))
