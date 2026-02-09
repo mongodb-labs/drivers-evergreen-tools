@@ -30,6 +30,7 @@ if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
   echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >>$DRIVERS_TOOLS/.env
   echo "Ensuring python binary... done."
 fi
+set -x
 export UV_PYTHON=$DRIVERS_TOOLS_PYTHON
 
 # Ensure uv is writing assets to a contained location.
