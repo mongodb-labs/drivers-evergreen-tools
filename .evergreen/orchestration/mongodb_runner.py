@@ -64,13 +64,14 @@ def start_mongodb_runner(opts, data):
         out_log.unlink()
     config = _get_cluster_options(data, opts)
     config["runnerDir"] = config["tmpDir"]
+    config["host"] = "localhost"
     # Write the config file.
     config_file = mo_home / "config.json"
     config_file.write_text(json.dumps(config, indent=2))
     config_file = _normalize_path(config_file)
     # Start the runner using node.
     # Use npx unless dev version of mongodb runner is being used.
-    if os.environ.get("USE_DEV_MONGODB_RUNNER"):
+    if True:  # os.environ.get("USE_DEV_MONGODB_RUNNER"):
         binary = shutil.which("node")
         target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
         target = _normalize_path(target)
@@ -95,13 +96,15 @@ def start_mongodb_runner(opts, data):
     cluster_file.unlink()
     out_log.write_text(json.dumps(server_info, indent=2))
 
-    # Get the connection string, keeping only the replicaSet query param.
-    conn_string = server_info["connectionString"].replace("127.0.0.1", "localhost")
+    # Get the connection string, keeping only the replicaSet and authSource query params.
+    conn_string = server_info["connectionString"]
     parsed = urlparse(conn_string)
     query_params = dict(parse_qsl(parsed.query))
-    new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
-    if opts.auth:
-        new_query["authSource"] = "admin"
+    new_query = {
+        k: v for k, v in query_params.items() if k in ["replicaSet", "authSource"]
+    }
+    if opts.auth and "authSource" not in new_query:
+        new_query["authSource"] = config.get("authSource", "admin")
     return urlunparse(parsed._replace(query=urlencode(new_query)))
 
 
