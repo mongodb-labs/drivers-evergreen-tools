@@ -100,6 +100,8 @@ def start_mongodb_runner(opts, data):
     parsed = urlparse(conn_string)
     query_params = dict(parse_qsl(parsed.query))
     new_query = {k: v for k, v in query_params.items() if k == "replicaSet"}
+    if opts.auth:
+        new_query["authSource"] = "admin"
     return urlunparse(parsed._replace(query=urlencode(new_query)))
 
 
