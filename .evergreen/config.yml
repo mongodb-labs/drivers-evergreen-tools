@@ -554,6 +554,20 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
+  "run mongodb runner test partial":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-mongodb-runner.sh, partial]
+
+  "run mongodb runner test full":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-mongodb-runner.sh]
+
   "run cli test partial":
     - command: subprocess.exec
       type: test
@@ -1039,6 +1053,11 @@ tasks:
       commands:
         - func: "run cli test full"
 
+    - name: "test-mongodb-runner-full"
+      tags: ["pr"]
+      commands:
+        - func: "run mongodb runner test full"
+
     - name: "test-ocsp"
       tags: ["pr", "ocsp"]
       commands:
@@ -1053,6 +1072,11 @@ tasks:
       tags: ["pr"]
       commands:
         - func: "run cli test partial"
+
+    - name: "test-mongodb-runner-partial"
+      tags: ["pr"]
+      commands:
+        - func: "run mongodb runner test partial"
 
 # }}}
 
@@ -1476,6 +1500,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-cli-full"
+          - "test-mongodb-runner-full"
           - "test-happy-eyeballs"
           - "test-ocsp"
           - "test-8.0-standalone-require-api"
@@ -1506,6 +1531,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
+          - "test-mongodb-runner-partial"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1529,6 +1555,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-cli-partial"
+          - "test-mongodb-runner-partial"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"

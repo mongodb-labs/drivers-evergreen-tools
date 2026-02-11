@@ -9,15 +9,15 @@ clean:
 
 run-server:
 	@echo "Running server..."
-	.evergreen/run-orchestration.sh
+	.evergreen/run-mongodb.sh start
 
 run-local-atlas:
 	@echo "Running local atlas server..."
-	.evergreen/run-orchestration --local-atlas
+	.evergreen/run-mongodb.sh start --local-atlas
 
 stop-server:
 	@echo "Stopping server..."
-	.evergreen/stop-orchestration.sh
+	.evergreen/run-mongodb.sh stop
 
 test:
 	@echo "Running tests..."

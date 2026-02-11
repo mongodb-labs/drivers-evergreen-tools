@@ -34,7 +34,7 @@ bash ./run-server.sh
 ```
 
 This will build the container image and run it with appropriate settings.
-Note that any of the environment variables used by `run-orchestration`
+Note that any of the environment variables used by `drivers-orchestration`
 will be passed through to the container.
 The appropriate port(s) will be exposed, allowing you to run local test against
 the running container.
