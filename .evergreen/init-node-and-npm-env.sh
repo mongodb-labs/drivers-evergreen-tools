@@ -12,6 +12,7 @@
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
 # shellcheck disable=SC3028
 _SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
+. $_SCRIPT_DIR/handle-paths.sh
 NODE_ARTIFACTS_PATH="$_SCRIPT_DIR/node-artifacts"
 if [ "${OS:-}" = "Windows_NT" ]; then
   NODE_ARTIFACTS_PATH=$(cygpath --unix "$NODE_ARTIFACTS_PATH")
