@@ -9,7 +9,7 @@ and then tearing down the Atlas cluster, and VM and its resources.
 There are a set of scripts that facilitate these operations.
 They build on top of the scripts used in `csfle/gcpkms`.
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how the script accesses the `drivers/gcpoidc` vault.
+See [Secrets Handling](../../secrets_handling/README.md) for details on how the script accesses the `drivers/gcpoidc` vault.
 
 See the [How-To: Set up GCP OIDC Infrastructure](https://wiki.corp.mongodb.com/display/DRIVERS/How-To%3A+Set+up+GCP+OIDC+Infrastructure) wiki for information on how the infrastructure is set up.
 
