@@ -71,7 +71,7 @@ def start_mongodb_runner(opts, data):
     config_file = _normalize_path(config_file)
     # Start the runner using node.
     # Use npx unless dev version of mongodb runner is being used.
-    if os.environ.get("USE_DEV_MONGODB_RUNNER"):
+    if True:  # os.environ.get("USE_DEV_MONGODB_RUNNER"):
         binary = shutil.which("node")
         target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
         target = _normalize_path(target)
