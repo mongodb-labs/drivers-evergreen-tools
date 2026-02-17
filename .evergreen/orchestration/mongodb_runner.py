@@ -83,9 +83,23 @@ def start_mongodb_runner(opts, data):
     LOGGER.info(f"Running mongodb-runner using {binary} {target}...")
     try:
         with server_log.open("w") as fid:
-            subprocess.check_call(
-                shlex.split(cmd), stdout=fid, stderr=subprocess.STDOUT
+            # Capture output while still streaming it to the file
+            proc = subprocess.Popen(
+                shlex.split(cmd),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
             )
+            output_lines = []
+            for line in proc.stdout:
+                print(line, end="")  # to stdout
+                fid.write(line)  # to file
+                output_lines.append(line)
+            proc.wait()
+            if proc.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    proc.returncode, cmd, "".join(output_lines)
+                )
     except subprocess.CalledProcessError as e:
         LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
