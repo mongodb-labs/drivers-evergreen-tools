@@ -23,8 +23,6 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner if USE_DEV_MONGODB_RUNNER is set.
-# TODO: remove before merging
-export USE_DEV_MONGODB_RUNNER=1
 if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
   if [ ! -d "$HERE/../node-artifacts" ]; then
     # The dev version requires Node 22+.
