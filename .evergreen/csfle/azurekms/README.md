@@ -27,7 +27,7 @@ If you need a larger Azure VM, set `AZUREKMS_MACHINESIZE` to a larger [size](htt
 
 # Usage with AWS Vault
 
-See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
+See [Secrets Handling](../../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/azurekms` vault.
 
 Your Evergreen config should look something like:
