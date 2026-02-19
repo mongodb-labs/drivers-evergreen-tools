@@ -83,7 +83,7 @@ returned from the `setup-mongodb` workflow step when running tests:
 ### Starting and Stopping Servers Locally or on an Evergreen Host
 
 There are two options for running a MongoDB server configuration.
-One is to use [docker](./.evergreen/docker/README.md).
+One is to use [docker](.evergreen/docker/README.md).
 The other is to run `./evergreen/run-orchestration.sh` locally.
 For convenience, you can run `make run-server` and `make stop-server` to start and stop the server(s).
 
@@ -95,7 +95,7 @@ TOPOLOGY=replica_set MONGODB_VERSION=7.0 make run-server
 
 You can also run:  `make run-local-atlas` to run a local atlas server in a container.
 
-See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+See [run-orchestration.sh](.evergreen/run-orchestration.sh) for the available environment variables.
 Run `bash ./evergreen/run-orchestration.sh --help` for usage of command line flags.
 
 In order to use custom certificates in your server, set the following environment variables:
@@ -237,11 +237,11 @@ Subfolders that have setup and teardown requirements are encouraged to also prov
 `setup-test.sh` and `teardown-test.sh`.
 
 NOTE: The subfolder setup/teardown scripts requires users to have configured
-support for [Secrets Handling](./.evergreen/secrets_handling/README.md).
+support for [Secrets Handling](.evergreen/secrets_handling/README.md).
 
 ## Secrets Handling
 
-See the Secrets Handling [readme](./.evergreen/secrets_handling/README.md) for more information on how secrets are managed
+See the Secrets Handling [readme](.evergreen/secrets_handling/README.md) for more information on how secrets are managed
 locally and on on Evergreen.
 
 # Python CLIs
