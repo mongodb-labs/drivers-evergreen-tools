@@ -1215,7 +1215,7 @@ def main(argv=None):
         LOGGER.setLevel(logging.DEBUG)
     elif args.quiet:
         LOGGER.setLevel(logging.WARNING)
-    
+
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
 
