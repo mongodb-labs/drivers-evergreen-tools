@@ -310,7 +310,7 @@ def collate_mdb_version(left: str, right: str) -> int:
 
 def mdb_version_not_rc(version: str) -> bool:
     tup = version_tup(version)
-    return tup[-1] == STABLE_MAX_RC
+    return tup[-2] == STABLE_MAX_RC
 
 
 def mdb_version_rapid(version: str) -> bool:
@@ -1210,6 +1210,12 @@ def main(argv=None):
     )
     dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
     args = parser.parse_args(argv)
+
+    if args.verbose:
+        LOGGER.setLevel(logging.DEBUG)
+    elif args.quiet:
+        LOGGER.setLevel(logging.WARNING)
+
     cache = Cache.open_in(args.cache_dir)
     cache.refresh_full_json()
 
@@ -1222,11 +1228,6 @@ def main(argv=None):
     arch = args.arch
     if arch == "auto":
         arch = infer_arch()
-
-    if args.verbose:
-        LOGGER.setLevel(logging.DEBUG)
-    elif args.quiet:
-        LOGGER.setLevel(logging.WARNING)
 
     if args.list:
         _print_list(cache.db, version, target, arch, args.edition, args.component)
