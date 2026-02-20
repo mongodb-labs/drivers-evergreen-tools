@@ -113,12 +113,12 @@ export TLS_CA_FILE=<path-to>/ca.pem
 
 ### Manual use of start-orchestration
 
-The [start-orchestration.sh](./evergreen/start-orchestration.sh) script can be used directly as a way to
+The [start-orchestration.sh](./.evergreen/start-orchestration.sh) script can be used directly as a way to
 start the orchestration server without downloading binaries or starting a local server.
 You are still responsible for having a directory containing the MongoDB binaries in the default
 MONGODB_BINARIES folder or setting MONGODB_BINARIES to the appropriate folder.
 
-See [run-orchestration.sh](./evergreen/run-orchestration.sh) for the available environment variables.
+See [run-orchestration.sh](./.evergreen/run-orchestration.sh) for the available environment variables.
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
