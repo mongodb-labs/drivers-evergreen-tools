@@ -24,11 +24,14 @@ from pathlib import Path, PureWindowsPath
 
 import psutil
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mongodb_runner import start_mongodb_runner
+
 # Get global values.
 HERE = Path(__file__).absolute().parent
 EVG_PATH = HERE.parent
 DRIVERS_TOOLS = EVG_PATH.parent
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("drivers_orchestration")
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 PLATFORM = sys.platform.lower()
 CRYPT_NAME_MAP = {
@@ -82,6 +85,11 @@ def get_options():
             "--local-atlas",
             action="store_true",
             help="Whether to use mongodb-atlas-local to start the server",
+        )
+        parser.add_argument(
+            "--mongodb-runner",
+            action="store_true",
+            help="Whether to use mongodb-runner to start the server",
         )
         parser.add_argument(
             "--orchestration-file", help="The name of the orchestration config file"
@@ -231,6 +239,7 @@ def handle_docker_config(data):
         item["ipv6"] = False
         item["bind_ip"] = "0.0.0.0,::1"
         item["dbpath"] = f"/tmp/mongo-{item['port']}"
+        os.makedirs(item["dbpath"], exist_ok=True)
 
     if "routers" in data:
         for router in data["routers"]:
@@ -386,6 +395,7 @@ def run(opts):
     from mongosh_dl import main as mongosh_dl
 
     LOGGER.info("Running orchestration...")
+    stop(opts)
     clean_run(opts)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
@@ -414,9 +424,9 @@ def run(opts):
         args = f"{default_args} --version {version}"
         args += " --strip-path-components 2 --component archive"
         if not opts.existing_binaries_dir:
-            LOGGER.info(f"Downloading mongodb {version}...")
+            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}...")
             mongodl(shlex.split(args))
-            LOGGER.info(f"Downloading mongodb {version}... done.")
+            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}... done.")
         else:
             LOGGER.info(
                 f"Using existing mongod binaries dir: {opts.existing_binaries_dir}"
@@ -470,11 +480,20 @@ def run(opts):
     dl_end = datetime.now()
     mo_start = datetime.now()
 
+    data = get_orchestration_data(opts)
+
+    if opts.mongodb_runner and version in ("3.6", "4.0"):
+        LOGGER.warning(
+            "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
+        )
+        opts.mongodb_runner = False
+
     if opts.local_atlas:
         uri = start_atlas(opts)
+    elif opts.mongodb_runner:
+        uri = start_mongodb_runner(opts, data)
     else:
         mo_home = Path(opts.mongo_orchestration_home)
-        data = get_orchestration_data(opts)
 
         # Write the config file.
         orch_file = Path(mo_home / "config.json")
@@ -645,7 +664,7 @@ def shutdown_proc(proc: psutil.Process) -> None:
     try:
         proc.terminate()
         try:
-            proc.wait(10)  # Wait up to 10 seconds.
+            proc.wait(2)  # Wait up to 2 seconds.
         except psutil.TimeoutExpired:
             proc.kill()
     except Exception as e:
@@ -663,6 +682,7 @@ def shutdown_docker(docker: str, container_id: str) -> None:
 def stop(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     pid_file = mo_home / "server.pid"
+    out_log = mo_home / "out.log"
     container_file = mo_home / "container_id.txt"
     docker = get_docker_cmd()
 
@@ -674,6 +694,26 @@ def stop(opts):
             LOGGER.info("Stopping mongo-orchestration using pid file...")
             shutdown_proc(psutil.Process(pid))
             LOGGER.info("Stopping mongo-orchestration using pid file... done.")
+
+    # Next try and use the output.log file as a serialized json file.
+    if out_log.exists():
+        try:
+            data = json.loads(out_log.read_text())
+        except Exception:
+            data = None
+        if data:
+            LOGGER.info("Stopping mongodb-runner cluster...")
+            all_servers = data["serialized"]["servers"]
+            for shard in data["serialized"].get("shards", []):
+                all_servers.extend(shard["servers"])
+            for server in all_servers:
+                pid = server["pid"]
+                if psutil.pid_exists(pid):
+                    shutdown_proc(psutil.Process(pid))
+                if Path(server["dbPath"]).exists():
+                    shutil.rmtree(server["dbPath"])
+            LOGGER.info("Stopping mongodb-runner cluster... done.")
+            out_log.unlink()
 
     # Next try using a docker container file.
     if docker is not None and container_file.exists():
@@ -708,7 +748,7 @@ def stop(opts):
             response = subprocess.check_output(
                 shlex.split(cmd), encoding="utf-8"
             ).strip()
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
             LOGGER.exception(e)
             response = ""
         for line in response.splitlines():
@@ -724,7 +764,7 @@ def stop(opts):
             name = proc.name()
         except psutil.NoSuchProcess:
             continue
-        if name in ["mongod", "mongos"]:
+        if name in ["mongod", "mongos", "mongod.exe", "mongos.exe"]:
             LOGGER.info(f"Stopping {name} by process name...")
             shutdown_proc(proc)
             LOGGER.info(f"Stopping {name} by process name... done.")

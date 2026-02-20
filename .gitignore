@@ -140,6 +140,7 @@ uv-requirements.txt
 uv-override-dependencies.txt
 .evergreen/orchestration/uv
 .evergreen/orchestration/uvx
+devtools-shared
 
 # Azure functions.
 .python_packages/
