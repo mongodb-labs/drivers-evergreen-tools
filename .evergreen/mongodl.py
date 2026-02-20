@@ -310,7 +310,7 @@ def collate_mdb_version(left: str, right: str) -> int:
 
 def mdb_version_not_rc(version: str) -> bool:
     tup = version_tup(version)
-    return tup[-1] == STABLE_MAX_RC
+    return tup[-2] == STABLE_MAX_RC
 
 
 def mdb_version_rapid(version: str) -> bool:
