@@ -30,20 +30,24 @@ def _format_value(value):
     return value
 
 
+def _append_arg(args, key, value):
+    if value is True:
+        args.append(f"--{key}")
+    elif value is not False:
+        args.append(f"--{key}")
+        args.append(_format_value(value))
+
+
 def _handle_proc_params(params: dict, args: List[str]):
     found_enable_test_commands = False
     for key, value in params.items():
         if isinstance(value, dict):
             for subkey, subvalue in value.items():
-                args.append(f"--{key}")
-                args.append(f"{subkey}={_format_value(subvalue)}")
+                _append_arg(args, subkey, subvalue)
                 if subkey == "enableTestCommands":
                     found_enable_test_commands = True
-        elif value is True:
-            args.append(f"--{key}")
-        elif value is not False:
-            args.append(f"--{key}")
-            args.append(_format_value(value))
+        else:
+            _append_arg(args, key, value)
     if not found_enable_test_commands:
         args.append("--setParameter")
         args.append("enableTestCommands=true")
@@ -171,11 +175,8 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                     f.write(input["auth_key"])
                 os.chmod(key_file, S_IRUSR)
             args.extend(["--keyFile", _normalize_path(key_file)])
-        elif value is True:
-            args.append(f"--{key}")
-        elif value is not False:
-            args.append(f"--{key}")
-            args.append(_format_value(value))
+        else:
+            _append_arg(args, key, value)
 
     if topology == "standalone":
         if "procParams" in input:
@@ -235,11 +236,7 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                 key = "tlsCertificateKeyFile"  # noqa: PLW2901
             if key == "sslCAFile":
                 key = "tlsCAFile"  # noqa: PLW2901
-            if value is True:
-                args.append(f"--{key}")
-            elif value is not False:
-                args.append(f"--{key}")
-                args.append(_format_value(value))
+            _append_arg(args, key, value)
 
     if input.get("login"):
         users.append(
