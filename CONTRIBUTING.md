@@ -79,3 +79,16 @@ contain a README.md with usage instructions, including example Evergreen config 
 
 It should also have a test file in `.evergreen/tests` and be run as a dedicated task in this repository.
 If it does not use assets like Atlas or a VM, then it should have a "pr" tag so that it runs on PRs.
+
+## Helpful Links
+
+See the [Drivers Cloud Services](https://wiki.corp.mongodb.com/spaces/DRIVERS/pages/473895023/Drivers+Cloud+Services) wiki
+for background on our usage of AWS, GCP, and Azure.
+
+See the [Atlas QA Admin](https://wiki.corp.mongodb.com/spaces/DRIVERS/pages/473895025/Atlas+QA+Admin) wiki for background
+on our usage of Atlas QA for FaaS Lambda, Search Index, and OIDC testing.
+
+See the [Evergreen Project Configuration](https://docs.devprod.prod.corp.mongodb.com/evergreen/Project-Configuration/) docs
+for background on Evergreen project commands and configuration files.
+
+See the [Auth Spec Owner Guide](https://docs.google.com/document/d/1WNSAr2vTGxdi7iA7P0tpmTnIbnKtUD23UpP5Hn_dGNE/edit?tab=t.0#heading=h.vu70wi8bkr9d) for background on the roles and responsibilities of the Authentication Spec Owner.
