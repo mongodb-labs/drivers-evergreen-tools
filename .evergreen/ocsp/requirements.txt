@@ -12,7 +12,7 @@ click==8.1.7
     # via
     #   -r requirements-in.txt
     #   flask
-flask==2.2.5
+flask==3.1.3
     # via -r requirements-in.txt
 importlib-metadata==8.7.0
     # via flask
