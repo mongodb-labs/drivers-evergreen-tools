@@ -43,6 +43,7 @@ def _handle_proc_params(params: dict, args: List[str]):
     for key, value in params.items():
         if isinstance(value, dict):
             for subkey, subvalue in value.items():
+                args.append(f"--{key}")
                 _append_arg(args, subkey, subvalue)
                 if subkey == "enableTestCommands":
                     found_enable_test_commands = True
