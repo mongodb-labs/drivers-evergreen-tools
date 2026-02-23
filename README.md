@@ -8,6 +8,9 @@ It contains set of scripts for tasks that most drivers will need to perform,
 such as downloading MongoDB for the current platform, and launching various
 topologies.
 
+For maintenance of this repo see the [Contributing Guide](./CONTRIBUTING.md).
+If adding a new feature, follow the [New Features](./CONTRIBUTING.md#new-features) guidance.
+
 ## Using In Evergreen
 
 The bundled [`.evergreen/config.yml`](.evergreen/config.yml) file contains a
@@ -15,6 +18,7 @@ suggested template for drivers to use.
 This file can either be taken and used as is, or used as a recipe to copy&paste from.
 
 It is recommended to copy the entire directory and modify the following scripts:
+
 - [`install-dependencies.sh`](.evergreen/install-dependencies.sh) - Install any platform dependencies not currently available on Evergreen
 - [`run-tests.sh`](.evergreen/run-tests.sh) - How to run the test suite
 - [`compile.sh`](.evergreen/compile.sh) - Configure any alternative environment routes
@@ -23,16 +27,16 @@ It is recommended to copy the entire directory and modify the following scripts:
 - [`make-docs.sh`](.evergreen/make-docs.sh) - Instructions how to compile the driver docs
 - [`make-release.sh`](.evergreen/make-release.sh) - Instructions how to package and release the driver
 
-
 The normal matrix (e.g. all tasks with the exception on those in the `** Release Archive Creator` buildvariant) runs the following two shell scripts:
+
 - The `install-dependencies.sh` file is always executed by all tasks.
 - The `run-tests.sh` is run by all tasks, except for the `** Release Archive Creator`.
 
 The `** Release Archive Creator` buildvariant is special, and does not run the "standard test matrix", but in stead runs the following:
+
 - The `compile*.sh` is executed by the `release-compile` and `release-compile-cmake` tasks. These are no commonly used by drivers, so feel free to ignore.
 - The `make-docs.sh` is executed by the `make-docs` task
 - The `make-release.sh` is executed by the `make-release-archive` task
-
 
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
@@ -70,6 +74,7 @@ After the cluster is started, its URI is exposed via the `cluster-uri` output. I
 path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
 This configuration snippet environment variables with the cluster URI and `crypt_shared` lib path
 returned from the `setup-mongodb` workflow step when running tests:
+
 ```yaml
     steps:
       # [...]
@@ -108,12 +113,12 @@ export TLS_CA_FILE=<path-to>/ca.pem
 
 ### Manual use of start-orchestration
 
-The (start-orchestration.sh)[./evergreen/start-orchestration.sh] script can be used directly as a way to
+The [start-orchestration.sh](./.evergreen/start-orchestration.sh) script can be used directly as a way to
 start the orchestration server without downloading binaries or starting a local server.
 You are still responsible for having a directory containing the MongoDB binaries in the default
 MONGODB_BINARIES folder or setting MONGODB_BINARIES to the appropriate folder.
 
-See (run-orchestration.sh)[./evergreen/run-orchestration.sh] for the available environment variables.
+See [run-orchestration.sh](./.evergreen/run-orchestration.sh) for the available environment variables.
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
@@ -158,6 +163,7 @@ The named versions that we support are:
 #### "Bad CPU type in executable" error
 
 You may encounter this error if Rosetta isn't properly configured on your system.
+
 ```txt
 OSError: [Errno 86] Bad CPU type in executable: '.../node-mongodb-native/drivers-evergreen-tools/mongodb/bin/mongod'
 ```
@@ -166,59 +172,6 @@ To fix it, simply run:
 
 ```sh
 softwareupdate --install-rosetta
-```
-
-## Updating Dependencies
-
-The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
-depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
-[`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
-lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
-still in use by downstream projects.
-
-If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
-server version that is still in use by downstream projects, add a dependency override to
-[`.evergreen/orchestration/setup.sh`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/setup.sh).
-Otherwise, an error similar to the following may occur during mongo-orchestration operations (e.g. with server 4.0 and
-PyMongo 4.14):
-
-```
-[ERROR] mongo_orchestration.apps:68 - ...
-Traceback (most recent call last):
-  ...
-  File ".../drivers-orchestration/lib/python3.13/site-packages/pymongo/synchronous/topology.py", line 369, in _select_servers_loop
-    self._description.check_compatible()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File ".../drivers-orchestration/lib/python3.13/site-packages/pymongo/topology_description.py", line 168, in check_compatible
-    raise ConfigurationError(self._incompatible_err)
-pymongo.errors.ConfigurationError: Server at localhost:27017 reports wire version 7, but this version of PyMongo requires at least 8 (MongoDB 4.2).
-```
-
-The dependency override may be removed once all downstream projects have also dropped support for the old server version.
-
-## Linters and Formatters
-
-This repo uses [pre-commit](https://pre-commit.com/) for managing linting and formatting of the codebase.
-`pre-commit` performs various checks on all files in the repo and uses tools that help follow a consistent code
-style.
-
-To set up `pre-commit` locally, run:
-
-```bash
-brew install pre-commit
-pre-commit install
-```
-
-To run pre-commit manually, run:
-
-```bash
-pre-commit run --all-files
-```
-
-To run an individual hook like `shellcheck` manually, run:
-
-```bash
-pre-commit run --all-files shellcheck
 ```
 
 ## Setup and Teardown
@@ -244,7 +197,7 @@ support for [Secrets Handling](.evergreen/secrets_handling/README.md).
 See the Secrets Handling [readme](.evergreen/secrets_handling/README.md) for more information on how secrets are managed
 locally and on on Evergreen.
 
-# Python CLIs
+## Python CLIs
 
 We make some of our Python scripts available as self-contained clis that do not require setting up a Python
 virtual environment.  For example, after running `.evergreen/setup.sh` you can run the resulting `.evergreen/mongodl`,
