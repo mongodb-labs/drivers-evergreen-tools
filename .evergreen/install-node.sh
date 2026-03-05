@@ -14,7 +14,7 @@ if command -v ldd >/dev/null 2>&1; then
     GLIBC_MAJOR=$(echo "$GLIBC_VERSION" | cut -d. -f1)
     GLIBC_MINOR=$(echo "$GLIBC_VERSION" | cut -d. -f2)
     # Node 18+ requires glibc 2.28+, Node 16 works with glibc 2.17+
-    if [ "$GLIBC_MAJOR" -lt 2 }; then
+    if [ "$GLIBC_MAJOR" -lt 2 ]; then
       echo "Glibc version is too old for Node.js compatibility: $GLIBC_VERSION"
       exit 1
     elif [ "$GLIBC_MAJOR" -eq 2 ] && [ "$GLIBC_MINOR" -lt 28 ]; then
