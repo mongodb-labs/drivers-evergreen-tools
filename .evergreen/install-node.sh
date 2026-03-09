@@ -5,8 +5,22 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
 DEFAULT_NODE_VERSION=20
-if grep -q "release 7" /etc/redhat-release 2> /dev/null; then
-  DEFAULT_NODE_VERSION=16
+# Check glibc version using ldd on Linux to determine Node version compatibility
+if command -v ldd >/dev/null 2>&1; then
+  echo "Check glibc version using ldd on Linux to determine Node version compatibility"
+  # ldd --version output looks like: ldd (GNU libc) 2.39 or ldd (Debian GLIBC 2.39-1) 2.39
+  GLIBC_VERSION=$(ldd --version 2>&1 | grep -oP 'GLIBC \K[0-9]+\.[0-9]+|ldd .* \K[0-9]+\.[0-9]+' | head -n1)
+  if [ -n "$GLIBC_VERSION" ]; then
+    GLIBC_MAJOR=$(echo "$GLIBC_VERSION" | cut -d. -f1)
+    GLIBC_MINOR=$(echo "$GLIBC_VERSION" | cut -d. -f2)
+    # Node 18+ requires glibc 2.28+, Node 16 works with glibc 2.17+
+    if [ "$GLIBC_MAJOR" -lt 2 ]; then
+      echo "Glibc version is too old for Node.js compatibility: $GLIBC_VERSION"
+      exit 1
+    elif [ "$GLIBC_MAJOR" -eq 2 ] && [ "$GLIBC_MINOR" -lt 28 ]; then
+      DEFAULT_NODE_VERSION=16
+    fi
+  fi
 fi
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-$DEFAULT_NODE_VERSION}
 
