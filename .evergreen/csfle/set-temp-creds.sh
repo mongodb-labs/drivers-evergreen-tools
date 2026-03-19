@@ -23,6 +23,8 @@
 
 set +o xtrace # Disable tracing.
 
+echo "set-temp-creds.sh is legacy. Please use setup-secrets.sh instead"
+
 get_creds() {
     $PYTHON - << 'EOF'
 import sys
