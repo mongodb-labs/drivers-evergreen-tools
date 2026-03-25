@@ -17,7 +17,9 @@ if [ "Windows_NT" == "${OS:-}" ]; then
   CARGO_HOME=$(cygpath ${CARGO_HOME} --windows)
 fi
 
-curl --retry 8 https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
+# TODO: after https://sh.rustup.rs is updated to include https://github.com/rust-lang/rustup/issues/4755, replace the line below with:
+# curl --retry 8 https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
+curl --retry 8 https://raw.githubusercontent.com/rust-lang/rustup/4b2c0919cfd11db5f79695509a71b217a88bac68/rustup-init.sh -sSf | sh -s -- -y --no-modify-path ${DEFAULT_HOST_OPTIONS:-}
 
 if [ "Windows_NT" == "${OS:-}" ]; then
   # This file is not created by default on Windows
