@@ -5,7 +5,7 @@
 #    pip-compile --output-file=requirements-legacy.txt requirements-in-legacy.txt
 #
 boto3==1.35.99
-    # via -r requirements-in.txt
+    # via -r requirements-in-legacy.txt
 botocore==1.35.99
     # via
     #   boto3
@@ -31,7 +31,7 @@ jmespath==1.0.1
 pycparser==2.22
     # via cffi
 pykmip @ git+https://github.com/mongodb-forks/PyKMIP.git
-    # via -r requirements-in.txt
+    # via -r requirements-in-legacy.txt
 python-dateutil==2.9.0.post0
     # via botocore
 requests==2.32.4
@@ -45,7 +45,7 @@ six==1.17.0
     #   python-dateutil
 sqlalchemy==1.4.54
     # via
-    #   -r requirements-in.txt
+    #   -r requirements-in-legacy.txt
     #   pykmip
 urllib3==1.26.20
     # via

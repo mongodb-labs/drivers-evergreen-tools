@@ -17,7 +17,9 @@ cffi==1.17.1
 charset-normalizer==3.4.2
     # via requests
 cryptography==45.0.5
-    # via pykmip
+    # via
+    #   -r requirements-in.txt
+    #   pykmip
 enum-compat==0.0.3
     # via pykmip
 idna==3.10
