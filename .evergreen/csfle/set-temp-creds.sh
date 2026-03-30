@@ -23,7 +23,7 @@
 
 set +o xtrace # Disable tracing.
 
-echo "set-temp-creds.sh is legacy. Please use setup-secrets.sh instead"
+echo "DRIVERS-3433: set-temp-creds.sh is deprecated, use setup-secrets.sh instead" 1>&2
 
 get_creds() {
     $PYTHON - << 'EOF'
