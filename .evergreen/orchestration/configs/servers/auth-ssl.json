@@ -1,5 +1,6 @@
 {
     "id" : "standalonessl",
+    "auth_key": "secret",
     "name": "mongod",
     "login": "bob",
     "password": "pwd123",
