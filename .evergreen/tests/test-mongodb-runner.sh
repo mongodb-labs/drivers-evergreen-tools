@@ -15,16 +15,21 @@ pushd $SCRIPT_DIR/.. > /dev/null
 # shellcheck disable=SC2120
 function connect_mongodb() {
   local use_tls=false
+  local use_auth=false
 
   # Parse flags
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --ssl) use_tls=true; shift ;;
+      --auth) use_auth=true; shift ;;
       *) echo "Unknown option: $1"; return 1 ;;
     esac
   done
 
   URI="mongodb://localhost:27017/?directConnection=true&serverSelectionTimeoutMS=10000"
+  if [[ "$use_auth" == "true" ]]; then
+    URI="mongodb://bob:pwd123@localhost:27017/?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+  fi
   local TLS_OPTS=()
   if [[ "$use_tls" == "true" ]]; then
     TLS_OPTS+=("--tls" "--tlsCertificateKeyFile" "${DRIVERS_TOOLS}/.evergreen/x509gen/server.pem")
@@ -48,6 +53,15 @@ connect_mongodb --ssl
 
 bash ./run-mongodb.sh start --version latest --topology sharded_cluster --auth --ssl
 connect_mongodb --ssl
+
+# Verify that auth is enforced when starting with AUTH=auth SSL=yes.
+# An unauthenticated connection must be rejected, and an authenticated one must succeed.
+AUTH=auth SSL=yes bash ./run-mongodb.sh start
+if connect_mongodb --ssl 2>/dev/null; then
+  echo "ERROR: unauthenticated connection should have been rejected on an auth+ssl server"
+  exit 1
+fi
+connect_mongodb --ssl --auth
 
 # Ensure that we can use a downloaded mongodb directory.
 DOWNLOAD_DIR=mongodl_test
