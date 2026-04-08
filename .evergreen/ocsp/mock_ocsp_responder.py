@@ -165,7 +165,7 @@ class OCSPResponseBuilder:
         self._certificate_status_list = certificate_status_list or []
         self._revocation_date = revocation_date
 
-        self._key_hash_algo = "sha1"
+        self._key_hash_algo = "sha256"
         self._hash_algo = "sha256"
         self._response_data_extensions = {}
         self._single_response_extensions = {}
