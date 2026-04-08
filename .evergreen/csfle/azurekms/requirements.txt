@@ -51,7 +51,7 @@ pyjwt[crypto]==2.10.1
     # via
     #   msal
     #   pyjwt
-requests==2.32.4
+requests==2.33.0
     # via
     #   azure-core
     #   msal
