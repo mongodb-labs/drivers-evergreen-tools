@@ -64,7 +64,7 @@ pyop==3.4.1
     # via -r requirements-in.txt
 python-dateutil==2.9.0.post0
     # via botocore
-python-dotenv==1.1.1
+python-dotenv==1.2.2
     # via pydantic-settings
 requests==2.32.4
     # via
