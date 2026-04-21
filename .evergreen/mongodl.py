@@ -790,7 +790,15 @@ def _published_build_url(
             f'version="{version}" target="{target}" arch="{arch}" edition="{edition}" component="{component}"'
         )
     data = json.loads(tup.data_json)
-    return data[value], data["sha256"]
+    checksum = data["sha256"]
+    if tup.target == "windows" and tup.version == "7.0.32-rc2":
+        LOGGER.warning("Overriding checksum due to SERVER-124033")
+        checksum = {
+            "archive": "1d585203c5fd36b09267a58fd7d6cb367c304dba45c1517fb6ba42a44635554d",
+            "crypt_shared": "07712345a2d374db84212a35ff62892c8c93ed85cabbc3692a1e91a9b05c907c",
+            "cryptd": "3a3e93c7956fbc13cb4b514e69e57d56e8f07fab951c2dee55eb40ae78d54909",
+        }[component]
+    return data[value], checksum
 
 
 def _latest_build_url(
