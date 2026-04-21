@@ -1133,17 +1133,17 @@ def main(argv=None):
     dl_grp.add_argument(
         "--target",
         "-T",
-        default="auto",
+        default=None,
         help="The target platform for which to download. "
         'Use "--list" to list available targets.',
     )
     dl_grp.add_argument(
-        "--arch", "-A", default="auto", help="The architecture for which to download"
+        "--arch", "-A", default=None, help="The architecture for which to download"
     )
     dl_grp.add_argument(
         "--edition",
         "-E",
-        default="enterprise",
+        default=None,
         help='The edition of the product to download (Default is "enterprise"). '
         'Use "--list" to list available editions.',
     )
@@ -1156,7 +1156,7 @@ def main(argv=None):
     dl_grp.add_argument(
         "--version",
         "-V",
-        default="latest-build",
+        default=None,
         help='The product version to download. Use "latest-release" to download '
         "the newest available version (including release candidates). Use "
         '"latest-stable" to download the newest version, excluding release '
@@ -1167,7 +1167,7 @@ def main(argv=None):
     dl_grp.add_argument(
         "--component",
         "-C",
-        default="archive",
+        default=None,
         help="The component to download. " 'Use "--list" to list available components.',
     )
     dl_grp.add_argument(
@@ -1228,18 +1228,25 @@ def main(argv=None):
     cache.refresh_full_json()
 
     version = args.version
-    if version in PERF_VERSIONS:
-        version = PERF_VERSIONS[version]
     target = args.target
-    if target == "auto":
-        target = infer_target(version)
     arch = args.arch
-    if arch == "auto":
-        arch = infer_arch()
 
     if args.list:
         _print_list(cache.db, version, target, arch, args.edition, args.component)
         return
+
+    # Apply defaults:
+    if version in PERF_VERSIONS:
+        version = PERF_VERSIONS[version]
+    if version is None:
+        version = "latest-build"
+    if target is None or target == "auto":
+        target = infer_target(version)
+    if arch is None or arch == "auto":
+        arch = infer_arch()
+
+    edition = args.edition if args.edition is not None else "enterprise"
+    component = args.component if args.component is not None else "archive"
 
     out = args.out or Path.cwd()
     out = out.absolute()
@@ -1250,8 +1257,8 @@ def main(argv=None):
         version=version,
         target=target,
         arch=arch,
-        edition=args.edition,
-        component=args.component,
+        edition=edition,
+        component=component,
         pattern=args.only,
         strip_components=args.strip_components,
         test=args.test,
