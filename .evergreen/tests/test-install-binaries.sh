@@ -9,6 +9,9 @@ pushd $SCRIPT_DIR/..
 ./install-node.sh
 . ./init-node-and-npm-env.sh
 MR_INSTALL_DIR=$(mktemp -d)
+case "$(uname -s)" in
+  CYGWIN*) MR_INSTALL_DIR=$(cygpath -m "$MR_INSTALL_DIR") ;;
+esac
 trap 'rm -rf "$MR_INSTALL_DIR"' EXIT
 printf '{"name":"t","version":"1.0.0","dependencies":{"mongodb-runner":"6.7.1"},"overrides":{"@mongodb-js/oidc-mock-provider":"0.13.7"}}' > "$MR_INSTALL_DIR/package.json"
 # Use a subshell + cd so npm install uses process.cwd() instead of --prefix,
