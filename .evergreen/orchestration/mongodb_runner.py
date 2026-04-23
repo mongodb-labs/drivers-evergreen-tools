@@ -84,6 +84,10 @@ def _install_mongodb_runner() -> Path:
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
         npm = shutil.which("npm")
+        if npm is None:
+            raise RuntimeError(
+                "npm not found. Source init-node-and-npm-env.sh or install Node before running this script."
+            )
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
             subprocess.run(
