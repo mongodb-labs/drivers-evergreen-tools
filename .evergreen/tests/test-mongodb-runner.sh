@@ -15,25 +15,41 @@ pushd $SCRIPT_DIR/.. > /dev/null
 # shellcheck disable=SC2120
 function connect_mongodb() {
   local use_tls=false
+  local use_auth=false
+  local eval_cmd='db.runCommand({"ping":1})'
 
   # Parse flags
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --ssl) use_tls=true; shift ;;
+      --auth) use_auth=true; shift ;;
+      --eval-cmd)
+        if [[ -z "${2:-}" ]]; then
+          echo "Missing value for --eval-cmd"
+          return 1
+        fi
+        eval_cmd="$2"
+        shift 2
+        ;;
       *) echo "Unknown option: $1"; return 1 ;;
     esac
   done
 
   URI="mongodb://localhost:27017/?directConnection=true&serverSelectionTimeoutMS=10000"
+  if [[ "$use_auth" == "true" ]]; then
+    URI="mongodb://bob:pwd123@localhost:27017/?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+  fi
   local TLS_OPTS=()
   if [[ "$use_tls" == "true" ]]; then
     TLS_OPTS+=("--tls" "--tlsCertificateKeyFile" "${DRIVERS_TOOLS}/.evergreen/x509gen/server.pem")
     TLS_OPTS+=("--tlsCAFile" "${DRIVERS_TOOLS}/.evergreen/x509gen/ca.pem")
   fi
+  local result=0
   echo "Connecting to server..."
   # shellcheck disable=SC2068
-  $MONGODB_BINARIES/mongosh "$URI" ${TLS_OPTS[@]:-} --eval "db.runCommand({\"ping\":1})"
+  $MONGODB_BINARIES/mongosh "$URI" ${TLS_OPTS[@]:-} --eval "$eval_cmd" || result=$?
   echo "Connecting to server... done."
+  return $result
 }
 
 # Test for default, then test cli options.
@@ -41,13 +57,22 @@ bash ./run-mongodb.sh start
 connect_mongodb
 
 bash ./run-mongodb.sh start --topology standalone --auth
-connect_mongodb
+connect_mongodb --auth
 
 bash ./run-mongodb.sh start --version 7.0 --topology replica_set --ssl
 connect_mongodb --ssl
 
 bash ./run-mongodb.sh start --version latest --topology sharded_cluster --auth --ssl
-connect_mongodb --ssl
+connect_mongodb --ssl --auth
+
+# Verify that auth is enforced when starting with AUTH=auth SSL=yes.
+# An unauthenticated connection must be rejected, and an authenticated one must succeed.
+AUTH=auth SSL=yes bash ./run-mongodb.sh start
+if connect_mongodb --ssl --eval-cmd 'db.adminCommand({listDatabases:1})' 2>/dev/null; then
+  echo "ERROR: unauthenticated connection should have been rejected on an auth+ssl server"
+  exit 1
+fi
+connect_mongodb --ssl --auth
 
 # Ensure that we can use a downloaded mongodb directory.
 DOWNLOAD_DIR=mongodl_test

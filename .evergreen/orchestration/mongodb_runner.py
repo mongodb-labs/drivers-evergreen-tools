@@ -61,6 +61,48 @@ def _normalize_path(path: Union[Path, str]) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
+_MR_VERSION = "6.7.1"
+
+
+def _install_mongodb_runner() -> Path:
+    """Install mongodb-runner via npm with overrides to pin @mongodb-js/oidc-mock-provider.
+
+    npx does not support npm overrides, so we manage the install manually.
+    @mongodb-js/oidc-mock-provider 0.13.8+ switched to yargs@18 (ESM-only), which
+    cannot be require()'d on Node 16. Pinning to 0.13.7 keeps it on yargs@17.
+    """
+    install_dir = TMPDIR / f"mongodb-runner-{_MR_VERSION}"
+    ext = ".cmd" if PLATFORM == "win32" else ""
+    runner_bin = install_dir / "node_modules" / ".bin" / f"mongodb-runner{ext}"
+    if not runner_bin.exists():
+        pkg = {
+            "name": "mongodb-runner-wrapper",
+            "version": "1.0.0",
+            "dependencies": {"mongodb-runner": _MR_VERSION},
+            "overrides": {"@mongodb-js/oidc-mock-provider": "0.13.7"},
+        }
+        install_dir.mkdir(parents=True, exist_ok=True)
+        (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
+        npm = shutil.which("npm")
+        if npm is None:
+            raise RuntimeError(
+                "npm not found. Source init-node-and-npm-env.sh or install Node before running this script."
+            )
+        if PLATFORM == "win32":
+            # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
+            subprocess.run(
+                f'"{npm}" install --silent',
+                cwd=str(install_dir),
+                check=True,
+                shell=True,
+            )
+        else:
+            subprocess.run(
+                [npm, "install", "--silent"], cwd=str(install_dir), check=True
+            )
+    return runner_bin
+
+
 def start_mongodb_runner(opts, data):
     mo_home = Path(opts.mongo_orchestration_home)
     server_log = mo_home / "server.log"
@@ -80,20 +122,39 @@ def start_mongodb_runner(opts, data):
         binary = shutil.which("node")
         target = HERE / "devtools-shared/packages/mongodb-runner/bin/runner.js"
         target = _normalize_path(target)
+        binary = _normalize_path(binary)
+        cmd = f"{binary} {target} start --debug --config {config_file}"
     else:
-        binary = shutil.which("npx")
-        target = "-y mongodb-runner@^6.7.1"
-    binary = _normalize_path(binary)
-    cmd = f"{binary} {target} start --debug --config {config_file}"
-    LOGGER.info(f"Running mongodb-runner using {binary} {target}...")
+        binary = _normalize_path(_install_mongodb_runner())
+        cmd = f"{binary} start --debug --config {config_file}"
+    LOGGER.info(f"Running mongodb-runner using {binary}...")
+    env = os.environ.copy()
+    node_bin = shutil.which("node")
+    if node_bin:
+        try:
+            node_ver = subprocess.check_output(
+                [node_bin, "--version"], encoding="utf-8"
+            ).strip()
+            node_major = int(node_ver.lstrip("v").split(".")[0])
+            # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
+            # The flag was removed in Node 22, so only add it for Node 16-18.
+            if node_major < 19:
+                existing = env.get("NODE_OPTIONS", "")
+                env["NODE_OPTIONS"] = (
+                    f"{existing} --experimental-global-webcrypto".strip()
+                )
+        except (subprocess.CalledProcessError, ValueError):
+            pass
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
             proc = subprocess.Popen(
-                shlex.split(cmd),
+                cmd if PLATFORM == "win32" else shlex.split(cmd),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                env=env,
+                shell=(PLATFORM == "win32"),
             )
             output_lines = []
             for line in proc.stdout:
@@ -109,7 +170,7 @@ def start_mongodb_runner(opts, data):
         LOGGER.error("server.log: %s", server_log.read_text())
         LOGGER.error(str(e))
         raise e
-    LOGGER.info(f"Running mongodb-runner using {binary} {target}... done.")
+    LOGGER.info(f"Running mongodb-runner using {binary}... done.")
     cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
     server_info = json.loads(cluster_file.read_text())
     cluster_file.unlink()
