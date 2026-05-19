@@ -22,7 +22,7 @@ cryptography==3.3.2
     #   pykmip
 enum-compat==0.0.3
     # via pykmip
-idna==3.10
+idna==3.15
     # via requests
 jmespath==1.0.1
     # via
