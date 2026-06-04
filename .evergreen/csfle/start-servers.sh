@@ -23,7 +23,7 @@ fi
 # Forcibly kill the process listening on the desired ports, most likely
 # left running from a previous task.
 . "$SCRIPT_DIR/../process-utils.sh"
-for port in 5698 9000 9001 9002 8080; do
+for port in 5698 9000 9001 9002 9004 8080; do
   killport $port 9
 done
 
@@ -77,6 +77,13 @@ $COMMAND kms_failpoint_server.py --port 9003 > failpoint.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 echo "Starting Failpoint Server...done."
 sleep 1
+
+echo "Starting HTTP Proxy..."
+$COMMAND kms_http_proxy.py --port 9004 > http_proxy.log 2>&1 &
+echo "$!" >> kmip_pids.pid
+sleep 1
+cat http_proxy.log
+echo "Starting HTTP Proxy...done."
 
 echo "Starting Fake Azure IMDS..."
 $COMMAND bottle.py fake_azure:imds > fake_azure.log 2>&1 &
