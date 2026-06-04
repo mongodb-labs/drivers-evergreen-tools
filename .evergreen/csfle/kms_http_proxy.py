@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Minimal HTTPS CONNECT proxy with a /metrics endpoint.
 
-Used by the KMS connect-callback test in test-mongoc-client-side-encryption.c.
-
 Run:
     python3 kms_http_proxy.py [--host 127.0.0.1] [--port 8080]
 
