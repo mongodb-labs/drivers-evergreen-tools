@@ -29,7 +29,6 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-
 _counter_lock = threading.Lock()
 _connect_count = 0
 _connect_targets: list[str] = []
@@ -49,11 +48,11 @@ def _snapshot_metrics() -> tuple[int, list[str]]:
 
 class ProxyHandler(BaseHTTPRequestHandler):
     # BaseHTTPRequestHandler logs to stderr by default; keep it but make it terse.
-    def log_message(self, fmt: str, *args) -> None:  # noqa: A003
+    def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("[proxy %s] %s\n" % (self.address_string(), fmt % args))
 
     # ---- HTTPS CONNECT ----------------------------------------------------
-    def do_CONNECT(self) -> None:  # noqa: N802
+    def do_CONNECT(self) -> None:
         # self.path is "host:port"
         target = self.path
         try:
@@ -70,7 +69,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return
 
         _bump_connect(target)
-        self.log_message("CONNECT %s established (count=%d)", target, _snapshot_metrics()[0])
+        self.log_message(
+            "CONNECT %s established (count=%d)", target, _snapshot_metrics()[0]
+        )
 
         # 200 response with no body. BaseHTTPRequestHandler insists on a
         # Content-Length on end_headers(), but for CONNECT we just want the
@@ -89,7 +90,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             upstream.close()
 
     # ---- GET /metrics -----------------------------------------------------
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if self.path != "/metrics":
             self.send_error(404, "only /metrics is exposed")
             return
