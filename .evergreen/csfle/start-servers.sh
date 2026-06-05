@@ -49,7 +49,7 @@ echo "Starting KMIP Server...done."
 
 
 echo "Starting HTTP Server 1..."
-$COMMAND kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file ../x509gen/expired.pem --port 9000 > http1.log 2>&1 &
+$COMMAND kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_EXPIRED_FILE --port 9000 > http1.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 sleep 1
 cat http1.log
@@ -57,7 +57,7 @@ echo "Starting HTTP Server 1...done."
 
 
 echo "Starting HTTP Server 2..."
-$COMMAND kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file ../x509gen/wrong-host.pem --port 9001 > http2.log 2>&1 &
+$COMMAND kms_http_server.py --ca_file $CSFLE_TLS_CA_FILE --cert_file $CSFLE_TLS_WRONG_HOST_FILE --port 9001 > http2.log 2>&1 &
 echo "$!" >> kmip_pids.pid
 sleep 1
 cat http2.log
