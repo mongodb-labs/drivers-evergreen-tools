@@ -143,6 +143,11 @@ def get_options():
             help="A .pem file that contains the root certificate chain for the server",
         )
         other_group.add_argument(
+            "--tls-disable-certificate-revocation-check",
+            action="store_true",
+            help="Whether to disable TLS certificate revocation checking (avoids OCSP failures on macOS)",
+        )
+        other_group.add_argument(
             "--arch",
             help="the architecture.  if unspecified, the arch will be inferred.",
         )
@@ -365,6 +370,9 @@ def get_orchestration_data(opts):
                 "requireApiVersion is not supported with replica_sets, see SERVER-97010"
             )
         data["requireApiVersion"] = "1"
+
+    if opts.tls_disable_certificate_revocation_check and "sslParams" in data:
+        data["sslParams"]["tlsDisableCertificateRevocationCheck"] = True
 
     # If running on Docker, update the orchestration file to be docker-friendly.
     if os.environ.get("DOCKER_RUNNING"):
