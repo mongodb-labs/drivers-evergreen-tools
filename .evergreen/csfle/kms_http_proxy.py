@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 """Minimal HTTPS CONNECT proxy with a /metrics endpoint.
 
-Run:
+Plain HTTP (no inbound TLS):
     python3 kms_http_proxy.py [--host 127.0.0.1] [--port 8080]
-
-To test:
 
     $ curl --proxy 127.0.0.1:8080 -sS -o /dev/null https://example.com
     $ curl http://127.0.0.1:8080/metrics
-    connect_count 1
-    connect_target example.com:443
+
+TLS on the inbound connection (clients must connect over HTTPS):
+    python3 kms_http_proxy.py --port 8443 --ca_file ca.pem --cert_file server.pem
+
+    $ curl --proxy-cacert ca.pem --proxy https://127.0.0.1:8443 -sS -o /dev/null https://example.com
+    $ curl -k https://127.0.0.1:8443/metrics
 
 Behavior:
   - CONNECT host:port HTTP/1.1  -> opens a TCP tunnel, returns 200, then
                                    blindly proxies bytes both directions.
-  - GET /metrics                -> returns "connect_count <N>\n" so callers
+  - GET /metrics                -> returns "connect_count <N>\\n" so callers
                                    can verify a CONNECT was observed.
-  - Any other request           -> 405.
+  - Any other request           -> 404.
 
-No auth, no TLS on the inbound side, no concurrency limits. This is for
-local testing only.
+No auth, no concurrency limits. For local testing only.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from __future__ import annotations
 import argparse
 import select
 import socket
+import ssl
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -138,11 +140,27 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8080)
+    p.add_argument("--ca_file", type=str, default=None, help="TLS CA PEM file")
+    p.add_argument("--cert_file", type=str, default=None, help="TLS server PEM file (required with --ca_file)")
     args = p.parse_args()
 
+    if bool(args.ca_file) != bool(args.cert_file):
+        p.error("--ca_file and --cert_file must be given together")
+
     server = ThreadingHTTPServer((args.host, args.port), ProxyHandler)
+
+    if args.ca_file:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_verify_locations(args.ca_file)
+        context.load_cert_chain(args.cert_file)
+        context.verify_mode = ssl.CERT_NONE
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        scheme = "https"
+    else:
+        scheme = "http"
+
     sys.stderr.write(f"KMS HTTP proxy listening on {args.host}:{args.port}\n")
-    sys.stderr.write(f"  metrics:   http://{args.host}:{args.port}/metrics\n")
+    sys.stderr.write(f"  metrics:   {scheme}://{args.host}:{args.port}/metrics\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
