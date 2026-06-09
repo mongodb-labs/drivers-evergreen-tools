@@ -299,6 +299,8 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
             if key == "sslCAFile":
                 key = "tlsCAFile"  # noqa: PLW2901
             _append_arg(args, key, value)
+        if os.environ.get("TLS_DISABLE_CERTIFICATE_REVOCATION_CHECK"):
+            _append_arg(args, "tlsDisableCertificateRevocationCheck", True)
 
     if input.get("login"):
         users.append(
