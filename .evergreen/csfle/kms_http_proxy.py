@@ -4,10 +4,12 @@
 Run:
     python3 kms_http_proxy.py [--host 127.0.0.1] [--port 8080]
 
-Then point the test at it:
-    export MONGOC_TEST_KMS_PROXY_HOST=127.0.0.1
-    export MONGOC_TEST_KMS_PROXY_PORT=8080
-    ./test-libmongoc -l '/client_side_encryption/kms/connect_callback/*'
+To test:
+
+    $ curl --proxy 127.0.0.1:8080 -sS -o /dev/null https://example.com
+    $ curl http://127.0.0.1:8080/metrics
+    connect_count 1
+    connect_target example.com:443
 
 Behavior:
   - CONNECT host:port HTTP/1.1  -> opens a TCP tunnel, returns 200, then
