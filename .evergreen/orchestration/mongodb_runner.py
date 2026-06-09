@@ -298,12 +298,6 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
                 key = "tlsCertificateKeyFile"  # noqa: PLW2901
             elif key == "sslCAFile":
                 key = "tlsCAFile"  # noqa: PLW2901
-            elif key == "tlsDisableCertificateRevocationCheck":
-                if value:
-                    args.extend(
-                        ["--setParameter", "tlsDisableCertificateRevocationCheck=1"]
-                    )
-                continue
             _append_arg(args, key, value)
     if input.get("login"):
         users.append(

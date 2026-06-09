@@ -143,9 +143,10 @@ def get_options():
             help="A .pem file that contains the root certificate chain for the server",
         )
         other_group.add_argument(
-            "--tls-disable-certificate-revocation-check",
+            "--tls-allow-invalid-certificates",
             action="store_true",
-            help="Whether to disable TLS certificate revocation checking (avoids OCSP failures on macOS)",
+            help="Whether to pass --tlsAllowInvalidCertificates to mongod, bypassing "
+            "certificate revocation (OCSP) enforcement on macOS",
         )
         other_group.add_argument(
             "--arch",
@@ -371,8 +372,8 @@ def get_orchestration_data(opts):
             )
         data["requireApiVersion"] = "1"
 
-    if opts.tls_disable_certificate_revocation_check and "sslParams" in data:
-        data["sslParams"]["tlsDisableCertificateRevocationCheck"] = True
+    if opts.tls_allow_invalid_certificates and "sslParams" in data:
+        data["sslParams"]["tlsAllowInvalidCertificates"] = True
 
     # If running on Docker, update the orchestration file to be docker-friendly.
     if os.environ.get("DOCKER_RUNNING"):
