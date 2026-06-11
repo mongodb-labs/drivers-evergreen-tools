@@ -41,8 +41,10 @@ class HTTPServerWithTLS(http.server.HTTPServer):
 
         if use_tls:
             server_dir = os.path.dirname(__file__)
-            cert_file = os.path.join(server_dir, "..", "x509gen", "server.pem")
-            ca_file = os.path.join(server_dir, "..", "x509gen", "ca.pem")
+            default_cert = os.path.join(server_dir, "..", "x509gen", "server.pem")
+            default_ca = os.path.join(server_dir, "..", "x509gen", "ca.pem")
+            cert_file = os.environ.get("CSFLE_TLS_CERT_FILE", default_cert)
+            ca_file = os.environ.get("CSFLE_TLS_CA_FILE", default_ca)
 
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             context.load_verify_locations(ca_file)
