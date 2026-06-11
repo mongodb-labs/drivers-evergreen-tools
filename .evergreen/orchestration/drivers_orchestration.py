@@ -145,8 +145,7 @@ def get_options():
         other_group.add_argument(
             "--tls-allow-invalid-certificates",
             action="store_true",
-            help="Whether to pass --tlsAllowInvalidCertificates to mongod, bypassing "
-            "certificate revocation (OCSP) enforcement",
+            help="Whether to pass --tlsAllowInvalidCertificates to mongod",
         )
         other_group.add_argument(
             "--arch",
