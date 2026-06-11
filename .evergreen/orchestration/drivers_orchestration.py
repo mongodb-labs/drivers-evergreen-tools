@@ -146,7 +146,7 @@ def get_options():
             "--tls-allow-invalid-certificates",
             action="store_true",
             help="Whether to pass --tlsAllowInvalidCertificates to mongod, bypassing "
-            "certificate revocation (OCSP) enforcement on macOS",
+            "certificate revocation (OCSP) enforcement",
         )
         other_group.add_argument(
             "--arch",
