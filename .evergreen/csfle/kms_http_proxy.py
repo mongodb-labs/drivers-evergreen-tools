@@ -2,10 +2,10 @@
 """Minimal HTTPS CONNECT proxy with a /metrics endpoint.
 
 Plain HTTP (no inbound TLS):
-    python3 kms_http_proxy.py [--host 127.0.0.1] [--port 8080]
+    python3 kms_http_proxy.py [--host 127.0.0.1] [--port 9004]
 
-    $ curl --proxy 127.0.0.1:8080 -sS -o /dev/null https://example.com
-    $ curl http://127.0.0.1:8080/metrics
+    $ curl --proxy 127.0.0.1:9004 -sS -o /dev/null https://example.com
+    $ curl http://127.0.0.1:9004/metrics
 
 TLS on the inbound connection (clients must connect over HTTPS):
     python3 kms_http_proxy.py --port 8443 --ca_file ca.pem --cert_file server.pem
@@ -160,9 +160,14 @@ def _tunnel(a: socket.socket, b: socket.socket) -> None:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--host", default="127.0.0.1")
-    p.add_argument("--port", type=int, default=8080)
+    p.add_argument("--port", type=int, default=9004)
     p.add_argument("--ca_file", type=str, default=None, help="TLS CA PEM file")
-    p.add_argument("--cert_file", type=str, default=None, help="TLS server PEM file (required with --ca_file)")
+    p.add_argument(
+        "--cert_file",
+        type=str,
+        default=None,
+        help="TLS server PEM file (required with --ca_file)",
+    )
     args = p.parse_args()
 
     if bool(args.ca_file) != bool(args.cert_file):
