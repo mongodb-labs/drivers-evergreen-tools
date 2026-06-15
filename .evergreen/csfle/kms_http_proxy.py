@@ -18,6 +18,7 @@ Behavior:
                                    blindly proxies bytes both directions.
   - GET /metrics                -> returns "connect_count <N>\\n" so callers
                                    can verify a CONNECT was observed.
+  - POST /reset                 -> resets the connection count to 0.
   - Any other request           -> 404.
 
 No auth, no concurrency limits. For local testing only.
@@ -48,6 +49,13 @@ def _bump_connect(target: str) -> None:
 def _snapshot_metrics() -> tuple[int, list[str]]:
     with _counter_lock:
         return _connect_count, list(_connect_targets)
+
+
+def _reset_metrics() -> None:
+    global _connect_count, _connect_targets
+    with _counter_lock:
+        _connect_count = 0
+        _connect_targets = []
 
 
 class ProxyHandler(BaseHTTPRequestHandler):
@@ -108,6 +116,19 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    # ---- POST /reset ------------------------------------------------------
+    def do_POST(self) -> None:
+        if self.path != "/reset":
+            self.send_error(404, "only /reset is exposed")
+            return
+        _reset_metrics()
+        body = b"connect_count 0\n"
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
 
 def _tunnel(a: socket.socket, b: socket.socket) -> None:
     """Pipe bytes between two sockets until either side closes."""
@@ -161,6 +182,7 @@ def main() -> int:
 
     sys.stderr.write(f"KMS HTTP proxy listening on {args.host}:{args.port}\n")
     sys.stderr.write(f"  metrics:   {scheme}://{args.host}:{args.port}/metrics\n")
+    sys.stderr.write(f"  reset:     {scheme}://{args.host}:{args.port}/reset\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
