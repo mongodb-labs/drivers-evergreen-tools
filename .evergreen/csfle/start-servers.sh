@@ -23,7 +23,7 @@ fi
 # Forcibly kill the process listening on the desired ports, most likely
 # left running from a previous task.
 . "$SCRIPT_DIR/../process-utils.sh"
-for port in 5698 9000 9001 9002 9004 9005 8080; do
+for port in 5698 9000 9001 9002 9003 9004 9005 8080; do
   killport $port 9
 done
 
