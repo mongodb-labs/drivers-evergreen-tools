@@ -143,6 +143,11 @@ def get_options():
             help="A .pem file that contains the root certificate chain for the server",
         )
         other_group.add_argument(
+            "--tls-allow-invalid-certificates",
+            action="store_true",
+            help="Whether to pass --tlsAllowInvalidCertificates to mongod",
+        )
+        other_group.add_argument(
             "--arch",
             help="the architecture.  if unspecified, the arch will be inferred.",
         )
@@ -365,6 +370,13 @@ def get_orchestration_data(opts):
                 "requireApiVersion is not supported with replica_sets, see SERVER-97010"
             )
         data["requireApiVersion"] = "1"
+
+    if opts.tls_allow_invalid_certificates:
+        if "sslParams" not in data:
+            raise ValueError(
+                "--tls-allow-invalid-certificates requires TLS to be configured, but no sslParams found in orchestration data"
+            )
+        data["sslParams"]["tlsAllowInvalidCertificates"] = True
 
     # If running on Docker, update the orchestration file to be docker-friendly.
     if os.environ.get("DOCKER_RUNNING"):
