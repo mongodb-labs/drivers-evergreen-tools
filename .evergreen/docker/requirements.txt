@@ -24,7 +24,7 @@ jmespath==1.0.1
     #   botocore
 python-dateutil==2.9.0.post0
     # via botocore
-requests==2.32.4
+requests==2.33.0
     # via docker
 s3transfer==0.10.4
     # via boto3
