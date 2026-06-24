@@ -78,7 +78,7 @@ pyjwt[crypto]==2.10.1
     #   pyjwt
 pyop==3.4.1
     # via -r requirements-in.txt
-pyopenssl==25.1.0
+pyopenssl==26.0.0
     # via -r requirements-in.txt
 python-dateutil==2.9.0.post0
     # via botocore
