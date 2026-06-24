@@ -14,6 +14,10 @@ Add `secrets-export.sh` to your `.gitignore` to prevent checking in credentials 
 
 ## Usage
 
+> [!NOTE]
+> Credentials for Azure specification tests are migrating: [DRIVERS-3392](https://jira.mongodb.org/browse/DRIVERS-3392).
+> To opt-in, export `FLE_AZURE_USE_CORPORATE=YES` before `setup-secrets.sh`.
+
 Set up In-Use Encryption by first fetching the secrets and then launching the kms servers:
 
 ```bash

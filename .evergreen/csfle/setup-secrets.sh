@@ -29,6 +29,17 @@ fi
 pushd $SCRIPT_DIR
 . $PARENT_DIR/secrets_handling/setup-secrets.sh drivers/csfle
 . ./activate-kmstlsvenv.sh
+if [[ "${FLE_AZURE_USE_CORPORATE:-}" == "YES" ]]; then
+    echo "Using corporate Azure credentials"
+    # Append corporate Azure credentials to secrets-export.sh:
+    echo "export FLE_AZURE_TENANTID='$FLE_AZURE_TENANTID_CORPORATE'" >> secrets-export.sh
+    echo "export FLE_AZURE_CLIENTID='$FLE_AZURE_CLIENTID_CORPORATE'" >> secrets-export.sh
+    echo "export FLE_AZURE_CLIENTSECRET='$FLE_AZURE_CLIENTSECRET_CORPORATE'" >> secrets-export.sh
+    # Source again to apply corporate credentials. Needed to generate an Azure token in setup_secrets.py.
+    source secrets-export.sh
+else
+    echo "WARNING: Using deprecated Azure credentials. These will be migrated to corporate credentials. See DRIVERS-3392."
+fi
 python ./setup_secrets.py
 cp secrets-export.sh $CURRENT || true
 popd
