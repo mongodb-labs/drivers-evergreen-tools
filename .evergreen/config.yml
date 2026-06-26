@@ -1596,7 +1596,7 @@ buildvariants:
   display_name: "Delete old Azure resources"
   run_on: rhel80-small
   cron: '@daily'
-  # patchable: false
+  patchable: false
   tasks:
     - name: delete_old_azure_resources
 
