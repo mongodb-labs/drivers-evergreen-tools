@@ -21,6 +21,7 @@ set -eu
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 #   TLS_PEM_KEY_FILE       Set a .pem file that contains the TLS certificate and key for the server
 #   TLS_CA_FILE            Set a .pem file that contains the root certificate chain for the server
+#   QE_SUBSTRING_SEARCH    Set to a non-empty string to enable featureFlagQESubstringSearch (requires a build that supports it, e.g. 9.0-dev latest)
 
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)

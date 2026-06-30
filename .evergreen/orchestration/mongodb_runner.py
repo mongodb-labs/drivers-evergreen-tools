@@ -308,6 +308,10 @@ def _get_cluster_options(input: dict, opts: Any, static=False) -> Dict[str, Any]
             }
         )
 
+    if os.environ.get("QE_SUBSTRING_SEARCH"):
+        args.append("--setParameter")
+        args.append("featureFlagQESubstringSearch=1")
+
     output = {"topology": topology, "args": args}
     if users:
         output["users"] = users
