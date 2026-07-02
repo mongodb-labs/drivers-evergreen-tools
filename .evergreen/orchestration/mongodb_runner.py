@@ -87,7 +87,7 @@ def _mongodb_runner_supported() -> bool:
 
 
 def _install_mongodb_runner() -> Path:
-    """Install mongodb-runner via npm, caching the install for reuse."""
+    """Install mongodb-runner using npm, caching the install for reuse."""
     install_dir = TMPDIR / f"mongodb-runner-{_MR_VERSION}"
     ext = ".cmd" if PLATFORM == "win32" else ""
     runner_bin = install_dir / "node_modules" / ".bin" / f"mongodb-runner{ext}"
