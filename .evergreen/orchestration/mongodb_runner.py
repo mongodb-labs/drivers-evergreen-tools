@@ -64,13 +64,30 @@ def _normalize_path(path: Union[Path, str]) -> str:
 _MR_VERSION = "6.8.2"
 
 
-def _install_mongodb_runner() -> Path:
-    """Install mongodb-runner via npm with overrides to pin @mongodb-js/oidc-mock-provider.
+def _mongodb_runner_supported() -> bool:
+    """Return False on platforms that cannot run the current mongodb-runner."""
+    if sys.platform != "linux":
+        return True
+    osr = next(
+        (
+            Path(p)
+            for p in ("/etc/os-release", "/usr/lib/os-release")
+            if Path(p).is_file()
+        ),
+        None,
+    )
+    if osr is None:
+        return True
+    try:
+        from mongodl import infer_target_from_os_release
 
-    npx does not support npm overrides, so we manage the install manually.
-    @mongodb-js/oidc-mock-provider 0.13.8+ switched to yargs@18 (ESM-only), which
-    cannot be require()'d on Node 16. Pinning to 0.13.7 keeps it on yargs@17.
-    """
+        return infer_target_from_os_release(osr) != "rhel7"
+    except Exception:
+        return True
+
+
+def _install_mongodb_runner() -> Path:
+    """Install mongodb-runner via npm, caching the install for reuse."""
     install_dir = TMPDIR / f"mongodb-runner-{_MR_VERSION}"
     ext = ".cmd" if PLATFORM == "win32" else ""
     runner_bin = install_dir / "node_modules" / ".bin" / f"mongodb-runner{ext}"
@@ -79,7 +96,6 @@ def _install_mongodb_runner() -> Path:
             "name": "mongodb-runner-wrapper",
             "version": "1.0.0",
             "dependencies": {"mongodb-runner": _MR_VERSION},
-            "overrides": {"@mongodb-js/oidc-mock-provider": "0.13.7"},
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
