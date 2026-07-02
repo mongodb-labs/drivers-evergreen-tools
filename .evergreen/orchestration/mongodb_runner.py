@@ -65,24 +65,31 @@ _MR_VERSION = "6.8.2"
 
 
 def _mongodb_runner_supported() -> bool:
-    """Return False on platforms that cannot run the current mongodb-runner."""
+    """Return False on platforms that cannot run the current mongodb-runner.
+
+    mongodb-runner depends on yargs@18, an ESM-only package that Node < 18
+    cannot require(). Check the actual Node version when available; RHEL7
+    (whose Node 16 is the only such platform in CI) is used as a fallback
+    signal when Node isn't on PATH yet.
+    """
+    node = shutil.which("node")
+    if node:
+        try:
+            node_ver = subprocess.check_output([node, "--version"], encoding="utf-8")
+            if int(node_ver.strip().lstrip("v").split(".")[0]) < 18:
+                return False
+        except (subprocess.CalledProcessError, ValueError):
+            pass
     if sys.platform != "linux":
         return True
-    osr = next(
-        (
-            Path(p)
-            for p in ("/etc/os-release", "/usr/lib/os-release")
-            if Path(p).is_file()
-        ),
-        None,
-    )
-    if osr is None:
-        return True
     try:
-        from mongodl import infer_target_from_os_release
+        from mongodl import infer_target
 
-        return infer_target_from_os_release(osr) != "rhel7"
-    except Exception:
+        return infer_target() != "rhel7"
+    except Exception as exc:
+        LOGGER.warning(
+            "Could not determine platform for mongodb-runner support check: %s", exc
+        )
         return True
 
 
