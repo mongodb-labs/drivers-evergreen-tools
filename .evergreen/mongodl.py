@@ -1228,6 +1228,9 @@ def main(argv=None):
     cache.refresh_full_json()
 
     version = args.version
+    # Translate perf version if applicable:
+    if version in PERF_VERSIONS:
+        version = PERF_VERSIONS[version]
     target = args.target
     arch = args.arch
 
@@ -1236,8 +1239,6 @@ def main(argv=None):
         return
 
     # Apply defaults:
-    if version in PERF_VERSIONS:
-        version = PERF_VERSIONS[version]
     if version is None:
         version = "latest-build"
     if target is None or target == "auto":
