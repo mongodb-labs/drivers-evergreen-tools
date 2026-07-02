@@ -61,7 +61,7 @@ def _normalize_path(path: Union[Path, str]) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-_MR_VERSION = "6.7.1"
+_MR_VERSION = "6.8.2"
 
 
 def _install_mongodb_runner() -> Path:
