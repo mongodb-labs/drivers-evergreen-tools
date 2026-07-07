@@ -25,7 +25,7 @@ from pathlib import Path, PureWindowsPath
 import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mongodb_runner import start_mongodb_runner
+from mongodb_runner import _mongodb_runner_supported, start_mongodb_runner
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
@@ -497,6 +497,13 @@ def run(opts):
     if opts.mongodb_runner and version in ("3.6", "4.0"):
         LOGGER.warning(
             "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
+        )
+        opts.mongodb_runner = False
+
+    if opts.mongodb_runner and not _mongodb_runner_supported():
+        LOGGER.warning(
+            "mongodb-runner is not supported on this platform; "
+            "falling back to mongo-orchestration"
         )
         opts.mongodb_runner = False
 
