@@ -25,7 +25,7 @@ fi
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-$DEFAULT_NODE_VERSION}
 
 # Pin npm per Node release to the newest npm that still supports it, so setup
-# never pulls an incompatible npm@latest.
+# never pulls an incompatible npm@latest. Do not override if it is already set.
 if [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 18 ]]; then
   NPM_VERSION=${NPM_VERSION:-9}
 elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 20 ]]; then
