@@ -42,6 +42,9 @@ class HTTPServerWithTLS(http.server.HTTPServer):
         super().__init__(server_address, Handler)
 
         if use_tls:
+            if not cert_file or not ca_file:
+                raise ValueError("cert_file and ca_file are required when use_tls=True")
+
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             context.load_verify_locations(ca_file)
             context.load_cert_chain(cert_file)
