@@ -24,12 +24,14 @@ if command -v ldd >/dev/null 2>&1; then
 fi
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-$DEFAULT_NODE_VERSION}
 
-# If NODE_LTS_VERSION is numeric and less than 18, default to 9, if less than 20, default to 10.
-# Do not override if it is already set.
+# Pin npm per Node release to the newest npm that still supports it, so setup
+# never pulls an incompatible npm@latest. Do not override if it is already set.
 if [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 18 ]]; then
   NPM_VERSION=${NPM_VERSION:-9}
 elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 20 ]]; then
   NPM_VERSION=${NPM_VERSION:-10}
+elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 22 ]]; then
+  NPM_VERSION=${NPM_VERSION:-11}
 else
   NPM_VERSION=${NPM_VERSION:-latest}
 fi
@@ -157,7 +159,7 @@ echo "$NODE_LTS_VERSION" > $NODE_ARTIFACTS_PATH/node-version.txt
 echo "Installing Node.js $NODE_LTS_VERSION... done."
 
 if [[ $operating_system != "win" ]]; then
-  # Update npm to latest when we can
+  # Update npm to the newest version supported by this Node release.
   echo "Installing npm $NPM_VERSION..."
   npm install --silent --global npm@$NPM_VERSION
   hash -r
