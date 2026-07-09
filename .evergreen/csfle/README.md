@@ -36,6 +36,19 @@ The following servers will be started:
 - KMS Failpoint Server on port 9003
 - Mock Azure IMDS server on port 8080
 
+### Overriding certs
+
+The following env vars override the certs used by the servers above. They default to certs
+generated in [x509gen](../x509gen):
+
+- `CSFLE_TLS_CA_FILE`
+- `CSFLE_TLS_CERT_FILE`
+- `CSFLE_TLS_CLIENT_CERT_FILE`
+- `CSFLE_TLS_EXPIRED_FILE`
+- `CSFLE_TLS_WRONG_HOST_FILE`
+- `CSFLE_TLS_FAILPOINT_CA_FILE`
+- `CSFLE_TLS_FAILPOINT_CERT_FILE`
+
 When finished, stop the servers by running:
 
 ```bash

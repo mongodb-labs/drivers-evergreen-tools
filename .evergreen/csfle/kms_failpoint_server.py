@@ -36,15 +36,14 @@ fake_plaintext = "b" * 96
 
 
 class HTTPServerWithTLS(http.server.HTTPServer):
-    def __init__(self, server_address, Handler, use_tls=True):
+    def __init__(
+        self, server_address, Handler, use_tls=True, cert_file=None, ca_file=None
+    ):
         super().__init__(server_address, Handler)
 
         if use_tls:
-            server_dir = os.path.dirname(__file__)
-            default_cert = os.path.join(server_dir, "..", "x509gen", "server.pem")
-            default_ca = os.path.join(server_dir, "..", "x509gen", "ca.pem")
-            cert_file = os.environ.get("CSFLE_TLS_CERT_FILE", default_cert)
-            ca_file = os.environ.get("CSFLE_TLS_CA_FILE", default_ca)
+            if not cert_file or not ca_file:
+                raise ValueError("cert_file and ca_file are required when use_tls=True")
 
             context = ssl.SSLContext(ssl.PROTOCOL_TLS)
             context.load_verify_locations(ca_file)
@@ -173,14 +172,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    server_dir = os.path.dirname(__file__)
+    default_cert = os.path.join(server_dir, "..", "x509gen", "server.pem")
+    default_ca = os.path.join(server_dir, "..", "x509gen", "ca.pem")
+
     parser = argparse.ArgumentParser(description="MongoDB mock KMS retry endpoint.")
     parser.add_argument(
         "-p", "--port", type=int, default=9003, help="Port to listen on"
     )
     parser.add_argument("--no-tls", action="store_true", help="Disable TLS")
+    parser.add_argument(
+        "--cert-file", type=str, default=default_cert, help="TLS Server PEM file"
+    )
+    parser.add_argument(
+        "--ca-file", type=str, default=default_ca, help="TLS CA PEM file"
+    )
     args = parser.parse_args()
 
     server_address = ("localhost", args.port)
-    httpd = HTTPServerWithTLS(server_address, Handler, not args.no_tls)
+    httpd = HTTPServerWithTLS(
+        server_address,
+        Handler,
+        not args.no_tls,
+        cert_file=args.cert_file,
+        ca_file=args.ca_file,
+    )
     print("Mock HTTP server listening on port " + str(server_address))
     httpd.serve_forever()
