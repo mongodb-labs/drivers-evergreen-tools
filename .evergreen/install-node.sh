@@ -158,8 +158,10 @@ fi
 echo "$NODE_LTS_VERSION" > $NODE_ARTIFACTS_PATH/node-version.txt
 echo "Installing Node.js $NODE_LTS_VERSION... done."
 
-if [[ $operating_system != "win" ]]; then
-  # Update npm to the newest version supported by this Node release.
+if [[ $operating_system != "win" && "${SKIP_NPM_UPGRADE:-}" != "true" ]]; then
+  # Update npm to the newest version supported by this Node release. Set
+  # SKIP_NPM_UPGRADE=true to keep the npm bundled with the Node release (e.g.
+  # when npm@latest no longer supports the installed Node version).
   echo "Installing npm $NPM_VERSION..."
   npm install --silent --global npm@$NPM_VERSION
   hash -r
