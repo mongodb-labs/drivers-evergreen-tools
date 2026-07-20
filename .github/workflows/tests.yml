@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           fetch-depth: 2
 
@@ -82,17 +82,17 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
     - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   eslint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
       - id: cache-restore
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ./.evergreen/github_app/node_modules
           key: npm-${{ hashFiles('./.evergreen/github_app/package-lock.json') }}
