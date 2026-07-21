@@ -15,23 +15,9 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR >/dev/null
 
-# First ensure we have a python binary.
-if [ -z "${DRIVERS_TOOLS_PYTHON:-}" ]; then
-  . ./find-python3.sh
-
-  echo "Ensuring python binary..."
-  DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
-  if [ -z "${DRIVERS_TOOLS_PYTHON}" ]; then
-    # For debug purposes
-    find_python3
-    exit 1
-  fi
-  echo "Using python $DRIVERS_TOOLS_PYTHON"
-  echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >>$DRIVERS_TOOLS/.env
-  echo "Ensuring python binary... done."
-fi
-
-export UV_PYTHON=$DRIVERS_TOOLS_PYTHON
+# Ensure uv is available.
+. ./ensure-uv.sh
+ensure_uv || exit 1
 
 # Ensure uv is writing assets to a contained location.
 export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
@@ -42,57 +28,6 @@ if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   _root_dir=$(mktemp -d)
   UV_CACHE_DIR=$_root_dir/uv-cache
   UV_TOOL_DIR=$_root_dir/uv-tool
-fi
-
-# If uv is not on path, try see if it is available from the Python toolchain.
-if ! command -v uv &>/dev/null; then
-  export PATH
-  declare python_path
-  case "${OSTYPE:?}" in
-  cygwin)
-    python_path="/cygdrive/c/Python/Current/Scripts"
-    ;;
-  darwin*)
-    python_path="/Library/Frameworks/Python.Framework/Versions/Current/bin"
-    ;;
-  *)
-    python_path="/opt/python/Current/bin"
-    ;;
-  esac
-  [[ "${PATH:-}" =~ (^|:)"${python_path:?}"(:|$) ]] || PATH="${python_path:?}:${PATH:-}"
-fi
-
-# If there is still no uv, we will install it to $DRIVERS_TOOLS/.bin.
-if ! command -V uv &>/dev/null; then
-  . ./venv-utils.sh
-  _venv_dir="$(mktemp -d)"
-  if [ "Windows_NT" = "${OS:-}" ]; then
-    _venv_dir="$(cygpath -m $_venv_dir)"
-  fi
-  echo "Installing uv using pip..."
-  venvcreate "$DRIVERS_TOOLS_PYTHON" "$_venv_dir"
-  # Install uv into the newly created venv.
-  python -m pip install -q --force-reinstall uv
-  _suffix=""
-  # Symlink uv and uvx binaries.
-  _install_dir="${DRIVERS_TOOLS}/.bin"
-  mkdir -p "$_install_dir"
-  if [ "Windows_NT" = "${OS:-}" ]; then
-    ln -s "${_venv_dir}/Scripts/uv.exe" "$_install_dir/uv.exe"
-    ln -s "${_venv_dir}/Scripts/uvx.exe" "$_install_dir/uvx.exe"
-  else
-    ln -s "$(which uv)" "$_install_dir/uv"
-    ln -s "$(which uvx)" "$_install_dir/uvx"
-  fi
-  echo "Installed to ${_install_dir}"
-  deactivate
-  echo "Installing uv using pip... done."
-fi
-
-# uv should be on the path at this point.
-if ! command -V uv &>/dev/null; then
-  echo "Could not install uv!"
-  exit 1
 fi
 
 # Ensure there is a venv available in the script dir for backward compatibility.

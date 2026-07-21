@@ -5,7 +5,7 @@ PREV_SCRIPT_DIR=$SCRIPT_DIR
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-. "$SCRIPT_DIR/../find-python3.sh"
+. "$SCRIPT_DIR/../ensure-uv.sh"
 SCRIPT_DIR=$PREV_SCRIPT_DIR
 
 # Create an Atlas M10 deployment - this returns immediately so we'll need to poll until
@@ -65,7 +65,7 @@ check_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
 
-  PYTHON=$(ensure_python3)
+  ensure_uv || exit 1
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2
@@ -83,7 +83,7 @@ check_deployment ()
         else
             PROP="['srvAddress']"
         fi
-        SRV_ADDRESS=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d${PROP})")
+        SRV_ADDRESS=$(uv run python -c "import json;d=json.loads('${RESP}');print(d${PROP})")
         # Remove trailing CR
         if [[ "$(uname -s)" == CYGWIN* ]]; then
             SRV_ADDRESS=$(echo $SRV_ADDRESS | dos2unix)

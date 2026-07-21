@@ -5,7 +5,7 @@ set -o errexit
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
-. $SCRIPT_DIR/find-python3.sh
+. $SCRIPT_DIR/ensure-uv.sh
 
 # Ensure environment variables are set.
 if [[ -z "$PROJECT_DIRECTORY" ]]; then
@@ -27,9 +27,8 @@ OS=${OS:-}
 PATH=$PATH
 EOF
 
-# Set the python binary to use.
-DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
-echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
+# Ensure uv is available for the CLI install step below.
+ensure_uv || exit 1
 
 # Setup the orchestration directory, which also installs CLIs into this directory.
 bash $SCRIPT_DIR/orchestration/setup.sh
