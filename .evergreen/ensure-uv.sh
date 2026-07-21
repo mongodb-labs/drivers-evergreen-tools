@@ -21,14 +21,13 @@ fi
 #   ensure_uv
 #
 # Return 0 (true) if `uv` is available on PATH, installing it with
-# `pip install --user uv` (falling back to the standalone installer script
-# if that doesn't work) if it was not already present.
+# `pip install --user uv` if it was not already present.
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
 # This does not scan the filesystem for toolchain-specific Python
-# installations: it only checks PATH and falls back to these two
-# install methods.
+# installations: it only checks PATH and falls back to a plain
+# `pip install --user`.
 ensure_uv() {
   if command -v uv >/dev/null 2>&1; then
     return 0
@@ -43,7 +42,10 @@ ensure_uv() {
 
   if [ -n "$py" ]; then
     echo "uv not found on PATH; installing with '$py -m pip install --user uv'..." >&2
-    "$py" -m pip install --user -q uv || true
+    # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
+    # guard, which some distros (e.g. Debian/Ubuntu) enable by default. This is
+    # safe here: it's a --user install and does not touch system site-packages.
+    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
 
     # `--user` installs console scripts into a version/platform-specific
     # directory (e.g. ~/.local/bin on Linux, ~/Library/Python/X.Y/bin on
@@ -54,19 +56,14 @@ ensure_uv() {
     if [ -n "$user_base" ]; then
       export PATH="$user_base/bin:$user_base/Scripts:$PATH"
     fi
-  fi
 
-  if command -v uv >/dev/null 2>&1; then
-    return 0
-  fi
-
-  # pip may be missing, too old to resolve a wheel for this platform, or
-  # blocked by an externally-managed-environment (PEP 668). Fall back to
-  # the standalone installer, which fetches a prebuilt binary directly.
-  if command -v curl >/dev/null 2>&1; then
-    echo "uv still not found; installing with the standalone installer script..." >&2
-    curl -LsSf https://astral.sh/uv/install.sh | sh || true
-    export PATH="$HOME/.local/bin:$PATH"
+    if ! command -v uv >/dev/null 2>&1; then
+      # Some hosts ship a pip too old to recognize uv's wheel tags (e.g. PEP
+      # 600 manylinux tags require pip 20.3+). Upgrade pip itself and retry.
+      echo "uv still not found; upgrading pip and retrying..." >&2
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
+    fi
   fi
 
   if command -v uv >/dev/null 2>&1; then
