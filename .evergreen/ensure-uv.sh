@@ -33,15 +33,27 @@ ensure_uv() {
     return 0
   fi
 
-  echo "uv not found on PATH; installing with 'pip install --user uv'..." >&2
-  if command -v pip >/dev/null 2>&1; then
-    pip install --user -q uv || true
-  elif command -v pip3 >/dev/null 2>&1; then
-    pip3 install --user -q uv || true
+  local py=""
+  if command -v python3 >/dev/null 2>&1; then
+    py=python3
+  elif command -v python >/dev/null 2>&1; then
+    py=python
   fi
 
-  # `pip install --user` installs consoles scripts here on most platforms.
-  export PATH="$HOME/.local/bin:$PATH"
+  if [ -n "$py" ]; then
+    echo "uv not found on PATH; installing with '$py -m pip install --user uv'..." >&2
+    "$py" -m pip install --user -q uv || true
+
+    # `--user` installs console scripts into a version/platform-specific
+    # directory (e.g. ~/.local/bin on Linux, ~/Library/Python/X.Y/bin on
+    # macOS, %APPDATA%\Python\PythonXY\Scripts on Windows); ask the
+    # interpreter where that is rather than assuming.
+    declare user_base
+    user_base="$("$py" -m site --user-base 2>/dev/null)" || user_base=""
+    if [ -n "$user_base" ]; then
+      export PATH="$user_base/bin:$user_base/Scripts:$PATH"
+    fi
+  fi
 
   if command -v uv >/dev/null 2>&1; then
     return 0
