@@ -31,12 +31,19 @@ fi
 # hosts (e.g. RHEL7) that have no python3 on PATH at all.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
-  # intercept `python`/`python3` and enforce the repo's .python-version file,
-  # failing outright if that exact version isn't already installed via
-  # pyenv. Force pyenv to defer to the real system interpreter instead.
-  export PYENV_VERSION=system
+  # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
+  # file, failing outright if that exact version isn't already installed via
+  # pyenv (some of these hosts already have a working uv installed under
+  # pyenv's own configured version). Defer to pyenv's own global version
+  # rather than the repo's file, instead of hardcoding e.g. "system", which
+  # may not be where uv/python are actually installed on a given host.
+  if command -v pyenv >/dev/null 2>&1; then
+    declare pyenv_global
+    pyenv_global="$(pyenv global 2>/dev/null | head -n1)"
+    [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
+  fi
 
-  if command -v uv >/dev/null 2>&1; then
+  if uv --version >/dev/null 2>&1; then
     return 0
   fi
 
@@ -80,7 +87,7 @@ ensure_uv() {
       export PATH="$user_base/bin:$user_base/Scripts:$PATH"
     fi
 
-    if ! command -v uv >/dev/null 2>&1; then
+    if ! uv --version >/dev/null 2>&1; then
       # Some hosts ship a pip too old to recognize uv's wheel tags (e.g. PEP
       # 600 manylinux tags require pip 20.3+). Upgrade pip itself and retry.
       echo "uv still not found; upgrading pip and retrying..." >&2
@@ -89,7 +96,7 @@ ensure_uv() {
     fi
   fi
 
-  if command -v uv >/dev/null 2>&1; then
+  if uv --version >/dev/null 2>&1; then
     return 0
   fi
 
