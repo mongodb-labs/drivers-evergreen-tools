@@ -21,13 +21,14 @@ fi
 #   ensure_uv
 #
 # Return 0 (true) if `uv` is available on PATH, installing it with
-# `pip install --user uv` first if it was not already present.
+# `pip install --user uv` (falling back to the standalone installer script
+# if that doesn't work) if it was not already present.
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
 # This does not scan the filesystem for toolchain-specific Python
-# installations: it only checks PATH and falls back to a plain
-# `pip install --user`.
+# installations: it only checks PATH and falls back to these two
+# install methods.
 ensure_uv() {
   if command -v uv >/dev/null 2>&1; then
     return 0
@@ -53,6 +54,19 @@ ensure_uv() {
     if [ -n "$user_base" ]; then
       export PATH="$user_base/bin:$user_base/Scripts:$PATH"
     fi
+  fi
+
+  if command -v uv >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # pip may be missing, too old to resolve a wheel for this platform, or
+  # blocked by an externally-managed-environment (PEP 668). Fall back to
+  # the standalone installer, which fetches a prebuilt binary directly.
+  if command -v curl >/dev/null 2>&1; then
+    echo "uv still not found; installing with the standalone installer script..." >&2
+    curl -LsSf https://astral.sh/uv/install.sh | sh || true
+    export PATH="$HOME/.local/bin:$PATH"
   fi
 
   if command -v uv >/dev/null 2>&1; then
