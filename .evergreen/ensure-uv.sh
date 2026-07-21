@@ -30,6 +30,12 @@ fi
 # exception is a fallback to the MongoDB toolchain's python3, needed on
 # hosts (e.g. RHEL7) that have no python3 on PATH at all.
 ensure_uv() {
+  # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
+  # intercept `python`/`python3` and enforce the repo's .python-version file,
+  # failing outright if that exact version isn't already installed via
+  # pyenv. Force pyenv to defer to the real system interpreter instead.
+  export PYENV_VERSION=system
+
   if command -v uv >/dev/null 2>&1; then
     return 0
   fi
@@ -57,7 +63,7 @@ ensure_uv() {
     # Some Python builds (e.g. the deadsnakes PPA used in the docker test
     # images) don't ship pip; bootstrap it from the stdlib bundle, which
     # requires no network access.
-    "$py" -m pip --version >/dev/null 2>&1 || "$py" -m ensurepip --user >/dev/null 2>&1
+    "$py" -m pip --version >/dev/null 2>&1 || "$py" -m ensurepip --user >/dev/null 2>&1 || true
 
     # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
     # guard, which some distros (e.g. Debian/Ubuntu) enable by default. This is
