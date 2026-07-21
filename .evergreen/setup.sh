@@ -12,8 +12,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 # default, causing SSL_CERT_VERIFY_FAILED for any HTTPS request they make
 # (e.g. mongodl.py, mongodb-runner). Point Python (SSL_CERT_FILE) and Node
 # (NODE_EXTRA_CA_CERTS) at the system bundle explicitly, and persist it to
-# .env so every later task step (each a fresh shell) picks it up via
-# handle-paths.sh.
+# .env so handle-paths.sh loads it in every later task step (each a fresh
+# shell).
 if [ -z "${SSL_CERT_FILE:-}" ]; then
   for _cert_file in /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; do
     if [ -f "$_cert_file" ]; then

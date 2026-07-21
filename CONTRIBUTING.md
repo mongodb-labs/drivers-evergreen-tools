@@ -13,7 +13,7 @@ the relevant DRIVERS ticket.
 ## Python Considerations
 
 This repository supports CPython 3.9+. The root `.python-version` file pins the default
-interpreter version used by `uv`. Most scripts source `ensure-uv.sh` and run Python via `uv run`,
+interpreter version used by `uv`. Most scripts source `ensure-uv.sh` and run Python using `uv run`,
 which resolves and manages the interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
 A handful of scripts under per-folder virtual environments still rely on the older
 `find_python3.sh`/`venvcreate` mechanism until they are migrated.

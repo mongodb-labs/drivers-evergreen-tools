@@ -32,8 +32,8 @@ fi
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
-  # file, failing outright if that exact version isn't already installed via
-  # pyenv (some of these hosts already have a working uv installed under
+  # file, failing outright if pyenv doesn't already have that exact version
+  # installed (some of these hosts already have a working uv installed under
   # pyenv's own configured version). Defer to pyenv's own global version
   # rather than the repo's file, instead of hardcoding e.g. "system", which
   # may not be where uv/python are actually installed on a given host.
