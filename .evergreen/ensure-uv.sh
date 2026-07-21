@@ -43,30 +43,6 @@ ensure_uv() {
     [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
   fi
 
-  # Some hosts (e.g. rhel8-zseries/s390x) have their CA trust store in a
-  # location that uv's managed Python build and Node don't discover by
-  # default, causing SSL_CERT_VERIFY_FAILED for any HTTPS request they make
-  # (e.g. mongodl.py, mongodb-runner). Point Python (SSL_CERT_FILE) and Node
-  # (NODE_EXTRA_CA_CERTS) at the system bundle explicitly, and persist it to
-  # $DRIVERS_TOOLS/.env so it survives into later Evergreen task steps that
-  # run in a fresh shell.
-  if [ -z "${SSL_CERT_FILE:-}" ]; then
-    declare cert_file
-    for cert_file in /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; do
-      if [ -f "$cert_file" ]; then
-        export SSL_CERT_FILE="$cert_file"
-        export NODE_EXTRA_CA_CERTS="$cert_file"
-        if [ -n "${DRIVERS_TOOLS:-}" ]; then
-          {
-            echo "SSL_CERT_FILE=$cert_file"
-            echo "NODE_EXTRA_CA_CERTS=$cert_file"
-          } >>"$DRIVERS_TOOLS/.env" 2>/dev/null || true
-        fi
-        break
-      fi
-    done
-  fi
-
   if uv --version >/dev/null 2>&1; then
     return 0
   fi

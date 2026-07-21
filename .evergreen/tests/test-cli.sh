@@ -5,8 +5,6 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-. $SCRIPT_DIR/../ensure-uv.sh
-ensure_uv || exit 1
 
 pushd $SCRIPT_DIR/..
 
