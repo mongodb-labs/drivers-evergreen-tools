@@ -25,9 +25,10 @@ fi
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
-# This does not scan the filesystem for toolchain-specific Python
-# installations: it only checks PATH and falls back to a plain
-# `pip install --user`.
+# This mainly checks PATH and falls back to a plain `pip install --user`,
+# rather than the broad filesystem scanning find-python3.sh did. The one
+# exception is a fallback to the MongoDB toolchain's python3, needed on
+# hosts (e.g. RHEL7) that have no python3 on PATH at all.
 ensure_uv() {
   if command -v uv >/dev/null 2>&1; then
     return 0
@@ -36,12 +37,28 @@ ensure_uv() {
   local py=""
   if command -v python3 >/dev/null 2>&1; then
     py=python3
-  elif command -v python >/dev/null 2>&1; then
-    py=python
+  else
+    # Some legacy hosts (e.g. RHEL7) have no python3 on PATH at all, only an
+    # ancient Python 2 `python`, which uv does not support. Look for the
+    # MongoDB toolchain's python3, which is present on these hosts, before
+    # falling back to plain `python`.
+    declare toolchain_py
+    toolchain_py="$(ls -d /opt/mongodbtoolchain/v*/bin/python3 2>/dev/null | sort -V | tail -n1)"
+    if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
+      py="$toolchain_py"
+    elif command -v python >/dev/null 2>&1; then
+      py=python
+    fi
   fi
 
   if [ -n "$py" ]; then
     echo "uv not found on PATH; installing with '$py -m pip install --user uv'..." >&2
+
+    # Some Python builds (e.g. the deadsnakes PPA used in the docker test
+    # images) don't ship pip; bootstrap it from the stdlib bundle, which
+    # requires no network access.
+    "$py" -m pip --version >/dev/null 2>&1 || "$py" -m ensurepip --user >/dev/null 2>&1
+
     # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
     # guard, which some distros (e.g. Debian/Ubuntu) enable by default. This is
     # safe here: it's a --user install and does not touch system site-packages.
