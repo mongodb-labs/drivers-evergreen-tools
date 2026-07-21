@@ -25,9 +25,9 @@ fi
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
-# Unlike find-python3.sh, this does not scan the filesystem for
-# toolchain-specific Python installations: it only checks PATH and falls
-# back to a plain `pip install --user`.
+# This does not scan the filesystem for toolchain-specific Python
+# installations: it only checks PATH and falls back to a plain
+# `pip install --user`.
 ensure_uv() {
   if command -v uv >/dev/null 2>&1; then
     return 0
