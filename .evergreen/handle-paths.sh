@@ -13,6 +13,8 @@
 set -o | grep -q '^errexit.*on$' && errexit_was_set=true || errexit_was_set=false
 # shellcheck disable=SC2034
 set -o | grep -q '^nounset.*on$' && nounset_was_set=true || nounset_was_set=false
+# shellcheck disable=SC2034
+set -o | grep -q '^allexport.*on$' && allexport_was_set=true || allexport_was_set=false
 
 set -eu
 
@@ -53,11 +55,12 @@ case "$(uname -s)" in
   ;;
 esac
 
-# Handle .env files
-set +a
+# Handle .env files. Export while sourcing so values set here (e.g.
+# SSL_CERT_FILE) are visible to subprocesses, not just this shell.
+set -a
 [ -f "$DRIVERS_TOOLS/.env" ] && . "$DRIVERS_TOOLS/.env"
 [ -f "$SCRIPT_DIR/.env" ] && . "$SCRIPT_DIR/.env"
-set -a
+$allexport_was_set && set -a || set +a
 
 MONGODB_BINARIES=${MONGODB_BINARIES:-${DRIVERS_TOOLS}/mongodb/bin}
 MONGO_ORCHESTRATION_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}
