@@ -19,10 +19,20 @@ if [ -z "${SSL_CERT_FILE:-}" ]; then
     if [ -f "$_cert_file" ]; then
       export SSL_CERT_FILE="$_cert_file"
       export NODE_EXTRA_CA_CERTS="$_cert_file"
-      {
-        echo "SSL_CERT_FILE=$_cert_file"
-        echo "NODE_EXTRA_CA_CERTS=$_cert_file"
-      } >>"$DRIVERS_TOOLS/.env"
+      # When testing this repo against itself, prepare-env-and-resources.sh
+      # copies the checkout into a separate $DRIVERS_TOOLS directory before
+      # calling this script, but some test entrypoints are invoked from the
+      # original checkout ($PROJECT_DIRECTORY) instead, whose own
+      # handle-paths.sh resolves a different physical .env file. Write to
+      # both so either resolution path picks it up.
+      for _env_dir in "$DRIVERS_TOOLS" "${PROJECT_DIRECTORY:-}"; do
+        if [ -n "$_env_dir" ]; then
+          {
+            echo "SSL_CERT_FILE=$_cert_file"
+            echo "NODE_EXTRA_CA_CERTS=$_cert_file"
+          } >>"$_env_dir/.env"
+        fi
+      done
       break
     fi
   done
