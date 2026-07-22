@@ -55,7 +55,7 @@ ensure_uv() {
     # MongoDB toolchain's python3, which is present on these hosts, before
     # falling back to plain `python`.
     declare toolchain_py
-    toolchain_py="$(ls -d /opt/mongodbtoolchain/v*/bin/python3 2>/dev/null | sort -V | tail -n1)"
+    toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)"
     if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
       py="$toolchain_py"
     elif command -v python >/dev/null 2>&1; then
