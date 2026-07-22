@@ -25,10 +25,9 @@ fi
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
-# This mainly checks PATH and falls back to a plain `pip install --user`,
-# rather than the broad filesystem scanning find-python3.sh did. The one
-# exception is a fallback to the MongoDB toolchain's python3, needed on
-# hosts (e.g. RHEL7) that have no python3 on PATH at all.
+# This mainly checks PATH and falls back to a plain `pip install --user`.
+# The one exception is a fallback to the MongoDB toolchain's python3, needed
+# on hosts (e.g. RHEL7) that have no python3 on PATH at all.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
