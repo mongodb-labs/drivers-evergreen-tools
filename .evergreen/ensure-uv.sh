@@ -74,6 +74,11 @@ ensure_uv() {
     # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
     # guard, which some distros (e.g. Debian/Ubuntu) enable by default. This is
     # safe here: it's a --user install and does not touch system site-packages.
+    #
+    # Upgrade pip itself first: some hosts ship a pip too old to recognize
+    # uv's wheel tags (e.g. PEP 600 manylinux tags require pip 20.3+). This is
+    # a fast no-op when pip is already current.
+    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
     PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
 
     # `--user` installs console scripts into a version/platform-specific
@@ -84,14 +89,6 @@ ensure_uv() {
     user_base="$("$py" -m site --user-base 2>/dev/null)" || user_base=""
     if [ -n "$user_base" ]; then
       export PATH="$user_base/bin:$user_base/Scripts:$PATH"
-    fi
-
-    if ! uv --version >/dev/null 2>&1; then
-      # Some hosts ship a pip too old to recognize uv's wheel tags (e.g. PEP
-      # 600 manylinux tags require pip 20.3+). Upgrade pip itself and retry.
-      echo "uv still not found; upgrading pip and retrying..." >&2
-      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
-      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
     fi
   fi
 
