@@ -38,7 +38,7 @@ ensure_uv() {
   # may not be where uv/python are actually installed on a given host.
   if command -v pyenv >/dev/null 2>&1; then
     declare pyenv_global
-    pyenv_global="$(pyenv global 2>/dev/null | head -n1)"
+    pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
     [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
   fi
 
