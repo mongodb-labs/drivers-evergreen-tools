@@ -7,38 +7,6 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 . $SCRIPT_DIR/ensure-uv.sh
 
-# Some hosts (e.g. rhel8-zseries/s390x) have their CA trust store in a
-# location that uv's managed Python builds and Node don't discover by
-# default, causing SSL_CERT_VERIFY_FAILED for any HTTPS request they make
-# (e.g. mongodl.py, mongodb-runner). Point Python (SSL_CERT_FILE) and Node
-# (NODE_EXTRA_CA_CERTS) at the system bundle explicitly, and persist it to
-# .env so handle-paths.sh loads it in every later task step (each a fresh
-# shell).
-if [ -z "${SSL_CERT_FILE:-}" ]; then
-  for _cert_file in /etc/pki/tls/certs/ca-bundle.crt /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; do
-    if [ -f "$_cert_file" ]; then
-      export SSL_CERT_FILE="$_cert_file"
-      export NODE_EXTRA_CA_CERTS="$_cert_file"
-      # When testing this repo against itself, prepare-env-and-resources.sh
-      # copies the checkout into a separate $DRIVERS_TOOLS directory before
-      # calling this script, but some test entrypoints are invoked from the
-      # original checkout ($PROJECT_DIRECTORY) instead, whose own
-      # handle-paths.sh resolves a different physical .env file. Write to
-      # both so either resolution path picks it up.
-      for _env_dir in "$DRIVERS_TOOLS" "${PROJECT_DIRECTORY:-}"; do
-        if [ -n "$_env_dir" ]; then
-          {
-            echo "SSL_CERT_FILE=$_cert_file"
-            echo "NODE_EXTRA_CA_CERTS=$_cert_file"
-          } >>"$_env_dir/.env"
-        fi
-      done
-      break
-    fi
-  done
-fi
-echo "CA bundle detection: SSL_CERT_FILE=${SSL_CERT_FILE:-<none found>}" >&2
-
 # Ensure environment variables are set.
 if [[ -z "$PROJECT_DIRECTORY" ]]; then
   echo "Please set the PROJECT_DIRECTORY environment variable."
@@ -57,7 +25,6 @@ PROJECT_DIRECTORY=$PROJECT_DIRECTORY
 DRIVERS_TOOLS=$DRIVERS_TOOLS
 OS=${OS:-}
 PATH=$PATH
-SSL_CERT_FILE=${SSL_CERT_FILE:-<none found>}
 EOF
 
 # Ensure uv is available for the CLI install step below.
