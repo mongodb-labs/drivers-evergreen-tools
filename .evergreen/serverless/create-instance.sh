@@ -108,7 +108,7 @@ RESP=$(curl -sS \
   -X GET \
   "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/serverless/${DEPLOYMENT_NAME}"
 );
-SERVERLESS_MONGODB_VERSION=$(uv run python -c "import json;d=json.loads('${RESP}');print(d['mongoDBVersion'])")
+SERVERLESS_MONGODB_VERSION=$(uv run python -c "import json,sys;d=json.loads(sys.argv[1]);print(d['mongoDBVersion'])" "${RESP}")
 echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"
 
 echo "SERVERLESS_URI: \"$SERVERLESS_URI\"" >> $CURRENT_DIR/serverless-expansion.yml

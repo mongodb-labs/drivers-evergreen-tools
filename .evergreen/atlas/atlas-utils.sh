@@ -83,7 +83,7 @@ check_deployment ()
         else
             PROP="['srvAddress']"
         fi
-        SRV_ADDRESS=$(uv run python -c "import json;d=json.loads('${RESP}');print(d${PROP})")
+        SRV_ADDRESS=$(uv run python -c "import json,sys;d=json.loads(sys.argv[1]);print(d${PROP})" "${RESP}")
         # Remove trailing CR
         if [[ "$(uname -s)" == CYGWIN* ]]; then
             SRV_ADDRESS=$(echo $SRV_ADDRESS | dos2unix)

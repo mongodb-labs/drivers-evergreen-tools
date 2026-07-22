@@ -79,7 +79,7 @@ DOWNLOAD_DIR=mongodl_test
 rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
 ensure_uv || exit 1
-uv run mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
+uv run python mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
 bash ./run-mongodb.sh start --existing-binaries-dir=${DOWNLOAD_DIR}
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 

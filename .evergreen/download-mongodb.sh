@@ -59,17 +59,17 @@ get_mongodb_download_url_for ()
    _script_dir="$(dirname ${BASH_SOURCE:-$0})"
    . "$_script_dir/ensure-uv.sh"
    ensure_uv || exit 1
-   MONGOSH_DOWNLOAD_URL=$(uv run --project "$_script_dir" "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
+   MONGOSH_DOWNLOAD_URL=$(uv run --project "$_script_dir" python "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
 
    # Get the download url for MongoDB for the given version.
-   MONGODB_DOWNLOAD_URL="$(uv run --project "$_script_dir" "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
+   MONGODB_DOWNLOAD_URL="$(uv run --project "$_script_dir" python "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
 
    if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
      echo "Unknown version: $_VERSION for $_DISTRO"
      exit 1
    fi
 
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$(uv run --project "$_script_dir" "${_script_dir}/mongodl.py" --version $_VERSION --component crypt_shared --no-download | tr -d '\r')
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$(uv run --project "$_script_dir" python "${_script_dir}/mongodl.py" --version $_VERSION --component crypt_shared --no-download | tr -d '\r')
 
    echo "$MONGODB_DOWNLOAD_URL"
 }
