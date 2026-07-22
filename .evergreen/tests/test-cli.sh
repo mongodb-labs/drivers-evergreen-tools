@@ -5,6 +5,7 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+echo "DEBUG: SSL_CERT_FILE=${SSL_CERT_FILE:-<unset>}" >&2
 
 pushd $SCRIPT_DIR/..
 

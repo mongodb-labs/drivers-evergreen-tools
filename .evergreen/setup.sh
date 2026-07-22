@@ -15,7 +15,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 # .env so handle-paths.sh loads it in every later task step (each a fresh
 # shell).
 if [ -z "${SSL_CERT_FILE:-}" ]; then
-  for _cert_file in /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; do
+  for _cert_file in /etc/pki/tls/certs/ca-bundle.crt /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/ssl/certs/ca-certificates.crt /etc/ssl/cert.pem; do
     if [ -f "$_cert_file" ]; then
       export SSL_CERT_FILE="$_cert_file"
       export NODE_EXTRA_CA_CERTS="$_cert_file"
@@ -27,6 +27,7 @@ if [ -z "${SSL_CERT_FILE:-}" ]; then
     fi
   done
 fi
+echo "CA bundle detection: SSL_CERT_FILE=${SSL_CERT_FILE:-<none found>}" >&2
 
 # Ensure environment variables are set.
 if [[ -z "$PROJECT_DIRECTORY" ]]; then
@@ -46,6 +47,7 @@ PROJECT_DIRECTORY=$PROJECT_DIRECTORY
 DRIVERS_TOOLS=$DRIVERS_TOOLS
 OS=${OS:-}
 PATH=$PATH
+SSL_CERT_FILE=${SSL_CERT_FILE:-<none found>}
 EOF
 
 # Ensure uv is available for the CLI install step below.
