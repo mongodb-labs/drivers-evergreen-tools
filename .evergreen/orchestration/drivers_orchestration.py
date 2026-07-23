@@ -810,8 +810,10 @@ def stop(opts):
             response = ""
         for line in response.splitlines():
             image, container_id = line.split("\t")
-            # Strip an optional tag so a registry-mirrored reference like
-            # ".../dockerhub/mongodb/mongodb-atlas-local:latest" (used in CI) still matches.
+            # In CI the image is pulled through an ECR mirror, so it's prefixed with a
+            # registry host (e.g. ".../dockerhub/mongodb/mongodb-atlas-local:latest")
+            # instead of the plain "mongodb/mongodb-atlas-local". Drop the tag so the
+            # suffix match below recognizes both forms.
             repo, sep, tag = image.rpartition(":")
             if not sep or "/" in tag:
                 repo = image
