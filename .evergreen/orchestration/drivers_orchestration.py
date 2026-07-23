@@ -7,6 +7,7 @@ Use '--help' for more information.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import logging
 import os
@@ -206,15 +207,27 @@ def get_options():
     return opts, command
 
 
+@functools.lru_cache(maxsize=1)
 def get_docker_cmd():
-    """Get the appropriate docker command."""
-    docker = shutil.which("podman") or shutil.which("docker")
-    if not docker:
-        return None
-    docker = PureWindowsPath(docker).as_posix()
-    if "podman" in docker:
-        docker = f"sudo {docker}"
-    return docker
+    """Get the appropriate docker command, or None if neither daemon is available."""
+    for raw_binary in (shutil.which("podman"), shutil.which("docker")):
+        if not raw_binary:
+            continue
+        binary = PureWindowsPath(raw_binary).as_posix()
+        docker = f"sudo {binary}" if "podman" in binary else binary
+        try:
+            subprocess.run(
+                shlex.split(f"{docker} info"),
+                check=True,
+                timeout=10,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+            LOGGER.debug("%s daemon is not available: %s", docker, e)
+            continue
+        return docker
+    return None
 
 
 def handle_docker_config(data):
@@ -284,6 +297,12 @@ def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     image = f"mongodb/mongodb-atlas-local:{opts.version}"
     docker = get_docker_cmd()
+    if docker is None:
+        msg = "Docker/Podman is required for --local-atlas but was not found or its daemon is not running."
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            msg += " Run with -v for more details."
+        LOGGER.error(msg)
+        sys.exit(1)
     stop(opts)
     # If we're on evergreen, we need to log into docker and use the pull-through cache.
     if "CI" in os.environ and "GITHUB_ACTION" not in os.environ:
@@ -291,16 +310,41 @@ def start_atlas(opts):
         run_command("bash setup.sh", cwd=EVG_PATH / "docker")
         LOGGER.info("Logging in to ECR... done.")
         image = f"901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/{image}"
-    cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
+    cmd = [
+        *shlex.split(docker),
+        "run",
+        "--rm",
+        "-d",
+        "--name",
+        "mongodb_atlas_local",
+        "-p",
+        "27017:27017",
+    ]
     if opts.auth:
-        cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
-        cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+        cmd += [
+            "-e",
+            "MONGODB_INITDB_ROOT_USERNAME=bob",
+            "-e",
+            "MONGODB_INITDB_ROOT_PASSWORD=pwd123",
+        ]
     if "podman" in docker:
-        cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
-    cmd += f" -P {image}"
+        cmd += ["--health-cmd", "/usr/local/bin/runner healthcheck"]
+    cmd += ["-P", image]
     LOGGER.info("Starting local atlas...")
-    LOGGER.debug("Using command: '%s'", cmd)
-    container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
+    LOGGER.debug("Using command: '%s'", shlex.join(cmd))
+    try:
+        proc = subprocess.run(
+            cmd,
+            check=True,
+            encoding="utf-8",
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("Failed to start local atlas container:\n%s", e.stdout + e.stderr)
+        sys.exit(e.returncode)
+    # Only stdout contains the container id; stderr may contain unrelated
+    # image-pull progress output that must not be mixed in.
+    container_id = proc.stdout.strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
@@ -309,7 +353,13 @@ def start_atlas(opts):
     cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
     tries = 0
     while 1:
-        resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+        try:
+            resp = subprocess.check_output(
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.STDOUT
+            ).strip()
+        except subprocess.CalledProcessError as e:
+            LOGGER.error("Failed to check local atlas container health:\n%s", e.output)
+            sys.exit(e.returncode)
         if resp == "healthy":
             break
         if tries >= 60:
@@ -765,14 +815,23 @@ def stop(opts):
         cmd = f"{docker} ps --format '{{{{.Image}}}}\t{{{{.ID}}}}'"
         try:
             response = subprocess.check_output(
-                shlex.split(cmd), encoding="utf-8"
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.DEVNULL
             ).strip()
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            LOGGER.exception(e)
+            LOGGER.debug("Failed to list docker containers: %s", e)
             response = ""
         for line in response.splitlines():
             image, container_id = line.split("\t")
-            if image in ["mongodb/mongodb-atlas-local", "mongo"]:
+            # In CI the image is pulled through an ECR mirror, so it's prefixed with a
+            # registry host (e.g. ".../dockerhub/mongodb/mongodb-atlas-local:latest")
+            # instead of the plain "mongodb/mongodb-atlas-local". Drop the tag so the
+            # suffix match below recognizes both forms.
+            repo, sep, tag = image.rpartition(":")
+            if not sep or "/" in tag:
+                repo = image
+            if repo in ("mongodb/mongodb-atlas-local", "mongo") or repo.endswith(
+                ("/mongodb/mongodb-atlas-local", "/mongo")
+            ):
                 LOGGER.info(f"Stopping {image} by image name...")
                 shutdown_docker(docker, container_id)
                 LOGGER.info(f"Stopping {image} by image name... done.")
