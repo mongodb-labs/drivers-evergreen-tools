@@ -7,6 +7,7 @@ Use '--help' for more information.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import logging
 import os
@@ -206,14 +207,26 @@ def get_options():
     return opts, command
 
 
+@functools.lru_cache(maxsize=1)
 def get_docker_cmd():
-    """Get the appropriate docker command."""
+    """Get the appropriate docker command, or None if the daemon is unavailable."""
     docker = shutil.which("podman") or shutil.which("docker")
     if not docker:
         return None
     docker = PureWindowsPath(docker).as_posix()
     if "podman" in docker:
         docker = f"sudo {docker}"
+    try:
+        subprocess.run(
+            shlex.split(f"{docker} info"),
+            check=True,
+            timeout=10,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+        LOGGER.debug("Docker/Podman daemon is not available: %s", e)
+        return None
     return docker
 
 
@@ -284,6 +297,12 @@ def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     image = f"mongodb/mongodb-atlas-local:{opts.version}"
     docker = get_docker_cmd()
+    if docker is None:
+        LOGGER.error(
+            "Docker/Podman is required for --local-atlas but was not found or "
+            "its daemon is not running. Run with -v for more details."
+        )
+        sys.exit(1)
     stop(opts)
     # If we're on evergreen, we need to log into docker and use the pull-through cache.
     if "CI" in os.environ and "GITHUB_ACTION" not in os.environ:
@@ -300,7 +319,20 @@ def start_atlas(opts):
     cmd += f" -P {image}"
     LOGGER.info("Starting local atlas...")
     LOGGER.debug("Using command: '%s'", cmd)
-    container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
+    try:
+        proc = subprocess.run(
+            cmd,
+            shell=True,
+            check=True,
+            encoding="utf-8",
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("Failed to start local atlas container:\n%s", e.stdout + e.stderr)
+        sys.exit(e.returncode)
+    # Only stdout contains the container id; stderr may contain unrelated
+    # image-pull progress output that must not be mixed in.
+    container_id = proc.stdout.strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
@@ -309,7 +341,13 @@ def start_atlas(opts):
     cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
     tries = 0
     while 1:
-        resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+        try:
+            resp = subprocess.check_output(
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.STDOUT
+            ).strip()
+        except subprocess.CalledProcessError as e:
+            LOGGER.error("Failed to check local atlas container health:\n%s", e.output)
+            sys.exit(e.returncode)
         if resp == "healthy":
             break
         if tries >= 60:
@@ -765,14 +803,21 @@ def stop(opts):
         cmd = f"{docker} ps --format '{{{{.Image}}}}\t{{{{.ID}}}}'"
         try:
             response = subprocess.check_output(
-                shlex.split(cmd), encoding="utf-8"
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.DEVNULL
             ).strip()
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            LOGGER.exception(e)
+            LOGGER.debug("Failed to list docker containers: %s", e)
             response = ""
         for line in response.splitlines():
             image, container_id = line.split("\t")
-            if image in ["mongodb/mongodb-atlas-local", "mongo"]:
+            # Strip an optional tag so a registry-mirrored reference like
+            # ".../dockerhub/mongodb/mongodb-atlas-local:latest" (used in CI) still matches.
+            repo, sep, tag = image.rpartition(":")
+            if not sep or "/" in tag:
+                repo = image
+            if repo in ("mongodb/mongodb-atlas-local", "mongo") or repo.endswith(
+                ("/mongodb/mongodb-atlas-local", "/mongo")
+            ):
                 LOGGER.info(f"Stopping {image} by image name...")
                 shutdown_docker(docker, container_id)
                 LOGGER.info(f"Stopping {image} by image name... done.")
