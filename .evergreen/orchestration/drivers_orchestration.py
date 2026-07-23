@@ -209,25 +209,25 @@ def get_options():
 
 @functools.lru_cache(maxsize=1)
 def get_docker_cmd():
-    """Get the appropriate docker command, or None if the daemon is unavailable."""
-    docker = shutil.which("podman") or shutil.which("docker")
-    if not docker:
-        return None
-    docker = PureWindowsPath(docker).as_posix()
-    if "podman" in docker:
-        docker = f"sudo {docker}"
-    try:
-        subprocess.run(
-            shlex.split(f"{docker} info"),
-            check=True,
-            timeout=10,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
-        LOGGER.debug("Docker/Podman daemon is not available: %s", e)
-        return None
-    return docker
+    """Get the appropriate docker command, or None if neither daemon is available."""
+    for raw_binary in (shutil.which("podman"), shutil.which("docker")):
+        if not raw_binary:
+            continue
+        binary = PureWindowsPath(raw_binary).as_posix()
+        docker = f"sudo {binary}" if "podman" in binary else binary
+        try:
+            subprocess.run(
+                shlex.split(f"{docker} info"),
+                check=True,
+                timeout=10,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+            LOGGER.debug("%s daemon is not available: %s", docker, e)
+            continue
+        return docker
+    return None
 
 
 def handle_docker_config(data):
@@ -310,19 +310,31 @@ def start_atlas(opts):
         run_command("bash setup.sh", cwd=EVG_PATH / "docker")
         LOGGER.info("Logging in to ECR... done.")
         image = f"901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/{image}"
-    cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
+    cmd = [
+        *shlex.split(docker),
+        "run",
+        "--rm",
+        "-d",
+        "--name",
+        "mongodb_atlas_local",
+        "-p",
+        "27017:27017",
+    ]
     if opts.auth:
-        cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
-        cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+        cmd += [
+            "-e",
+            "MONGODB_INITDB_ROOT_USERNAME=bob",
+            "-e",
+            "MONGODB_INITDB_ROOT_PASSWORD=pwd123",
+        ]
     if "podman" in docker:
-        cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
-    cmd += f" -P {image}"
+        cmd += ["--health-cmd", "/usr/local/bin/runner healthcheck"]
+    cmd += ["-P", image]
     LOGGER.info("Starting local atlas...")
-    LOGGER.debug("Using command: '%s'", cmd)
+    LOGGER.debug("Using command: '%s'", shlex.join(cmd))
     try:
         proc = subprocess.run(
             cmd,
-            shell=True,
             check=True,
             encoding="utf-8",
             capture_output=True,
