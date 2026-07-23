@@ -6,13 +6,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR/..
 
-# The system python3 may be too old (or missing); find a suitable one.
-. ./find-python3.sh
-PYTHON_BINARY=$(ensure_python3 2>/dev/null)
-if [ -z "$PYTHON_BINARY" ]; then
-  echo "No suitable python3 binary found" >&2
-  exit 1
-fi
+# Ensure uv is available, then resolve the interpreter it would use.
+. ./ensure-uv.sh
+ensure_uv || exit 1
+PYTHON_BINARY=$(uv python find)
 PATH="$(dirname "$PYTHON_BINARY"):$PATH"
 
 ./install-node.sh

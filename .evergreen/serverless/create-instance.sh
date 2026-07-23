@@ -25,7 +25,7 @@ set +o xtrace # Disable xtrace to ensure credentials aren't leaked
 CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-. $SCRIPT_DIR/../find-python3.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 pushd $SCRIPT_DIR
 
 # Load the secrets file if it exists.
@@ -101,14 +101,14 @@ if [ $SERVERLESS_URI = "null" ]; then
   exit 1
 fi
 
-PYTHON=$(ensure_python3)
+ensure_uv || exit 1
 
 RESP=$(curl -sS \
   --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
   -X GET \
   "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/serverless/${DEPLOYMENT_NAME}"
 );
-SERVERLESS_MONGODB_VERSION=$($PYTHON -c "import json;d=json.loads('${RESP}');print(d['mongoDBVersion'])")
+SERVERLESS_MONGODB_VERSION=$(uv run python -c "import json,sys;d=json.loads(sys.argv[1]);print(d['mongoDBVersion'])" "${RESP}")
 echo "SERVERLESS_MONGODB_VERSION=$SERVERLESS_MONGODB_VERSION"
 
 echo "SERVERLESS_URI: \"$SERVERLESS_URI\"" >> $CURRENT_DIR/serverless-expansion.yml

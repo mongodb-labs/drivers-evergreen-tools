@@ -5,11 +5,13 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/../csfle
 
 # Test with default python
-PYTHON_BINARY=$(bash -c ". $SCRIPT_DIR/../find-python3.sh && ensure_python3 2>/dev/null")
+ensure_uv || exit 1
+PYTHON_BINARY=$(uv python find)
 export PYTHON_BINARY
 
 function run_test() {
