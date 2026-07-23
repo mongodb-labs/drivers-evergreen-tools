@@ -298,10 +298,10 @@ def start_atlas(opts):
     image = f"mongodb/mongodb-atlas-local:{opts.version}"
     docker = get_docker_cmd()
     if docker is None:
-        LOGGER.error(
-            "Docker/Podman is required for --local-atlas but was not found or "
-            "its daemon is not running. Run with -v for more details."
-        )
+        msg = "Docker/Podman is required for --local-atlas but was not found or its daemon is not running."
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            msg += " Run with -v for more details."
+        LOGGER.error(msg)
         sys.exit(1)
     stop(opts)
     # If we're on evergreen, we need to log into docker and use the pull-through cache.
