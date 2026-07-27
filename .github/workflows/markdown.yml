@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
 
       - name: "Check Markdown"
-        uses: "john0isaac/action-check-markdown@274ad7e69a147c37274e1a94fb01ddb175c57bed"
+        uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           command: check_broken_paths
