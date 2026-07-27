@@ -59,6 +59,7 @@ get_mongodb_download_url_for ()
    _script_dir="$(dirname ${BASH_SOURCE:-$0})"
    . "$_script_dir/ensure-uv.sh"
    ensure_uv || exit 1
+   ensure_uv_scoped_paths
    MONGOSH_DOWNLOAD_URL=$(uv run --project "$_script_dir" python "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
 
    # Get the download url for MongoDB for the given version.

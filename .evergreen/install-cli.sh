@@ -20,14 +20,13 @@ pushd $SCRIPT_DIR >/dev/null
 ensure_uv || exit 1
 
 # Ensure uv is writing assets to a contained location.
-export UV_CACHE_DIR=${DRIVERS_TOOLS}/.local/uv-cache
-export UV_TOOL_DIR=${DRIVERS_TOOLS}/.local/uv-tool
+ensure_uv_scoped_paths
 export UV_UNMANAGED_INSTALL="1"
 
 if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   _root_dir=$(mktemp -d)
-  UV_CACHE_DIR=$_root_dir/uv-cache
-  UV_TOOL_DIR=$_root_dir/uv-tool
+  export UV_CACHE_DIR=$_root_dir/uv-cache
+  export UV_TOOL_DIR=$_root_dir/uv-tool
 fi
 
 # Ensure there is a venv available in the script dir for backward compatibility.

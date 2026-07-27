@@ -21,6 +21,7 @@ bash ./setup.sh
 # Run the client.
 . ../ensure-uv.sh
 ensure_uv || exit 1
+ensure_uv_scoped_paths
 uv run python client.py
 
 # Tear down the server
@@ -32,6 +33,7 @@ bash ./setup.sh -c 10037
 # Run the client.
 . ../ensure-uv.sh
 ensure_uv || exit 1
+ensure_uv_scoped_paths
 uv run python client.py -c 10037
 
 # Tear down the server.

@@ -108,3 +108,22 @@ please file a ticket in the DEVPROD Jira project:
 EOF
   return 1
 }
+
+# ensure_uv_scoped_paths
+#
+# Usage:
+#   ensure_uv_scoped_paths
+#
+# Confines uv's cache, installed tools, and downloaded Python interpreters to
+# the Evergreen checkout (under $DRIVERS_TOOLS/.local) instead of uv's
+# default shared home-directory locations (~/.cache/uv,
+# ~/.local/share/uv/{tools,python}). This avoids cross-task/cross-host
+# contention when Evergreen hosts are reused or share a home directory.
+#
+# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
+ensure_uv_scoped_paths() {
+  : "${DRIVERS_TOOLS:?ensure_uv_scoped_paths: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
+  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
+  export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
+  export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
+}
