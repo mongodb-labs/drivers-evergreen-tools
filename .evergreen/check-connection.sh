@@ -10,4 +10,5 @@ if [ ! -f "${MONGODB_BINARIES}/mongosh" ]; then
 fi
 
 MONGODB_URI=${MONGODB_URI:-"mongodb://127.0.0.1:27017/?serverSelectionTimeoutMS=10000"}
-${MONGODB_BINARIES}/mongosh "${MONGODB_URI}" --eval "db.runCommand({\"ping\":1})"
+MONGOSH_EXTRA_ARGS=${MONGOSH_EXTRA_ARGS:-}
+${MONGODB_BINARIES}/mongosh "${MONGODB_URI}" ${MONGOSH_EXTRA_ARGS} --eval "db.runCommand({\"ping\":1})"

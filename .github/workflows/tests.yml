@@ -72,12 +72,12 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
-          URI=$(cat uri.txt)
-          ARGS=""
+          MONGOSH_EXTRA_ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ] && [ -z "${{ matrix.local-atlas }}" ]; then
-            ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
+            MONGOSH_EXTRA_ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
           fi
-          mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
+          export MONGOSH_EXTRA_ARGS
+          make test-connect
 
   pre-commit:
     runs-on: ubuntu-latest
