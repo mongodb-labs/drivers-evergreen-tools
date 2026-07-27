@@ -19,10 +19,10 @@ pushd $SCRIPT_DIR >/dev/null
 . ./ensure-uv.sh
 ensure_uv || exit 1
 
-# Ensure uv is writing assets to a contained location.
-ensure_uv_scoped_paths
 export UV_UNMANAGED_INSTALL="1"
 
+# Override the contained cache/tool dirs ensure_uv already set, since this
+# Docker case needs a fresh temp dir instead.
 if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   _root_dir=$(mktemp -d)
   export UV_CACHE_DIR=$_root_dir/uv-cache

@@ -102,7 +102,6 @@ if [ $SERVERLESS_URI = "null" ]; then
 fi
 
 ensure_uv || exit 1
-ensure_uv_scoped_paths
 
 RESP=$(curl -sS \
   --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \

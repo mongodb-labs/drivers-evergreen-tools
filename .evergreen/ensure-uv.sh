@@ -15,6 +15,24 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
+# _ensure_uv_scope_paths (internal)
+#
+# Confines uv's cache, installed tools, and downloaded Python interpreters to
+# the Evergreen checkout (under $DRIVERS_TOOLS/.local) instead of uv's
+# default shared home-directory locations (~/.cache/uv,
+# ~/.local/share/uv/{tools,python}). This avoids cross-task/cross-host
+# contention when Evergreen hosts are reused or share a home directory.
+#
+# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
+# Called automatically by ensure_uv() on success; not meant to be called
+# directly.
+_ensure_uv_scope_paths() {
+  : "${DRIVERS_TOOLS:?_ensure_uv_scope_paths: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
+  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
+  export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
+  export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
+}
+
 # ensure_uv
 #
 # Usage:
@@ -28,6 +46,13 @@ fi
 # This mainly checks PATH and falls back to a plain `pip install --user`.
 # The one exception is a fallback to the MongoDB toolchain's python3, needed
 # on hosts (e.g. RHEL7) that have no python3 on PATH at all.
+#
+# On success, also confines uv's cache, installed tools, and downloaded
+# Python interpreters to the Evergreen checkout (under $DRIVERS_TOOLS/.local)
+# instead of uv's default shared home-directory locations (~/.cache/uv,
+# ~/.local/share/uv/{tools,python}), avoiding cross-task/cross-host
+# contention when Evergreen hosts are reused or share a home directory.
+# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
@@ -43,6 +68,7 @@ ensure_uv() {
   fi
 
   if uv --version >/dev/null 2>&1; then
+    _ensure_uv_scope_paths
     return 0
   fi
 
@@ -93,6 +119,7 @@ ensure_uv() {
   fi
 
   if uv --version >/dev/null 2>&1; then
+    _ensure_uv_scope_paths
     return 0
   fi
 
@@ -107,23 +134,4 @@ please file a ticket in the DEVPROD Jira project:
   https://jira.mongodb.org/projects/DEVPROD
 EOF
   return 1
-}
-
-# ensure_uv_scoped_paths
-#
-# Usage:
-#   ensure_uv_scoped_paths
-#
-# Confines uv's cache, installed tools, and downloaded Python interpreters to
-# the Evergreen checkout (under $DRIVERS_TOOLS/.local) instead of uv's
-# default shared home-directory locations (~/.cache/uv,
-# ~/.local/share/uv/{tools,python}). This avoids cross-task/cross-host
-# contention when Evergreen hosts are reused or share a home directory.
-#
-# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
-ensure_uv_scoped_paths() {
-  : "${DRIVERS_TOOLS:?ensure_uv_scoped_paths: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
-  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
-  export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
-  export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
 }

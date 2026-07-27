@@ -66,7 +66,6 @@ check_deployment ()
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
 
   ensure_uv || exit 1
-  ensure_uv_scoped_paths
 
   # Don't try longer than 20 minutes.
   echo "" 1>&2

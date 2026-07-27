@@ -10,7 +10,6 @@ pushd $SCRIPT_DIR
 # Ensure uv is available here.
 . ../ensure-uv.sh
 ensure_uv || exit 1
-ensure_uv_scoped_paths
 
 echo "Starting Happy Eyeballs server..."
 

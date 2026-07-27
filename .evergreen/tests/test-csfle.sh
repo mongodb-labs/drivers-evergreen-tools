@@ -11,7 +11,6 @@ pushd $SCRIPT_DIR/../csfle
 
 # Test with default python
 ensure_uv || exit 1
-ensure_uv_scoped_paths
 PYTHON_BINARY=$(uv python find)
 export PYTHON_BINARY
 

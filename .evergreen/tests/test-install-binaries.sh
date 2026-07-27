@@ -9,7 +9,6 @@ pushd $SCRIPT_DIR/..
 # Ensure uv is available, then resolve the interpreter it would use.
 . ./ensure-uv.sh
 ensure_uv || exit 1
-ensure_uv_scoped_paths
 PYTHON_BINARY=$(uv python find)
 PATH="$(dirname "$PYTHON_BINARY"):$PATH"
 

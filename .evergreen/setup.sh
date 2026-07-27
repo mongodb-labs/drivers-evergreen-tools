@@ -29,7 +29,6 @@ EOF
 
 # Ensure uv is available for the CLI install step below.
 ensure_uv || exit 1
-ensure_uv_scoped_paths
 
 # Setup the orchestration directory, which also installs CLIs into this directory.
 bash $SCRIPT_DIR/orchestration/setup.sh
