@@ -15,7 +15,9 @@ popd
 pushd $SCRIPT_DIR/../atlas_data_lake
 bash ./setup.sh
 source secrets-export.sh
-${DOWNLOAD_DIR}/bin/mongosh "mongodb://$ADL_USERNAME:$ADL_PASSWORD@localhost:27017" --eval "db.runCommand({\"ping\":1})"
+export MONGODB_BINARIES="${DOWNLOAD_DIR}/bin"
+export MONGODB_URI="mongodb://$ADL_USERNAME:$ADL_PASSWORD@localhost:27017"
+. "${DRIVERS_TOOLS}/.evergreen/check-connection.sh"
 bash ./teardown.sh
 popd
 
