@@ -23,10 +23,15 @@ fi
 # ~/.local/share/uv/{tools,python}). This avoids cross-task/cross-host
 # contention when Evergreen hosts are reused or share a home directory.
 #
-# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
-# Called automatically by ensure_uv() on success; not meant to be called
-# directly.
+# A no-op outside CI (i.e. when $CI is unset), so local developer runs keep
+# uv's normal shared cache instead of being forced to re-download everything
+# on every invocation.
+#
+# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first)
+# whenever $CI is set. Called automatically by ensure_uv() on success; not
+# meant to be called directly.
 _ensure_uv_scope_paths() {
+  [ -n "${CI:-}" ] || return 0
   : "${DRIVERS_TOOLS:?_ensure_uv_scope_paths: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
   export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
@@ -47,12 +52,14 @@ _ensure_uv_scope_paths() {
 # The one exception is a fallback to the MongoDB toolchain's python3, needed
 # on hosts (e.g. RHEL7) that have no python3 on PATH at all.
 #
-# On success, also confines uv's cache, installed tools, and downloaded
-# Python interpreters to the Evergreen checkout (under $DRIVERS_TOOLS/.local)
-# instead of uv's default shared home-directory locations (~/.cache/uv,
-# ~/.local/share/uv/{tools,python}), avoiding cross-task/cross-host
-# contention when Evergreen hosts are reused or share a home directory.
-# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first).
+# On success in CI (i.e. when $CI is set), also confines uv's cache,
+# installed tools, and downloaded Python interpreters to the Evergreen
+# checkout (under $DRIVERS_TOOLS/.local) instead of uv's default shared
+# home-directory locations (~/.cache/uv, ~/.local/share/uv/{tools,python}),
+# avoiding cross-task/cross-host contention when Evergreen hosts are reused
+# or share a home directory. Requires $DRIVERS_TOOLS to already be set in
+# that case (source handle-paths.sh first). Outside CI, uv's paths are left
+# untouched.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
