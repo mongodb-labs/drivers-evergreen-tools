@@ -143,12 +143,20 @@ def start_mongodb_runner(opts, data):
     LOGGER.info(f"Running mongodb-runner using {binary}...")
     env = os.environ.copy()
     node_bin = shutil.which("node")
+    LOGGER.info(
+        f"DEBUG webcrypto check: node_bin={node_bin!r} "
+        f"PATH={env.get('PATH')!r} "
+        f"inherited_NODE_OPTIONS={env.get('NODE_OPTIONS')!r}"
+    )
     if node_bin:
         try:
             node_ver = subprocess.check_output(
                 [node_bin, "--version"], encoding="utf-8"
             ).strip()
             node_major = int(node_ver.lstrip("v").split(".")[0])
+            LOGGER.info(
+                f"DEBUG webcrypto check: node_ver={node_ver!r} node_major={node_major!r}"
+            )
             # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
             # The flag was removed in Node 22, so only add it for Node 16-18.
             if node_major < 19:
@@ -156,8 +164,11 @@ def start_mongodb_runner(opts, data):
                 env["NODE_OPTIONS"] = (
                     f"{existing} --experimental-global-webcrypto".strip()
                 )
-        except (subprocess.CalledProcessError, ValueError):
-            pass
+                LOGGER.info(
+                    f"DEBUG webcrypto check: added flag, NODE_OPTIONS={env['NODE_OPTIONS']!r}"
+                )
+        except (subprocess.CalledProcessError, ValueError) as e:
+            LOGGER.info(f"DEBUG webcrypto check: exception {e!r}")
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
