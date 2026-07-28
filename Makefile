@@ -1,5 +1,9 @@
 .PHONY: clean sleep install lint test test-connect
 
+# Repo-local bin dir that install-cli.sh bootstraps uv into, and where we install
+# pre-commit, so neither has to be present globally.
+LOCAL_BIN := $(CURDIR)/.bin
+
 all:
 	@echo "Project successfully compiled"
 
@@ -8,12 +12,13 @@ install:
 	bash .evergreen/install-cli.sh .evergreen
 	bash .evergreen/install-cli.sh .evergreen/orchestration
 	@echo "Installing pre-commit..."
-	export PATH="$$PWD/.bin:$$PATH"; \
-	export UV_TOOL_BIN_DIR="$$PWD/.bin"; \
-	uv tool install pre-commit; \
+	export PATH="$(LOCAL_BIN):$$PATH"; \
+	export UV_TOOL_BIN_DIR="$(LOCAL_BIN)"; \
+	uv tool install pre-commit && \
 	pre-commit install
 
 lint:
+	export PATH="$(LOCAL_BIN):$$PATH"; \
 	pre-commit run --all-files
 
 clean:

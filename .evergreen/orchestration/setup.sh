@@ -26,7 +26,7 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 # Otherwise, Node is installed lazily by mongodb_runner.py only when mongodb-runner
 # is actually invoked.
 if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
-  if [ ! -d "$HERE/../node-artifacts" ]; then
+  if [ ! -d "$_HERE/../node-artifacts" ]; then
     # The dev version requires Node 22+.
     NODE_LTS_VERSION=22 bash $_HERE/../install-node.sh
   fi

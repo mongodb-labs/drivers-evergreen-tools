@@ -34,7 +34,7 @@ bash ./setup.sh
 echo "Connecting to server..."
 export MONGODB_URI="mongodb://localhost/?serverSelectionTimeoutMS=10000"
 export MONGOSH_EXTRA_ARGS="--tls --tlsCertificateKeyFile ${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/server.pem --tlsCAFile ${DRIVERS_TOOLS}/.evergreen/ocsp/${OCSP_ALGORITHM}/ca.pem"
-. "${DRIVERS_TOOLS}/.evergreen/check-connection.sh"
+bash "${DRIVERS_TOOLS}/.evergreen/check-connection.sh"
 echo "Connecting to server... done."
 
 bash ./teardown.sh

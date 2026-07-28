@@ -11,7 +11,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 TMPDIR = Path(tempfile.gettempdir()) / "drivers_orchestration"
@@ -62,7 +62,24 @@ def _normalize_path(path: Union[Path, str]) -> str:
 
 
 _MR_VERSION = "6.8.2"
-_MIN_NODE_MAJOR = 16
+# mongodb-runner depends on yargs@18, an ESM-only package that Node < 18 cannot
+# require(), so 18 is the floor for both "is the Node on PATH usable" and "is
+# mongodb-runner supported here" checks.
+_MIN_NODE_MAJOR = 18
+
+
+def _node_major_version() -> Optional[int]:
+    """Return the major version of the "node" on PATH, or None if unavailable."""
+    node = shutil.which("node")
+    if node is None:
+        return None
+    try:
+        node_ver = subprocess.check_output(
+            [node, "--version"], encoding="utf-8"
+        ).strip()
+        return int(node_ver.lstrip("v").split(".")[0])
+    except (subprocess.CalledProcessError, ValueError):
+        return None
 
 
 def _node_is_usable() -> bool:
@@ -72,34 +89,20 @@ def _node_is_usable() -> bool:
     tooling) earlier on PATH than any Node we install ourselves; relying on
     "npm exists somewhere on PATH" alone can pick that up instead.
     """
-    node = shutil.which("node")
-    if node is None:
-        return False
-    try:
-        node_ver = subprocess.check_output(
-            [node, "--version"], encoding="utf-8"
-        ).strip()
-        return int(node_ver.lstrip("v").split(".")[0]) >= _MIN_NODE_MAJOR
-    except (subprocess.CalledProcessError, ValueError):
-        return False
+    node_major = _node_major_version()
+    return node_major is not None and node_major >= _MIN_NODE_MAJOR
 
 
 def _mongodb_runner_supported() -> bool:
     """Return False on platforms that cannot run the current mongodb-runner.
 
-    mongodb-runner depends on yargs@18, an ESM-only package that Node < 18
-    cannot require(). Check the actual Node version when available; RHEL7
-    (whose Node 16 is the only such platform in CI) is used as a fallback
-    signal when Node isn't on PATH yet.
+    Check the actual Node version when available; RHEL7 (whose Node 16 is the
+    only such platform in CI) is used as a fallback signal when Node isn't on
+    PATH yet.
     """
-    node = shutil.which("node")
-    if node:
-        try:
-            node_ver = subprocess.check_output([node, "--version"], encoding="utf-8")
-            if int(node_ver.strip().lstrip("v").split(".")[0]) < 18:
-                return False
-        except (subprocess.CalledProcessError, ValueError):
-            pass
+    node_major = _node_major_version()
+    if node_major is not None and node_major < _MIN_NODE_MAJOR:
+        return False
     if sys.platform != "linux":
         return True
     try:

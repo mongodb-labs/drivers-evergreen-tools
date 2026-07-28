@@ -17,10 +17,10 @@ bash ./setup.sh
 source secrets-export.sh
 export MONGODB_BINARIES="${DOWNLOAD_DIR}/bin"
 export MONGODB_URI="mongodb://$ADL_USERNAME:$ADL_PASSWORD@localhost:27017"
-. "${DRIVERS_TOOLS}/.evergreen/check-connection.sh"
+bash "${DRIVERS_TOOLS}/.evergreen/check-connection.sh"
 bash ./teardown.sh
 popd
 
-rm -rf "${SCRIPT_DIR:?}/${DOWNLOAD_DIR}"
+rm -rf "${DOWNLOAD_DIR:?}"
 
 make -C ${DRIVERS_TOOLS} test
