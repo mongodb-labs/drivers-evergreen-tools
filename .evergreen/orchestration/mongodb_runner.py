@@ -86,7 +86,9 @@ def _install_mongodb_runner() -> Path:
         npm = shutil.which("npm")
         if npm is None:
             install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
-            LOGGER.info(f"npm not found, installing Node via {install_node_script}...")
+            LOGGER.info(
+                f"npm not found, installing Node using {install_node_script}..."
+            )
             subprocess.run(["bash", str(install_node_script)], check=True)
             node_bin_dir = (
                 DRIVERS_TOOLS / ".evergreen" / "node-artifacts" / "nodejs" / "bin"
@@ -97,7 +99,7 @@ def _install_mongodb_runner() -> Path:
             npm = shutil.which("npm")
             if npm is None:
                 raise RuntimeError(
-                    f"npm still not found after installing Node via {install_node_script}"
+                    f"npm still not found after installing Node using {install_node_script}"
                 )
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
