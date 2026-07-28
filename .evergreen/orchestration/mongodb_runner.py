@@ -62,6 +62,26 @@ def _normalize_path(path: Union[Path, str]) -> str:
 
 
 _MR_VERSION = "6.7.1"
+_MIN_NODE_MAJOR = 16
+
+
+def _node_is_usable() -> bool:
+    """Check whether the "node" on PATH is new enough for mongodb-runner.
+
+    Some hosts have an unrelated, ancient Node (e.g. bundled with other
+    tooling) earlier on PATH than any Node we install ourselves; relying on
+    "npm exists somewhere on PATH" alone can pick that up instead.
+    """
+    node = shutil.which("node")
+    if node is None:
+        return False
+    try:
+        node_ver = subprocess.check_output(
+            [node, "--version"], encoding="utf-8"
+        ).strip()
+        return int(node_ver.lstrip("v").split(".")[0]) >= _MIN_NODE_MAJOR
+    except (subprocess.CalledProcessError, ValueError):
+        return False
 
 
 def _install_mongodb_runner() -> Path:
@@ -83,11 +103,10 @@ def _install_mongodb_runner() -> Path:
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
-        npm = shutil.which("npm")
-        if npm is None:
+        if not _node_is_usable():
             install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
             LOGGER.info(
-                f"npm not found, installing Node using {install_node_script}..."
+                f"No usable Node found, installing Node using {install_node_script}..."
             )
             subprocess.run(["bash", str(install_node_script)], check=True)
             node_bin_dir = (
@@ -96,11 +115,11 @@ def _install_mongodb_runner() -> Path:
             os.environ["PATH"] = (
                 f"{node_bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
             )
-            npm = shutil.which("npm")
-            if npm is None:
+            if not _node_is_usable():
                 raise RuntimeError(
-                    f"npm still not found after installing Node using {install_node_script}"
+                    f"No usable Node found after installing Node using {install_node_script}"
                 )
+        npm = shutil.which("npm")
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
             subprocess.run(
@@ -143,20 +162,12 @@ def start_mongodb_runner(opts, data):
     LOGGER.info(f"Running mongodb-runner using {binary}...")
     env = os.environ.copy()
     node_bin = shutil.which("node")
-    LOGGER.info(
-        f"DEBUG webcrypto check: node_bin={node_bin!r} "
-        f"PATH={env.get('PATH')!r} "
-        f"inherited_NODE_OPTIONS={env.get('NODE_OPTIONS')!r}"
-    )
     if node_bin:
         try:
             node_ver = subprocess.check_output(
                 [node_bin, "--version"], encoding="utf-8"
             ).strip()
             node_major = int(node_ver.lstrip("v").split(".")[0])
-            LOGGER.info(
-                f"DEBUG webcrypto check: node_ver={node_ver!r} node_major={node_major!r}"
-            )
             # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
             # The flag was removed in Node 22, so only add it for Node 16-18.
             if node_major < 19:
@@ -164,11 +175,8 @@ def start_mongodb_runner(opts, data):
                 env["NODE_OPTIONS"] = (
                     f"{existing} --experimental-global-webcrypto".strip()
                 )
-                LOGGER.info(
-                    f"DEBUG webcrypto check: added flag, NODE_OPTIONS={env['NODE_OPTIONS']!r}"
-                )
-        except (subprocess.CalledProcessError, ValueError) as e:
-            LOGGER.info(f"DEBUG webcrypto check: exception {e!r}")
+        except (subprocess.CalledProcessError, ValueError):
+            pass
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
