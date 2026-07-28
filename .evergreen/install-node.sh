@@ -24,11 +24,12 @@ if command -v ldd >/dev/null 2>&1; then
 fi
 NODE_LTS_VERSION=${NODE_LTS_VERSION:-$DEFAULT_NODE_VERSION}
 
-# If NODE_LTS_VERSION is numeric and less than 18, default to 9, if less than 20, default to 10.
-# Do not override if it is already set.
+# If NODE_LTS_VERSION is numeric and less than 18, default to 9, if less than 22, default to 10.
+# npm's "latest" dist-tag requires Node >=22.22.2 (npm@12+), so anything older must pin to npm@10,
+# which supports Node >=18.17.0 || >=20.5.0. Do not override if it is already set.
 if [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 18 ]]; then
   NPM_VERSION=${NPM_VERSION:-9}
-elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 20 ]]; then
+elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 22 ]]; then
   NPM_VERSION=${NPM_VERSION:-10}
 else
   NPM_VERSION=${NPM_VERSION:-latest}
