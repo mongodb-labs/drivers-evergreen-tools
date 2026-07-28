@@ -72,7 +72,7 @@ pydantic-settings==2.10.1
     # via oic
 pyjwkest==1.4.2
     # via oic
-pyjwt[crypto]==2.10.1
+pyjwt[crypto]==2.13.0
     # via
     #   msal
     #   pyjwt
