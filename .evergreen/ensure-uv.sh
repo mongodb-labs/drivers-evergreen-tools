@@ -73,8 +73,8 @@ ensure_uv() {
   # hosts already have a working uv installed under pyenv's own configured
   # version). Defer to pyenv's own global version instead of hardcoding e.g.
   # "system", which may not be where uv/python are actually installed on a
-  # given host. This covers the repo's own .python-version as well as any in a
-  # parent directory of the checkout.
+  # given host. This repo ships no .python-version, but a parent directory of
+  # the checkout may still have one.
   if command -v pyenv >/dev/null 2>&1; then
     declare pyenv_global
     pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true

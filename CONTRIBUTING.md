@@ -12,10 +12,12 @@ the relevant DRIVERS ticket.
 
 ## Python Considerations
 
-This repository supports CPython 3.9+. The root `.python-version` file pins the default
-interpreter version used by `uv`. Note that it does not affect `uv tool install`, which resolves its
-own interpreter. Most scripts source `ensure-uv.sh` and run Python using `uv run`,
-which resolves and manages the interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
+This repository supports CPython 3.9+. There is deliberately no `.python-version` pin, so `uv`
+reuses whichever interpreter the host already provides that satisfies `requires-python`, rather than
+downloading a specific version. Raising the floor is therefore not just a metadata change: it forces
+an interpreter upgrade on hosts sitting at the old floor. Most scripts source `ensure-uv.sh` and run
+Python using `uv run`, which resolves and manages the interpreter itself; see `ensure_uv` in
+`ensure-uv.sh` for details.
 `ensure_uv` also relocates uv's shared state into `$DRIVERS_TOOLS/.local` so it stays within the
 checkout: tool installs always, plus the cache and uv-managed interpreters when running in CI.
 A handful of scripts under per-folder virtual environments still rely on the older
