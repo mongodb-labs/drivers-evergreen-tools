@@ -17,29 +17,44 @@ fi
 
 # _ensure_uv_scope_paths (internal)
 #
-# Confines uv's shared state to the Evergreen checkout (under
-# $DRIVERS_TOOLS/.local) instead of uv's default shared home-directory
-# locations (~/.cache/uv, ~/.local/share/uv/{tools,python}), avoiding
-# cross-task/cross-host contention when Evergreen hosts are reused or share a
-# home directory.
+# Keeps uv's shared state out of its default home-directory locations
+# (~/.cache/uv, ~/.local/share/uv/{tools,python}), which would otherwise be
+# contended when Evergreen hosts are reused or share a home directory.
 #
-# UV_TOOL_DIR is always scoped: `uv tool install --force` would otherwise
-# overwrite a developer's globally installed tools (see install-cli.sh, which
-# pins its own uv that way). The cache and managed interpreters are only
-# scoped in CI (i.e. when $CI is set), so local runs keep uv's shared cache
-# rather than re-downloading everything on every invocation.
+# In CI everything goes under the task's temp directory. Evergreen points
+# TMPDIR at a per-task directory outside both $DRIVERS_TOOLS and
+# $PROJECT_DIRECTORY, so uv's caches are recycled with the task and never end
+# up in the uploaded failure artifacts, which are packed from those two trees.
 #
-# A no-op when $DRIVERS_TOOLS is unset: this is best-effort hygiene, not a
-# correctness requirement, and ensure_uv() is reachable from child shells that
-# do not inherit it (handle-paths.sh assigns DRIVERS_TOOLS without exporting
-# it). Called automatically by ensure_uv() on success; not meant to be called
-# directly.
+# Outside CI only UV_TOOL_DIR is redirected, since `uv tool install --force`
+# would otherwise overwrite a developer's globally installed tools (see
+# install-cli.sh, which pins its own uv that way). The cache is deliberately
+# left shared so local runs do not re-download everything.
+#
+# A no-op if there is nowhere suitable to point at: this is best-effort
+# hygiene, not a correctness requirement, and ensure_uv() is reachable from
+# child shells that do not inherit DRIVERS_TOOLS (handle-paths.sh assigns it
+# without exporting). Called automatically by ensure_uv() on success; not
+# meant to be called directly.
 _ensure_uv_scope_paths() {
+  if [ -n "${CI:-}" ]; then
+    declare _tmp="${TMPDIR:-${TEMP:-${TMP:-}}}"
+    if [ -n "$_tmp" ]; then
+      # Strip any trailing slash, and match handle-paths.sh in giving uv a
+      # native Windows path -- it rejects /cygdrive/c/... style paths.
+      _tmp="${_tmp%/}"
+      if [ "${OSTYPE:-}" = cygwin ]; then
+        _tmp="$(cygpath -m "$_tmp")"
+      fi
+      export UV_CACHE_DIR="$_tmp/uv-cache"
+      export UV_TOOL_DIR="$_tmp/uv-tool"
+      export UV_PYTHON_INSTALL_DIR="$_tmp/uv-python"
+      return 0
+    fi
+  fi
+
   [ -n "${DRIVERS_TOOLS:-}" ] || return 0
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
-  [ -n "${CI:-}" ] || return 0
-  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
-  export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
 }
 
 # ensure_uv

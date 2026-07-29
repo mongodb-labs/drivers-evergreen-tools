@@ -17,8 +17,9 @@ that satisfies `requires-python` rather than downloading a specific version, so 
 not merely a metadata change: it forces an interpreter upgrade on hosts sitting at the old floor.
 Most scripts source `ensure-uv.sh` and run Python using `uv run`, which resolves and manages the
 interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
-`ensure_uv` also relocates uv's shared state into `$DRIVERS_TOOLS/.local` so it stays within the
-checkout: tool installs always, plus the cache and uv-managed interpreters when running in CI.
+`ensure_uv` also keeps uv's shared state out of its default home-directory locations: in CI it goes
+under the task's temp directory, and outside CI only tool installs are redirected, so a local run
+cannot overwrite globally installed tools.
 A handful of scripts under per-folder virtual environments still rely on the older
 `find_python3.sh`/`venvcreate` mechanism until they are migrated.
 The minimum supported version must also be reflected in the `project.requires-python` metadata
