@@ -30,10 +30,13 @@ EOF
 # Ensure uv is available for the CLI install step below.
 ensure_uv || exit 1
 
-# Persist the uv-resolved interpreter for scripts still on find-python3.sh.
-# Each Evergreen command runs in a fresh shell, so the export from ensure_uv
-# does not survive; handle-paths.sh sources this .env to make it available.
-echo "DRIVERS_TOOLS_PYTHON=${DRIVERS_TOOLS_PYTHON:-}" >> $DRIVERS_TOOLS/.env
+# Deliberately no DRIVERS_TOOLS_PYTHON here. Scripts still on find-python3.sh
+# call ensure_python3 themselves, which picks a vetted interpreter in a
+# specific order (toolchain first, then `python3`, then `python`). Seeding the
+# variable from uv instead overrides that ordering: in the Ubuntu test image uv
+# resolves /usr/bin/python (3.10) while find_python3 correctly picks python3
+# (3.11), and since venvcreate uses --system-site-packages the 3.10
+# dist-packages leak a stale pyOpenSSL into the venv.
 
 # Setup the orchestration directory, which also installs CLIs into this directory.
 bash $SCRIPT_DIR/orchestration/setup.sh
