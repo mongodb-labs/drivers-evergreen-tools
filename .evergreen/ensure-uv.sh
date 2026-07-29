@@ -32,7 +32,7 @@ fi
 # meant to be called directly.
 _ensure_uv_scope_paths() {
   [ -n "${CI:-}" ] || return 0
-  : "${DRIVERS_TOOLS:?_ensure_uv_scope_paths: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
+  : "${DRIVERS_TOOLS:?ensure_uv: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
   export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
   export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
