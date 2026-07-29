@@ -14,8 +14,9 @@ the relevant DRIVERS ticket.
 
 This repository supports CPython 3.10+. Most scripts source `ensure-uv.sh` and run Python using
 `uv run`, which resolves and manages the interpreter itself; see `ensure_uv` in `ensure-uv.sh` for
-details. There is deliberately no `.python-version` pin, so `uv` reuses any interpreter already on
-the host that satisfies `requires-python` rather than downloading a specific version.
+details. The root `.python-version` file holds the interpreter at 3.13, because mongo-orchestration
+fails its TLS connection to `mongod` under 3.14. Removing the pin lets `uv` reuse whatever the host
+already has, which is preferable once 3.14 works.
 `ensure_uv` also relocates uv's shared state into `$DRIVERS_TOOLS/.local` so it stays within the
 checkout: tool installs always, plus the cache and uv-managed interpreters when running in CI.
 A handful of scripts under per-folder virtual environments still rely on the older
