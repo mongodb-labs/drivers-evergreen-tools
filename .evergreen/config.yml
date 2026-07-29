@@ -267,6 +267,11 @@ functions:
         exclude_files:
           # Windows cannot read the mongod *.lock files because they are locked.
           - "*.lock"
+          # uv's cache, tools, and managed interpreters are scoped here in CI
+          # and can be hundreds of MB; they are not useful for debugging.
+          - ".local/uv-cache/*"
+          - ".local/uv-tool/*"
+          - ".local/uv-python/*"
     - command: ec2.assume_role
       params:
         role_arn: ${assume_role_arn}

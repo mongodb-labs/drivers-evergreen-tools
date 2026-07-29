@@ -17,24 +17,28 @@ fi
 
 # _ensure_uv_scope_paths (internal)
 #
-# Confines uv's cache, installed tools, and downloaded Python interpreters to
-# the Evergreen checkout (under $DRIVERS_TOOLS/.local) instead of uv's
-# default shared home-directory locations (~/.cache/uv,
-# ~/.local/share/uv/{tools,python}). This avoids cross-task/cross-host
-# contention when Evergreen hosts are reused or share a home directory.
+# Confines uv's shared state to the Evergreen checkout (under
+# $DRIVERS_TOOLS/.local) instead of uv's default shared home-directory
+# locations (~/.cache/uv, ~/.local/share/uv/{tools,python}), avoiding
+# cross-task/cross-host contention when Evergreen hosts are reused or share a
+# home directory.
 #
-# A no-op outside CI (i.e. when $CI is unset), so local developer runs keep
-# uv's normal shared cache instead of being forced to re-download everything
-# on every invocation.
+# UV_TOOL_DIR is always scoped: `uv tool install --force` would otherwise
+# overwrite a developer's globally installed tools (see install-cli.sh, which
+# pins its own uv that way). The cache and managed interpreters are only
+# scoped in CI (i.e. when $CI is set), so local runs keep uv's shared cache
+# rather than re-downloading everything on every invocation.
 #
-# Requires $DRIVERS_TOOLS to already be set (source handle-paths.sh first)
-# whenever $CI is set. Called automatically by ensure_uv() on success; not
-# meant to be called directly.
+# A no-op when $DRIVERS_TOOLS is unset: this is best-effort hygiene, not a
+# correctness requirement, and ensure_uv() is reachable from child shells that
+# do not inherit it (handle-paths.sh assigns DRIVERS_TOOLS without exporting
+# it). Called automatically by ensure_uv() on success; not meant to be called
+# directly.
 _ensure_uv_scope_paths() {
-  [ -n "${CI:-}" ] || return 0
-  : "${DRIVERS_TOOLS:?ensure_uv: DRIVERS_TOOLS must be set (source handle-paths.sh first)}"
-  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
+  [ -n "${DRIVERS_TOOLS:-}" ] || return 0
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
+  [ -n "${CI:-}" ] || return 0
+  export UV_CACHE_DIR="${DRIVERS_TOOLS}/.local/uv-cache"
   export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
 }
 
@@ -50,22 +54,17 @@ _ensure_uv_scope_paths() {
 #
 # Sets the following environment variables:
 #
-# - PYENV_VERSION
-# - UV_CACHE_DIR
-# - <...>
+# - PYENV_VERSION (only when pyenv is installed)
+# - PATH (only when uv had to be installed)
+# - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
+# - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
 # This mainly checks PATH and falls back to a plain `pip install --user`.
 # The one exception is a fallback to the MongoDB toolchain's python3, needed
 # on hosts (e.g. RHEL7) that have no python3 on PATH at all.
 #
-# On success in CI (i.e. when $CI is set), also confines uv's cache,
-# installed tools, and downloaded Python interpreters to the Evergreen
-# checkout (under $DRIVERS_TOOLS/.local) instead of uv's default shared
-# home-directory locations (~/.cache/uv, ~/.local/share/uv/{tools,python}),
-# avoiding cross-task/cross-host contention when Evergreen hosts are reused
-# or share a home directory. Requires $DRIVERS_TOOLS to already be set in
-# that case (source handle-paths.sh first). Outside CI, uv's paths are left
-# untouched.
+# On success, also relocates uv's shared state into the checkout; see
+# _ensure_uv_scope_paths above for exactly what is scoped and when.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce the repo's .python-version

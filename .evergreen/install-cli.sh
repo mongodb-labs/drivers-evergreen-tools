@@ -21,12 +21,13 @@ ensure_uv || exit 1
 
 export UV_UNMANAGED_INSTALL="1"
 
-# Override the contained cache/tool dirs ensure_uv already set, since this
-# Docker case needs a fresh temp dir instead.
+# Point uv at a fresh temp dir in the Docker case, overriding anything
+# ensure_uv may have scoped to the checkout.
 if [ "${DOCKER_RUNNING:-}" == "true" ]; then
   _root_dir=$(mktemp -d)
   export UV_CACHE_DIR=$_root_dir/uv-cache
   export UV_TOOL_DIR=$_root_dir/uv-tool
+  export UV_PYTHON_INSTALL_DIR=$_root_dir/uv-python
 fi
 
 # Ensure there is a venv available in the script dir for backward compatibility.

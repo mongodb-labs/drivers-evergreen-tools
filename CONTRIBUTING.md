@@ -15,6 +15,8 @@ the relevant DRIVERS ticket.
 This repository supports CPython 3.9+. The root `.python-version` file pins the default
 interpreter version used by `uv`. Most scripts source `ensure-uv.sh` and run Python using `uv run`,
 which resolves and manages the interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
+`ensure_uv` also relocates uv's shared state into `$DRIVERS_TOOLS/.local` so it stays within the
+checkout: tool installs always, plus the cache and uv-managed interpreters when running in CI.
 A handful of scripts under per-folder virtual environments still rely on the older
 `find_python3.sh`/`venvcreate` mechanism until they are migrated.
 The minimum supported version must also be reflected in the `project.requires-python` metadata
