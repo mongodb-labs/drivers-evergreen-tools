@@ -42,6 +42,28 @@ _ensure_uv_scope_paths() {
   export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
 }
 
+# _ensure_uv_export_python (internal)
+#
+# Exports DRIVERS_TOOLS_PYTHON as the interpreter uv resolves for this repo
+# (per the root .python-version pin). Scripts still on the older
+# find-python3.sh mechanism read this variable in ensure_python3 and prefer it
+# over scanning the filesystem, so keeping it populated avoids a slow scan --
+# and a possibly different interpreter -- in the per-folder virtualenv scripts
+# (auth_aws, auth_oidc, csfle, docker, ocsp) that have not moved to uv yet.
+#
+# An existing value is left alone: DRIVERS_TOOLS_PYTHON is a documented
+# override knob. Best-effort -- if uv cannot resolve an interpreter this is a
+# no-op rather than an error, since ensure_uv() is called under `set -e`.
+# Called automatically by ensure_uv() on success; not meant to be called
+# directly.
+_ensure_uv_export_python() {
+  [ -z "${DRIVERS_TOOLS_PYTHON:-}" ] || return 0
+  declare _py
+  _py="$(uv python find 2>/dev/null)" || return 0
+  [ -n "$_py" ] && export DRIVERS_TOOLS_PYTHON="$_py"
+  return 0
+}
+
 # ensure_uv
 #
 # Usage:
@@ -58,6 +80,7 @@ _ensure_uv_scope_paths() {
 # - PATH (only when uv had to be installed)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
+# - DRIVERS_TOOLS_PYTHON (unless already set; see _ensure_uv_export_python)
 #
 # This mainly checks PATH and falls back to a plain `pip install --user`.
 # The one exception is a fallback to the MongoDB toolchain's python3, needed
@@ -81,6 +104,7 @@ ensure_uv() {
 
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_export_python
     return 0
   fi
 
@@ -132,6 +156,7 @@ ensure_uv() {
 
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_export_python
     return 0
   fi
 

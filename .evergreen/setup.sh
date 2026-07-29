@@ -30,5 +30,10 @@ EOF
 # Ensure uv is available for the CLI install step below.
 ensure_uv || exit 1
 
+# Persist the uv-resolved interpreter for scripts still on find-python3.sh.
+# Each Evergreen command runs in a fresh shell, so the export from ensure_uv
+# does not survive; handle-paths.sh sources this .env to make it available.
+echo "DRIVERS_TOOLS_PYTHON=${DRIVERS_TOOLS_PYTHON:-}" >> $DRIVERS_TOOLS/.env
+
 # Setup the orchestration directory, which also installs CLIs into this directory.
 bash $SCRIPT_DIR/orchestration/setup.sh
