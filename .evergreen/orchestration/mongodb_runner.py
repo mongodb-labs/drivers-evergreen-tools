@@ -93,27 +93,45 @@ def _node_is_usable() -> bool:
     return node_major is not None and node_major >= _MIN_NODE_MAJOR
 
 
+def _ensure_usable_node() -> bool:
+    """Make a Node new enough for mongodb-runner available on PATH.
+
+    Installs Node when the one on PATH is missing or too old. Returns whether a
+    usable Node is available afterwards.
+    """
+    if _node_is_usable():
+        return True
+    install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
+    LOGGER.info(f"No usable Node found, installing Node using {install_node_script}...")
+    try:
+        subprocess.run(["bash", str(install_node_script)], check=True)
+    except subprocess.CalledProcessError as exc:
+        LOGGER.warning(f"Failed to install Node using {install_node_script}: {exc}")
+        return False
+    node_bin_dir = DRIVERS_TOOLS / ".evergreen" / "node-artifacts" / "nodejs" / "bin"
+    os.environ["PATH"] = f"{node_bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+    return _node_is_usable()
+
+
 def _mongodb_runner_supported() -> bool:
     """Return False on platforms that cannot run the current mongodb-runner.
 
-    Check the actual Node version when available; RHEL7 (whose Node 16 is the
-    only such platform in CI) is used as a fallback signal when Node isn't on
-    PATH yet.
+    Installs Node if needed, so the answer reflects the Node we would actually
+    run mongodb-runner with rather than an unrelated older Node that happens to
+    come first on PATH. RHEL7's glibc is old enough that install-node.sh falls
+    back to Node 16, so it is rejected up front without attempting an install.
     """
-    node_major = _node_major_version()
-    if node_major is not None and node_major < _MIN_NODE_MAJOR:
-        return False
-    if sys.platform != "linux":
-        return True
-    try:
-        from mongodl import infer_target
+    if sys.platform == "linux":
+        try:
+            from mongodl import infer_target
 
-        return infer_target() != "rhel7"
-    except Exception as exc:
-        LOGGER.warning(
-            "Could not determine platform for mongodb-runner support check: %s", exc
-        )
-        return True
+            if infer_target() == "rhel7":
+                return False
+        except Exception as exc:
+            LOGGER.warning(
+                "Could not determine platform for mongodb-runner support check: %s", exc
+            )
+    return _ensure_usable_node()
 
 
 def _install_mongodb_runner() -> Path:
@@ -129,23 +147,14 @@ def _install_mongodb_runner() -> Path:
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
-        if not _node_is_usable():
-            install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
-            LOGGER.info(
-                f"No usable Node found, installing Node using {install_node_script}..."
+        if not _ensure_usable_node():
+            raise RuntimeError(
+                f"mongodb-runner requires Node {_MIN_NODE_MAJOR}+, which could not "
+                "be found or installed"
             )
-            subprocess.run(["bash", str(install_node_script)], check=True)
-            node_bin_dir = (
-                DRIVERS_TOOLS / ".evergreen" / "node-artifacts" / "nodejs" / "bin"
-            )
-            os.environ["PATH"] = (
-                f"{node_bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
-            )
-            if not _node_is_usable():
-                raise RuntimeError(
-                    f"No usable Node found after installing Node using {install_node_script}"
-                )
         npm = shutil.which("npm")
+        if npm is None:
+            raise RuntimeError("Found a usable Node but no npm alongside it")
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
             subprocess.run(
@@ -187,22 +196,12 @@ def start_mongodb_runner(opts, data):
         cmd = f"{binary} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {binary}...")
     env = os.environ.copy()
-    node_bin = shutil.which("node")
-    if node_bin:
-        try:
-            node_ver = subprocess.check_output(
-                [node_bin, "--version"], encoding="utf-8"
-            ).strip()
-            node_major = int(node_ver.lstrip("v").split(".")[0])
-            # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
-            # The flag was removed in Node 22, so only add it for Node 16-18.
-            if node_major < 19:
-                existing = env.get("NODE_OPTIONS", "")
-                env["NODE_OPTIONS"] = (
-                    f"{existing} --experimental-global-webcrypto".strip()
-                )
-        except (subprocess.CalledProcessError, ValueError):
-            pass
+    node_major = _node_major_version()
+    # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
+    # The flag was removed in Node 22, so only add it for Node 16-18.
+    if node_major is not None and node_major < 19:
+        existing = env.get("NODE_OPTIONS", "")
+        env["NODE_OPTIONS"] = f"{existing} --experimental-global-webcrypto".strip()
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
