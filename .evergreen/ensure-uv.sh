@@ -48,6 +48,12 @@ _ensure_uv_scope_paths() {
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
+# Sets the following environment variables:
+#
+# - PYENV_VERSION
+# - UV_CACHE_DIR
+# - <...>
+#
 # This mainly checks PATH and falls back to a plain `pip install --user`.
 # The one exception is a fallback to the MongoDB toolchain's python3, needed
 # on hosts (e.g. RHEL7) that have no python3 on PATH at all.
