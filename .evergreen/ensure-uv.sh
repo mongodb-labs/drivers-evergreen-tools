@@ -45,11 +45,17 @@ _ensure_uv_scope_paths() {
 # _ensure_uv_export_python (internal)
 #
 # Exports DRIVERS_TOOLS_PYTHON as the interpreter uv resolves for this repo
-# (per the root .python-version pin). Scripts still on the older
+# (any interpreter satisfying requires-python). Scripts still on the older
 # find-python3.sh mechanism read this variable in ensure_python3 and prefer it
 # over scanning the filesystem, so keeping it populated avoids a slow scan --
 # and a possibly different interpreter -- in the per-folder virtualenv scripts
 # (auth_aws, auth_oidc, csfle, docker, ocsp) that have not moved to uv yet.
+#
+# `--system` is important: those consumers feed this to venvcreate, which
+# needs a base interpreter. A plain `uv python find` would instead return
+# whichever virtualenv it discovers from the working directory (this repo grows
+# several: .evergreen/venv, the per-folder ones), making the value depend on
+# cwd.
 #
 # An existing value is left alone: DRIVERS_TOOLS_PYTHON is a documented
 # override knob. Best-effort -- if uv cannot resolve an interpreter this is a
@@ -59,7 +65,7 @@ _ensure_uv_scope_paths() {
 _ensure_uv_export_python() {
   [ -z "${DRIVERS_TOOLS_PYTHON:-}" ] || return 0
   declare _py
-  _py="$(uv python find 2>/dev/null)" || return 0
+  _py="$(uv python find --system 2>/dev/null)" || return 0
   [ -n "$_py" ] && export DRIVERS_TOOLS_PYTHON="$_py"
   return 0
 }
@@ -90,12 +96,14 @@ _ensure_uv_export_python() {
 # _ensure_uv_scope_paths above for exactly what is scoped and when.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
-  # intercept `python`/`python3`/`uv` and enforce the repo's .python-version
-  # file, failing outright if pyenv doesn't already have that exact version
-  # installed (some of these hosts already have a working uv installed under
-  # pyenv's own configured version). Defer to pyenv's own global version
-  # rather than the repo's file, instead of hardcoding e.g. "system", which
-  # may not be where uv/python are actually installed on a given host.
+  # intercept `python`/`python3`/`uv` and enforce whichever .python-version
+  # file they find walking up from the working directory, failing outright if
+  # pyenv doesn't already have that exact version installed (some of these
+  # hosts already have a working uv installed under pyenv's own configured
+  # version). Defer to pyenv's own global version instead of hardcoding e.g.
+  # "system", which may not be where uv/python are actually installed on a
+  # given host. This repo does not ship a .python-version, but a parent
+  # directory of the checkout still might.
   if command -v pyenv >/dev/null 2>&1; then
     declare pyenv_global
     pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
