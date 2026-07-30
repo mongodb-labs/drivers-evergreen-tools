@@ -118,19 +118,10 @@ def _mongodb_runner_supported() -> bool:
 
     Installs Node if needed, so the answer reflects the Node we would actually
     run mongodb-runner with rather than an unrelated older Node that happens to
-    come first on PATH. RHEL7's glibc is old enough that install-node.sh falls
-    back to Node 16, so it is rejected up front without attempting an install.
+    come first on PATH. This also covers hosts whose glibc is too old for
+    Node 18+: install-node.sh falls back to Node 16 there, which this rejects
+    without needing to enumerate those platforms by name.
     """
-    if sys.platform == "linux":
-        try:
-            from mongodl import infer_target
-
-            if infer_target() == "rhel7":
-                return False
-        except Exception as exc:
-            LOGGER.warning(
-                "Could not determine platform for mongodb-runner support check: %s", exc
-            )
     return _ensure_usable_node()
 
 
