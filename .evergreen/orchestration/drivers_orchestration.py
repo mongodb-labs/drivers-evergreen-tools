@@ -210,7 +210,11 @@ def get_options():
 @functools.lru_cache(maxsize=1)
 def get_docker_cmd():
     """Get the appropriate docker command, or None if neither daemon is available."""
-    for raw_binary in (shutil.which("podman"), shutil.which("docker")):
+    if "GITHUB_ACTION" in os.environ:
+        binaries = (shutil.which("docker"), shutil.which("podman"))
+    else:
+        binaries = (shutil.which("podman"), shutil.which("docker"))
+    for raw_binary in binaries:
         if not raw_binary:
             continue
         binary = PureWindowsPath(raw_binary).as_posix()
