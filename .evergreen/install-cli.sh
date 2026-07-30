@@ -32,7 +32,7 @@ fi
 
 # Ensure there is a venv available in the script dir for backward compatibility.
 if [ ! -d venv ]; then
-  uv venv venv &>/dev/null || uv venv venv
+  uv venv -p "${DRIVERS_TOOLS_PYTHON:-python}" venv &>/dev/null || uv venv venv
 fi
 [[ -d venv ]]
 
