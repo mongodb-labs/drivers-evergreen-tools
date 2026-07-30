@@ -120,6 +120,12 @@ wheels = [
 name = "drivers-evergreen-tools"
 version = "0.1.0"
 source = { directory = "../" }
+dependencies = [
+    { name = "certifi" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "certifi" }]
 
 [[package]]
 name = "drivers-orchestration"
@@ -161,7 +167,7 @@ wheels = [
 
 [[package]]
 name = "mongo-orchestration"
-version = "0.12.0.dev0"
+version = "0.12.0.dev1"
 source = { url = "https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz" }
 dependencies = [
     { name = "bottle" },
@@ -169,7 +175,7 @@ dependencies = [
     { name = "pymongo" },
     { name = "requests" },
 ]
-sdist = { hash = "sha256:656a71e8303860d1e7c162cdf161ad3c0bcb3562f742c21d6f60c2ad29e9fa1f" }
+sdist = { hash = "sha256:a994a21b19276633743e27daade64fd1b5616abf1892d0dc6a8e2cda329a6f2e" }
 
 [package.metadata]
 requires-dist = [
