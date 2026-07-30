@@ -12,8 +12,16 @@ the relevant DRIVERS ticket.
 
 ## Python Considerations
 
-This repository supports CPython 3.9+, and will use either the Python toolchain or the system
-python on Evergreen hosts.  See `find_python3.sh` for details on Python binary selection.
+This repository supports CPython 3.9+. `uv` reuses whichever interpreter the host already provides
+that satisfies `requires-python` rather than downloading a specific version, so raising the floor is
+not merely a metadata change: it forces an interpreter upgrade on hosts sitting at the old floor.
+Most scripts source `ensure-uv.sh` and run Python using `uv run`, which resolves and manages the
+interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
+`ensure_uv` also keeps uv's shared state out of its default home-directory locations: in CI it goes
+under the task's temp directory, and outside CI only tool installs are redirected, so a local run
+cannot overwrite globally installed tools.
+A handful of scripts under per-folder virtual environments still rely on the older
+`find_python3.sh`/`venvcreate` mechanism until they are migrated.
 The minimum supported version must also be reflected in the `project.requires-python` metadata
 in any `pyproject.toml` files in this repository.
 

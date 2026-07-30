@@ -17,7 +17,12 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = []
+dependencies = [
+  # mongodl.py loads certifi's CA bundle explicitly rather than relying on
+  # the interpreter's own default cert paths, which don't always match the
+  # host (e.g. uv's managed Python builds on less common architectures).
+  "certifi",
+]
 
 [project.scripts]
 mongodl = "mongodl:main"

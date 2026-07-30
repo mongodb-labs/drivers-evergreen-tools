@@ -5,7 +5,7 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-. $SCRIPT_DIR/../find-python3.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/.. > /dev/null
 
@@ -78,8 +78,8 @@ connect_mongodb --ssl --auth
 DOWNLOAD_DIR=mongodl_test
 rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
-PYTHON="$(ensure_python3 2>/dev/null)"
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
+ensure_uv || exit 1
+uv run python mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
 bash ./run-mongodb.sh start --existing-binaries-dir=${DOWNLOAD_DIR}
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 
