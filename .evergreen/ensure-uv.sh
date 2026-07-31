@@ -70,13 +70,19 @@ _ensure_uv_add_user_base() {
   user_base="$("$1" -m site --user-base 2>/dev/null)" || return 0
   [ -n "$user_base" ] || return 0
 
-  declare _dir
+  # Build the prefix first and prepend it once, so "bin" keeps precedence over
+  # "Scripts" as it would with a single assignment; prepending in a loop would
+  # reverse them.
+  declare _prefix="" _dir
   for _dir in "$user_base/bin" "$user_base/Scripts"; do
     case ":${PATH:-}:" in
     *":${_dir}:"*) ;;
-    *) export PATH="${_dir}:${PATH:-}" ;;
+    *) _prefix="${_prefix}${_dir}:" ;;
     esac
   done
+  if [ -n "$_prefix" ]; then
+    export PATH="${_prefix}${PATH:-}"
+  fi
 }
 
 # ensure_uv
