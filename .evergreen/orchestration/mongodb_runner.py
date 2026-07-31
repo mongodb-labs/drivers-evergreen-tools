@@ -62,10 +62,12 @@ def _normalize_path(path: Union[Path, str]) -> str:
 
 
 _MR_VERSION = "6.8.2"
-# mongodb-runner depends on yargs@18, an ESM-only package that Node < 18 cannot
-# require(), so 18 is the floor for both "is the Node on PATH usable" and "is
-# mongodb-runner supported here" checks.
-_MIN_NODE_MAJOR = 18
+# mongodb-runner itself only needs Node 18+ (it depends on yargs@18, an ESM-only
+# package that Node < 18 cannot require()), but Node 16-18 additionally needs
+# --experimental-global-webcrypto to expose WebCrypto as a global for the mongodb
+# driver. Requiring 20 avoids that workaround entirely and matches the version
+# install-node.sh installs by default anyway.
+_MIN_NODE_MAJOR = 20
 
 
 def _node_major_version() -> Optional[int]:
@@ -186,13 +188,6 @@ def start_mongodb_runner(opts, data):
         binary = _normalize_path(_install_mongodb_runner())
         cmd = f"{binary} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {binary}...")
-    env = os.environ.copy()
-    node_major = _node_major_version()
-    # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
-    # The flag was removed in Node 22, so only add it for Node 16-18.
-    if node_major is not None and node_major < 19:
-        existing = env.get("NODE_OPTIONS", "")
-        env["NODE_OPTIONS"] = f"{existing} --experimental-global-webcrypto".strip()
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
@@ -201,7 +196,6 @@ def start_mongodb_runner(opts, data):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=env,
                 shell=(PLATFORM == "win32"),
             )
             output_lines = []
