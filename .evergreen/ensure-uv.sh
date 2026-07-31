@@ -57,6 +57,28 @@ _ensure_uv_scope_paths() {
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
 }
 
+# _ensure_uv_add_user_base (internal)
+#
+# Prepend $1's `pip install --user` script directory to PATH, if not already
+# there. That directory is version/platform specific (~/.local/bin on Linux,
+# ~/Library/Python/X.Y/bin on macOS, %APPDATA%\Python\PythonXY\Scripts on
+# Windows), so ask the interpreter rather than assuming.
+#
+# A no-op if the interpreter cannot report it. Not meant to be called directly.
+_ensure_uv_add_user_base() {
+  declare user_base
+  user_base="$("$1" -m site --user-base 2>/dev/null)" || return 0
+  [ -n "$user_base" ] || return 0
+
+  declare _dir
+  for _dir in "$user_base/bin" "$user_base/Scripts"; do
+    case ":${PATH:-}:" in
+    *":${_dir}:"*) ;;
+    *) export PATH="${_dir}:${PATH:-}" ;;
+    esac
+  done
+}
+
 # ensure_uv
 #
 # Usage:
@@ -118,6 +140,19 @@ ensure_uv() {
     fi
   fi
 
+  # An earlier ensure_uv call may have already installed uv into the `--user`
+  # script directory. That PATH addition does not outlive the shell it ran in,
+  # and on hosts where the directory is not on the default PATH (e.g. RHEL7,
+  # where it is /root/.local/bin) every later script would otherwise pay for
+  # another pip install. Look there before reinstalling.
+  if [ -n "$py" ]; then
+    _ensure_uv_add_user_base "$py"
+    if uv --version >/dev/null 2>&1; then
+      _ensure_uv_scope_paths
+      return 0
+    fi
+  fi
+
   if [ -n "$py" ]; then
     echo "uv not found on PATH; installing with '$py -m pip install --user uv'..." >&2
 
@@ -136,15 +171,7 @@ ensure_uv() {
     PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
     PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
 
-    # `--user` installs console scripts into a version/platform-specific
-    # directory (e.g. ~/.local/bin on Linux, ~/Library/Python/X.Y/bin on
-    # macOS, %APPDATA%\Python\PythonXY\Scripts on Windows); ask the
-    # interpreter where that is rather than assuming.
-    declare user_base
-    user_base="$("$py" -m site --user-base 2>/dev/null)" || user_base=""
-    if [ -n "$user_base" ]; then
-      export PATH="$user_base/bin:$user_base/Scripts:$PATH"
-    fi
+    _ensure_uv_add_user_base "$py"
   fi
 
   if uv --version >/dev/null 2>&1; then
