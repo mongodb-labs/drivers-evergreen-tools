@@ -67,7 +67,7 @@ _ensure_uv_scope_paths() {
 # A no-op if the interpreter cannot report it. Not meant to be called directly.
 _ensure_uv_add_user_base() {
   declare user_base
-  user_base="$("$1" -m site --user-base 2>/dev/null)" || return 0
+  user_base="$("${1:?}" -m site --user-base 2>/dev/null)" || return 0
   [ -n "$user_base" ] || return 0
 
   # Both are added together and only one of them exists on any given platform,
