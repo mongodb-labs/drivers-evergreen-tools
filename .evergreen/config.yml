@@ -554,6 +554,13 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
+  "run remote kms provisioning test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
+
   "run mongodb runner test partial":
     - command: subprocess.exec
       type: test
@@ -1028,6 +1035,11 @@ tasks:
       tags: ["pr"]
       commands:
         - func: "run csfle test"
+
+    - name: "test-remote-kms-provisioning"
+      tags: ["docker", "pr"]
+      commands:
+        - func: "run remote kms provisioning test"
 
     - name: "test-legacy-versions"
       commands:
