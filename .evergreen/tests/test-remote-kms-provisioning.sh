@@ -20,12 +20,12 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
   DOCKER=$DOCKER_COMMAND
 fi
 
-$DOCKER build -q -t "$IMAGE" -f "$SCRIPT_DIR/docker/remote-kms-provisioning.Dockerfile" "$SCRIPT_DIR/docker"
-
 test_provisioning() {
-  local name="$1" script="$2"
-  echo "Testing $name provisioning ..."
-  $DOCKER run --rm -v "$ROOT_DIR:/drivers-tools:ro" "$IMAGE" bash -c "
+  local name="$1" script="$2" base_image="$3"
+  echo "Testing $name provisioning ($base_image) ..."
+  $DOCKER build -q -t "$IMAGE-$name" --build-arg BASE_IMAGE="$base_image" \
+    -f "$SCRIPT_DIR/docker/remote-kms-provisioning.Dockerfile" "$SCRIPT_DIR/docker"
+  $DOCKER run --rm -v "$ROOT_DIR:/drivers-tools:ro" "$IMAGE-$name" bash -c "
     set -e
     cp -r /drivers-tools ~/drivers-tools
     cd ~/drivers-tools
@@ -37,5 +37,7 @@ test_provisioning() {
   echo "Testing $name provisioning ... done."
 }
 
-test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh
-test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh
+# Keep these in sync with the defaults in create-and-setup-instance.sh
+# (GCPKMS_IMAGEFAMILY) and create-and-setup-vm.sh (AZUREKMS_IMAGE).
+test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh debian:11
+test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh debian:11
