@@ -9,12 +9,23 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 IMAGE=drivers-tools-remote-kms-provisioning-test
 
-docker build -q -t "$IMAGE" -f "$SCRIPT_DIR/docker/remote-kms-provisioning.Dockerfile" "$SCRIPT_DIR/docker"
+# Some Evergreen hosts (e.g. RHEL) only ship podman, not docker; matches the
+# engine selection in .evergreen/docker/run-server.sh.
+if command -v podman &> /dev/null; then
+  DOCKER="sudo podman --storage-opt ignore_chown_errors=true"
+else
+  DOCKER=docker
+fi
+if [ -n "${DOCKER_COMMAND:-}" ]; then
+  DOCKER=$DOCKER_COMMAND
+fi
+
+$DOCKER build -q -t "$IMAGE" -f "$SCRIPT_DIR/docker/remote-kms-provisioning.Dockerfile" "$SCRIPT_DIR/docker"
 
 test_provisioning() {
   local name="$1" script="$2"
   echo "Testing $name provisioning ..."
-  docker run --rm -v "$ROOT_DIR:/drivers-tools:ro" "$IMAGE" bash -c "
+  $DOCKER run --rm -v "$ROOT_DIR:/drivers-tools:ro" "$IMAGE" bash -c "
     set -e
     cp -r /drivers-tools ~/drivers-tools
     cd ~/drivers-tools
