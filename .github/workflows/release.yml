@@ -1,0 +1,93 @@
+name: "Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: "Which part of the version to bump"
+        required: true
+        type: choice
+        options:
+          - "patch"
+          - "minor"
+          - "major"
+      dry_run:
+        description: "Report the next version and preview the notes without creating anything"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash -eu {0}
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+    environment: automation
+    timeout-minutes: 10
+    permissions: {}
+
+    steps:
+      - name: "Create a GitHub App token"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: "Checkout"
+        uses: "actions/checkout@v7"
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: "Check the ref"
+        if: ${{ !inputs.dry_run }}
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            echo "A release must run on refs/heads/$DEFAULT_BRANCH, got $GITHUB_REF"
+            exit 1
+          fi
+
+      - name: "Compute the next version"
+        id: bump
+        env:
+          LEVEL: ${{ inputs.level }}
+        run: python3 .github/scripts/bump_version.py "$LEVEL"
+
+      - name: "Preview the release notes"
+        if: ${{ inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CURRENT_VERSION: ${{ steps.bump.outputs.current-version }}
+          NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
+        run: |
+          {
+            echo "## Dry run: $CURRENT_VERSION to $NEXT_VERSION"
+            echo
+            gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$NEXT_VERSION" \
+              -f previous_tag_name="$CURRENT_VERSION" \
+              -f target_commitish="$GITHUB_SHA" \
+              --jq ".body"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Create the tag and release"
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
+        run: |
+          gh release create "$NEXT_VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "$NEXT_VERSION" \
+            --generate-notes
+          echo "Created release $NEXT_VERSION" >> "$GITHUB_STEP_SUMMARY"
