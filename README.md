@@ -125,19 +125,6 @@ See [run-orchestration.sh](./.evergreen/run-orchestration.sh) for the available 
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
 
-## Releasing
-
-Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
-`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
-version, then creates that tag and a GitHub release whose notes are generated from the commits
-since the previous tag.
-
-Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
-release. A real release only runs on the default branch.
-
-The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
-`.github/scripts/test_bump_version.py`.
-
 ### Usage of MongoDB Runner
 
 As part of [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335) we are migrating away from
@@ -189,6 +176,19 @@ To fix it, simply run:
 ```sh
 softwareupdate --install-rosetta
 ```
+
+## Releasing
+
+Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
+`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
+version, then creates that tag and a GitHub release whose notes are generated from the commits
+since the previous tag.
+
+Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
+release. A real release only runs on the default branch.
+
+The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
+`.github/scripts/test_bump_version.py`.
 
 ## Setup and Teardown
 
