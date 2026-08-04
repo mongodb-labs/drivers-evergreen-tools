@@ -70,6 +70,9 @@ The following inputs exist:
 
 These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
 
+The example above tracks `master`. To pin a published version instead, use a release tag such as
+`mongodb-labs/drivers-evergreen-tools@v1.0.0`. See [Releasing](#releasing).
+
 After the cluster is started, its URI is exposed via the `cluster-uri` output. In addition, the action also exposes the
 path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
 This configuration snippet environment variables with the cluster URI and `crypt_shared` lib path
@@ -121,6 +124,19 @@ MONGODB_BINARIES folder or setting MONGODB_BINARIES to the appropriate folder.
 See [run-orchestration.sh](./.evergreen/run-orchestration.sh) for the available environment variables.
 
 Run `bash ./evergreen/start-orchestration.sh --help` for usage of command line flags.
+
+## Releasing
+
+Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
+`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
+version, then creates that tag and a GitHub release whose notes are generated from the commits
+since the previous tag.
+
+Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
+release. A real release only runs on the default branch.
+
+The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
+`.github/scripts/test_bump_version.py`.
 
 ### Usage of MongoDB Runner
 
