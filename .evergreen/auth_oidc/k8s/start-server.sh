@@ -14,9 +14,7 @@ source $K8S_VARIANT_DIR/secrets-export.sh
 echo "Setting up server on ${K8S_POD_NAME}..."
 kubectl exec ${K8S_POD_NAME} -- bash -c "rm -rf /tmp/server && mkdir /tmp/server/"
 K8S_TAR_FILE=/tmp/drivers-tools.tgz
-pushd $DRIVERS_TOOLS
-git archive -o $K8S_TAR_FILE HEAD
-popd
+bash $DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh $K8S_TAR_FILE
 kubectl cp ${K8S_TAR_FILE}  ${K8S_POD_NAME}:/tmp/server/drivers-tools.tgz
 kubectl cp $K8S_VARIANT_DIR/secrets-export.sh ${K8S_POD_NAME}:/tmp/server/secrets-export.sh
 kubectl cp ./remote-scripts/start-server.sh ${K8S_POD_NAME}:/tmp/server/start-server.sh

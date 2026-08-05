@@ -74,6 +74,19 @@ AZUREKMS_DST="./" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
 AZUREKMS_CMD="./setup-azure-vm.sh" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
+# Ship this checkout so the VM runs the same revision that provisioned it. On
+# failure start-mongodb.sh falls back to cloning the default branch, so this must
+# not abort the task.
+AZUREKMS_ARCHIVE_DIR=$(mktemp -d)
+if bash "$DRIVERS_TOOLS"/.evergreen/make-drivers-tools-archive.sh "$AZUREKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz"; then
+    AZUREKMS_SRC="$AZUREKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz" \
+    AZUREKMS_DST="./" \
+        "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
+else
+    echo "WARNING: could not archive $DRIVERS_TOOLS; the VM will clone the default branch, which may not match this checkout."
+fi
+rm -rf "$AZUREKMS_ARCHIVE_DIR"
+
 # Start mongodb.
 AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/start-mongodb.sh" \
 AZUREKMS_DST="./" \

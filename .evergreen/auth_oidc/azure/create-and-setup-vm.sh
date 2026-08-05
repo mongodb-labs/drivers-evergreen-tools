@@ -70,14 +70,16 @@ AZUREKMS_DST="./" \
 # Push Drivers Evergreen Tools onto the VM
 TARFILE=/tmp/drivers-evergreen-tools.tgz
 pushd $DRIVERS_TOOLS
-git archive --format=tar.gz -o $TARFILE --prefix=drivers-evergreen-tools/ HEAD
+bash $DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh $TARFILE
 TARFILE_BASE=$(basename ${TARFILE})
 AZUREKMS_SRC=${TARFILE} \
     AZUREKMS_DST="./" \
     $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
 echo "Copying files ... end"
 echo "Untarring file ... begin"
-AZUREKMS_CMD="tar xf ${TARFILE_BASE}" \
+# The archive is flat, so name the destination here rather than baking it in as
+# a tar --prefix.
+AZUREKMS_CMD="mkdir -p drivers-evergreen-tools && tar xf ${TARFILE_BASE} -C drivers-evergreen-tools" \
   $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
 echo "Untarring file ... end"
 popd
