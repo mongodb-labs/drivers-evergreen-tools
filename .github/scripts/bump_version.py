@@ -64,7 +64,13 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
-    current = latest_version(list_tags())
+    try:
+        tags = list_tags()
+    except subprocess.CalledProcessError as error:
+        sys.stderr.write(error.stderr)
+        return 1
+
+    current = latest_version(tags)
     if current is None:
         print(
             "error: no vX.Y.Z tag found, create and push the first tag (v1.0.0) before releasing",

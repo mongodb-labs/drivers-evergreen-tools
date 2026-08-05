@@ -14,17 +14,35 @@ sys.path.insert(0, str(HERE))
 import bump_version
 
 
+def git_env():
+    """Return an environment with the developer's global/system git config disabled.
+
+    Without this, a global `commit.gpgsign = true` or `core.hooksPath` can make
+    `git commit` fail in `make_repo`, for reasons unrelated to the code under test.
+    """
+    env = dict(os.environ)
+    env["GIT_CONFIG_GLOBAL"] = "/dev/null"
+    env["GIT_CONFIG_SYSTEM"] = "/dev/null"
+    return env
+
+
 def make_repo(tags):
     """Create a temporary git repository with one empty commit and the given tags."""
     tmp = tempfile.TemporaryDirectory()
     path = Path(tmp.name)
+    env = git_env()
     git = ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test"]
-    subprocess.run([*git, "init", "-q", "-b", "main", "."], cwd=path, check=True)
     subprocess.run(
-        [*git, "commit", "-q", "--allow-empty", "-m", "init"], cwd=path, check=True
+        [*git, "init", "-q", "-b", "main", "."], cwd=path, env=env, check=True
+    )
+    subprocess.run(
+        [*git, "commit", "-q", "--allow-empty", "-m", "init"],
+        cwd=path,
+        env=env,
+        check=True,
     )
     for tag in tags:
-        subprocess.run([*git, "tag", tag], cwd=path, check=True)
+        subprocess.run([*git, "tag", tag], cwd=path, env=env, check=True)
     return tmp
 
 
@@ -35,9 +53,7 @@ def run_script(cwd, level, env=None):
     Actions does not append to the real step output file.
     """
     if env is None:
-        env = {
-            key: value for key, value in os.environ.items() if key != "GITHUB_OUTPUT"
-        }
+        env = {key: value for key, value in git_env().items() if key != "GITHUB_OUTPUT"}
     return subprocess.run(
         [sys.executable, str(SCRIPT), level],
         cwd=cwd,
@@ -114,7 +130,7 @@ class TestMain(unittest.TestCase):
         tmp = make_repo(["v2.3.4"])
         self.addCleanup(tmp.cleanup)
         output = Path(tmp.name) / "github_output"
-        env = dict(os.environ, GITHUB_OUTPUT=str(output))
+        env = dict(git_env(), GITHUB_OUTPUT=str(output))
         result = run_script(tmp.name, "patch", env=env)
         self.assertEqual(result.returncode, 0, result.stderr)
         written = output.read_text()
@@ -133,6 +149,14 @@ class TestMain(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         result = run_script(tmp.name, "epoch")
         self.assertEqual(result.returncode, 2)
+
+    def test_fails_with_git_message_outside_a_git_repository(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        result = run_script(tmp.name, "patch")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not a git repository", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
 
 if __name__ == "__main__":

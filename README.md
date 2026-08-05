@@ -187,6 +187,11 @@ since the previous tag.
 Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
 release. A real release only runs on the default branch.
 
+The workflow needs an `automation` environment holding an `APP_ID` variable and an
+`APP_PRIVATE_KEY` secret for a GitHub App, and that App must be installed with `contents: write`
+permission. A `vX.Y.Z` tag must already exist in the repository, since the script fails when it
+finds none.
+
 The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
 `.github/scripts/test_bump_version.py`.
 
