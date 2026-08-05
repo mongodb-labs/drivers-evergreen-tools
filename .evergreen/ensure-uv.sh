@@ -192,8 +192,10 @@ ensure_uv() {
     fi
   fi
 
-  # None of these is reliably on PATH in a fresh shell: ~/.local/bin is where uv's
-  # own installer puts it, and the others are where an earlier call put it.
+  # None of these is reliably on PATH in a fresh shell. ~/.local/bin is where uv's
+  # own installer puts it and is off the default PATH on some hosts (RHEL7 root
+  # shells), and the rest are where an earlier ensure_uv call put it. Scripts is the
+  # Windows spelling of bin.
   [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
   _ensure_uv_add_path "$venv_dir/bin"
   _ensure_uv_add_path "$venv_dir/Scripts"
@@ -207,6 +209,8 @@ ensure_uv() {
   # Past this point uv is genuinely absent and has to be installed. Output is
   # collected rather than printed, since each attempt is expected to fail on some
   # hosts and only a total failure is worth reporting.
+  # Beside the venv, so there is nothing to clean up. Falls back to discarding the
+  # output if $TMPDIR is not writable, which is better than failing over a log.
   declare log="${venv_dir}-install.log"
   : >"$log" 2>/dev/null || log=/dev/null
 
