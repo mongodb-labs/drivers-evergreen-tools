@@ -413,7 +413,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$AZUREOIDC_DRIVERS_TAR_FILE"
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/azure/run-driver-test.sh
           # Generate a test results file
@@ -448,7 +448,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$GCPOIDC_DRIVERS_TAR_FILE"
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/gcp/run-driver-test.sh
           # Generate a test results file
@@ -468,7 +468,7 @@ functions:
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $K8S_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
           bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
@@ -560,6 +560,13 @@ functions:
       params:
         binary: bash
         args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
+
+  "run drivers tools archive test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-drivers-tools-archive.sh]
 
   "run mongodb runner test partial":
     - command: subprocess.exec
@@ -1041,6 +1048,11 @@ tasks:
       commands:
         - func: "run remote kms provisioning test"
 
+    - name: "test-drivers-tools-archive"
+      tags: ["pr"]
+      commands:
+        - func: "run drivers tools archive test"
+
     - name: "test-legacy-versions"
       commands:
         - func: "run legacy versions test"
@@ -1511,6 +1523,7 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-csfle"
+          - "test-drivers-tools-archive"
           - "test-cli-full"
           - "test-mongodb-runner-full"
           - "test-happy-eyeballs"
