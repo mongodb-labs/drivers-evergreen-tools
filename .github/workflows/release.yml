@@ -30,8 +30,11 @@ jobs:
     name: "Release"
     runs-on: ubuntu-latest
     environment: automation
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
+      # id-token is for the AWS OIDC login inside the setup action. Every
+      # privileged GitHub call uses the App token minted by secure-checkout.
+      id-token: write
       contents: read
 
     steps:
@@ -45,19 +48,19 @@ jobs:
             exit 1
           fi
 
-      - name: "Create a GitHub App token"
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          permission-contents: write
-
       - name: "Checkout"
-        uses: "actions/checkout@v7"
+        uses: mongodb-labs/drivers-github-tools/secure-checkout@v3
         with:
+          app_id: ${{ vars.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
           fetch-depth: 0
-          persist-credentials: false
+
+      - name: "Set up the signing environment"
+        uses: mongodb-labs/drivers-github-tools/setup@v3
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region_name: ${{ vars.AWS_REGION_NAME }}
+          aws_secret_id: ${{ secrets.AWS_SECRET_ID }}
 
       - name: "Compute the next version"
         id: bump
@@ -68,7 +71,6 @@ jobs:
       - name: "Preview the release notes"
         if: ${{ inputs.dry_run }}
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
           CURRENT_VERSION: ${{ steps.bump.outputs.current-version }}
           NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
@@ -83,16 +85,21 @@ jobs:
               --jq ".body"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: "Create the tag and release"
+      - name: "Create the signed tag"
+        uses: mongodb-labs/drivers-github-tools/tag-version@v3
+        with:
+          version: ${{ steps.bump.outputs.next-version }}
+          push_tag: ${{ !inputs.dry_run }}
+
+      - name: "Create the release"
         if: ${{ !inputs.dry_run }}
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
           CURRENT_VERSION: ${{ steps.bump.outputs.current-version }}
           NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
         run: |
           gh release create "$NEXT_VERSION" \
-            --target "$GITHUB_SHA" \
+            --verify-tag \
             --title "$NEXT_VERSION" \
             --generate-notes \
             --notes-start-tag "$CURRENT_VERSION"

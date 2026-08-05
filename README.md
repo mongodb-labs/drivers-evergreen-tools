@@ -192,6 +192,10 @@ The workflow needs an `automation` environment holding an `APP_ID` variable and 
 permission. A `vX.Y.Z` tag must already exist in the repository, since the script fails when it
 finds none.
 
+The release tag is signed, and signing runs through `mongodb-labs/drivers-github-tools`. The
+`automation` environment additionally needs `AWS_ROLE_ARN` and `AWS_SECRET_ID` secrets and an
+`AWS_REGION_NAME` variable, which MongoDB release infrastructure provisions.
+
 The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
 `.github/scripts/test_bump_version.py`.
 
