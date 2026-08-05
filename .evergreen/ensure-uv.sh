@@ -101,14 +101,12 @@ _ensure_uv_add_user_bin() {
 #   fails outright and only pip works there.
 # - Callers already inside an active venv have pip, but pip refuses `--user`
 #   inside one, so again only the venv works.
+# - The docker test images install a deadsnakes python with venv but no pip, so the
+#   venv covers them as well.
 #
 # Every step tolerates failure, since a later one may still succeed.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"
-
-  # Some Python builds (notably the deadsnakes PPA in the docker test images) ship
-  # no pip; bootstrap it from the stdlib bundle, which needs no network.
-  "$py" -m pip --version >>"$log" 2>&1 || "$py" -m ensurepip --user >>"$log" 2>&1 || true
 
   if "$py" -m pip --version >/dev/null 2>&1; then
     echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
