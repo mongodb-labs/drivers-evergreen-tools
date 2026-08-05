@@ -29,7 +29,7 @@ jobs:
   release:
     name: "Release"
     runs-on: ubuntu-latest
-    environment: automation
+    environment: release
     timeout-minutes: 20
     permissions:
       # id-token is for the AWS OIDC login inside the setup action. Every
