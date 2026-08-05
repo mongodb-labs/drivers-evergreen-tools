@@ -11,7 +11,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 TMPDIR = Path(tempfile.gettempdir()) / "drivers_orchestration"
@@ -62,35 +62,69 @@ def _normalize_path(path: Union[Path, str]) -> str:
 
 
 _MR_VERSION = "6.8.2"
+# mongodb-runner itself only needs Node 18+ (it depends on yargs@18, an ESM-only
+# package that Node < 18 cannot require()), but Node 16-18 additionally needs
+# --experimental-global-webcrypto to expose WebCrypto as a global for the mongodb
+# driver. Requiring 20 avoids that workaround entirely and matches the version
+# install-node.sh installs by default anyway.
+_MIN_NODE_MAJOR = 20
+
+
+def _node_major_version() -> Optional[int]:
+    """Return the major version of the "node" on PATH, or None if unavailable."""
+    node = shutil.which("node")
+    if node is None:
+        return None
+    try:
+        node_ver = subprocess.check_output(
+            [node, "--version"], encoding="utf-8"
+        ).strip()
+        return int(node_ver.lstrip("v").split(".")[0])
+    except (subprocess.CalledProcessError, ValueError):
+        return None
+
+
+def _node_is_usable() -> bool:
+    """Check whether the "node" on PATH is new enough for mongodb-runner.
+
+    Some hosts have an unrelated, ancient Node (e.g. bundled with other
+    tooling) earlier on PATH than any Node we install ourselves; relying on
+    "npm exists somewhere on PATH" alone can pick that up instead.
+    """
+    node_major = _node_major_version()
+    return node_major is not None and node_major >= _MIN_NODE_MAJOR
+
+
+def _ensure_usable_node() -> bool:
+    """Make a Node new enough for mongodb-runner available on PATH.
+
+    Installs Node when the one on PATH is missing or too old. Returns whether a
+    usable Node is available afterwards.
+    """
+    if _node_is_usable():
+        return True
+    install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
+    LOGGER.info(f"No usable Node found, installing Node using {install_node_script}...")
+    try:
+        subprocess.run(["bash", str(install_node_script)], check=True)
+    except subprocess.CalledProcessError as exc:
+        LOGGER.warning(f"Failed to install Node using {install_node_script}: {exc}")
+        return False
+    node_bin_dir = DRIVERS_TOOLS / ".evergreen" / "node-artifacts" / "nodejs" / "bin"
+    os.environ["PATH"] = f"{node_bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+    return _node_is_usable()
 
 
 def _mongodb_runner_supported() -> bool:
     """Return False on platforms that cannot run the current mongodb-runner.
 
-    mongodb-runner depends on yargs@18, an ESM-only package that Node < 18
-    cannot require(). Check the actual Node version when available; RHEL7
-    (whose Node 16 is the only such platform in CI) is used as a fallback
-    signal when Node isn't on PATH yet.
+    Installs Node if needed, so the answer reflects the Node we would actually
+    run mongodb-runner with rather than an unrelated older Node that happens to
+    come first on PATH. This also covers hosts whose glibc is too old for
+    Node 18+: install-node.sh falls back to Node 16 there, which this rejects
+    without needing to enumerate those platforms by name.
     """
-    node = shutil.which("node")
-    if node:
-        try:
-            node_ver = subprocess.check_output([node, "--version"], encoding="utf-8")
-            if int(node_ver.strip().lstrip("v").split(".")[0]) < 18:
-                return False
-        except (subprocess.CalledProcessError, ValueError):
-            pass
-    if sys.platform != "linux":
-        return True
-    try:
-        from mongodl import infer_target
-
-        return infer_target() != "rhel7"
-    except Exception as exc:
-        LOGGER.warning(
-            "Could not determine platform for mongodb-runner support check: %s", exc
-        )
-        return True
+    return _ensure_usable_node()
 
 
 def _install_mongodb_runner() -> Path:
@@ -106,11 +140,14 @@ def _install_mongodb_runner() -> Path:
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
+        if not _ensure_usable_node():
+            raise RuntimeError(
+                f"mongodb-runner requires Node {_MIN_NODE_MAJOR}+, which could not "
+                "be found or installed"
+            )
         npm = shutil.which("npm")
         if npm is None:
-            raise RuntimeError(
-                "npm not found. Source init-node-and-npm-env.sh or install Node before running this script."
-            )
+            raise RuntimeError("Found a usable Node but no npm alongside it")
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
             subprocess.run(
@@ -151,23 +188,6 @@ def start_mongodb_runner(opts, data):
         binary = _normalize_path(_install_mongodb_runner())
         cmd = f"{binary} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {binary}...")
-    env = os.environ.copy()
-    node_bin = shutil.which("node")
-    if node_bin:
-        try:
-            node_ver = subprocess.check_output(
-                [node_bin, "--version"], encoding="utf-8"
-            ).strip()
-            node_major = int(node_ver.lstrip("v").split(".")[0])
-            # Node < 19 doesn't expose WebCrypto as a global; mongodb driver needs it.
-            # The flag was removed in Node 22, so only add it for Node 16-18.
-            if node_major < 19:
-                existing = env.get("NODE_OPTIONS", "")
-                env["NODE_OPTIONS"] = (
-                    f"{existing} --experimental-global-webcrypto".strip()
-                )
-        except (subprocess.CalledProcessError, ValueError):
-            pass
     try:
         with server_log.open("w") as fid:
             # Capture output while still streaming it to the file
@@ -176,7 +196,6 @@ def start_mongodb_runner(opts, data):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=env,
                 shell=(PLATFORM == "win32"),
             )
             output_lines = []
