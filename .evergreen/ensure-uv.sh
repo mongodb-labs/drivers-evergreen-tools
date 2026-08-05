@@ -180,11 +180,20 @@ ensure_uv() {
   # fails outright there, while the remote KMS VMs ship python3-venv but no
   # python3-pip, and Debian and Ubuntu disable `ensurepip` for the system python
   # so nothing can bootstrap one. Neither path alone covers both.
+  # Each attempt below is allowed to fail, since a later one may still succeed, so
+  # their output is collected here instead of being printed as it happens. On
+  # success it is noise: `pip install --user` is refused outright inside an active
+  # venv, which is expected when the venv path is about to succeed anyway. On
+  # failure it is the only diagnosis there is, so it is replayed before the error.
+  # Kept beside the venv under $TMPDIR, so there is nothing to clean up.
+  declare log="${venv_dir}-install.log"
+  : >"$log" 2>/dev/null || log=/dev/null
+
   if [ -n "$py" ]; then
     # pip first, being much cheaper than building a venv. Some Python builds
     # (e.g. the deadsnakes PPA in the docker test images) ship no pip at all;
     # bootstrap it from the stdlib bundle, which needs no network access.
-    "$py" -m pip --version >/dev/null 2>&1 || "$py" -m ensurepip --user >/dev/null 2>&1 || true
+    "$py" -m pip --version >>"$log" 2>&1 || "$py" -m ensurepip --user >>"$log" 2>&1 || true
 
     if "$py" -m pip --version >/dev/null 2>&1; then
       echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
@@ -195,8 +204,8 @@ ensure_uv() {
       #
       # Upgrade pip first, since one predating PEP 600 (e.g. 20.0.2 on Ubuntu
       # 20.04) mis-resolves uv's wheel tags. A fast no-op when already current.
-      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
-      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
 
       _ensure_uv_add_user_bin "$py"
     fi
@@ -206,7 +215,7 @@ ensure_uv() {
 
       # --clear so a previously broken venv is replaced. A working one would have
       # been found above, so anything still here is unusable.
-      if "$py" -m venv --clear "$venv_dir" >/dev/null 2>&1; then
+      if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
         # Windows venvs put the interpreter under Scripts, everything else in bin.
         declare venv_py="$venv_dir/bin/python"
         [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
@@ -214,8 +223,8 @@ ensure_uv() {
         # Upgrade pip for the same wheel-tag reason as above. It matters more
         # here: a venv seeds itself with the pip bundled in the system
         # interpreter, which on Ubuntu 20.04 is that same 20.0.2.
-        "$venv_py" -m pip install -q --upgrade pip || true
-        "$venv_py" -m pip install -q uv || true
+        "$venv_py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
+        "$venv_py" -m pip install -q uv >>"$log" 2>&1 || true
       fi
     fi
   fi
@@ -223,6 +232,14 @@ ensure_uv() {
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
     return 0
+  fi
+
+  # Tail rather than the whole log: pip's connection retries can run to dozens of
+  # lines, and the message that actually explains the failure is the last one.
+  if [ "$log" != /dev/null ] && [ -s "$log" ]; then
+    echo "Last output from the failed install attempts (full log: $log):" >&2
+    tail -n 20 "$log" | sed 's/^/  /' >&2
+    echo >&2
   fi
 
   cat <<'EOF' >&2
