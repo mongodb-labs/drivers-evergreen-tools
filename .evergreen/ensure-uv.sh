@@ -57,26 +57,33 @@ _ensure_uv_scope_paths() {
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
 }
 
-# _ensure_uv_add_user_base (internal)
+# _ensure_uv_add_path (internal)
 #
-# Prepend $1's `pip install --user` script directory to PATH, if not already
-# there. That directory is version/platform specific (~/.local/bin on Linux,
-# ~/Library/Python/X.Y/bin on macOS, %APPDATA%\Python\PythonXY\Scripts on
-# Windows), so ask the interpreter rather than assuming.
+# Prepend $1 to PATH unless it is already there, which keeps repeated ensure_uv
+# calls from growing PATH without end. Not meant to be called directly.
+_ensure_uv_add_path() {
+  declare dir="${1:?}"
+  case ":${PATH:-}:" in
+  *":$dir:"*) ;;
+  *) export PATH="$dir:${PATH:-}" ;;
+  esac
+}
+
+# _ensure_uv_add_user_bin (internal)
+#
+# Put $1's `pip install --user` script directory on PATH. That directory is
+# version and platform specific (~/.local/bin on Linux, ~/Library/Python/X.Y/bin
+# on macOS, %APPDATA%\Python\PythonXY\Scripts on Windows), so ask the interpreter
+# rather than assuming. Only one of bin/Scripts exists on any given platform, so
+# adding both is harmless.
 #
 # A no-op if the interpreter cannot report it. Not meant to be called directly.
-_ensure_uv_add_user_base() {
-  declare user_base
-  user_base="$("${1:?}" -m site --user-base 2>/dev/null)" || return 0
-  [ -n "$user_base" ] || return 0
-
-  # Both are added together and only one of them exists on any given platform,
-  # so either serves as a sentinel for "already added" -- which keeps repeated
-  # calls from growing PATH without end.
-  case ":${PATH:-}:" in
-  *":$user_base/bin:"*) ;;
-  *) export PATH="$user_base/bin:$user_base/Scripts:${PATH:-}" ;;
-  esac
+_ensure_uv_add_user_bin() {
+  declare base
+  base="$("${1:?}" -m site --user-base 2>/dev/null)" || return 0
+  [ -n "$base" ] || return 0
+  _ensure_uv_add_path "$base/bin"
+  _ensure_uv_add_path "$base/Scripts"
 }
 
 # ensure_uv
@@ -84,24 +91,34 @@ _ensure_uv_add_user_base() {
 # Usage:
 #   ensure_uv
 #
-# Return 0 (true) if `uv` is available on PATH, installing it with
-# `pip install --user uv` if it was not already present.
+# Return 0 (true) if `uv` is available on PATH, installing it if it was not
+# already present.
 # Return a non-zero value (false) otherwise, after printing an actionable
 # error message to stderr.
 #
 # Sets the following environment variables:
 #
 # - PYENV_VERSION (only when pyenv is installed)
-# - PATH (only when uv had to be installed)
+# - PATH (~/.local/bin, the venv, and pip's `--user` script directory)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
-# This mainly checks PATH and falls back to a plain `pip install --user`.
-# The one exception is a fallback to the MongoDB toolchain's python3, needed
-# on hosts (e.g. RHEL7) that have no python3 on PATH at all.
+# First look everywhere uv may already be: PATH, ~/.local/bin where uv's own
+# installer puts it, and the two places an earlier call may have installed it.
+# Failing that, install it with `pip install --user`, and failing that into a
+# virtual environment under $TMPDIR.
 #
-# On success, also relocates uv's shared state into the checkout; see
-# _ensure_uv_scope_paths above for exactly what is scoped and when.
+# Both install paths are load-bearing because the host fleet is split. Evergreen's
+# debian11 images have python3-pip but no python3-venv, so a venv cannot be built
+# there. The remote KMS VMs have python3-venv but no python3-pip, and Debian and
+# Ubuntu disable `ensurepip` for the system python, so no pip can be bootstrapped
+# there.
+#
+# The one wrinkle is a fallback to the MongoDB toolchain's python3, needed on
+# hosts (e.g. RHEL7) that have no python3 on PATH at all.
+#
+# On success, also relocates uv's shared state; see _ensure_uv_scope_paths above
+# for exactly what is scoped and when.
 ensure_uv() {
   # Some hosts (e.g. RHEL8 zseries/power8) have pyenv installed, whose shims
   # intercept `python`/`python3`/`uv` and enforce whichever .python-version
@@ -118,12 +135,15 @@ ensure_uv() {
     [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
   fi
 
-  if uv --version >/dev/null 2>&1; then
-    _ensure_uv_scope_paths
-    return 0
-  fi
+  # Kept stable rather than mktemp'd so a later ensure_uv call in a fresh shell
+  # reuses the venv instead of rebuilding it. Under CI, Evergreen points TMPDIR at
+  # a per-task directory, so the venv is recycled with the task and stays out of
+  # the failure artifacts, which are packed from $DRIVERS_TOOLS and
+  # $PROJECT_DIRECTORY.
+  declare venv_dir="${TMPDIR:-/tmp}"
+  venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  local py=""
+  declare py=""
   if command -v python3 >/dev/null 2>&1; then
     py=python3
   else
@@ -140,38 +160,64 @@ ensure_uv() {
     fi
   fi
 
-  # An earlier ensure_uv call may have already installed uv into the `--user`
-  # script directory. That PATH addition does not outlive the shell it ran in,
-  # and on hosts where the directory is not on the default PATH (e.g. RHEL7,
-  # where it is /root/.local/bin) every later script would otherwise pay for
-  # another pip install. Look there before reinstalling.
-  if [ -n "$py" ]; then
-    _ensure_uv_add_user_base "$py"
-    if uv --version >/dev/null 2>&1; then
-      _ensure_uv_scope_paths
-      return 0
-    fi
+  # Everywhere uv may already be, none of it reliably on PATH in a fresh shell:
+  # ~/.local/bin is where uv's own installer puts it and is off the default PATH
+  # on some hosts (e.g. RHEL7 root shells), while the venv and the `--user` script
+  # directory are where an earlier ensure_uv call put it. Checking them together
+  # means a later call in a new shell reuses whichever install happened.
+  [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
+  _ensure_uv_add_path "$venv_dir/bin"
+  _ensure_uv_add_path "$venv_dir/Scripts"
+  [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
+
+  if uv --version >/dev/null 2>&1; then
+    _ensure_uv_scope_paths
+    return 0
   fi
 
+  # Both install paths are needed, because the host fleet is split: Evergreen's
+  # debian11 images ship python3-pip but no python3-venv, so `python3 -m venv`
+  # fails outright there, while the remote KMS VMs ship python3-venv but no
+  # python3-pip, and Debian and Ubuntu disable `ensurepip` for the system python
+  # so nothing can bootstrap one. Neither path alone covers both.
   if [ -n "$py" ]; then
-    echo "uv not found on PATH; installing with '$py -m pip install --user uv'..." >&2
-
-    # Some Python builds (e.g. the deadsnakes PPA used in the docker test
-    # images) don't ship pip; bootstrap it from the stdlib bundle, which
-    # requires no network access.
+    # pip first, being much cheaper than building a venv. Some Python builds
+    # (e.g. the deadsnakes PPA in the docker test images) ship no pip at all;
+    # bootstrap it from the stdlib bundle, which needs no network access.
     "$py" -m pip --version >/dev/null 2>&1 || "$py" -m ensurepip --user >/dev/null 2>&1 || true
 
-    # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
-    # guard, which some distros (e.g. Debian/Ubuntu) enable by default. This is
-    # safe here: it's a --user install and does not touch system site-packages.
-    #
-    # Upgrade pip itself first: some hosts ship a pip too old to recognize
-    # uv's wheel tags (e.g. PEP 600 manylinux tags require pip 20.3+). This is
-    # a fast no-op when pip is already current.
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
+    if "$py" -m pip --version >/dev/null 2>&1; then
+      echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
 
-    _ensure_uv_add_user_base "$py"
+      # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed-environment
+      # guard, which Debian and Ubuntu enable by default. Safe here: a --user
+      # install does not touch system site-packages.
+      #
+      # Upgrade pip first, since one predating PEP 600 (e.g. 20.0.2 on Ubuntu
+      # 20.04) mis-resolves uv's wheel tags. A fast no-op when already current.
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip || true
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv || true
+
+      _ensure_uv_add_user_bin "$py"
+    fi
+
+    if ! uv --version >/dev/null 2>&1; then
+      echo "uv not found; installing it into a virtual environment at $venv_dir..." >&2
+
+      # --clear so a previously broken venv is replaced. A working one would have
+      # been found above, so anything still here is unusable.
+      if "$py" -m venv --clear "$venv_dir" >/dev/null 2>&1; then
+        # Windows venvs put the interpreter under Scripts, everything else in bin.
+        declare venv_py="$venv_dir/bin/python"
+        [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
+
+        # Upgrade pip for the same wheel-tag reason as above. It matters more
+        # here: a venv seeds itself with the pip bundled in the system
+        # interpreter, which on Ubuntu 20.04 is that same 20.0.2.
+        "$venv_py" -m pip install -q --upgrade pip || true
+        "$venv_py" -m pip install -q uv || true
+      fi
+    fi
   fi
 
   if uv --version >/dev/null 2>&1; then
