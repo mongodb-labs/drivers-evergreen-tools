@@ -413,7 +413,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          bash ./.evergreen/make-drivers-tools-archive.sh $AZUREOIDC_DRIVERS_TAR_FILE
+          bash ./.evergreen/make-drivers-tools-archive.sh "$AZUREOIDC_DRIVERS_TAR_FILE"
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/azure/run-driver-test.sh
           # Generate a test results file
@@ -448,7 +448,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          bash ./.evergreen/make-drivers-tools-archive.sh $GCPOIDC_DRIVERS_TAR_FILE
+          bash ./.evergreen/make-drivers-tools-archive.sh "$GCPOIDC_DRIVERS_TAR_FILE"
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/gcp/run-driver-test.sh
           # Generate a test results file
@@ -468,7 +468,7 @@ functions:
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          bash ./.evergreen/make-drivers-tools-archive.sh $K8S_DRIVERS_TAR_FILE
+          bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
           bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh

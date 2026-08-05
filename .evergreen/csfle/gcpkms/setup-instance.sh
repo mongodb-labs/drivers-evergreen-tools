@@ -35,7 +35,7 @@ echo "Copying drivers-evergreen-tools to GCE instance ($GCPKMS_INSTANCENAME) ...
 # On failure start-mongodb.sh falls back to cloning the default branch, so this
 # must not abort the task.
 GCPKMS_ARCHIVE_DIR=$(mktemp -d)
-if bash $DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh "$GCPKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz"; then
+if bash "$DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh" "$GCPKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz"; then
     $GCPKMS_GCLOUD compute scp "$GCPKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz" "$GCPKMS_INSTANCENAME":~ \
         --zone $GCPKMS_ZONE \
         --project $GCPKMS_PROJECT

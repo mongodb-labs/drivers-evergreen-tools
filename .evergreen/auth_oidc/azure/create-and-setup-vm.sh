@@ -70,7 +70,7 @@ AZUREKMS_DST="./" \
 # Push Drivers Evergreen Tools onto the VM
 TARFILE=/tmp/drivers-evergreen-tools.tgz
 pushd $DRIVERS_TOOLS
-bash $DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh $TARFILE
+bash "$DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh" "$TARFILE"
 TARFILE_BASE=$(basename ${TARFILE})
 AZUREKMS_SRC=${TARFILE} \
     AZUREKMS_DST="./" \

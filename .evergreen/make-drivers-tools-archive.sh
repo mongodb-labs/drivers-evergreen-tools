@@ -59,5 +59,8 @@ if ! git -C "$DRIVERS_TOOLS" rev-parse --git-dir >/dev/null 2>&1; then
   exit 1
 fi
 
+# --no-xattrs because building this on macOS otherwise records com.apple.provenance
+# on every entry, and GNU tar on the Linux side then warns once per file. Accepted
+# by both bsdtar and GNU tar.
 git -C "$DRIVERS_TOOLS" ls-files -z |
-  tar czf "$OUTPUT" -C "$DRIVERS_TOOLS" --null -T -
+  tar czf "$OUTPUT" --no-xattrs -C "$DRIVERS_TOOLS" --null -T -
