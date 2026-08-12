@@ -71,7 +71,8 @@ The following inputs exist:
 These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
 
 The example above tracks `master`. To pin a published version instead, use a release tag such as
-`mongodb-labs/drivers-evergreen-tools@v1.0.0`. See [Releasing](#releasing).
+`mongodb-labs/drivers-evergreen-tools@v1.0.0`. See [Releasing](CONTRIBUTING.md#releasing) for how
+those versions are cut.
 
 After the cluster is started, its URI is exposed via the `cluster-uri` output. In addition, the action also exposes the
 path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
@@ -176,16 +177,6 @@ To fix it, simply run:
 ```sh
 softwareupdate --install-rosetta
 ```
-
-## Releasing
-
-Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
-`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
-version, then creates that tag and a GitHub release whose notes are generated from the commits
-since the previous tag.
-
-Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
-release. A real release only runs on the default branch, and the tag it creates is signed.
 
 ## Setup and Teardown
 
