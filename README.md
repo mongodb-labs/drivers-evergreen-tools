@@ -185,19 +185,7 @@ version, then creates that tag and a GitHub release whose notes are generated fr
 since the previous tag.
 
 Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
-release. A real release only runs on the default branch.
-
-The workflow needs a `release` environment holding an `APP_ID` variable and an
-`APP_PRIVATE_KEY` secret for a GitHub App, and that App must be installed with `contents: write`
-permission. A `vX.Y.Z` tag must already exist in the repository, since the script fails when it
-finds none.
-
-The release tag is signed, and signing runs through `mongodb-labs/drivers-github-tools`. The
-`release` environment additionally needs `AWS_ROLE_ARN` and `AWS_SECRET_ID` secrets and an
-`AWS_REGION_NAME` variable, which MongoDB release infrastructure provisions.
-
-The version arithmetic lives in `.github/scripts/bump_version.py` and is covered by
-`.github/scripts/test_bump_version.py`.
+release. A real release only runs on the default branch, and the tag it creates is signed.
 
 ## Setup and Teardown
 
