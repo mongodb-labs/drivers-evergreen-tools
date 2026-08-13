@@ -41,6 +41,12 @@ CRYPT_NAME_MAP = {
     "linux": "mongo_crypt_v1.so",
 }
 
+# Server versions that are still in development and whose release candidates are
+# not published in full.json (https://downloads.mongodb.org/full.json).  These
+# are satisfied with the latest nightly build of the corresponding branch.
+# Remove an entry once its GA release appears in full.json.
+UNPUBLISHED_VERSIONS = {"9.0"}
+
 # Top level files
 URI_TXT = DRIVERS_TOOLS / "uri.txt"
 MO_EXPANSION_SH = Path("mo-expansion.sh")
@@ -484,6 +490,14 @@ def run(opts):
 
     if opts.arch:
         default_args += f" --arch={opts.arch}"
+
+    if version in UNPUBLISHED_VERSIONS:
+        LOGGER.warning(
+            f"MongoDB {version} is not published in full.json; "
+            f"using the latest v{version} nightly build instead."
+        )
+        default_args += f" --latest-build-branch v{version}"
+        version = "latest-build"
 
     if not opts.local_atlas:
         # Download the archive.
