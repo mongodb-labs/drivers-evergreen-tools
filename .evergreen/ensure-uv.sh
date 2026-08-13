@@ -15,8 +15,8 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
-# Captured while sourcing, because ensure_uv may be called from any working
-# directory and needs to find find-python3.sh beside this file.
+# Captured while sourcing: ensure_uv may run from any working directory and
+# needs find-python3.sh beside this file.
 _ensure_uv_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # _ensure_uv_scope_paths (internal)
@@ -102,8 +102,8 @@ _ensure_uv_supports_uv() {
 #
 # Return 0 (true) if the uv on PATH is one we can use. uv 0.10.0 stopped
 # invalidating the lockfile versions after an exclude-newer change, which
-# drivers-tools relies on, so anything older counts as absent and gets replaced
-# rather than reused. Not meant to be called directly.
+# drivers-tools relies on, so anything older counts as absent. Not meant to be
+# called directly.
 _ensure_uv_have_uv() {
   declare version
   version="$(uv --version 2>/dev/null)" || return 1
@@ -116,11 +116,10 @@ _ensure_uv_have_uv() {
 
 # _ensure_uv_publish (internal)
 #
-# Link the uv now on PATH into $DRIVERS_TOOLS/.bin, the directory
-# ensure-binary.sh keeps tool binaries in and handle-paths.sh puts on PATH, so a
-# later script in a fresh shell finds it without repeating the install. A no-op
-# when DRIVERS_TOOLS is unset, which is the case in child shells that do not
-# inherit it. Not meant to be called directly.
+# Link the uv now on PATH into $DRIVERS_TOOLS/.bin, where ensure-binary.sh keeps
+# tool binaries and handle-paths.sh looks, so a later script in a fresh shell
+# skips the install. A no-op when DRIVERS_TOOLS is unset, as it is in child
+# shells that do not inherit it. Not meant to be called directly.
 _ensure_uv_publish() {
   [ -n "${DRIVERS_TOOLS:-}" ] || return 0
 
@@ -132,8 +131,8 @@ _ensure_uv_publish() {
   [ "$src" = "$dest/uv" ] && return 0
   mkdir -p "$dest" 2>/dev/null || return 0
 
-  # Symlinks need a privilege Windows does not grant by default, so fall back to
-  # a copy there. Either way this is best-effort: uv is already on PATH.
+  # Windows does not grant symlink privilege by default. Best-effort either way,
+  # since uv is already on PATH.
   ln -sf "$src" "$dest/uv" 2>/dev/null || cp -f "$src" "$dest/uv" 2>/dev/null || return 0
   _ensure_uv_add_path "$dest"
 }
@@ -153,13 +152,13 @@ _ensure_uv_publish() {
 #   inside one, so again only the venv works.
 # - The docker test images install a deadsnakes python with venv but no pip, so the
 #   venv covers them as well.
-# - Evergreen's debian11 images are the one case that runs the other way: they have
-#   pip but no python3-venv, so `python3 -m venv` fails outright and pip is the only
-#   way through. A venv-only ensure_uv broke exactly those hosts once already; see
-#   test_no_venv_module in tests/test-remote-kms-provisioning.sh.
+# - Evergreen's debian11 images run the other way: pip but no python3-venv, so
+#   `python3 -m venv` fails outright and pip is the only way through. A venv-only
+#   ensure_uv broke those hosts once already; see test_no_venv_module in
+#   tests/test-remote-kms-provisioning.sh.
 #
-# The venv goes first because it is self-contained: it neither depends on nor
-# disturbs whatever the host's own python has in its `--user` directory.
+# The venv goes first because it neither depends on nor disturbs the host
+# python's `--user` directory.
 #
 # Every step tolerates failure, since a later one may still succeed.
 _ensure_uv_install() {
@@ -169,9 +168,9 @@ _ensure_uv_install() {
 
   # --clear replaces a previously broken venv; a working one was found already.
   if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
-    # Windows venvs put the interpreter under Scripts, everything else in bin. A
-    # venv seeds itself with the system interpreter's pip, so it needs the same
-    # upgrade as below, for the same reason.
+    # Windows venvs put the interpreter under Scripts, everything else in bin.
+    # A venv seeds itself with the system pip, so it needs the same upgrade as
+    # below, for the same reason.
     declare venv_py="$venv_dir/bin/python"
     [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
     "$venv_py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
@@ -214,8 +213,8 @@ _ensure_uv_install() {
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
-# Looks everywhere uv may already be -- accepting one only if it is recent enough,
-# see _ensure_uv_have_uv -- and only then hands off to _ensure_uv_install, which
+# Looks everywhere uv may already be, accepting one only if it is recent enough
+# (see _ensure_uv_have_uv), and only then hands off to _ensure_uv_install, which
 # documents why installing it takes two attempts.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
@@ -237,18 +236,16 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  # find_python3 is drivers-tools' own answer to "which python3 is usable here":
-  # it wants 3.9+ with pip and venv, rejects free-threaded and prerelease builds,
-  # and prefers the MongoDB toolchain over whatever the distro shipped. That last
-  # part is what gets RHEL 8.2 working, where the platform python3 is 3.6 and no
-  # amount of retrying can install uv with it.
+  # find_python3 already knows which python3 is usable here: 3.9+ with pip and
+  # venv, no free-threaded or prerelease builds, and the MongoDB toolchain ahead
+  # of whatever the distro shipped. That last part is what gets RHEL 8.2 working,
+  # where the platform python3 is 3.6 and cannot install uv at all.
   declare py=""
   command -v ensure_python3 >/dev/null 2>&1 || . "$_ensure_uv_dir/find-python3.sh"
   py="$(ensure_python3 2>/dev/null)" || py=""
 
-  # find_python3 holds out for 3.9 while uv itself only needs 3.8, so a host
-  # whose best interpreter is 3.8 -- Ubuntu 20.04 is the one we still run on --
-  # finds nothing above and would otherwise be stranded.
+  # find_python3 holds out for 3.9 while uv needs only 3.8, which strands a host
+  # whose best interpreter is 3.8. Ubuntu 20.04 is the one we still run on.
   if [ -z "$py" ]; then
     declare candidate
     for candidate in python3 python; do
@@ -260,10 +257,9 @@ ensure_uv() {
     done
   fi
 
-  # Resolved to an absolute path rather than left as a bare name: the venv below
-  # goes on PATH ahead of everything, and a venv that fails partway through (see
-  # _ensure_uv_install) leaves a pip-less interpreter of the same name sitting in
-  # it. A bare `python3` would silently become that one.
+  # Absolute, not a bare name: the venv goes on PATH ahead of everything, and one
+  # that fails partway through (see _ensure_uv_install) leaves a pip-less
+  # interpreter of the same name in it. A bare `python3` would become that one.
   if [ -n "$py" ]; then
     py="$(command -v "$py" 2>/dev/null)" || py=""
   fi
