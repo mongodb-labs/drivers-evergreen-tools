@@ -15,6 +15,10 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
+# Captured while sourcing, because ensure_uv may be called from any working
+# directory and needs to find find-python3.sh beside this file.
+_ensure_uv_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # _ensure_uv_scope_paths (internal)
 #
 # Keeps uv's shared state out of its default home-directory locations
@@ -86,55 +90,111 @@ _ensure_uv_add_user_bin() {
   _ensure_uv_add_path "$base/Scripts"
 }
 
+# _ensure_uv_supports_uv (internal)
+#
+# Return 0 (true) if interpreter $1 is new enough for uv, which publishes no
+# distribution below Python 3.8. Not meant to be called directly.
+_ensure_uv_supports_uv() {
+  "${1:?}" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1
+}
+
+# _ensure_uv_have_uv (internal)
+#
+# Return 0 (true) if the uv on PATH is one we can use. uv 0.10.0 stopped
+# invalidating the lockfile versions after an exclude-newer change, which
+# drivers-tools relies on, so anything older counts as absent and gets replaced
+# rather than reused. Not meant to be called directly.
+_ensure_uv_have_uv() {
+  declare version
+  version="$(uv --version 2>/dev/null)" || return 1
+  # e.g. "uv 0.12.3 (b88d7c5c4 2026-07-28)" -> "0.12.3"
+  version="${version#uv }"
+  version="${version%% *}"
+  [ -n "$version" ] || return 1
+  [ "$(printf '%s\n' 0.10 "$version" | sort -V | head -n1)" = "0.10" ]
+}
+
+# _ensure_uv_publish (internal)
+#
+# Link the uv now on PATH into $DRIVERS_TOOLS/.bin, the directory
+# ensure-binary.sh keeps tool binaries in and handle-paths.sh puts on PATH, so a
+# later script in a fresh shell finds it without repeating the install. A no-op
+# when DRIVERS_TOOLS is unset, which is the case in child shells that do not
+# inherit it. Not meant to be called directly.
+_ensure_uv_publish() {
+  [ -n "${DRIVERS_TOOLS:-}" ] || return 0
+
+  declare src
+  src="$(command -v uv 2>/dev/null)" || return 0
+  [ -n "$src" ] || return 0
+
+  declare dest="$DRIVERS_TOOLS/.bin"
+  [ "$src" = "$dest/uv" ] && return 0
+  mkdir -p "$dest" 2>/dev/null || return 0
+
+  # Symlinks need a privilege Windows does not grant by default, so fall back to
+  # a copy there. Either way this is best-effort: uv is already on PATH.
+  ln -sf "$src" "$dest/uv" 2>/dev/null || cp -f "$src" "$dest/uv" 2>/dev/null || return 0
+  _ensure_uv_add_path "$dest"
+}
+
 # _ensure_uv_install (internal)
 #
 # Install uv using interpreter $1, building a virtual environment at $2 if needed,
 # with all output appended to $3. Not meant to be called directly.
 #
-# Tries `pip install --user` and then a virtual environment, because no single
+# Tries a virtual environment and then `pip install --user`, because no single
 # method covers every host we run on:
 #
 # - Remote KMS VMs provisioned before python3-pip was added to their setup scripts
 #   have no system pip. These are real Debian 11 cloud images, and Debian disables
 #   `ensurepip` for the system python, so only the venv works there.
-# - Evergreen's debian11 images have pip but no python3-venv, so `python3 -m venv`
-#   fails outright and only pip works there.
 # - Callers already inside an active venv have pip, but pip refuses `--user`
 #   inside one, so again only the venv works.
 # - The docker test images install a deadsnakes python with venv but no pip, so the
 #   venv covers them as well.
+# - Evergreen's debian11 images are the one case that runs the other way: they have
+#   pip but no python3-venv, so `python3 -m venv` fails outright and pip is the only
+#   way through. A venv-only ensure_uv broke exactly those hosts once already; see
+#   test_no_venv_module in tests/test-remote-kms-provisioning.sh.
+#
+# The venv goes first because it is self-contained: it neither depends on nor
+# disturbs whatever the host's own python has in its `--user` directory.
 #
 # Every step tolerates failure, since a later one may still succeed.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"
 
-  if "$py" -m pip --version >/dev/null 2>&1; then
-    echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
-
-    # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
-    # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
-    # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
-    # Ubuntu 20.04) mis-resolves uv's wheel tags.
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
-
-    _ensure_uv_add_user_bin "$py"
-  fi
-
-  uv --version >/dev/null 2>&1 && return 0
-
-  echo "uv not found; installing it into a virtual environment at $venv_dir..." >&2
+  echo "uv not found; installing it into a virtual environment at $venv_dir with $py..." >&2
 
   # --clear replaces a previously broken venv; a working one was found already.
-  "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1 || return 0
+  if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
+    # Windows venvs put the interpreter under Scripts, everything else in bin. A
+    # venv seeds itself with the system interpreter's pip, so it needs the same
+    # upgrade as below, for the same reason.
+    declare venv_py="$venv_dir/bin/python"
+    [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
+    "$venv_py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
+    "$venv_py" -m pip install -q uv >>"$log" 2>&1 || true
 
-  # Windows venvs put the interpreter under Scripts, everything else in bin. A
-  # venv seeds itself with the system interpreter's pip, so it needs the same
-  # upgrade for the same reason.
-  declare venv_py="$venv_dir/bin/python"
-  [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
-  "$venv_py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
-  "$venv_py" -m pip install -q uv >>"$log" 2>&1 || true
+    _ensure_uv_add_path "$venv_dir/bin"
+    _ensure_uv_add_path "$venv_dir/Scripts"
+  fi
+
+  _ensure_uv_have_uv && return 0
+
+  "$py" -m pip --version >/dev/null 2>&1 || return 0
+
+  echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
+
+  # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
+  # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
+  # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
+  # Ubuntu 20.04) mis-resolves uv's wheel tags.
+  PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
+  PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
+
+  _ensure_uv_add_user_bin "$py"
 }
 
 # ensure_uv
@@ -150,12 +210,13 @@ _ensure_uv_install() {
 # Sets the following environment variables:
 #
 # - PYENV_VERSION (only when pyenv is installed)
-# - PATH (~/.local/bin, the venv, and pip's `--user` script directory)
+# - PATH (~/.local/bin, $DRIVERS_TOOLS/.bin, the venv, and pip's `--user` dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
-# Looks everywhere uv may already be, and only then hands off to
-# _ensure_uv_install, which documents why installing it takes two attempts.
+# Looks everywhere uv may already be -- accepting one only if it is recent enough,
+# see _ensure_uv_have_uv -- and only then hands off to _ensure_uv_install, which
+# documents why installing it takes two attempts.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -176,20 +237,35 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
+  # find_python3 is drivers-tools' own answer to "which python3 is usable here":
+  # it wants 3.9+ with pip and venv, rejects free-threaded and prerelease builds,
+  # and prefers the MongoDB toolchain over whatever the distro shipped. That last
+  # part is what gets RHEL 8.2 working, where the platform python3 is 3.6 and no
+  # amount of retrying can install uv with it.
   declare py=""
-  if command -v python3 >/dev/null 2>&1; then
-    py=python3
-  else
-    # Some legacy hosts (e.g. RHEL7) have no python3 on PATH at all, only an
-    # ancient Python 2 `python` that uv does not support. Prefer the MongoDB
-    # toolchain's python3, which those hosts do have.
-    declare toolchain_py
-    toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
-    if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
-      py="$toolchain_py"
-    elif command -v python >/dev/null 2>&1; then
-      py=python
-    fi
+  command -v ensure_python3 >/dev/null 2>&1 || . "$_ensure_uv_dir/find-python3.sh"
+  py="$(ensure_python3 2>/dev/null)" || py=""
+
+  # find_python3 holds out for 3.9 while uv itself only needs 3.8, so a host
+  # whose best interpreter is 3.8 -- Ubuntu 20.04 is the one we still run on --
+  # finds nothing above and would otherwise be stranded.
+  if [ -z "$py" ]; then
+    declare candidate
+    for candidate in python3 python; do
+      command -v "$candidate" >/dev/null 2>&1 || continue
+      if _ensure_uv_supports_uv "$candidate"; then
+        py="$candidate"
+        break
+      fi
+    done
+  fi
+
+  # Resolved to an absolute path rather than left as a bare name: the venv below
+  # goes on PATH ahead of everything, and a venv that fails partway through (see
+  # _ensure_uv_install) leaves a pip-less interpreter of the same name sitting in
+  # it. A bare `python3` would silently become that one.
+  if [ -n "$py" ]; then
+    py="$(command -v "$py" 2>/dev/null)" || py=""
   fi
 
   # None of these is reliably on PATH in a fresh shell. ~/.local/bin is where uv's
@@ -197,11 +273,13 @@ ensure_uv() {
   # shells), and the rest are where an earlier ensure_uv call put it. Scripts is the
   # Windows spelling of bin.
   [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
+  [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
   _ensure_uv_add_path "$venv_dir/bin"
   _ensure_uv_add_path "$venv_dir/Scripts"
   [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
 
-  if uv --version >/dev/null 2>&1; then
+  if _ensure_uv_have_uv; then
+    _ensure_uv_publish
     _ensure_uv_scope_paths
     return 0
   fi
@@ -216,7 +294,8 @@ ensure_uv() {
 
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
-  if uv --version >/dev/null 2>&1; then
+  if _ensure_uv_have_uv; then
+    _ensure_uv_publish
     _ensure_uv_scope_paths
     return 0
   fi

@@ -79,6 +79,20 @@ jobs:
           fi
           mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
 
+  ensure-uv:
+    name: "ensure-uv Unit Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The host-shape cases need containers and several distro images, so they
+      # run in Evergreen as test-ensure-uv. This job is the fast half, gating
+      # every PR.
+      - name: "Run unit tests"
+        run: ENSURE_UV_SKIP_CONTAINERS=1 bash .evergreen/tests/test-ensure-uv.sh
+
   pre-commit:
     runs-on: ubuntu-latest
     steps:

@@ -561,6 +561,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
 
+  "run ensure uv test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-ensure-uv.sh]
+
   "run drivers tools archive test":
     - command: subprocess.exec
       type: test
@@ -1047,6 +1054,11 @@ tasks:
       tags: ["docker", "pr"]
       commands:
         - func: "run remote kms provisioning test"
+
+    - name: "test-ensure-uv"
+      tags: ["docker", "pr"]
+      commands:
+        - func: "run ensure uv test"
 
     - name: "test-drivers-tools-archive"
       tags: ["pr"]
