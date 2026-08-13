@@ -71,9 +71,8 @@ def _npm_install(install_dir: Path) -> Optional[str]:
     tree into errors rather than the default warnings, which makes npm the
     thing that decides whether the Node on PATH is acceptable. That keeps the
     requirement in one place: it is mongodb-runner's dependencies that
-    constrain Node (yargs, currently ^20.19.0 || ^22.12.0 || >=23), and
-    repeating that range here would mean re-checking it on every _MR_VERSION
-    bump.
+    constrain Node, somewhere down the tree, and naming the package and range
+    here would mean re-checking both on every _MR_VERSION bump.
 
     Returns npm's error output on failure, for the caller to report. Output is
     captured rather than silenced so that reason survives: --silent suppresses
