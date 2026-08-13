@@ -204,20 +204,9 @@ check "installs uv through the venv when the interpreter has no pip" '
 
 echo "Testing ensure_uv reuse of an existing uv ..."
 
-# uv 0.10.0 stopped invalidating the lockfile versions after an exclude-newer
-# change, which drivers-tools relies on, so an older uv has to be replaced.
-check "replaces a uv older than 0.10" '
-  make_uv "$sandbox/home/.local/bin/uv" 0.9.2
-  make_python "$sandbox/bin/python3" 3.11.9 pip,venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-' '
-  got=$(uv --version)
-  case "$got" in
-  "uv 0.9.2"*) echo "expected the too-old uv to be replaced, still got: $got"; exit 1 ;;
-  esac
-'
-
-check "reuses a uv at 0.10 or newer" '
+# ~/.local/bin is off the default PATH on some hosts, so an existing uv there
+# has to be found rather than reinstalled.
+check "reuses a uv already installed under ~/.local/bin" '
   make_uv "$sandbox/home/.local/bin/uv" 0.11.8
   # No interpreter to install with, so reuse is the only way this can succeed.
   export DRIVERS_TOOLS_PYTHON="$sandbox/no-python-here"

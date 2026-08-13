@@ -98,22 +98,6 @@ _ensure_uv_supports_uv() {
   "${1:?}" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1
 }
 
-# _ensure_uv_have_uv (internal)
-#
-# Return 0 (true) if the uv on PATH is one we can use. uv 0.10.0 stopped
-# invalidating the lockfile versions after an exclude-newer change, which
-# drivers-tools relies on, so anything older counts as absent. Not meant to be
-# called directly.
-_ensure_uv_have_uv() {
-  declare version
-  version="$(uv --version 2>/dev/null)" || return 1
-  # e.g. "uv 0.12.3 (b88d7c5c4 2026-07-28)" -> "0.12.3"
-  version="${version#uv }"
-  version="${version%% *}"
-  [ -n "$version" ] || return 1
-  [ "$(printf '%s\n' 0.10 "$version" | sort -V | head -n1)" = "0.10" ]
-}
-
 # _ensure_uv_publish (internal)
 #
 # Link the uv now on PATH into $DRIVERS_TOOLS/.bin, where ensure-binary.sh keeps
@@ -180,7 +164,7 @@ _ensure_uv_install() {
     _ensure_uv_add_path "$venv_dir/Scripts"
   fi
 
-  _ensure_uv_have_uv && return 0
+  uv --version >/dev/null 2>&1 && return 0
 
   "$py" -m pip --version >/dev/null 2>&1 || return 0
 
@@ -213,9 +197,8 @@ _ensure_uv_install() {
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
-# Looks everywhere uv may already be, accepting one only if it is recent enough
-# (see _ensure_uv_have_uv), and only then hands off to _ensure_uv_install, which
-# documents why installing it takes two attempts.
+# Looks everywhere uv may already be, and only then hands off to
+# _ensure_uv_install, which documents why installing it takes two attempts.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -274,7 +257,7 @@ ensure_uv() {
   _ensure_uv_add_path "$venv_dir/Scripts"
   [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
 
-  if _ensure_uv_have_uv; then
+  if uv --version >/dev/null 2>&1; then
     _ensure_uv_publish
     _ensure_uv_scope_paths
     return 0
@@ -290,7 +273,7 @@ ensure_uv() {
 
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
-  if _ensure_uv_have_uv; then
+  if uv --version >/dev/null 2>&1; then
     _ensure_uv_publish
     _ensure_uv_scope_paths
     return 0
