@@ -75,12 +75,14 @@ def _npm_install(install_dir: Path) -> Optional[str]:
     repeating that range here would mean re-checking it on every _MR_VERSION
     bump.
 
-    Returns npm's error output on failure, for the caller to report.
+    Returns npm's error output on failure, for the caller to report. Output is
+    captured rather than silenced so that reason survives: --silent suppresses
+    it, leaving nothing but an exit status to explain why a host was rejected.
     """
     npm = shutil.which("npm")
     if npm is None:
         return "npm was not found on PATH"
-    args = ["install", "--silent", "--engine-strict"]
+    args = ["install", "--loglevel=error", "--engine-strict"]
     try:
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
