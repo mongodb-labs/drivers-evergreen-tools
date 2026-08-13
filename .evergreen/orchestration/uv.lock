@@ -140,7 +140,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "drivers-evergreen-tools", directory = "../" },
-    { name = "mongo-orchestration", url = "https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz" },
+    { name = "mongo-orchestration", specifier = ">=0.11.2" },
     { name = "psutil", specifier = ">=7.1" },
 ]
 
@@ -167,27 +167,18 @@ wheels = [
 
 [[package]]
 name = "mongo-orchestration"
-version = "0.12.0.dev1"
-source = { url = "https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz" }
+version = "0.11.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bottle" },
     { name = "cheroot" },
     { name = "pymongo" },
     { name = "requests" },
 ]
-sdist = { hash = "sha256:a994a21b19276633743e27daade64fd1b5616abf1892d0dc6a8e2cda329a6f2e" }
-
-[package.metadata]
-requires-dist = [
-    { name = "bottle", specifier = ">=0.12.7" },
-    { name = "cheroot", specifier = ">=5.11" },
-    { name = "coverage", marker = "extra == 'test'", specifier = ">=3.5" },
-    { name = "pexpect", marker = "extra == 'test'" },
-    { name = "pymongo", specifier = ">=4,<5" },
-    { name = "pytest", marker = "extra == 'test'" },
-    { name = "requests" },
+sdist = { url = "https://files.pythonhosted.org/packages/c9/3b/6e579eb7aae04e95c194e6ca57666bc4d1cd0dff4f81de0b3f7e663222b5/mongo_orchestration-0.11.2.tar.gz", hash = "sha256:6f0996e5bb072e8dbd0009289b31debb88a647f562c486cfc2c73583ab059993", size = 52349, upload-time = "2026-02-25T23:32:18.48Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/c6/b84ea12160c0b162eba957578d6d41f80bc4e4873d045fbb11e9b4678873/mongo_orchestration-0.11.2-py3-none-any.whl", hash = "sha256:123cff8e808ad2f5d4fe9cf8d736ce9a51ee50d75a213712055da5cc0f973665", size = 79456, upload-time = "2026-02-25T23:32:17.2Z" },
 ]
-provides-extras = ["test"]
 
 [[package]]
 name = "more-itertools"
