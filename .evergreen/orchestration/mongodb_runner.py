@@ -85,14 +85,20 @@ def _node_major_version() -> Optional[int]:
 
 
 def _node_is_usable() -> bool:
-    """Check whether the "node" on PATH is new enough for mongodb-runner.
+    """Check whether PATH has a Node new enough for mongodb-runner, plus npm.
 
     Some hosts have an unrelated, ancient Node (e.g. bundled with other
-    tooling) earlier on PATH than any Node we install ourselves; relying on
-    "npm exists somewhere on PATH" alone can pick that up instead.
+    tooling) earlier on PATH than any Node we install ourselves, so the
+    version has to be checked rather than merely finding an executable.
+
+    npm is checked too because some distributions package it separately: a
+    host can have a new enough node and no npm, and treating that as usable
+    would skip the install that would have provided both.
     """
     node_major = _node_major_version()
-    return node_major is not None and node_major >= _MIN_NODE_MAJOR
+    if node_major is None or node_major < _MIN_NODE_MAJOR:
+        return False
+    return shutil.which("npm") is not None
 
 
 def _ensure_usable_node() -> bool:
@@ -142,12 +148,11 @@ def _install_mongodb_runner() -> Path:
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
         if not _ensure_usable_node():
             raise RuntimeError(
-                f"mongodb-runner requires Node {_MIN_NODE_MAJOR}+, which could not "
-                "be found or installed"
+                f"mongodb-runner requires Node {_MIN_NODE_MAJOR}+ and npm, which "
+                "could not be found or installed"
             )
+        # _ensure_usable_node() guarantees both are on PATH.
         npm = shutil.which("npm")
-        if npm is None:
-            raise RuntimeError("Found a usable Node but no npm alongside it")
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
             subprocess.run(

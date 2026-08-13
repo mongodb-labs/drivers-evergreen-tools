@@ -76,8 +76,11 @@ make lint
 To run an individual hook like `shellcheck` manually, run:
 
 ```bash
-pre-commit run --all-files shellcheck
+.bin/pre-commit run --all-files shellcheck
 ```
+
+`make install` puts `pre-commit` in the repo-local `.bin` directory, so it does
+not have to be installed globally.
 
 ## New Features
 
