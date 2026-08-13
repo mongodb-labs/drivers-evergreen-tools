@@ -62,55 +62,53 @@ def _normalize_path(path: Union[Path, str]) -> str:
 
 
 _MR_VERSION = "6.8.2"
-# mongodb-runner itself only needs Node 18+ (it depends on yargs@18, an ESM-only
-# package that Node < 18 cannot require()), but Node 16-18 additionally needs
-# --experimental-global-webcrypto to expose WebCrypto as a global for the mongodb
-# driver. Requiring 20 avoids that workaround entirely and matches the version
-# install-node.sh installs by default anyway.
-_MIN_NODE_MAJOR = 20
 
 
-def _node_major_version() -> Optional[int]:
-    """Return the major version of the "node" on PATH, or None if unavailable."""
-    node = shutil.which("node")
-    if node is None:
-        return None
+def _npm_install(install_dir: Path) -> Optional[str]:
+    """Install the pinned mongodb-runner in install_dir. None on success.
+
+    --engine-strict turns the engines ranges declared across the dependency
+    tree into errors rather than the default warnings, which makes npm the
+    thing that decides whether the Node on PATH is acceptable. That keeps the
+    requirement in one place: it is mongodb-runner's dependencies that
+    constrain Node (yargs, currently ^20.19.0 || ^22.12.0 || >=23), and
+    repeating that range here would mean re-checking it on every _MR_VERSION
+    bump.
+
+    Returns npm's error output on failure, for the caller to report.
+    """
+    npm = shutil.which("npm")
+    if npm is None:
+        return "npm was not found on PATH"
+    args = ["install", "--silent", "--engine-strict"]
     try:
-        node_ver = subprocess.check_output(
-            [node, "--version"], encoding="utf-8"
-        ).strip()
-        return int(node_ver.lstrip("v").split(".")[0])
-    except (subprocess.CalledProcessError, ValueError):
-        return None
+        if PLATFORM == "win32":
+            # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
+            subprocess.run(
+                f'"{npm}" {" ".join(args)}',
+                cwd=str(install_dir),
+                check=True,
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+        else:
+            subprocess.run(
+                [npm, *args],
+                cwd=str(install_dir),
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+    except subprocess.CalledProcessError as exc:
+        return (exc.stderr or exc.stdout or str(exc)).strip()
+    return None
 
 
-def _node_is_usable() -> bool:
-    """Check whether PATH has a Node new enough for mongodb-runner, plus npm.
-
-    Some hosts have an unrelated, ancient Node (e.g. bundled with other
-    tooling) earlier on PATH than any Node we install ourselves, so the
-    version has to be checked rather than merely finding an executable.
-
-    npm is checked too because some distributions package it separately: a
-    host can have a new enough node and no npm, and treating that as usable
-    would skip the install that would have provided both.
-    """
-    node_major = _node_major_version()
-    if node_major is None or node_major < _MIN_NODE_MAJOR:
-        return False
-    return shutil.which("npm") is not None
-
-
-def _ensure_usable_node() -> bool:
-    """Make a Node new enough for mongodb-runner available on PATH.
-
-    Installs Node when the one on PATH is missing or too old. Returns whether a
-    usable Node is available afterwards.
-    """
-    if _node_is_usable():
-        return True
+def _install_node() -> bool:
+    """Install Node into node-artifacts and put it first on PATH."""
     install_node_script = DRIVERS_TOOLS / ".evergreen" / "install-node.sh"
-    LOGGER.info(f"No usable Node found, installing Node using {install_node_script}...")
+    LOGGER.info(f"Installing Node using {install_node_script}...")
     try:
         subprocess.run(["bash", str(install_node_script)], check=True)
     except subprocess.CalledProcessError as exc:
@@ -118,19 +116,23 @@ def _ensure_usable_node() -> bool:
         return False
     node_bin_dir = DRIVERS_TOOLS / ".evergreen" / "node-artifacts" / "nodejs" / "bin"
     os.environ["PATH"] = f"{node_bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
-    return _node_is_usable()
+    return True
 
 
 def _mongodb_runner_supported() -> bool:
-    """Return False on platforms that cannot run the current mongodb-runner.
+    """Whether mongodb-runner can run on this host.
 
-    Installs Node if needed, so the answer reflects the Node we would actually
-    run mongodb-runner with rather than an unrelated older Node that happens to
-    come first on PATH. This also covers hosts whose glibc is too old for
-    Node 18+: install-node.sh falls back to Node 16 there, which this rejects
-    without needing to enumerate those platforms by name.
+    Installing it is the check, because npm is what enforces the Node its
+    dependencies need. Hosts that cannot get a new enough Node -- RHEL7, whose
+    glibc caps install-node.sh at Node 16 -- fail the install and fall back to
+    mongo-orchestration, without this needing to name those platforms.
     """
-    return _ensure_usable_node()
+    try:
+        _install_mongodb_runner()
+    except RuntimeError as exc:
+        LOGGER.warning(f"mongodb-runner is unavailable here: {exc}")
+        return False
+    return True
 
 
 def _install_mongodb_runner() -> Path:
@@ -146,25 +148,15 @@ def _install_mongodb_runner() -> Path:
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
-        if not _ensure_usable_node():
-            raise RuntimeError(
-                f"mongodb-runner requires Node {_MIN_NODE_MAJOR}+ and npm, which "
-                "could not be found or installed"
-            )
-        # _ensure_usable_node() guarantees both are on PATH.
-        npm = shutil.which("npm")
-        if PLATFORM == "win32":
-            # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
-            subprocess.run(
-                f'"{npm}" install --silent',
-                cwd=str(install_dir),
-                check=True,
-                shell=True,
-            )
-        else:
-            subprocess.run(
-                [npm, "install", "--silent"], cwd=str(install_dir), check=True
-            )
+        # Try the Node already on PATH first. If npm rejects it -- or there is
+        # no npm at all -- install our own Node and give it one more go.
+        error = _npm_install(install_dir)
+        if error is not None:
+            LOGGER.info(f"Installing mongodb-runner failed, installing Node: {error}")
+            if _install_node():
+                error = _npm_install(install_dir)
+        if error is not None:
+            raise RuntimeError(f"could not install mongodb-runner: {error}")
     return runner_bin
 
 
