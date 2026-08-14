@@ -128,10 +128,12 @@ _ensure_uv_publish() {
 #   inside one, so again only the venv works.
 # - The docker test images install a deadsnakes python with venv but no pip, so the
 #   venv covers them as well.
-# - Evergreen's debian11 images run the other way: pip but no python3-venv, so
-#   `python3 -m venv` fails outright and pip is the only way through. A venv-only
-#   ensure_uv broke those hosts once already; see test_no_venv_module in
-#   tests/test-remote-kms-provisioning.sh.
+# - A host with pip but no working venv runs the other way, and pip is the only
+#   way through. Debian packages ensurepip separately, so `python3 -m venv` fails
+#   there without python3-venv even though the venv module imports; see
+#   test_no_venv_module in tests/test-remote-kms-provisioning.sh. find_python3
+#   prefers the toolchain, so this is reached only where there is no toolchain to
+#   prefer.
 #
 # The venv goes first because it neither depends on nor disturbs the host
 # python's `--user` directory.
