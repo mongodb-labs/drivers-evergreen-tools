@@ -199,7 +199,7 @@ else
     uv --version
   '
 
-  # The same image without the toolchain: the failure the ticket reported. Pins
+  # The same image without the toolchain: the failure PYTHON-6005 reported. Pins
   # the diagnosis, so the case above cannot pass for some other reason.
   check_container "rhel 8.2: fails cleanly when only the 3.6 python3 exists" \
     registry.access.redhat.com/ubi8/ubi:8.8 '
