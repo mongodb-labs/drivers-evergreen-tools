@@ -1356,7 +1356,7 @@ axes:
 
       - id: ubuntu-22.04
         display_name: "Ubuntu 22.04"
-        run_on: ubuntu2004-test
+        run_on: ubuntu2204-small
 
       - id: amazon-2023-x64
         display_name: "Amazon Linux 2023 x64"
