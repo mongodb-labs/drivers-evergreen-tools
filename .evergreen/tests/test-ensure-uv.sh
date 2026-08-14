@@ -20,7 +20,7 @@ failures=0
 # named in $3 ("pip", "venv"), reporting $4 as its `--user` base.
 #
 # The stub is a wrapper that hands off to stub-python.sh, which holds the
-# behaviour and documents the variables. An install drops a `uv` into the target
+# behavior and documents the variables. An install drops a `uv` into the target
 # bin directory, and that uv names the interpreter it came from, so a case can
 # assert which one ensure_uv picked rather than just that it found something.
 make_python() {
@@ -184,7 +184,7 @@ else
 
   echo "Testing ensure_uv on real distro images ..."
 
-  # The host this ticket is about. RHEL 8.2's platform python3 is 3.6, which uv
+  # The host PYTHON-6005 is about. RHEL 8.2's platform python3 is 3.6, which uv
   # has no distribution for, so only the toolchain can succeed here.
   check_container "rhel 8.2: toolchain rescues a 3.6 platform python3" \
     registry.access.redhat.com/ubi8/ubi:8.8 '

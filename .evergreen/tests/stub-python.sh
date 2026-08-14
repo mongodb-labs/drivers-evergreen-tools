@@ -2,7 +2,7 @@
 #
 # The stub interpreter behind make_python in test-ensure-uv.sh. Each stub is a
 # small wrapper that exports the variables below and execs this script, so the
-# behaviour lives in one place instead of a heredoc.
+# behavior lives in one place instead of a heredoc.
 #
 # It answers only what ensure_uv asks of an interpreter:
 #
