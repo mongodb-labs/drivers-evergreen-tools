@@ -151,6 +151,7 @@ check() {
     export TMPDIR="$sandbox/tmp"
     unset CI
 
+    # shellcheck source=/dev/null
     . "$SCRIPT_DIR/../ensure-uv.sh"
     ensure_uv
     eval "$assert"

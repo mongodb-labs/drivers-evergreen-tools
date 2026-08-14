@@ -211,6 +211,7 @@ ensure_uv() {
   # of whatever the distro shipped. That last part is what gets RHEL 8.2 working,
   # where the platform python3 is 3.6 and cannot install uv at all.
   declare py=""
+  # shellcheck source=/dev/null
   command -v ensure_python3 >/dev/null 2>&1 || . "$_ensure_uv_dir/find-python3.sh"
   py="$(ensure_python3 2>/dev/null)" || py=""
 
