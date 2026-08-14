@@ -9,6 +9,8 @@
 set -eu
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+# Absolute, because the stubs exec it from wherever ensure_uv runs them.
+STUB_PYTHON="$(cd "$SCRIPT_DIR" && pwd)/stub-python.sh"
 
 failures=0
 
@@ -17,106 +19,21 @@ failures=0
 # Write a stub interpreter to $1 reporting version $2, with the capabilities
 # named in $3 ("pip", "venv", "brokenvenv"), reporting $4 as its `--user` base.
 #
-# It answers only what ensure_uv asks. An install drops a `uv` into the target
+# The stub is a wrapper that hands off to stub-python.sh, which holds the
+# behaviour and documents the variables. An install drops a `uv` into the target
 # bin directory, and that uv names the interpreter it came from, so a case can
 # assert which one ensure_uv picked rather than just that it found something.
 make_python() {
   local path="$1" version="$2" caps="$3" user_base="$4"
 
   mkdir -p "$(dirname "$path")"
-  cat >"$path" <<EOF
-#!/usr/bin/env bash
-# Stub interpreter: Python $version, capabilities [$caps].
-version="$version"
-major_minor="${version%.*}"
-caps="$caps"
-user_base="$user_base"
-origin="$path"
-EOF
-  cat >>"$path" <<'EOF'
-set -u
-
-# uv publishes no distribution below Python 3.8, so an older interpreter fails
-# here the way it does on a real host: pip and venv both find nothing.
-supports_uv() {
-  [ "$(printf '%s\n' 3.8 "$major_minor" | sort -V | head -n1)" = "3.8" ]
-}
-
-has() { case ",$caps," in *",$1,"*) return 0 ;; *) return 1 ;; esac; }
-
-no_distribution() {
-  echo "ERROR: Could not find a version that satisfies the requirement uv (from versions: none)" >&2
-  echo "ERROR: No matching distribution found for uv" >&2
-  exit 1
-}
-
-# Drop a working uv into $1. $origin survives into the venv copy below, so a uv
-# installed by a venv still names the interpreter that venv was built from.
-install_uv_into() {
-  mkdir -p "$1"
   {
-    printf '#!/bin/sh\n'
-    printf 'echo "uv 0.12.3 (from %s)"\n' "$origin"
-  } >"$1/uv"
-  chmod +x "$1/uv"
-}
-
-case "${1:-}" in
---version)
-  echo "Python $version"
-  ;;
--m)
-  case "${2:-}" in
-  site)
-    echo "$user_base"
-    ;;
-  pip)
-    has pip || exit 1
-    if [ "${3:-}" = "--version" ]; then
-      echo "pip 24.0 from $user_base (python $version)"
-      exit 0
-    fi
-    # Anything other than an install of uv, e.g. upgrading pip, is a no-op.
-    for arg in "$@"; do
-      if [ "$arg" = "uv" ]; then
-        supports_uv || no_distribution
-        install_uv_into "$user_base/bin"
-        exit 0
-      fi
-    done
-    ;;
-  venv)
-    # Debian without python3-venv: venv builds the directory, then fails in
-    # ensurepip, leaving a pip-less interpreter behind on PATH.
-    if has brokenvenv; then
-      venv_dir="${*: -1}"
-      mkdir -p "$venv_dir/bin"
-      printf '#!/bin/sh\nexit 1\n' >"$venv_dir/bin/python3"
-      chmod +x "$venv_dir/bin/python3"
-      echo "ensurepip is not available" >&2
-      exit 1
-    fi
-    has venv || exit 1
-    supports_uv || no_distribution
-    # Seed the venv with an interpreter that installs into the venv's own bin.
-    # It always has pip, even when the base one did not: seeding pip through
-    # ensurepip is why a host with venv but no pip can still get uv.
-    venv_dir="${*: -1}"
-    mkdir -p "$venv_dir/bin"
-    sed -e "s|^user_base=.*|user_base=\"$venv_dir\"|" \
-        -e 's|^caps=.*|caps="pip,venv"|' "$0" >"$venv_dir/bin/python"
-    chmod +x "$venv_dir/bin/python"
-    ;;
-  *)
-    exit 1
-    ;;
-  esac
-  ;;
-*)
-  exit 1
-  ;;
-esac
-EOF
+    printf '#!/usr/bin/env bash\n'
+    printf '# Stub interpreter: Python %s, capabilities [%s].\n' "$version" "$caps"
+    printf 'export STUB_VERSION=%q STUB_CAPS=%q STUB_USER_BASE=%q STUB_ORIGIN=%q\n' \
+      "$version" "$caps" "$user_base" "$path"
+    printf 'exec %q "$@"\n' "$STUB_PYTHON"
+  } >"$path"
   chmod +x "$path"
 }
 
