@@ -17,7 +17,7 @@ failures=0
 # make_python
 #
 # Write a stub interpreter to $1 reporting version $2, with the capabilities
-# named in $3 ("pip", "venv", "brokenvenv"), reporting $4 as its `--user` base.
+# named in $3 ("pip", "venv"), reporting $4 as its `--user` base.
 #
 # The stub is a wrapper that hands off to stub-python.sh, which holds the
 # behaviour and documents the variables. An install drops a `uv` into the target
@@ -94,19 +94,7 @@ check "installs uv with the interpreter find_python3 selected" '
   }
 '
 
-# Evergreen's debian11 images have pip but no python3-venv. The failed venv
-# leaves a pip-less interpreter on PATH, so the pip fallback has to keep using
-# the interpreter that was selected, not whatever `python3` now resolves to.
-check "debian 11: falls back to pip when the venv module is broken" '
-  make_python "$sandbox/bin/python3" 3.9.2 pip,brokenvenv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-' '
-  uv --version | grep -q "$sandbox/bin/python3" || {
-    echo "expected uv from the selected python3 via pip, got: $(uv --version)"; exit 1
-  }
-'
-
-# The mirror of the case above, and what the deadsnakes docker images look like.
+# What the deadsnakes docker images look like: venv but no pip.
 check "installs uv through the venv when the interpreter has no pip" '
   make_python "$sandbox/bin/python3" 3.11.9 venv "$sandbox/platform-user-base"
   export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
@@ -219,6 +207,30 @@ else
     . .evergreen/ensure-uv.sh
     if ensure_uv >/dev/null 2>&1; then
       echo "expected ensure_uv to fail with only a 3.6 python3"; exit 1
+    fi
+  '
+
+  # The pip fallback ensure_uv used to carry is gone, so an interpreter that
+  # satisfies find_python3 but whose `python3 -m venv` fails at runtime has no
+  # second route. Debian is where that happens: `import venv` succeeds while
+  # ensurepip lives in python3-venv. Pinned so that restoring the fallback is a
+  # decision rather than an accident. No host we run on looks like this -- the
+  # toolchain covers Evergreen's debian images, and the KMS VMs install
+  # python3-venv while provisioning.
+  check_container "debian 11: fails cleanly when the venv module is broken" \
+    debian:11 '
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get -qq update >/dev/null 2>&1
+    apt-get -y -qq install python3 python3-pip >/dev/null 2>&1
+    python3 -m pip --version >/dev/null 2>&1 || {
+      echo "expected a working pip; the image changed"; exit 1
+    }
+    if python3 -m venv --clear /tmp/probe >/dev/null 2>&1; then
+      echo "expected no working venv module; the image changed"; exit 1
+    fi
+    . .evergreen/ensure-uv.sh
+    if ensure_uv >/dev/null 2>&1; then
+      echo "expected ensure_uv to fail without a working venv"; exit 1
     fi
   '
 

@@ -118,27 +118,12 @@ _ensure_uv_publish() {
 # Install uv using interpreter $1, building a virtual environment at $2 if needed,
 # with all output appended to $3. Not meant to be called directly.
 #
-# Tries a virtual environment and then `pip install --user`, because no single
-# method covers every host we run on:
+# A virtual environment is the only method, because find_python3 hands over an
+# interpreter that has one: it requires venv or virtualenv, and prefers the
+# MongoDB toolchain over the distro python. The venv is also self-contained, so
+# it neither depends on nor disturbs the host python's `--user` directory.
 #
-# - Remote KMS VMs provisioned before python3-pip was added to their setup scripts
-#   have no system pip. These are real Debian 11 cloud images, and Debian disables
-#   `ensurepip` for the system python, so only the venv works there.
-# - Callers already inside an active venv have pip, but pip refuses `--user`
-#   inside one, so again only the venv works.
-# - The docker test images install a deadsnakes python with venv but no pip, so the
-#   venv covers them as well.
-# - A host with pip but no working venv runs the other way, and pip is the only
-#   way through. Debian packages ensurepip separately, so `python3 -m venv` fails
-#   there without python3-venv even though the venv module imports; see
-#   test_no_venv_module in tests/test-remote-kms-provisioning.sh. find_python3
-#   prefers the toolchain, so this is reached only where there is no toolchain to
-#   prefer.
-#
-# The venv goes first because it neither depends on nor disturbs the host
-# python's `--user` directory.
-#
-# Every step tolerates failure, since a later one may still succeed.
+# Every step tolerates failure; the caller reports whether uv ended up on PATH.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"
 
@@ -154,19 +139,6 @@ _ensure_uv_install() {
     _ensure_uv_add_path "$venv_dir/bin"
     _ensure_uv_add_path "$venv_dir/Scripts"
   fi
-
-  uv --version >/dev/null 2>&1 && return 0
-
-  "$py" -m pip --version >/dev/null 2>&1 || return 0
-
-  echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
-
-  # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
-  # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
-  # alone.
-  PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
-
-  _ensure_uv_add_user_bin "$py"
 }
 
 # ensure_uv

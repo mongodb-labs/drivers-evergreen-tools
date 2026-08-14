@@ -89,35 +89,6 @@ test_no_system_pip() {
   echo "Testing ensure_uv without system pip ($base_image) ... done."
 }
 
-# The mirror image of test_no_system_pip, and the reason ensure_uv keeps both
-# install paths. Evergreen's debian11 images have python3-pip but no
-# python3-venv, so `python3 -m venv` fails outright and pip is the only way
-# through. A venv-only ensure_uv passed every test above and still broke those
-# hosts, so assert this shape too.
-test_no_venv_module() {
-  local name="$1" base_image="$2"
-  echo "Testing ensure_uv without the venv module ($base_image) ..."
-  $DOCKER build -q -t "$IMAGE-$name" --build-arg BASE_IMAGE="$base_image" \
-    -f "$SCRIPT_DIR/docker/remote-kms-provisioning.Dockerfile" "$SCRIPT_DIR/docker"
-  $DOCKER run --rm -v "$ARCHIVE:/drivers-evergreen-tools.tgz:ro" "$IMAGE-$name" bash -c '
-    set -e
-    sudo apt-get -qq update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -qq \
-      -o DPkg::Lock::Timeout=-1 install python3 python3-pip git < /dev/null > /dev/null
-    if python3 -m venv --clear /tmp/probe > /dev/null 2>&1; then
-      echo "expected no working venv module; this test is no longer testing anything" >&2
-      exit 1
-    fi
-    mkdir -p ~/drivers-tools
-    tar xzf /drivers-evergreen-tools.tgz -C ~/drivers-tools
-    cd ~/drivers-tools
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-  echo "Testing ensure_uv without the venv module ($base_image) ... done."
-}
-
 # ensure_uv called from an active virtual environment, which is how the Node OIDC
 # tests invoke it. pip is present there, but pip refuses `--user` inside a venv, so
 # the venv fallback is the only way through, and it has to build its venv using a
@@ -211,8 +182,5 @@ test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-
 
 # debian:11 matches both defaults above.
 test_no_system_pip nopip-debian11 debian:11
-
-# debian:11 matches the Evergreen image whose missing python3-venv this covers.
-test_no_venv_module novenv-debian11 debian:11
 
 test_inside_active_venv invenv-debian11 debian:11

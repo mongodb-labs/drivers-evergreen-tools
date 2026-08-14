@@ -7,7 +7,7 @@
 # It answers only what ensure_uv asks of an interpreter:
 #
 #   STUB_VERSION    version to report, e.g. 3.9.2
-#   STUB_CAPS       comma-separated capabilities: pip, venv, brokenvenv
+#   STUB_CAPS       comma-separated capabilities: pip, venv
 #   STUB_USER_BASE  directory to report as `-m site --user-base`
 #   STUB_ORIGIN     the interpreter this stub stands for, carried into any uv it
 #                   installs so a case can assert which candidate was chosen
@@ -84,16 +84,6 @@ case "${1:-}" in
     done
     ;;
   venv)
-    # Debian without python3-venv: venv builds the directory, then fails in
-    # ensurepip, leaving a pip-less interpreter behind on PATH.
-    if has brokenvenv; then
-      venv_dir="${*: -1}"
-      mkdir -p "$venv_dir/bin"
-      printf '#!/bin/sh\nexit 1\n' >"$venv_dir/bin/python3"
-      chmod +x "$venv_dir/bin/python3"
-      echo "ensurepip is not available" >&2
-      exit 1
-    fi
     has venv || exit 1
     supports_uv || no_distribution
     # The venv directory is the last argument.
