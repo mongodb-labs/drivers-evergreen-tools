@@ -21,8 +21,10 @@ that has the Azure CLI 2.25+ installed.  At time of writing, distros with `az` i
 
 - debian10
 - debian11
+- debian12
 - ubuntu2004
 - ubuntu2204
+- ubuntu2404
 
 Locally, it can be installed as `brew install az`.
 

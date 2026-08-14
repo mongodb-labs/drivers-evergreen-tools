@@ -9,9 +9,11 @@ Use delete-vm.sh to delete the remote Azure Virtual Machine.
 The distro used must have the Azure Command-Line Interface (`az`) version 2.25.0 or higher installed. At time of writing, distros with `az` installed include:
 - debian10
 - debian11
+- debian12
 - ubuntu1804
 - ubuntu2004
 - ubuntu2204
+- ubuntu2404
 If another distro is required, consider filing a BUILD ticket similar to [BUILD-16836](https://jira.mongodb.org/browse/BUILD-16836).
 
 The image of the remote Virtual Machine defaults to the URN `Debian:debian-11:11:0.20221020.1174`. It may be overridden with the environment variable `AZUREKMS_IMAGE` set to the value of `--image` in `az vm create`. See [Azure documentation](https://learn.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az-vm-create) for valid values.
