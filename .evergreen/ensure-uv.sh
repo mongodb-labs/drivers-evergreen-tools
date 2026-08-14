@@ -90,14 +90,6 @@ _ensure_uv_add_user_bin() {
   _ensure_uv_add_path "$base/Scripts"
 }
 
-# _ensure_uv_supports_uv (internal)
-#
-# Return 0 (true) if interpreter $1 is new enough for uv, which publishes no
-# distribution below Python 3.8. Not meant to be called directly.
-_ensure_uv_supports_uv() {
-  "${1:?}" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1
-}
-
 # _ensure_uv_publish (internal)
 #
 # Link the uv now on PATH into $DRIVERS_TOOLS/.bin, where ensure-binary.sh keeps
@@ -153,11 +145,8 @@ _ensure_uv_install() {
   # --clear replaces a previously broken venv; a working one was found already.
   if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
     # Windows venvs put the interpreter under Scripts, everything else in bin.
-    # A venv seeds itself with the system pip, so it needs the same upgrade as
-    # below, for the same reason.
     declare venv_py="$venv_dir/bin/python"
     [ -x "$venv_py" ] || venv_py="$venv_dir/Scripts/python.exe"
-    "$venv_py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
     "$venv_py" -m pip install -q uv >>"$log" 2>&1 || true
 
     _ensure_uv_add_path "$venv_dir/bin"
@@ -172,9 +161,7 @@ _ensure_uv_install() {
 
   # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
   # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
-  # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
-  # Ubuntu 20.04) mis-resolves uv's wheel tags.
-  PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
+  # alone.
   PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
 
   _ensure_uv_add_user_bin "$py"
@@ -226,19 +213,6 @@ ensure_uv() {
   declare py=""
   command -v ensure_python3 >/dev/null 2>&1 || . "$_ensure_uv_dir/find-python3.sh"
   py="$(ensure_python3 2>/dev/null)" || py=""
-
-  # find_python3 holds out for 3.9 while uv needs only 3.8, which strands a host
-  # whose best interpreter is 3.8. Ubuntu 20.04 is the one we still run on.
-  if [ -z "$py" ]; then
-    declare candidate
-    for candidate in python3 python; do
-      command -v "$candidate" >/dev/null 2>&1 || continue
-      if _ensure_uv_supports_uv "$candidate"; then
-        py="$candidate"
-        break
-      fi
-    done
-  fi
 
   # Absolute, not a bare name: the venv goes on PATH ahead of everything, and one
   # that fails partway through (see _ensure_uv_install) leaves a pip-less

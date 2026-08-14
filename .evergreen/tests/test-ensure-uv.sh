@@ -65,10 +65,6 @@ case "${1:-}" in
 --version)
   echo "Python $version"
   ;;
--c)
-  # ensure_uv's only -c call is the version check.
-  supports_uv
-  ;;
 -m)
   case "${2:-}" in
   site)

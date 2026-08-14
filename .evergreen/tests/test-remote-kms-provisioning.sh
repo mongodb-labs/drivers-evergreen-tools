@@ -209,11 +209,8 @@ test_start_mongodb_uses_archive azurekms .evergreen/csfle/azurekms/remote-script
 test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh debian:11
 test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh debian:11
 
-# debian:11 matches both defaults above. ubuntu:20.04 is a supported
-# AZUREKMS_IMAGE (see azurekms/README.md) and additionally covers a system
-# interpreter whose bundled pip predates PEP 600.
+# debian:11 matches both defaults above.
 test_no_system_pip nopip-debian11 debian:11
-test_no_system_pip nopip-ubuntu2004 ubuntu:20.04
 
 # debian:11 matches the Evergreen image whose missing python3-venv this covers.
 test_no_venv_module novenv-debian11 debian:11

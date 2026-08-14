@@ -6,12 +6,10 @@ Scripts in this directory can be used to run driver CSFLE tests on a remote Azur
 
 Use create-and-setup-vm.sh to create the remote Azure Virtual Machine.
 Use delete-vm.sh to delete the remote Azure Virtual Machine.
-The distro used must have the Azure Command-Line Interface (`az`) version 2.25.0 or higher installed. At time of writing, distros with `az` installed include:
-- debian10
+The distro used must have the Azure Command-Line Interface (`az`) version 2.25.0 or higher installed. It must also ship Python 3.9 or newer, which drivers-evergreen-tools needs to install uv on the Virtual Machine. At time of writing, distros meeting both are:
 - debian11
-- ubuntu1804
-- ubuntu2004
 - ubuntu2204
+debian10, ubuntu1804 and ubuntu2004 have `az`, but their Python is 3.7, 3.6 and 3.8 respectively, so uv cannot be installed on them.
 If another distro is required, consider filing a BUILD ticket similar to [BUILD-16836](https://jira.mongodb.org/browse/BUILD-16836).
 
 The image of the remote Virtual Machine defaults to the URN `Debian:debian-11:11:0.20221020.1174`. It may be overridden with the environment variable `AZUREKMS_IMAGE` set to the value of `--image` in `az vm create`. See [Azure documentation](https://learn.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az-vm-create) for valid values.
