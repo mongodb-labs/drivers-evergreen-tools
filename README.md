@@ -70,6 +70,10 @@ The following inputs exist:
 
 These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
 
+The example above tracks `master`. To pin a published version instead, use a release tag such as
+`mongodb-labs/drivers-evergreen-tools@v1.0.0`. See [Releasing](CONTRIBUTING.md#releasing) for how
+those versions are cut.
+
 After the cluster is started, its URI is exposed via the `cluster-uri` output. In addition, the action also exposes the
 path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
 This configuration snippet environment variables with the cluster URI and `crypt_shared` lib path
