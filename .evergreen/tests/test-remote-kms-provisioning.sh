@@ -90,9 +90,8 @@ test_no_system_pip() {
 }
 
 # ensure_uv called from an active virtual environment, which is how the Node OIDC
-# tests invoke it. pip is present there, but pip refuses `--user` inside a venv, so
-# the venv fallback is the only way through, and it has to build its venv using a
-# venv's own interpreter. Neither of the cases above covers that.
+# tests invoke it. ensure_uv has to build its venv using a venv's own interpreter
+# there, which no other case covers.
 test_inside_active_venv() {
   local name="$1" base_image="$2"
   echo "Testing ensure_uv inside an active venv ($base_image) ..."

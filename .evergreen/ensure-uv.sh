@@ -101,7 +101,6 @@ _ensure_uv_publish() {
 
   declare src
   src="$(command -v uv 2>/dev/null)" || return 0
-  [ -n "$src" ] || return 0
 
   declare dest="$DRIVERS_TOOLS/.bin"
   [ "$src" = "$dest/uv" ] && return 0
@@ -180,13 +179,31 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  # find_python3 already knows which python3 is usable here: 3.9+ with pip and
-  # venv, no free-threaded or prerelease builds, and the MongoDB toolchain ahead
-  # of whatever the distro shipped. That last part is what gets RHEL 8.2 working,
-  # where the platform python3 is 3.6 and cannot install uv at all.
+  # None of these is reliably on PATH in a fresh shell. ~/.local/bin is where uv's
+  # own installer puts it and is off the default PATH on some hosts (RHEL7 root
+  # shells), and the rest are where an earlier ensure_uv call put it. Scripts is the
+  # Windows spelling of bin. None of them needs an interpreter to name, so this is
+  # the cheap half of the search and it runs first.
+  [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
+  [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
+  _ensure_uv_add_path "$venv_dir/bin"
+  _ensure_uv_add_path "$venv_dir/Scripts"
+
+  if uv --version >/dev/null 2>&1; then
+    _ensure_uv_publish
+    _ensure_uv_scope_paths
+    return 0
+  fi
+
+  # Only now is an interpreter worth looking for, and find_python3 is not cheap:
+  # it starts a python per candidate. It already knows which one is usable here,
+  # though -- 3.9+ with pip and venv, no free-threaded or prerelease builds, and
+  # the MongoDB toolchain ahead of whatever the distro shipped. That last part is
+  # what gets RHEL 8.2 working, where the platform python3 is 3.6 and cannot
+  # install uv at all.
   declare py=""
   # shellcheck source=/dev/null
-  command -v ensure_python3 >/dev/null 2>&1 || . "$_ensure_uv_dir/find-python3.sh"
+  . "$_ensure_uv_dir/find-python3.sh"
   py="$(ensure_python3 2>/dev/null)" || py=""
 
   # Absolute, not a bare name: the venv goes on PATH ahead of everything, and one
@@ -196,14 +213,10 @@ ensure_uv() {
     py="$(command -v "$py" 2>/dev/null)" || py=""
   fi
 
-  # None of these is reliably on PATH in a fresh shell. ~/.local/bin is where uv's
-  # own installer puts it and is off the default PATH on some hosts (RHEL7 root
-  # shells), and the rest are where an earlier ensure_uv call put it. Scripts is the
-  # Windows spelling of bin.
-  [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
-  [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
-  _ensure_uv_add_path "$venv_dir/bin"
-  _ensure_uv_add_path "$venv_dir/Scripts"
+  # pip's `--user` script directory is version and platform specific, so naming it
+  # takes the interpreter we just found. On Linux it is the ~/.local/bin already
+  # added above; on macOS and Windows it is not, so an earlier --user install is
+  # only reachable from here.
   [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
 
   if uv --version >/dev/null 2>&1; then
