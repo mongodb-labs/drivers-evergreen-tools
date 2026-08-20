@@ -1478,6 +1478,17 @@ buildvariants:
     - ".local-atlas"
     - ".github-app"
 
+# RHEL 8.2 arm64 is the host PYTHON-6005 was filed for: its system python3 is
+# 3.6, which uv publishes no distribution for, and unlike most Evergreen images
+# it ships no uv, so ensure_uv has to select an interpreter and install. That
+# makes it the one host that exercises the toolchain rescue for real.
+- name: tests-rhel82-arm64
+  display_name: "RHEL 8.2 ARM64"
+  run_on:
+    - rhel82-arm64-small
+  tasks:
+    - name: "test-latest-standalone"
+
 - name: tests-rhel
   display_name: RHEL Tests
   run_on:
