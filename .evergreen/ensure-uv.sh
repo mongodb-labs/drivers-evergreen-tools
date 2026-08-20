@@ -129,6 +129,9 @@ _ensure_uv_publish() {
 #   support rather than a live path; see test_legacy_vm_without_pip in
 #   tests/test-remote-kms-provisioning.sh.
 #
+#   DRIVERS-XXXX (placeholder, not yet filed) tracks getting those pins past
+#   PYTHON-5985. Delete this branch when it closes.
+#
 # Every step tolerates failure; the caller reports whether uv ended up on PATH.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"

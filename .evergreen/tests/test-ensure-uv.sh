@@ -111,6 +111,8 @@ check "installs into the active venv when --user is refused" '
 
 # Legacy support for KMS VMs provisioned before PYTHON-5985 added python3-pip.
 # Debian refuses ensurepip outside a venv, so a venv is the only route there.
+# DRIVERS-XXXX (placeholder, not yet filed) tracks getting those pins past
+# PYTHON-5985. Delete this case when it closes.
 check "legacy: builds a venv when the interpreter has no pip" '
   make_python "$sandbox/bin/python3" 3.9.2 venv "$sandbox/platform-user-base"
   export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"

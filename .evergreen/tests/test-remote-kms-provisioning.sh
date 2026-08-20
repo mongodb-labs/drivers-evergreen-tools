@@ -61,6 +61,9 @@ test_provisioning() {
 # through 2026-04, and node-mongodb-native 6.x pins 2025-09. Their VM-side
 # start-mongodb.sh clones drivers-tools master, so they provision with old
 # scripts and then run current ensure_uv against them.
+#
+# DRIVERS-XXXX (placeholder, not yet filed) tracks getting those pins past
+# PYTHON-5985. Delete this case when it closes.
 test_legacy_vm_without_pip() {
   local name="$1" base_image="$2"
   echo "Testing ensure_uv without system pip ($base_image) ..."
