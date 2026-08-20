@@ -7,7 +7,7 @@
 # It answers only what ensure_uv asks of an interpreter:
 #
 #   STUB_VERSION    version to report, e.g. 3.9.2
-#   STUB_CAPS       comma-separated capabilities: pip, venv
+#   STUB_CAPS       comma-separated capabilities: pip, venv, invenv
 #   STUB_USER_BASE  directory to report as `-m site --user-base`
 #   STUB_ORIGIN     the interpreter this stub stands for, carried into any uv it
 #                   installs so a case can assert which candidate was chosen
@@ -38,7 +38,7 @@ install_uv_into() {
   mkdir -p "$1"
   {
     printf '#!/bin/sh\n'
-    printf 'echo "uv 0.12.3 (from %s)"\n' "$origin"
+    printf 'echo "uv 0.12.3 (from %s, %s)"\n' "$origin" "${2:-venv}"
   } >"$1/uv"
   chmod +x "$1/uv"
 }
@@ -63,6 +63,10 @@ case "${1:-}" in
 --version)
   echo "Python $version"
   ;;
+-c)
+  # ensure_uv's only -c call asks whether this interpreter is inside a venv.
+  has invenv
+  ;;
 -m)
   case "${2:-}" in
   site)
@@ -75,10 +79,14 @@ case "${1:-}" in
       exit 0
     fi
     # Anything other than an install of uv, e.g. upgrading pip, is a no-op.
+    declare flag=venv
+    for arg in "$@"; do
+      [ "$arg" = "--user" ] && flag=--user
+    done
     for arg in "$@"; do
       if [ "$arg" = "uv" ]; then
         supports_uv || no_distribution
-        install_uv_into "$user_base/bin"
+        install_uv_into "$user_base/bin" "$flag"
         exit 0
       fi
     done

@@ -15,10 +15,6 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
-# Captured while sourcing: ensure_uv may run from any working directory and
-# needs find-python3.sh beside this file.
-_ensure_uv_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # _ensure_uv_scope_paths (internal)
 #
 # Keeps uv's shared state out of its default home-directory locations
@@ -114,19 +110,45 @@ _ensure_uv_publish() {
 
 # _ensure_uv_install (internal)
 #
-# Install uv using interpreter $1, building a virtual environment at $2 if needed,
-# with all output appended to $3. Not meant to be called directly.
+# Install uv with interpreter $1, using $2 for the virtual environment fallback
+# and appending all output to $3. Not meant to be called directly.
 #
-# A virtual environment is the only method, because find_python3 hands over an
-# interpreter that has one: it requires venv or virtualenv, and prefers the
-# MongoDB toolchain over the distro python. The venv is also self-contained, so
-# it neither depends on nor disturbs the host python's `--user` directory.
+# `pip install --user` is the method. Every host we control has pip: the docker
+# test images install it, Evergreen hosts get it with the toolchain python, and
+# the KMS VM setup scripts have installed python3-pip since PYTHON-5985.
+#
+# Two shapes need something else:
+#
+# - A caller already inside an active venv, which is how the Node OIDC tests
+#   invoke this. pip refuses `--user` there, and the venv is the right target
+#   anyway, so install into it. Only reachable without a toolchain, since an
+#   interpreter outside the venv is unaffected by it.
+# - A KMS VM provisioned before PYTHON-5985, which has no pip at all. Debian
+#   refuses `ensurepip` outside a venv, so a venv is the only route left. Release
+#   branches still pin drivers-tools from before that change, so this is legacy
+#   support rather than a live path; see test_legacy_vm_without_pip in
+#   tests/test-remote-kms-provisioning.sh.
 #
 # Every step tolerates failure; the caller reports whether uv ended up on PATH.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"
 
-  echo "uv not found; installing it into a virtual environment at $venv_dir with $py..." >&2
+  if "$py" -m pip --version >>"$log" 2>&1; then
+    if "$py" -c 'import sys; sys.exit(0 if sys.prefix != sys.base_prefix else 1)'; then
+      echo "uv not found; installing it with '$py -m pip install uv' into the active venv..." >&2
+      "$py" -m pip install -q uv >>"$log" 2>&1 || true
+    else
+      echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
+      # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard,
+      # which Debian and Ubuntu enable. Safe here: `--user` leaves system
+      # site-packages alone.
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
+    fi
+    _ensure_uv_add_user_bin "$py"
+    return 0
+  fi
+
+  echo "uv not found and $py has no pip; building a virtual environment at $venv_dir..." >&2
 
   # --clear replaces a previously broken venv; a working one was found already.
   if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
@@ -139,25 +161,6 @@ _ensure_uv_install() {
     _ensure_uv_add_path "$venv_dir/Scripts"
   fi
 }
-
-# ensure_uv
-#
-# Usage:
-#   ensure_uv
-#
-# Return 0 (true) if `uv` is available on PATH, installing it if it was not
-# already present.
-# Return a non-zero value (false) otherwise, after printing an actionable
-# error message to stderr.
-#
-# Sets the following environment variables:
-#
-# - PYENV_VERSION (only when pyenv is installed)
-# - PATH (~/.local/bin, $DRIVERS_TOOLS/.bin, the venv, and pip's `--user` dir)
-# - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
-# - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
-#
-# Looks everywhere uv may already be, and only then hands off to
 # _ensure_uv_install, which documents why installing it takes two attempts.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
@@ -195,23 +198,27 @@ ensure_uv() {
     return 0
   fi
 
-  # Only now is an interpreter worth looking for, and find_python3 is not cheap:
-  # it starts a python per candidate. It already knows which one is usable here,
-  # though -- 3.9+ with pip and venv, no free-threaded or prerelease builds, and
-  # the MongoDB toolchain ahead of whatever the distro shipped. That last part is
-  # what gets RHEL 8.2 working, where the platform python3 is 3.6 and cannot
-  # install uv at all.
-  declare py=""
-  # shellcheck source=/dev/null
-  . "$_ensure_uv_dir/find-python3.sh"
-  py="$(ensure_python3 2>/dev/null)" || py=""
-
-  # Absolute, not a bare name: the venv goes on PATH ahead of everything, and one
-  # that fails partway through (see _ensure_uv_install) leaves a pip-less
-  # interpreter of the same name in it. A bare `python3` would become that one.
-  if [ -n "$py" ]; then
-    py="$(command -v "$py" 2>/dev/null)" || py=""
-  fi
+  # Only now is an interpreter worth looking for. $DRIVERS_TOOLS_PYTHON wins if
+  # the caller set it, the same contract find-python3.sh offers and setup.sh
+  # writes into .env. Otherwise the MongoDB toolchain, because it is the one we
+  # control: it rescues hosts whose system python3 is absent, as on RHEL 7, or too
+  # old for uv, as on RHEL 8.2 where the platform python3 is 3.6 and uv publishes
+  # no distribution for it.
+  #
+  # Resolved to an absolute path, so that a venv arriving on PATH later cannot
+  # re-point a bare name at a different interpreter.
+  declare py="" candidate resolved
+  for candidate in \
+    "${DRIVERS_TOOLS_PYTHON:-}" \
+    $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) \
+    python3 \
+    python; do
+    [ -n "$candidate" ] || continue
+    resolved="$(command -v "$candidate" 2>/dev/null)" || continue
+    [ -n "$resolved" ] || continue
+    py="$resolved"
+    break
+  done
 
   # pip's `--user` script directory is version and platform specific, so naming it
   # takes the interpreter we just found. On Linux it is the ~/.local/bin already

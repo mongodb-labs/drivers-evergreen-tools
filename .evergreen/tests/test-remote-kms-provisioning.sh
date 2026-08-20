@@ -51,13 +51,17 @@ test_provisioning() {
   echo "Testing $name provisioning ... done."
 }
 
-# Asserts ensure_uv works on a host provisioned by a $DRIVERS_TOOLS revision from
-# before python3-pip was added to the remote-scripts. Those revisions installed
-# python3-venv only, and Debian and Ubuntu disable `ensurepip` for the system
-# python, so there is no way to reach pip from the system interpreter: ensure_uv
-# has to get there through a venv. Drivers bump their pin on their own schedule,
-# so this has to keep working indefinitely, not just until they all have.
-test_no_system_pip() {
+# The one shape that still needs the virtual environment, and the reason
+# ensure_uv keeps it. A host provisioned by a $DRIVERS_TOOLS revision from before
+# PYTHON-5985 has python3-venv but no pip, and Debian disables `ensurepip` for
+# the system python, so a venv is the only way to reach pip at all.
+#
+# This is not hypothetical: release branches pin revisions that old. As of
+# 2026-08, mongo-ruby-driver's *-stable branches pin drivers-tools from 2020
+# through 2026-04, and node-mongodb-native 6.x pins 2025-09. Their VM-side
+# start-mongodb.sh clones drivers-tools master, so they provision with old
+# scripts and then run current ensure_uv against them.
+test_legacy_vm_without_pip() {
   local name="$1" base_image="$2"
   echo "Testing ensure_uv without system pip ($base_image) ..."
   $DOCKER build -q -t "$IMAGE-$name" --build-arg BASE_IMAGE="$base_image" \
@@ -90,8 +94,8 @@ test_no_system_pip() {
 }
 
 # ensure_uv called from an active virtual environment, which is how the Node OIDC
-# tests invoke it. ensure_uv has to build its venv using a venv's own interpreter
-# there, which no other case covers.
+# tests invoke it. pip refuses `--user` there, so ensure_uv installs into the
+# active venv instead, which no other case covers.
 test_inside_active_venv() {
   local name="$1" base_image="$2"
   echo "Testing ensure_uv inside an active venv ($base_image) ..."
@@ -118,8 +122,8 @@ test_inside_active_venv() {
     ensure_uv
     uv --version
     case "$(command -v uv)" in
-    *drivers-tools-uv-venv*) ;;
-    *) echo "expected uv from the fallback venv, got $(command -v uv)" >&2; exit 1 ;;
+    "$HOME/outer/bin/uv") ;;
+    *) echo "expected uv installed into the active venv, got $(command -v uv)" >&2; exit 1 ;;
     esac
   '
   echo "Testing ensure_uv inside an active venv ($base_image) ... done."
@@ -180,6 +184,6 @@ test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instan
 test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh debian:11
 
 # debian:11 matches both defaults above.
-test_no_system_pip nopip-debian11 debian:11
+test_legacy_vm_without_pip nopip-debian11 debian:11
 
 test_inside_active_venv invenv-debian11 debian:11

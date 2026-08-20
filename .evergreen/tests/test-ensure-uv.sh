@@ -2,10 +2,10 @@
 #
 # Tests for ensure-uv.sh.
 #
-# The first half pins ensure_uv to a stub interpreter through
-# DRIVERS_TOOLS_PYTHON, covering what it does with the interpreter it is handed.
-# Which interpreter a distro actually offers is find_python3's problem, so the
-# second half runs on real images.
+# The first half pins a stub interpreter through DRIVERS_TOOLS_PYTHON and covers
+# what ensure_uv does with the one it picks. Pinning matters: without it the real
+# MongoDB toolchain on an Evergreen host wins over anything in the sandbox. Which interpreter a distro actually offers is a property
+# of the distro, so the second half runs on real images.
 set -eu
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
@@ -83,14 +83,40 @@ check() {
   rm -rf "$sandbox"
 }
 
-echo "Testing ensure_uv interpreter selection ..."
+echo "Testing ensure_uv install methods ..."
 
-check "installs uv with the interpreter find_python3 selected" '
-  make_python "$sandbox/toolchain/v4/bin/python3" 3.10.9 pip,venv "$sandbox/toolchain-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/toolchain/v4/bin/python3"
+# Which interpreter a given distro offers is a property of the distro, so the
+# container cases below cover that. These pin the interpreter through PATH and
+# cover what ensure_uv does with the one it picked.
+
+check "installs uv with pip --user" '
+  make_python "$sandbox/bin/python3" 3.11.9 pip,venv "$sandbox/platform-user-base"
+  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
 ' '
-  uv --version | grep -q toolchain || {
-    echo "expected uv from the selected interpreter, got: $(uv --version)"; exit 1
+  uv --version | grep -q "$sandbox/bin/python3, --user" || {
+    echo "expected a --user install by the stub, got: $(uv --version)"; exit 1
+  }
+'
+
+# How the Node OIDC tests call ensure_uv. pip refuses --user inside a venv, and
+# the venv is the right target there anyway.
+check "installs into the active venv when --user is refused" '
+  make_python "$sandbox/bin/python3" 3.11.9 pip,venv,invenv "$sandbox/platform-user-base"
+  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
+' '
+  uv --version | grep -q "$sandbox/bin/python3, venv" || {
+    echo "expected an install without --user, got: $(uv --version)"; exit 1
+  }
+'
+
+# Legacy support for KMS VMs provisioned before PYTHON-5985 added python3-pip.
+# Debian refuses ensurepip outside a venv, so a venv is the only route there.
+check "legacy: builds a venv when the interpreter has no pip" '
+  make_python "$sandbox/bin/python3" 3.9.2 venv "$sandbox/platform-user-base"
+  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
+' '
+  uv --version | grep -q "$sandbox/bin/python3" || {
+    echo "expected uv from the venv, got: $(uv --version)"; exit 1
   }
 '
 
@@ -100,8 +126,6 @@ echo "Testing ensure_uv reuse of an existing uv ..."
 # has to be found rather than reinstalled.
 check "reuses a uv already installed under ~/.local/bin" '
   make_uv "$sandbox/home/.local/bin/uv" 0.11.8
-  # No interpreter to install with, so reuse is the only way this can succeed.
-  export DRIVERS_TOOLS_PYTHON="$sandbox/no-python-here"
 ' '
   case "$(uv --version)" in
   "uv 0.11.8"*) ;;
@@ -200,14 +224,10 @@ else
     fi
   '
 
-  # The pip fallback ensure_uv used to carry is gone, so an interpreter that
-  # satisfies find_python3 but whose `python3 -m venv` fails at runtime has no
-  # second route. Debian is where that happens: `import venv` succeeds while
-  # ensurepip lives in python3-venv. Pinned so that restoring the fallback is a
-  # decision rather than an accident. No host we run on looks like this -- the
-  # toolchain covers Evergreen's debian images, and the KMS VMs install
-  # python3-venv while provisioning.
-  check_container "debian 11: fails cleanly when the venv module is broken" \
+  # The mirror of the legacy case: pip present, no working venv. Debian packages
+  # ensurepip separately, so `python3 -m venv` fails there without python3-venv
+  # even though the venv module imports. pip is what covers this shape.
+  check_container "debian 11: installs with pip when the venv module is missing" \
     debian:11 '
     export DEBIAN_FRONTEND=noninteractive
     apt-get -qq update >/dev/null 2>&1
@@ -219,9 +239,8 @@ else
       echo "expected no working venv module; the image changed"; exit 1
     fi
     . .evergreen/ensure-uv.sh
-    if ensure_uv >/dev/null 2>&1; then
-      echo "expected ensure_uv to fail without a working venv"; exit 1
-    fi
+    ensure_uv
+    uv --version
   '
 
   check_container "rhel 9: uses the platform python3" \
