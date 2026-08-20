@@ -18,13 +18,16 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   net-tools < /dev/null > /dev/null \
  && rm -rf /var/lib/apt/lists/*
 
-# Install python 3.11 from ppa
+# Install python 3.11 from ppa. deadsnakes ships no pip package for its
+# interpreters, so bootstrap pip with ensurepip: the image owning that is what
+# keeps ensure_uv from having to, and pip is what it installs uv with.
 RUN export DEBIAN_FRONTEND=noninteractive \
 && export TZ=Etc/UTC \
 && add-apt-repository ppa:deadsnakes/ppa \
 && apt-get -qq update \
 && apt-get -qq -y install $PYTHON $PYTHON-venv < /dev/null > /dev/null \
 && ln -sf /usr/bin/$PYTHON /usr/bin/python3 \
+&& $PYTHON -m ensurepip \
 && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID

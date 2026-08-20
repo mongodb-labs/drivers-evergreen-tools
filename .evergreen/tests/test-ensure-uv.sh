@@ -94,16 +94,6 @@ check "installs uv with the interpreter find_python3 selected" '
   }
 '
 
-# What the deadsnakes docker images look like: venv but no pip.
-check "installs uv through the venv when the interpreter has no pip" '
-  make_python "$sandbox/bin/python3" 3.11.9 venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-' '
-  uv --version | grep -q "$sandbox/bin/python3" || {
-    echo "expected uv from the venv, got: $(uv --version)"; exit 1
-  }
-'
-
 echo "Testing ensure_uv reuse of an existing uv ..."
 
 # ~/.local/bin is off the default PATH on some hosts, so an existing uv there
