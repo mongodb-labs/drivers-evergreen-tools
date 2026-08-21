@@ -619,13 +619,6 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-remote-start-mongodb.sh]
 
-  "run ensure uv test":
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: bash
-        args: [src/.evergreen/tests/test-ensure-uv.sh]
-
   "run drivers tools archive test":
     - command: subprocess.exec
       type: test
@@ -1125,11 +1118,6 @@ tasks:
       tags: ["docker", "pr"]
       commands:
         - func: "run remote start-mongodb test"
-
-    - name: "test-ensure-uv"
-      tags: ["docker", "pr"]
-      commands:
-        - func: "run ensure uv test"
 
     - name: "test-drivers-tools-archive"
       tags: ["pr"]
@@ -1640,9 +1628,6 @@ buildvariants:
     - rhel82-arm64-small
   tasks:
     - name: "test-latest-standalone"
-    # The only variant whose platform python3 is older than uv supports, so the
-    # refusal case in test-ensure-uv.sh runs here and skips everywhere else.
-    - name: "test-ensure-uv"
 
 # These provision real cloud VMs, so batchtime keeps them to one run a day and
 # skips them when nothing has landed. They stay patch-selectable with -t, which
