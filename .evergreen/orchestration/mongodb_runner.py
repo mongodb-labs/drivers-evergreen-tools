@@ -65,18 +65,13 @@ _MR_VERSION = "6.8.2"
 
 
 def _npm_install(install_dir: Path) -> Optional[str]:
-    """Install the pinned mongodb-runner in install_dir. None on success.
+    """Install the pinned mongodb-runner in install_dir.
 
-    --engine-strict turns the engines ranges declared across the dependency
-    tree into errors rather than the default warnings, which makes npm the
-    thing that decides whether the Node on PATH is acceptable. That keeps the
-    requirement in one place: it is mongodb-runner's dependencies that
-    constrain Node, somewhere down the tree, and naming the package and range
-    here would mean re-checking both on every _MR_VERSION bump.
+    Returns None on success, or npm's error output on failure.
 
-    Returns npm's error output on failure, for the caller to report. Output is
-    captured rather than silenced so that reason survives: --silent suppresses
-    it, leaving nothing but an exit status to explain why a host was rejected.
+    --engine-strict turns the dependency tree's engines ranges into errors
+    instead of warnings, so npm decides whether the Node on PATH will do.
+    Output is captured, not silenced, so that reason reaches the caller.
     """
     npm = shutil.which("npm")
     if npm is None:
@@ -123,10 +118,9 @@ def _install_node() -> bool:
 def _mongodb_runner_supported() -> bool:
     """Whether mongodb-runner can run on this host.
 
-    Installing it is the check, because npm is what enforces the Node its
-    dependencies need. Hosts that cannot get a new enough Node -- RHEL7, whose
-    glibc caps install-node.sh at Node 16 -- fail the install and fall back to
-    mongo-orchestration, without this needing to name those platforms.
+    Installing it is the check: npm enforces the Node its dependencies need, so
+    a host that cannot get a new enough Node fails the install and falls back to
+    mongo-orchestration.
     """
     try:
         _install_mongodb_runner()
@@ -149,8 +143,7 @@ def _install_mongodb_runner() -> Path:
         }
         install_dir.mkdir(parents=True, exist_ok=True)
         (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
-        # Try the Node already on PATH first. If npm rejects it -- or there is
-        # no npm at all -- install our own Node and give it one more go.
+        # Try the Node already on PATH first, then install our own and retry.
         error = _npm_install(install_dir)
         if error is not None:
             LOGGER.info(f"Installing mongodb-runner failed, installing Node: {error}")

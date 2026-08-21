@@ -562,10 +562,8 @@ def run(opts):
 
     data = get_orchestration_data(opts)
 
-    # run-mongodb.sh passes --mongodb-runner unconditionally, so it arrives set
-    # even for --local-atlas. The local-Atlas branch below wins either way, and
-    # probing for runner support installs Node, so clear the flag rather than
-    # paying for a Node we will not use.
+    # run-mongodb.sh passes --mongodb-runner even for --local-atlas, where
+    # probing for runner support would install a Node we never use.
     if opts.local_atlas:
         opts.mongodb_runner = False
 

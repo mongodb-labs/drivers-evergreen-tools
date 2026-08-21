@@ -3,15 +3,12 @@
 # ensure-uv.sh has to be sourced from bash, and make defaults to /bin/sh.
 SHELL := bash
 
-# Let ensure_uv scope uv's tool dir to this checkout, as it does for the other
-# scripts, so installing pre-commit cannot disturb globally installed tools.
+# Scopes uv's tool dir to this checkout, so installing pre-commit cannot
+# disturb globally installed tools.
 export DRIVERS_TOOLS ?= $(CURDIR)
 
-# Install the pre-commit shim into a repo-local bin dir rather than uv's default,
-# so `make lint` can find it without pre-commit being installed globally and
-# without writing to the developer's own tool bin dir. This stays a Unix path
-# for PATH; uv rejects /cygdrive/... for UV_TOOL_BIN_DIR, so the install target
-# converts it there (see install-cli.sh for the same handling).
+# Holds the pre-commit shim, so `make lint` works without a global install.
+# Stays a Unix path for PATH; the install target converts it for uv on Cygwin.
 LOCAL_BIN := $(CURDIR)/.bin
 
 all:

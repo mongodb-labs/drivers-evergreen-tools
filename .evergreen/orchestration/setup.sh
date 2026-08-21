@@ -23,12 +23,10 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner if USE_DEV_MONGODB_RUNNER is set.
-# Otherwise, Node is installed lazily by mongodb_runner.py only when mongodb-runner
-# is actually invoked.
+# Otherwise mongodb_runner.py installs Node when it first needs it.
 if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
-  # The dev version requires Node 22+. Ask for it unconditionally: the artifacts
-  # directory may already hold the Node 20 that the normal runner path installs,
-  # and install-node.sh exits early only when that exact version is cached.
+  # The dev version requires Node 22+, and install-node.sh exits early only when
+  # that exact version is cached, so ask for it unconditionally.
   NODE_LTS_VERSION=22 bash "$_HERE/../install-node.sh"
 
   if [ ! -d $_HERE/devtools-shared ]; then
