@@ -554,79 +554,23 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
-  # The KMS setup groups already provision the VM and run start-mongodb.sh, which
-  # runs run-orchestration.sh, so these checks only have to prove the server
-  # answers and that it came from this revision.
-  #
-  # start-mongodb.sh clones the default branch when the archive is missing and
-  # still starts a working server, so a ping alone cannot tell the two apart. A
-  # clone that went unnoticed would leave these variants testing master rather
-  # than the checkout under test. The archive ships no .git, a clone leaves one.
-  #
-  # On the legacy variant, also check that the VM really has no pip. Provisioning
-  # is the only thing that decides that, so if a base image starts shipping pip
-  # the run would still pass while testing the ordinary path -- the same trap the
-  # container cases this replaced kept falling into. ensure_uv installs uv into a
-  # virtual environment rather than the system, so pip stays absent afterwards.
   "run azurekms server check":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms
-          # setup.sh wrote the VM name and key path here.
-          source ./secrets-export.sh
-          if ! AZUREKMS_CMD='[ ! -d ./drivers-evergreen-tools/.git ]' ./run-command.sh </dev/null; then
-            echo "ERROR: the VM cloned drivers-evergreen-tools instead of unpacking the archive." >&2
-            echo "It is running the default branch, so this run does not test this revision." >&2
-            exit 1
-          fi
-          if [ "${kms_legacy_provisioning|}" = "true" ]; then
-            # Carried by the exit status, not the output: run-command.sh echoes
-            # the command it runs, so a sentinel string would match its own echo.
-            # </dev/null keeps a remote command from reading the rest of this
-            # script; azurekms uses ssh -n already, gcpkms needs the redirect.
-            if ! AZUREKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh </dev/null; then
-              echo "ERROR: the VM has pip, so this run did not exercise the venv fallback." >&2
-              echo "Has remote-scripts/legacy/setup-azure-vm.sh drifted, or the base image changed?" >&2
-              exit 1
-            fi
-          fi
-          export AZUREKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
-          ./run-command.sh
+        binary: bash
+        include_expansions_in_env: [kms_legacy_provisioning]
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/server-check.sh
 
   "run gcpkms server check":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms
-          # setup.sh wrote the instance name and the gcloud path here.
-          source ./secrets-export.sh
-          if ! GCPKMS_CMD='[ ! -d ./drivers-evergreen-tools/.git ]' ./run-command.sh </dev/null; then
-            echo "ERROR: the instance cloned drivers-evergreen-tools instead of unpacking the archive." >&2
-            echo "It is running the default branch, so this run does not test this revision." >&2
-            exit 1
-          fi
-          if [ "${kms_legacy_provisioning|}" = "true" ]; then
-            # Carried by the exit status, not the output: run-command.sh echoes
-            # the command it runs, so a sentinel string would match its own echo.
-            #
-            # </dev/null because gcloud compute ssh reads stdin, which here is the
-            # rest of this script. Without it the ping below is swallowed and the
-            # task passes having tested nothing.
-            if ! GCPKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh </dev/null; then
-              echo "ERROR: the instance has pip, so this run did not exercise the venv fallback." >&2
-              echo "Has remote-scripts/legacy/setup-gce-instance.sh drifted, or the base image changed?" >&2
-              exit 1
-            fi
-          fi
-          export GCPKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
-          ./run-command.sh
+        binary: bash
+        include_expansions_in_env: [kms_legacy_provisioning]
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/server-check.sh
 
   "run drivers tools archive test":
     - command: subprocess.exec
