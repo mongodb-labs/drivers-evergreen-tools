@@ -15,8 +15,7 @@ if [ -z "$GCPKMS_GCLOUD" ] || [ -z "$GCPKMS_PROJECT" ] || [ -z "$GCPKMS_ZONE" ] 
 fi
 
 # GCPKMS_SETUP_SCRIPT lets a caller provision with a different script, which
-# drivers-tools' own tests use to reproduce an older provisioning. azurekms
-# offers the same through AZUREKMS_SETUP_SCRIPT.
+# drivers-tools' own tests use to reproduce an older provisioning.
 GCPKMS_SETUP_SCRIPT="${GCPKMS_SETUP_SCRIPT:-$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh}"
 GCPKMS_SETUP_SCRIPT_NAME="$(basename "$GCPKMS_SETUP_SCRIPT")"
 

@@ -68,7 +68,7 @@ fi
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
 # Install dependencies. AZUREKMS_SETUP_SCRIPT lets a caller provision with a
 # different script, which drivers-tools' own tests use to reproduce an older
-# provisioning. gcpkms offers the same through GCPKMS_SETUP_SCRIPT.
+# provisioning.
 AZUREKMS_SETUP_SCRIPT="${AZUREKMS_SETUP_SCRIPT:-$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh}"
 AZUREKMS_SRC="$AZUREKMS_SETUP_SCRIPT" \
 AZUREKMS_DST="./" \
