@@ -1,60 +1,44 @@
 #!/usr/bin/env bash
 #
-# Tests for ensure-uv.sh.
+# Integration tests for ensure-uv.sh.
 #
-# Each case pins a stub interpreter through DRIVERS_TOOLS_PYTHON and covers what
-# ensure_uv does with the one it picks. Pinning matters: without it the real
-# MongoDB toolchain on an Evergreen host wins over anything in the sandbox.
-#
-# Which interpreter a distro actually offers is a property of the distro, so no
-# case tries to imitate one. The build variants cover that on real hosts, and the
-# kms variants cover the remote VMs.
+# Every case runs against a real interpreter. uv installs the pinned ones and the
+# host supplies the rest, so nothing here imitates a host shape and no case can
+# pass against a fiction. Each runs in a sandbox with its own HOME, TMPDIR and
+# DRIVERS_TOOLS, and a PATH that hides any uv already on this machine.
 set -eu
 
-SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
-# Absolute, because the stubs exec it from wherever ensure_uv runs them.
-STUB_PYTHON="$(cd "$SCRIPT_DIR" && pwd)/stub-python.sh"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+ENSURE_UV="$SCRIPT_DIR/../ensure-uv.sh"
 
 failures=0
 
-# make_python
-#
-# Write a stub interpreter to $1 reporting version $2, with the capabilities
-# named in $3 ("pip", "venv"), reporting $4 as its `--user` base.
-#
-# The stub is a wrapper that hands off to stub-python.sh, which holds the
-# behavior and documents the variables. An install drops a `uv` into the target
-# bin directory, and that uv names the interpreter it came from, so a case can
-# assert which one ensure_uv picked rather than just that it found something.
-make_python() {
-  local path="$1" version="$2" caps="$3" user_base="$4"
+# uv installs the pinned interpreters, so one has to be reachable before the
+# sandboxes hide it. Bootstrapping it here rather than requiring setup.sh first
+# keeps this runnable from a clean checkout, which is how GitHub Actions runs it.
+if ! command -v uv >/dev/null 2>&1; then
+  echo "No uv on PATH; bootstrapping one to install the pinned interpreters."
+  # shellcheck source=/dev/null
+  . "$ENSURE_UV"
+  ensure_uv || exit 1
+fi
 
-  mkdir -p "$(dirname "$path")"
-  {
-    printf '#!/usr/bin/env bash\n'
-    printf '# Stub interpreter: Python %s, capabilities [%s].\n' "$version" "$caps"
-    printf 'export STUB_VERSION=%q STUB_CAPS=%q STUB_USER_BASE=%q STUB_ORIGIN=%q\n' \
-      "$version" "$caps" "$user_base" "$path"
-    printf 'exec %q "$@"\n' "$STUB_PYTHON"
-  } >"$path"
-  chmod +x "$path"
-}
-
-# make_uv
+# pinned_python
 #
-# Write a stub uv reporting version $2 to $1, standing in for one a previous run
-# already installed.
-make_uv() {
-  mkdir -p "$(dirname "$1")"
-  printf '#!/bin/sh\necho "uv %s (from a previous run)"\n' "$2" >"$1"
-  chmod +x "$1"
+# Absolute path to a uv-managed CPython $1, installing it if it is not present.
+pinned_python() {
+  if ! uv python install "$1" >/dev/null 2>&1; then
+    echo "ERROR: uv could not install CPython $1 on this platform." >&2
+    return 1
+  fi
+  uv python find "$1"
 }
 
 # check
 #
-# Run case $1 in a sandbox. $2 sets the scenario up, $3 asserts on the result.
-# Both run with $sandbox set. ensure_uv has already been called and its exit
-# status is in $ensure_uv_status, so a case can assert on a refusal too.
+# Run case $1 in a sandbox, where $2 sets the scenario up and $3 asserts on the
+# result. Both see $sandbox, and $ensure_uv_status holds what ensure_uv returned
+# so a case can assert on a refusal.
 check() {
   local name="$1" setup="$2" assert="$3"
   local sandbox
@@ -63,17 +47,21 @@ check() {
   if (
     set -eu
     export sandbox
-    mkdir -p "$sandbox/bin" "$sandbox/home" "$sandbox/tmp"
-    eval "$setup"
+    mkdir -p "$sandbox/bin" "$sandbox/home" "$sandbox/tmp" "$sandbox/drivers-tools"
 
-    # A pared-down PATH, so this host's own uv cannot quietly satisfy the call.
+    # A pared-down PATH and a sandbox DRIVERS_TOOLS, so neither a uv already
+    # installed here nor the real tree can satisfy or absorb the call. Set before
+    # the setup runs, so a case that activates a venv keeps it on PATH.
     export PATH="$sandbox/bin:/usr/bin:/bin"
     export HOME="$sandbox/home"
     export TMPDIR="$sandbox/tmp"
+    export DRIVERS_TOOLS="$sandbox/drivers-tools"
     unset CI
 
+    eval "$setup"
+
     # shellcheck source=/dev/null
-    . "$SCRIPT_DIR/../ensure-uv.sh"
+    . "$ENSURE_UV"
     ensure_uv_status=0
     ensure_uv || ensure_uv_status=$?
     export ensure_uv_status
@@ -91,78 +79,80 @@ check() {
 
 echo "Testing ensure_uv install methods ..."
 
+# uv's own Requires-Python is >=3.8, and ensure_uv only has to bootstrap uv: the
+# 3.9 floor in .evergreen/pyproject.toml belongs to the projects uv then runs, and
+# uv fetches an interpreter for those itself. Pinning the oldest interpreter uv
+# supports means a future uv that drops 3.8 fails here rather than on a host.
+PINNED_PY38="$(pinned_python 3.8)"
+export PINNED_PY38
+
 check "installs uv with pip --user" '
-  make_python "$sandbox/bin/python3" 3.11.9 pip,venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
+  export DRIVERS_TOOLS_PYTHON="$PINNED_PY38"
 ' '
-  uv --version | grep -q "$sandbox/bin/python3, --user" || {
-    echo "expected a --user install by the stub, got: $(uv --version)"; exit 1
-  }
+  [ "$ensure_uv_status" -eq 0 ] || { echo "ensure_uv failed with a 3.8 interpreter"; exit 1; }
+  uv --version >/dev/null || { echo "no working uv on PATH"; exit 1; }
+  base="$("$DRIVERS_TOOLS_PYTHON" -m site --user-base)"
+  [ -x "$base/bin/uv" ] || { echo "expected a --user install under $base"; exit 1; }
 '
 
 # How the Node OIDC tests call ensure_uv. pip refuses --user inside a venv, and
 # the venv is the right target there anyway.
 check "installs into the active venv when --user is refused" '
-  make_python "$sandbox/bin/python3" 3.11.9 pip,venv,invenv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
+  "$PINNED_PY38" -m venv "$sandbox/venv"
+  # shellcheck source=/dev/null
+  . "$sandbox/venv/bin/activate"
+  export DRIVERS_TOOLS_PYTHON="$sandbox/venv/bin/python"
 ' '
-  uv --version | grep -q "$sandbox/bin/python3, venv" || {
-    echo "expected an install without --user, got: $(uv --version)"; exit 1
-  }
-'
-
-# Legacy support for KMS VMs provisioned before PYTHON-5985 added python3-pip.
-# Debian refuses ensurepip outside a venv, so a venv is the only route there.
-# DRIVERS-XXXX (placeholder, not yet filed) tracks getting those pins past
-# PYTHON-5985. Delete this case when it closes.
-check "legacy: builds a venv when the interpreter has no pip" '
-  make_python "$sandbox/bin/python3" 3.9.2 venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-' '
-  uv --version | grep -q "$sandbox/bin/python3" || {
-    echo "expected uv from the venv, got: $(uv --version)"; exit 1
+  [ "$ensure_uv_status" -eq 0 ] || { echo "ensure_uv failed inside a venv"; exit 1; }
+  [ -x "$sandbox/venv/bin/uv" ] || {
+    echo "expected uv in the active venv, got $(command -v uv)"; exit 1
   }
 '
 
 echo "Testing ensure_uv reuse of an existing uv ..."
 
-# ~/.local/bin is off the default PATH on some hosts, so an existing uv there
-# has to be found rather than reinstalled.
-check "reuses a uv already installed under ~/.local/bin" '
-  make_uv "$sandbox/home/.local/bin/uv" 0.11.8
+# A later script in a fresh shell has to find the uv an earlier one installed.
+# $DRIVERS_TOOLS/.bin is where handle-paths.sh looks, so give the second call only
+# that and check it stays quiet: ensure_uv announces every install it attempts.
+check "reuses the published uv instead of installing again" '
+  export DRIVERS_TOOLS_PYTHON="$PINNED_PY38"
 ' '
-  case "$(uv --version)" in
-  "uv 0.11.8"*) ;;
-  *) echo "expected the existing uv to be reused, got: $(uv --version)"; exit 1 ;;
+  [ -x "$DRIVERS_TOOLS/.bin/uv" ] || { echo "expected uv published to $DRIVERS_TOOLS/.bin"; exit 1; }
+  PATH="$DRIVERS_TOOLS/.bin:/usr/bin:/bin"
+  second="$(ensure_uv 2>&1)" || { echo "the second call failed with a published uv available"; exit 1; }
+  case "$second" in
+  *"installing it with"*) echo "reinstalled instead of reusing: $second"; exit 1 ;;
   esac
-'
-
-echo "Testing ensure_uv install location ..."
-
-check "installs uv into \$DRIVERS_TOOLS/.bin" '
-  make_python "$sandbox/bin/python3" 3.11.9 pip,venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-  export DRIVERS_TOOLS="$sandbox/drivers-tools"
-' '
-  [ -x "$sandbox/drivers-tools/.bin/uv" ] || {
-    echo "expected uv in \$DRIVERS_TOOLS/.bin, found: $(command -v uv)"; exit 1
-  }
 '
 
 echo "Testing ensure_uv refusal ..."
 
-# The failure PYTHON-6005 reported, and the one thing the cases above cannot
-# show: with no interpreter it can use, ensure_uv has to fail rather than report
-# success and leave callers with a uv that is not there. A real host cannot be
-# asked for this on demand, so it stays a stub.
-check "fails when the only interpreter is too old for uv" '
-  make_python "$sandbox/bin/python3" 3.6.8 pip,venv "$sandbox/platform-user-base"
-  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
-' '
-  [ "$ensure_uv_status" -ne 0 ] || {
-    echo "expected ensure_uv to fail, got 0 and uv at: $(command -v uv || echo none)"; exit 1
-  }
-'
+# ensure_uv has to refuse a host it cannot rescue rather than report success and
+# leave callers without uv. This needs an interpreter uv publishes nothing for,
+# and uv installs nothing below its own 3.8 floor, so it takes a host that
+# genuinely has an old python3. rhel82-arm64's platform python3 is 3.6, which is
+# the host PYTHON-6005 was filed for.
+PINNED_OLD_PY=""
+for candidate in /usr/bin/python3 "$(command -v python3 2>/dev/null || true)"; do
+  [ -n "$candidate" ] && [ -x "$candidate" ] || continue
+  if ! "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)'; then
+    PINNED_OLD_PY="$candidate"
+    break
+  fi
+done
+export PINNED_OLD_PY
+
+if [ -n "$PINNED_OLD_PY" ]; then
+  check "fails when the only interpreter is too old for uv" '
+    export DRIVERS_TOOLS_PYTHON="$PINNED_OLD_PY"
+  ' '
+    [ "$ensure_uv_status" -ne 0 ] || {
+      echo "expected a refusal, got success and uv at $(command -v uv || echo none)"; exit 1
+    }
+  '
+else
+  echo "  skip: no python3 below 3.8 on this host, which this case needs"
+fi
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures ensure_uv test(s) failed." >&2

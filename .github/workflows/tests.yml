@@ -80,18 +80,17 @@ jobs:
           mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
 
   ensure-uv:
-    name: "ensure-uv Unit Tests"
+    name: "ensure-uv Tests"
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The host-shape cases need containers and several distro images, so they
-      # run in Evergreen as test-ensure-uv. This job is the fast half, gating
-      # every PR.
-      - name: "Run unit tests"
-        run: ENSURE_UV_SKIP_CONTAINERS=1 bash .evergreen/tests/test-ensure-uv.sh
+      # Gates every PR. The refusal case needs a python3 older than 3.8 and skips
+      # here; tests-rhel82-arm64 is the variant that has one.
+      - name: "Run tests"
+        run: bash .evergreen/tests/test-ensure-uv.sh
 
   pre-commit:
     runs-on: ubuntu-latest
