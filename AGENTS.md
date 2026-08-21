@@ -100,10 +100,8 @@ Run `make lint` before opening a PR.
 
 ## Adding a new feature
 
-Per [CONTRIBUTING.md#new-features](./CONTRIBUTING.md#new-features): add a folder under
-`.evergreen/<feature>/` with a `README.md` (usage instructions, example Evergreen config
-where relevant) and a test file at `.evergreen/tests/test-<feature>.sh`, wired up as a
-dedicated Evergreen task. Tag it `pr` if it's self-contained enough to run on every PR.
+Per [CONTRIBUTING.md#new-features](./CONTRIBUTING.md#new-features), with the test file
+named `.evergreen/tests/test-<feature>.sh`.
 
 ## PR requirements
 
