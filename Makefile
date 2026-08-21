@@ -29,9 +29,10 @@ install:
 	uv tool install --force pre-commit && \
 	pre-commit install
 
+# Set HOOK to run a single hook, as in `make lint HOOK=shellcheck`.
 lint:
 	export PATH="$(LOCAL_BIN):$$PATH"; \
-	pre-commit run --all-files
+	pre-commit run --all-files $(HOOK)
 
 clean:
 	@echo "Cleaning files..."
