@@ -169,7 +169,8 @@ ensure_uv() {
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
   # The cheap half of the search, needing no interpreter to name: where uv's own
-  # installer or an earlier call put it. Scripts is the Windows spelling of bin.
+  # installer or an earlier call put it. Windows uses a Scripts directory
+  # instead of bin.
   [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
   [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
   _ensure_uv_add_path "$venv_dir/bin"

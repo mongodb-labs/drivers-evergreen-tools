@@ -1055,8 +1055,7 @@ tasks:
         - func: "run csfle test"
 
     # No "pr" tag: these provision real cloud VMs, so they run nightly and on
-    # request rather than on every pull request. Select them with -t when a change
-    # could affect how a remote host starts a server.
+    # request rather than on every pull request.
     - name: "test-azurekms"
       tags: ["kms"]
       commands:
@@ -1567,9 +1566,9 @@ buildvariants:
     - ".github-app"
 
 # RHEL 8.2 arm64 is the host PYTHON-6005 was filed for: its system python3 is
-# 3.6, which uv publishes no distribution for, and unlike most Evergreen images
-# it ships no uv, so ensure_uv has to select an interpreter and install. That
-# makes it the one host that exercises the toolchain rescue for real.
+# 3.6, which uv publishes no distribution for, and that Evergreen image does not
+# ship uv, so ensure_uv has to select an interpreter and install. That makes it
+# the one host that exercises the toolchain rescue for real.
 - name: tests-rhel82-arm64
   display_name: "RHEL 8.2 ARM64"
   run_on:
@@ -1578,8 +1577,7 @@ buildvariants:
     - name: "test-latest-standalone"
 
 # These provision real cloud VMs, so batchtime keeps them to one run a day and
-# skips them when nothing has landed. They stay patch-selectable with -t, which
-# is what you want when changing how a remote host starts a server.
+# skips them when nothing has landed.
 #
 # ubuntu2204-small because the Azure CLI is only preinstalled on the distros
 # listed in csfle/azurekms/README.md; tests-oidc picks it for the same reason.
