@@ -31,11 +31,14 @@ for the CI that runs it.
 - `DRIVERS_TOOLS`: expected to point at the repo root. Several scripts read it.
 - `.evergreen/find-python3.sh`: sourced by scripts that need a Python interpreter. A
   handful of older scripts still use its `find_python3`/`venvcreate` path instead of `uv`.
-- `.evergreen/ensure-uv.sh` (`ensure_uv`): installs or locates `uv` and scopes its state
-  under the task's temp directory in CI, and under this checkout locally, so a local run
-  can't disturb globally installed tools.
-- `uv` runs most Python scripts (`uv run`) and manages CLI installs. Scripts use isolated
-  virtual environments, never the system interpreter.
+- `.evergreen/ensure-uv.sh` (`ensure_uv`): installs or locates `uv`. In CI it scopes uv's
+  cache, tool, and Python install dirs under the task's temp directory; outside CI it
+  only redirects the tool dir, so a local `uv tool install --force` can't overwrite
+  globally installed tools, and the cache stays shared to avoid re-downloading.
+- `uv` runs most Python scripts (`uv run`) and manages CLI installs, but not all: some
+  scripts (`.evergreen/clean.sh`) call `python3` directly, and some features (`auth_aws`)
+  still use the legacy `find-python3.sh`/`venvcreate` virtual environments. Check the
+  script before assuming uv isolation.
 
 ## Running things
 
@@ -50,14 +53,16 @@ for the CI that runs it.
 
 ## Python CLIs
 
-Two independently packaged CLIs, both installed with
+Two independently packaged CLI projects, both installed with
 `bash .evergreen/install-cli.sh <dir>` (uv-managed, isolated):
 
 - `.evergreen/pyproject.toml` packages `mongodl`, `mongosh-dl`, `socks5srv`.
 - `.evergreen/orchestration/pyproject.toml` packages `drivers-orchestration`.
 
-Everything else under `.evergreen/` is an unpackaged script. Run it directly, e.g.
-`python3 .evergreen/<path>.py --help`.
+Everything else under `.evergreen/` is an unpackaged script. Check the script and its
+feature directory for a setup wrapper (e.g. `auth_aws/activate-authawsvenv.sh`) before
+running it: some import dependencies (`pymongo`) that only exist in a feature-specific
+virtual environment, so a direct `python3 <path>.py --help` fails on import first.
 
 ## Testing
 
@@ -73,8 +78,9 @@ There is no pytest suite. Validation is:
 step in this repo; conventions from other repos don't carry over.
 
 - Run `make install` once to set up `pre-commit`. It installs `pre-commit` into `.bin/`
-  under this checkout using `uv`, not globally, so a bare `pre-commit` command on `PATH`
-  only works after `make install` has run in that shell session.
+  under this checkout using `uv`, not globally. The `PATH` change lives only inside the
+  Make recipe, so a bare `pre-commit` command never resolves in your shell; use
+  `make lint` instead.
 - `make lint` runs `pre-commit run --all-files`. Many hooks auto-fix in place, so a run
   that modifies files exits non-zero even though it fixed the problem; re-run `make lint`
   to confirm clean. There is no separate fix mode.
