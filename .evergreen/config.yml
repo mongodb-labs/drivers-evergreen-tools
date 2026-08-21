@@ -555,7 +555,13 @@ functions:
         args: [src/.evergreen/tests/test-csfle.sh]
 
   # The KMS setup groups already provision the VM and run start-mongodb.sh, which
-  # runs run-orchestration.sh. All that is left is to prove the server answers.
+  # runs run-orchestration.sh, so these checks only have to prove the server
+  # answers and that it came from this revision.
+  #
+  # start-mongodb.sh clones the default branch when the archive is missing and
+  # still starts a working server, so a ping alone cannot tell the two apart. A
+  # clone that went unnoticed would leave these variants testing master rather
+  # than the checkout under test. The archive ships no .git, a clone leaves one.
   #
   # On the legacy variant, also check that the VM really has no pip. Provisioning
   # is the only thing that decides that, so if a base image starts shipping pip
@@ -572,6 +578,11 @@ functions:
           cd ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms
           # setup.sh wrote the VM name and key path here.
           source ./secrets-export.sh
+          if ! AZUREKMS_CMD='[ ! -d ./drivers-evergreen-tools/.git ]' ./run-command.sh </dev/null; then
+            echo "ERROR: the VM cloned drivers-evergreen-tools instead of unpacking the archive." >&2
+            echo "It is running the default branch, so this run does not test this revision." >&2
+            exit 1
+          fi
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
             # Carried by the exit status, not the output: run-command.sh echoes
             # the command it runs, so a sentinel string would match its own echo.
@@ -596,6 +607,11 @@ functions:
           cd ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms
           # setup.sh wrote the instance name and the gcloud path here.
           source ./secrets-export.sh
+          if ! GCPKMS_CMD='[ ! -d ./drivers-evergreen-tools/.git ]' ./run-command.sh </dev/null; then
+            echo "ERROR: the instance cloned drivers-evergreen-tools instead of unpacking the archive." >&2
+            echo "It is running the default branch, so this run does not test this revision." >&2
+            exit 1
+          fi
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
             # Carried by the exit status, not the output: run-command.sh echoes
             # the command it runs, so a sentinel string would match its own echo.
@@ -611,13 +627,6 @@ functions:
           fi
           export GCPKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
           ./run-command.sh
-
-  "run remote start-mongodb test":
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: bash
-        args: [src/.evergreen/tests/test-remote-start-mongodb.sh]
 
   "run drivers tools archive test":
     - command: subprocess.exec
@@ -1113,11 +1122,6 @@ tasks:
       tags: ["kms"]
       commands:
         - func: "run gcpkms server check"
-
-    - name: "test-remote-start-mongodb"
-      tags: ["docker", "pr"]
-      commands:
-        - func: "run remote start-mongodb test"
 
     - name: "test-drivers-tools-archive"
       tags: ["pr"]
