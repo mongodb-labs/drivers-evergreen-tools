@@ -573,12 +573,9 @@ functions:
           # setup.sh wrote the VM name and key path here.
           source ./secrets-export.sh
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
-            probe="$(mktemp)"
-            # No pip is the expected outcome, so the remote failure is not ours.
-            AZUREKMS_CMD='python3 -m pip --version && echo UNEXPECTED_PIP || true' \
-              ./run-command.sh >"$probe" 2>&1 || true
-            cat "$probe"
-            if grep -q UNEXPECTED_PIP "$probe"; then
+            # Carried by the exit status, not the output: run-command.sh echoes
+            # the command it runs, so a sentinel string would match its own echo.
+            if ! AZUREKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh; then
               echo "ERROR: the VM has pip, so this run did not exercise the venv fallback." >&2
               echo "Has remote-scripts/legacy/setup-azure-vm.sh drifted, or the base image changed?" >&2
               exit 1
@@ -598,12 +595,9 @@ functions:
           # setup.sh wrote the instance name and the gcloud path here.
           source ./secrets-export.sh
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
-            probe="$(mktemp)"
-            # No pip is the expected outcome, so the remote failure is not ours.
-            GCPKMS_CMD='python3 -m pip --version && echo UNEXPECTED_PIP || true' \
-              ./run-command.sh >"$probe" 2>&1 || true
-            cat "$probe"
-            if grep -q UNEXPECTED_PIP "$probe"; then
+            # Carried by the exit status, not the output: run-command.sh echoes
+            # the command it runs, so a sentinel string would match its own echo.
+            if ! GCPKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh; then
               echo "ERROR: the instance has pip, so this run did not exercise the venv fallback." >&2
               echo "Has remote-scripts/legacy/setup-gce-instance.sh drifted, or the base image changed?" >&2
               exit 1
