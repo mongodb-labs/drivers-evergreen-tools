@@ -41,3 +41,4 @@ unfixable = ["F401"]
 ".evergreen/ocsp/mock_ocsp_responder.py" = ["PLW"]
 ".evergreen/csfle/kms_*.py" = ["PLW"]
 ".evergreen/csfle/gcpkms/mock_server.py" = ["PLW"]
+".github/scripts/test_*.py" = ["PT"]      # unittest, not pytest
