@@ -42,7 +42,9 @@ for the CI that runs it.
 
 ## Running things
 
-- `make run-server` or `make run-local-atlas` starts a MongoDB deployment.
+- `make run-server` or `make run-local-atlas` starts a MongoDB deployment. Both are
+  configured through environment variables (topology, auth, SSL, version, and more); see
+  the comment block at the top of `.evergreen/run-mongodb.sh` for the full list.
 - `make stop-server` stops it.
 - `make test-connect` checks connectivity to a running deployment
   (`.evergreen/check-connection.sh`).
