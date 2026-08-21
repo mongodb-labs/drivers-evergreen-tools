@@ -122,6 +122,10 @@ def _mongodb_runner_supported() -> bool:
     a host that cannot get a new enough Node fails the install and falls back to
     mongo-orchestration.
     """
+    if os.environ.get("USE_DEV_MONGODB_RUNNER"):
+        # start_mongodb_runner runs the compiled dev runner directly, so the
+        # pinned package is never installed and only node has to be present.
+        return shutil.which("node") is not None
     try:
         _install_mongodb_runner()
     except RuntimeError as exc:
@@ -135,7 +139,9 @@ def _install_mongodb_runner() -> Path:
     install_dir = TMPDIR / f"mongodb-runner-{_MR_VERSION}"
     ext = ".cmd" if PLATFORM == "win32" else ""
     runner_bin = install_dir / "node_modules" / ".bin" / f"mongodb-runner{ext}"
-    if not runner_bin.exists():
+    # A cached shim still needs a node to run it, and the docker entrypoints
+    # delete node-artifacts while the cache under TMPDIR survives.
+    if not runner_bin.exists() or shutil.which("node") is None:
         pkg = {
             "name": "mongodb-runner-wrapper",
             "version": "1.0.0",
