@@ -68,11 +68,14 @@ if [ -f secrets-export.sh ]; then
 fi
 # Assign role.
 "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/assign-role.sh
-# Install dependencies.
-AZUREKMS_SRC="$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh" \
+# Install dependencies. AZUREKMS_SETUP_SCRIPT lets a caller provision with a
+# different script, which drivers-tools' own tests use to reproduce an older
+# provisioning. gcpkms offers the same through GCPKMS_SETUP_INSTANCE.
+AZUREKMS_SETUP_SCRIPT="${AZUREKMS_SETUP_SCRIPT:-$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh}"
+AZUREKMS_SRC="$AZUREKMS_SETUP_SCRIPT" \
 AZUREKMS_DST="./" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh
-AZUREKMS_CMD="./setup-azure-vm.sh" \
+AZUREKMS_CMD="./$(basename "$AZUREKMS_SETUP_SCRIPT")" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/run-command.sh
 # Ship this checkout so the VM runs the same revision that provisioned it. On
 # failure start-mongodb.sh falls back to cloning the default branch, so this must

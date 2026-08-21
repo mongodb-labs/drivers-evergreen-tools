@@ -554,6 +554,64 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
+  # The KMS setup groups already provision the VM and run start-mongodb.sh, which
+  # runs run-orchestration.sh. All that is left is to prove the server answers.
+  #
+  # On the legacy variant, also check that the VM really has no pip. Provisioning
+  # is the only thing that decides that, so if a base image starts shipping pip
+  # the run would still pass while testing the ordinary path -- the same trap the
+  # container cases this replaced kept falling into. ensure_uv installs uv into a
+  # virtual environment rather than the system, so pip stays absent afterwards.
+  "run azurekms server check":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms
+          # setup.sh wrote the VM name and key path here.
+          source ./secrets-export.sh
+          if [ "${kms_legacy_provisioning|}" = "true" ]; then
+            probe="$(mktemp)"
+            # No pip is the expected outcome, so the remote failure is not ours.
+            AZUREKMS_CMD='python3 -m pip --version && echo UNEXPECTED_PIP || true' \
+              ./run-command.sh >"$probe" 2>&1 || true
+            cat "$probe"
+            if grep -q UNEXPECTED_PIP "$probe"; then
+              echo "ERROR: the VM has pip, so this run did not exercise the venv fallback." >&2
+              echo "Has remote-scripts/legacy/setup-azure-vm.sh drifted, or the base image changed?" >&2
+              exit 1
+            fi
+          fi
+          export AZUREKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
+          ./run-command.sh
+
+  "run gcpkms server check":
+    - command: shell.exec
+      type: test
+      params:
+        shell: bash
+        script: |-
+          set -o errexit
+          cd ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms
+          # setup.sh wrote the instance name and the gcloud path here.
+          source ./secrets-export.sh
+          if [ "${kms_legacy_provisioning|}" = "true" ]; then
+            probe="$(mktemp)"
+            # No pip is the expected outcome, so the remote failure is not ours.
+            GCPKMS_CMD='python3 -m pip --version && echo UNEXPECTED_PIP || true' \
+              ./run-command.sh >"$probe" 2>&1 || true
+            cat "$probe"
+            if grep -q UNEXPECTED_PIP "$probe"; then
+              echo "ERROR: the instance has pip, so this run did not exercise the venv fallback." >&2
+              echo "Has remote-scripts/legacy/setup-gce-instance.sh drifted, or the base image changed?" >&2
+              exit 1
+            fi
+          fi
+          export GCPKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
+          ./run-command.sh
+
   "run remote kms provisioning test":
     - command: subprocess.exec
       type: test
@@ -1050,6 +1108,19 @@ tasks:
       commands:
         - func: "run csfle test"
 
+    # No "pr" tag: these provision real cloud VMs, so they run nightly and on
+    # request rather than on every pull request. Select them with -t when a change
+    # could affect how a remote host starts a server.
+    - name: "test-azurekms"
+      tags: ["kms"]
+      commands:
+        - func: "run azurekms server check"
+
+    - name: "test-gcpkms"
+      tags: ["kms"]
+      commands:
+        - func: "run gcpkms server check"
+
     - name: "test-remote-kms-provisioning"
       tags: ["docker", "pr"]
       commands:
@@ -1151,6 +1222,84 @@ task_groups:
       - func: "cleanup"
     tasks:
       - ".atlas"
+
+  # kms_legacy_provisioning switches the remote setup script to a frozen copy of
+  # the provisioning as it stood before PYTHON-5985, which installed python3-venv
+  # and no pip. That is the one shape that still needs the virtual environment
+  # fallback in ensure_uv, and no current image reproduces it.
+  - name: testazurekms_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
+    setup_group:
+      - func: "fetch and prepare resources"
+      - func: "assume role"
+      - command: shell.exec
+        params:
+          shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          script: |
+            set -o errexit
+            # ensure HEAD points to current commit, so the archive shipped to the
+            # VM is this checkout
+            cd ${DRIVERS_TOOLS}
+            git add .
+            git commit -m "add files"
+            export AZUREKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
+            if [ "${kms_legacy_provisioning|}" = "true" ]; then
+              export AZUREKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/remote-scripts/legacy/setup-azure-vm.sh"
+            fi
+            ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-azurekms
+
+  - name: testgcpkms_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
+    setup_group:
+      - func: "fetch and prepare resources"
+      - func: "assume role"
+      - command: shell.exec
+        params:
+          shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          script: |
+            set -o errexit
+            # ensure HEAD points to current commit, so the archive shipped to the
+            # instance is this checkout
+            cd ${DRIVERS_TOOLS}
+            git add .
+            git commit -m "add files"
+            export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
+            if [ "${kms_legacy_provisioning|}" = "true" ]; then
+              export GCPKMS_SETUP_INSTANCE="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
+            fi
+            ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-gcpkms
 
   - name: testazureoidc_task_group
     setup_group_can_fail_task: true
@@ -1488,6 +1637,32 @@ buildvariants:
     - rhel82-arm64-small
   tasks:
     - name: "test-latest-standalone"
+
+# These provision real cloud VMs, so batchtime keeps them to one run a day and
+# skips them when nothing has landed. They stay patch-selectable with -t, which
+# is what you want when changing how a remote host starts a server.
+#
+# ubuntu2204-small because the Azure CLI is only preinstalled on the distros
+# listed in csfle/azurekms/README.md; tests-oidc picks it for the same reason.
+- name: kms
+  display_name: "KMS VMs"
+  run_on:
+    - ubuntu2204-small
+  batchtime: 1440
+  tasks:
+    - name: testazurekms_task_group
+    - name: testgcpkms_task_group
+
+- name: kms-legacy
+  display_name: "KMS VMs (provisioned before PYTHON-5985)"
+  run_on:
+    - ubuntu2204-small
+  batchtime: 1440
+  expansions:
+    kms_legacy_provisioning: "true"
+  tasks:
+    - name: testazurekms_task_group
+    - name: testgcpkms_task_group
 
 - name: tests-rhel
   display_name: RHEL Tests
