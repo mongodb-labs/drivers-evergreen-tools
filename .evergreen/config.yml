@@ -612,12 +612,12 @@ functions:
           export GCPKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017'
           ./run-command.sh
 
-  "run remote kms provisioning test":
+  "run remote start-mongodb test":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
-        args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
+        args: [src/.evergreen/tests/test-remote-start-mongodb.sh]
 
   "run ensure uv test":
     - command: subprocess.exec
@@ -1121,10 +1121,10 @@ tasks:
       commands:
         - func: "run gcpkms server check"
 
-    - name: "test-remote-kms-provisioning"
+    - name: "test-remote-start-mongodb"
       tags: ["docker", "pr"]
       commands:
-        - func: "run remote kms provisioning test"
+        - func: "run remote start-mongodb test"
 
     - name: "test-ensure-uv"
       tags: ["docker", "pr"]
@@ -1285,7 +1285,7 @@ task_groups:
             git commit -m "add files"
             export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
             if [ "${kms_legacy_provisioning|}" = "true" ]; then
-              export GCPKMS_SETUP_INSTANCE="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
+              export GCPKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
             fi
             ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup.sh
     teardown_group:

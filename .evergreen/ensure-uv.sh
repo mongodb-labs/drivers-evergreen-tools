@@ -126,8 +126,8 @@ _ensure_uv_publish() {
 # - A KMS VM provisioned before PYTHON-5985, which has no pip at all. Debian
 #   refuses `ensurepip` outside a venv, so a venv is the only route left. Release
 #   branches still pin drivers-tools from before that change, so this is legacy
-#   support rather than a live path; see test_legacy_vm_without_pip in
-#   tests/test-remote-kms-provisioning.sh.
+#   support rather than a live path. The kms-legacy build variant provisions a VM
+#   that way nightly and checks pip really is absent.
 #
 #   DRIVERS-XXXX (placeholder, not yet filed) tracks getting those pins past
 #   PYTHON-5985. Delete this branch when it closes.

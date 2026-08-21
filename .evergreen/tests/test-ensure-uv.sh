@@ -2,10 +2,13 @@
 #
 # Tests for ensure-uv.sh.
 #
-# The first half pins a stub interpreter through DRIVERS_TOOLS_PYTHON and covers
-# what ensure_uv does with the one it picks. Pinning matters: without it the real
-# MongoDB toolchain on an Evergreen host wins over anything in the sandbox. Which interpreter a distro actually offers is a property
-# of the distro, so the second half runs on real images.
+# Each case pins a stub interpreter through DRIVERS_TOOLS_PYTHON and covers what
+# ensure_uv does with the one it picks. Pinning matters: without it the real
+# MongoDB toolchain on an Evergreen host wins over anything in the sandbox.
+#
+# Which interpreter a distro actually offers is a property of the distro, so no
+# case tries to imitate one. The build variants cover that on real hosts, and the
+# kms variants cover the remote VMs.
 set -eu
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
@@ -50,7 +53,8 @@ make_uv() {
 # check
 #
 # Run case $1 in a sandbox. $2 sets the scenario up, $3 asserts on the result.
-# Both run with $sandbox set and ensure_uv already called.
+# Both run with $sandbox set. ensure_uv has already been called and its exit
+# status is in $ensure_uv_status, so a case can assert on a refusal too.
 check() {
   local name="$1" setup="$2" assert="$3"
   local sandbox
@@ -70,7 +74,9 @@ check() {
 
     # shellcheck source=/dev/null
     . "$SCRIPT_DIR/../ensure-uv.sh"
-    ensure_uv
+    ensure_uv_status=0
+    ensure_uv || ensure_uv_status=$?
+    export ensure_uv_status
     eval "$assert"
   ) >"$sandbox/out.log" 2>&1; then
     echo "  ok: $name"
@@ -84,10 +90,6 @@ check() {
 }
 
 echo "Testing ensure_uv install methods ..."
-
-# Which interpreter a given distro offers is a property of the distro, so the
-# container cases below cover that. These pin the interpreter through PATH and
-# cover what ensure_uv does with the one it picked.
 
 check "installs uv with pip --user" '
   make_python "$sandbox/bin/python3" 3.11.9 pip,venv "$sandbox/platform-user-base"
@@ -147,133 +149,20 @@ check "installs uv into \$DRIVERS_TOOLS/.bin" '
   }
 '
 
-# ---------------------------------------------------------------------------
-# Host-shape cases.
-#
-# One container per distro whose interpreters make ensure_uv's job hard, so the
-# fallbacks are checked against what those images ship rather than what we assume.
-#
-# Missing on purpose: RHEL 7 publishes no arm64 image and Amazon Linux 2 has no
-# python newer than 3.7 to stand in for the toolchain. Both are structurally the
-# RHEL 8.2 case below. debian11 and Ubuntu 20.04 live in
-# test-remote-kms-provisioning.sh, which already builds images for them.
+echo "Testing ensure_uv refusal ..."
 
-if [ -n "${ENSURE_UV_SKIP_CONTAINERS:-}" ]; then
-  echo "Skipping ensure_uv host-shape cases (ENSURE_UV_SKIP_CONTAINERS is set)."
-elif ! command -v docker >/dev/null 2>&1 && ! command -v podman >/dev/null 2>&1; then
-  echo "Skipping ensure_uv host-shape cases (no container engine)."
-else
-  ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-  # Matches the engine selection in .evergreen/docker/run-server.sh.
-  if command -v podman >/dev/null 2>&1; then
-    DOCKER="sudo podman --storage-opt ignore_chown_errors=true"
-  else
-    DOCKER=docker
-  fi
-  [ -n "${DOCKER_COMMAND:-}" ] && DOCKER=$DOCKER_COMMAND
-
-  # check_container
-  #
-  # Run $3 inside $2, with a writable copy of the checkout as the working
-  # directory. Each case both establishes the shape it tests and guards that the
-  # image still has it, so an image that changes under us fails loudly.
-  check_container() {
-    local name="$1" base_image="$2" script="$3"
-    local log
-    log=$(mktemp)
-
-    if $DOCKER run --rm -v "$ROOT_DIR:/src:ro" "$base_image" bash -c "
-      set -eu
-      cp -r /src /root/drivers-tools
-      cd /root/drivers-tools
-      $script
-    " >"$log" 2>&1; then
-      echo "  ok: $name ($base_image)"
-    else
-      echo "  FAIL: $name ($base_image)"
-      tail -n 25 "$log" | sed 's/^/    /'
-      failures=$((failures + 1))
-    fi
-    rm -f "$log"
+# The failure PYTHON-6005 reported, and the one thing the cases above cannot
+# show: with no interpreter it can use, ensure_uv has to fail rather than report
+# success and leave callers with a uv that is not there. A real host cannot be
+# asked for this on demand, so it stays a stub.
+check "fails when the only interpreter is too old for uv" '
+  make_python "$sandbox/bin/python3" 3.6.8 pip,venv "$sandbox/platform-user-base"
+  export DRIVERS_TOOLS_PYTHON="$sandbox/bin/python3"
+' '
+  [ "$ensure_uv_status" -ne 0 ] || {
+    echo "expected ensure_uv to fail, got 0 and uv at: $(command -v uv || echo none)"; exit 1
   }
-
-  echo "Testing ensure_uv on real distro images ..."
-
-  # The host PYTHON-6005 is about. RHEL 8.2's platform python3 is 3.6, which uv
-  # has no distribution for, so only the toolchain can succeed here.
-  check_container "rhel 8.2: toolchain rescues a 3.6 platform python3" \
-    registry.access.redhat.com/ubi8/ubi:8.8 '
-    dnf install -y python3 python3.11 >/dev/null 2>&1
-    python3 -c "import sys; sys.exit(0 if sys.version_info < (3, 8) else 1)" || {
-      echo "expected a platform python3 too old for uv; the image changed"; exit 1
-    }
-    mkdir -p /opt/mongodbtoolchain/v4/bin
-    ln -sf /usr/bin/python3.11 /opt/mongodbtoolchain/v4/bin/python3
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-
-  # The same image without the toolchain: the failure PYTHON-6005 reported. Pins
-  # the diagnosis, so the case above cannot pass for some other reason.
-  check_container "rhel 8.2: fails cleanly when only the 3.6 python3 exists" \
-    registry.access.redhat.com/ubi8/ubi:8.8 '
-    dnf install -y python3 >/dev/null 2>&1
-    . .evergreen/ensure-uv.sh
-    if ensure_uv >/dev/null 2>&1; then
-      echo "expected ensure_uv to fail with only a 3.6 python3"; exit 1
-    fi
-  '
-
-  # The mirror of the legacy case: pip present, no working venv. Debian packages
-  # ensurepip separately, so `python3 -m venv` fails there without python3-venv
-  # even though the venv module imports. pip is what covers this shape.
-  check_container "debian 11: installs with pip when the venv module is missing" \
-    debian:11 '
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get -qq update >/dev/null 2>&1
-    apt-get -y -qq install python3 python3-pip >/dev/null 2>&1
-    python3 -m pip --version >/dev/null 2>&1 || {
-      echo "expected a working pip; the image changed"; exit 1
-    }
-    if python3 -m venv --clear /tmp/probe >/dev/null 2>&1; then
-      echo "expected no working venv module; the image changed"; exit 1
-    fi
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-
-  check_container "rhel 9: uses the platform python3" \
-    registry.access.redhat.com/ubi9/ubi:9.3 '
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-
-  check_container "amazon linux 2023: uses the platform python3" \
-    amazonlinux:2023 '
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-
-  # Ubuntu 24.04 enables PEP 668, so only PIP_BREAK_SYSTEM_PACKAGES or the venv
-  # gets through.
-  check_container "ubuntu 24.04: works despite the PEP 668 guard" \
-    ubuntu:24.04 '
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get -qq update >/dev/null 2>&1
-    apt-get -y -qq install python3 python3-venv python3-pip >/dev/null 2>&1
-    [ -f /usr/lib/python3*/EXTERNALLY-MANAGED ] || {
-      echo "expected a PEP 668 externally-managed marker; the image changed"; exit 1
-    }
-    . .evergreen/ensure-uv.sh
-    ensure_uv
-    uv --version
-  '
-fi
+'
 
 if [ "$failures" -ne 0 ]; then
   echo "$failures ensure_uv test(s) failed." >&2

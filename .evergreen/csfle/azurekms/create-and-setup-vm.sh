@@ -45,8 +45,6 @@ for VARNAME in "${VARLIST[@]}"; do
 done
 
 # Set defaults.
-# If this default changes, update the azurekms base_image in
-# .evergreen/tests/test-remote-kms-provisioning.sh to match.
 export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
 
 # Login.
