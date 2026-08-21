@@ -64,6 +64,10 @@ feature directory for a setup wrapper (e.g. `auth_aws/activate-authawsvenv.sh`) 
 running it: some import dependencies (`pymongo`) that only exist in a feature-specific
 virtual environment, so a direct `python3 <path>.py --help` fails on import first.
 
+Not everything under `.evergreen/` is Python: `.evergreen/github_app/` is an npm project
+(its own `package.json`, linted separately), and `.evergreen/mongoproxy/` and
+`.evergreen/perfcomp/` are Go modules (their own `go.mod`, tested with `go test ./...`).
+
 ## Testing
 
 There is no pytest suite. Validation is:
@@ -71,6 +75,10 @@ There is no pytest suite. Validation is:
 - `.evergreen/tests/test-*.sh`: one script per feature area, run as Evergreen tasks.
 - `.github/workflows/tests.yml`: GitHub Actions test workflow.
 - `.github/workflows/markdown.yml`: checks for broken relative links in Markdown files.
+
+Outside that, `.evergreen/mongoproxy/` and `.evergreen/perfcomp/` have their own Go tests
+(`go test ./...`, per each folder's README), and `.github/scripts/test_*.py` has its own
+unittest suite, run by the `bump-version` job in `tests.yml`.
 
 ## Pre-commit and linting
 
@@ -99,7 +107,9 @@ dedicated Evergreen task. Tag it `pr` if it's self-contained enough to run on ev
 
 - Title references a JIRA ticket; see `.github/pull_request_template.md`.
 - Body fills in Summary, Changes in this PR, and Test Plan.
-- Run `make lint` first. CI checks the same things.
+- Run `make lint` first. CI checks the same things in its own `pre-commit` job, but also
+  runs a deployment test matrix, `eslint` on `.evergreen/github_app/`, and the
+  `.github/scripts/test_*.py` unittest suite; `make lint` doesn't cover those.
 
 ## Gotchas
 
