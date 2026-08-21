@@ -64,21 +64,23 @@ style.  The python formatting rules are governed by the `ruff.toml` file.
 To set up `pre-commit` locally, run:
 
 ```bash
-brew install pre-commit
-pre-commit install
+make install
 ```
 
 To run pre-commit manually, run:
 
 ```bash
-pre-commit run --all-files
+make lint
 ```
 
 To run an individual hook like `shellcheck` manually, run:
 
 ```bash
-pre-commit run --all-files shellcheck
+make lint HOOK=shellcheck
 ```
+
+`make install` keeps `pre-commit` inside the repo rather than installing it globally, so reach for
+`make lint` instead of a bare `pre-commit` command.
 
 ## New Features
 

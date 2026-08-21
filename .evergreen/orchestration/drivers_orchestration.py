@@ -562,6 +562,11 @@ def run(opts):
 
     data = get_orchestration_data(opts)
 
+    # run-mongodb.sh passes --mongodb-runner even for --local-atlas, where
+    # probing for runner support would install a Node we never use.
+    if opts.local_atlas:
+        opts.mongodb_runner = False
+
     if opts.mongodb_runner and version in ("3.6", "4.0"):
         LOGGER.warning(
             "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
