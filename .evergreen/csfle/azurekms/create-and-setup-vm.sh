@@ -69,7 +69,8 @@ fi
 # Install dependencies. AZUREKMS_SETUP_SCRIPT lets a caller provision with a
 # different script, which drivers-tools' own tests use to reproduce an older
 # provisioning.
-AZUREKMS_SETUP_SCRIPT="${AZUREKMS_SETUP_SCRIPT:-$DRIVERS_TOOLS/.evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh}"
+DEFAULT_SETUP_SCRIPT="$SCRIPT_DIR/remote-scripts/setup-azure-vm.sh"
+AZUREKMS_SETUP_SCRIPT="${AZUREKMS_SETUP_SCRIPT:-$DEFAULT_SETUP_SCRIPT}"
 AZUREKMS_SRC="$AZUREKMS_SETUP_SCRIPT" \
 AZUREKMS_DST="./" \
     "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/copy-file.sh

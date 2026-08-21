@@ -16,7 +16,8 @@ fi
 
 # GCPKMS_SETUP_SCRIPT lets a caller provision with a different script, which
 # drivers-tools' own tests use to reproduce an older provisioning.
-GCPKMS_SETUP_SCRIPT="${GCPKMS_SETUP_SCRIPT:-$DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh}"
+DEFAULT_SETUP_SCRIPT="$SCRIPT_DIR/remote-scripts/setup-gce-instance.sh"
+GCPKMS_SETUP_SCRIPT="${GCPKMS_SETUP_SCRIPT:-$DEFAULT_SETUP_SCRIPT}"
 GCPKMS_SETUP_SCRIPT_NAME="$(basename "$GCPKMS_SETUP_SCRIPT")"
 
 echo "Copying $GCPKMS_SETUP_SCRIPT_NAME to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
