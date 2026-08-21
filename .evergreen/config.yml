@@ -575,7 +575,9 @@ functions:
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
             # Carried by the exit status, not the output: run-command.sh echoes
             # the command it runs, so a sentinel string would match its own echo.
-            if ! AZUREKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh; then
+            # </dev/null keeps a remote command from reading the rest of this
+            # script; azurekms uses ssh -n already, gcpkms needs the redirect.
+            if ! AZUREKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh </dev/null; then
               echo "ERROR: the VM has pip, so this run did not exercise the venv fallback." >&2
               echo "Has remote-scripts/legacy/setup-azure-vm.sh drifted, or the base image changed?" >&2
               exit 1
@@ -597,7 +599,11 @@ functions:
           if [ "${kms_legacy_provisioning|}" = "true" ]; then
             # Carried by the exit status, not the output: run-command.sh echoes
             # the command it runs, so a sentinel string would match its own echo.
-            if ! GCPKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh; then
+            #
+            # </dev/null because gcloud compute ssh reads stdin, which here is the
+            # rest of this script. Without it the ping below is swallowed and the
+            # task passes having tested nothing.
+            if ! GCPKMS_CMD='if python3 -m pip --version; then exit 17; fi' ./run-command.sh </dev/null; then
               echo "ERROR: the instance has pip, so this run did not exercise the venv fallback." >&2
               echo "Has remote-scripts/legacy/setup-gce-instance.sh drifted, or the base image changed?" >&2
               exit 1
