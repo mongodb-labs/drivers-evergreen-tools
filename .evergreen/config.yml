@@ -1183,7 +1183,9 @@ task_groups:
             # VM is this checkout
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export AZUREKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
             if [ "${kms_legacy_provisioning|}" = "true" ]; then
               export AZUREKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/remote-scripts/legacy/setup-azure-vm.sh"
@@ -1220,7 +1222,9 @@ task_groups:
             # instance is this checkout
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
             if [ "${kms_legacy_provisioning|}" = "true" ]; then
               export GCPKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
@@ -1256,7 +1260,9 @@ task_groups:
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
@@ -1289,7 +1295,9 @@ task_groups:
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
