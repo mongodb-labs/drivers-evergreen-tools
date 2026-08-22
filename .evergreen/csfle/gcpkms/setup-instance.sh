@@ -14,21 +14,27 @@ if [ -z "$GCPKMS_GCLOUD" ] || [ -z "$GCPKMS_PROJECT" ] || [ -z "$GCPKMS_ZONE" ] 
     exit 1
 fi
 
-echo "Copying setup-gce-instance.sh to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+# GCPKMS_SETUP_SCRIPT lets a caller provision with a different script, which
+# drivers-tools' own tests use to reproduce an older provisioning.
+DEFAULT_SETUP_SCRIPT="$SCRIPT_DIR/remote-scripts/setup-gce-instance.sh"
+GCPKMS_SETUP_SCRIPT="${GCPKMS_SETUP_SCRIPT:-$DEFAULT_SETUP_SCRIPT}"
+GCPKMS_SETUP_SCRIPT_NAME="$(basename "$GCPKMS_SETUP_SCRIPT")"
+
+echo "Copying $GCPKMS_SETUP_SCRIPT_NAME to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
-$GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh "$GCPKMS_INSTANCENAME":~ \
+$GCPKMS_GCLOUD compute scp "$GCPKMS_SETUP_SCRIPT" "$GCPKMS_INSTANCENAME":~ \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT \
     --scp-flag="-p"
-echo "Copying setup-gce-instance.sh to GCE instance ($GCPKMS_INSTANCENAME) ... end"
+echo "Copying $GCPKMS_SETUP_SCRIPT_NAME to GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
-echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+echo "Running $GCPKMS_SETUP_SCRIPT_NAME on GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
     --zone $GCPKMS_ZONE \
     --project $GCPKMS_PROJECT \
-    --command "./setup-gce-instance.sh"
+    --command "./$GCPKMS_SETUP_SCRIPT_NAME"
 echo "Exit code of test-script is: $?"
-echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"
+echo "Running $GCPKMS_SETUP_SCRIPT_NAME on GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
 echo "Copying drivers-evergreen-tools to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 # Ship this checkout so the instance runs the same revision that provisioned it.

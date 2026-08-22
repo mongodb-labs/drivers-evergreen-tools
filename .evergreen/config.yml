@@ -554,12 +554,23 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
-  "run remote kms provisioning test":
+  "run azurekms server check":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
-        args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
+        include_expansions_in_env: [kms_legacy_provisioning]
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/server-check.sh
+
+  "run gcpkms server check":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [kms_legacy_provisioning]
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/server-check.sh
 
   "run drivers tools archive test":
     - command: subprocess.exec
@@ -1043,10 +1054,17 @@ tasks:
       commands:
         - func: "run csfle test"
 
-    - name: "test-remote-kms-provisioning"
-      tags: ["docker", "pr"]
+    # No "pr" tag: these provision real cloud VMs, so they run nightly and on
+    # request rather than on every pull request.
+    - name: "test-azurekms"
+      tags: ["kms"]
       commands:
-        - func: "run remote kms provisioning test"
+        - func: "run azurekms server check"
+
+    - name: "test-gcpkms"
+      tags: ["kms"]
+      commands:
+        - func: "run gcpkms server check"
 
     - name: "test-drivers-tools-archive"
       tags: ["pr"]
@@ -1140,6 +1158,91 @@ task_groups:
     tasks:
       - ".atlas"
 
+  # kms_legacy_provisioning switches the remote setup script to a frozen copy of
+  # the provisioning as it stood before PYTHON-5985, which installed python3-venv
+  # and no pip. That is the only case that still needs the virtual environment
+  # fallback in ensure_uv, and no current image reproduces it.
+  #
+  # DRIVERS-XXXX (placeholder, not yet filed) tracks getting driver pins past
+  # PYTHON-5985. Delete the kms-legacy variant with the fallback when it closes.
+  - name: testazurekms_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
+    setup_group:
+      - func: "fetch and prepare resources"
+      - func: "assume role"
+      - command: shell.exec
+        params:
+          shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          script: |
+            set -o errexit
+            # ensure HEAD points to current commit, so the archive shipped to the
+            # VM is this checkout
+            cd ${DRIVERS_TOOLS}
+            git add .
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
+            export AZUREKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
+            if [ "${kms_legacy_provisioning|}" = "true" ]; then
+              export AZUREKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/remote-scripts/legacy/setup-azure-vm.sh"
+            fi
+            ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-azurekms
+
+  - name: testgcpkms_task_group
+    setup_group_can_fail_task: true
+    setup_group_timeout_secs: 1800 # 30 minutes
+    teardown_task_can_fail_task: true
+    teardown_group_timeout_secs: 180 # 3 minutes (maximum allowed)
+    setup_group:
+      - func: "fetch and prepare resources"
+      - func: "assume role"
+      - command: shell.exec
+        params:
+          shell: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          script: |
+            set -o errexit
+            # ensure HEAD points to current commit, so the archive shipped to the
+            # instance is this checkout
+            cd ${DRIVERS_TOOLS}
+            git add .
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
+            export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
+            if [ "${kms_legacy_provisioning|}" = "true" ]; then
+              export GCPKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
+            fi
+            ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup.sh
+    teardown_group:
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/teardown.sh
+      - func: "teardown assets"
+      - func: "upload logs"
+      - func: "upload test results"
+      - func: "cleanup"
+    tasks:
+      - test-gcpkms
+
   - name: testazureoidc_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800
@@ -1157,7 +1260,9 @@ task_groups:
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
@@ -1190,7 +1295,9 @@ task_groups:
             # ensure HEAD points to current commit
             cd ${DRIVERS_TOOLS}
             git add .
-            git commit -m "add files"
+            # Only when something is staged: a build with nothing to commit would
+            # otherwise fail here under errexit.
+            git diff --cached --quiet || git commit -m "add files"
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
@@ -1344,7 +1451,7 @@ axes:
 
       - id: ubuntu-22.04
         display_name: "Ubuntu 22.04"
-        run_on: ubuntu2004-test
+        run_on: ubuntu2204-small
 
       - id: amazon-2023-x64
         display_name: "Amazon Linux 2023 x64"
@@ -1465,6 +1572,43 @@ buildvariants:
     - ".docker"
     - ".local-atlas"
     - ".github-app"
+
+# RHEL 8.2 arm64 is the host PYTHON-6005 was filed for: its system python3 is
+# 3.6, which uv publishes no distribution for, and that Evergreen image does not
+# ship uv. On a cold host ensure_uv therefore has to reach the toolchain here.
+# It is not a guarantee: a run that finds a uv an earlier task left in the home
+# directory returns before it selects an interpreter at all.
+- name: tests-rhel82-arm64
+  display_name: "RHEL 8.2 ARM64"
+  run_on:
+    - rhel82-arm64-small
+  tasks:
+    - name: "test-latest-standalone"
+
+# These provision real cloud VMs, so batchtime keeps them to one run a day and
+# skips them when nothing has landed.
+#
+# ubuntu2204-small because the Azure CLI is only preinstalled on the distros
+# listed in csfle/azurekms/README.md; tests-oidc picks it for the same reason.
+- name: kms
+  display_name: "KMS VMs"
+  run_on:
+    - ubuntu2204-small
+  batchtime: 1440
+  tasks:
+    - name: testazurekms_task_group
+    - name: testgcpkms_task_group
+
+- name: kms-legacy
+  display_name: "KMS VMs (provisioned before PYTHON-5985)"
+  run_on:
+    - ubuntu2204-small
+  batchtime: 1440
+  expansions:
+    kms_legacy_provisioning: "true"
+  tasks:
+    - name: testazurekms_task_group
+    - name: testgcpkms_task_group
 
 - name: tests-rhel
   display_name: RHEL Tests
