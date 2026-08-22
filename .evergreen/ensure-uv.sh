@@ -17,25 +17,13 @@ fi
 
 # _ensure_uv_scope_paths (internal)
 #
-# Keeps uv's shared state out of its default home-directory locations
-# (~/.cache/uv, ~/.local/share/uv/{tools,python}), which would otherwise be
-# contended when Evergreen hosts are reused or share a home directory.
+# Move uv's cache and tool directories out of the home directory, which Evergreen
+# hosts contend over when they share one. Under CI that is $TMPDIR, recycled with
+# the task; elsewhere only UV_TOOL_DIR moves, since `uv tool install --force`
+# would otherwise overwrite a developer's own tools.
 #
-# In CI everything goes under the task's temp directory. Evergreen points
-# TMPDIR at a per-task directory outside both $DRIVERS_TOOLS and
-# $PROJECT_DIRECTORY, so uv's caches are recycled with the task and never end
-# up in the uploaded failure artifacts, which are packed from those two trees.
-#
-# Outside CI only UV_TOOL_DIR is redirected, since `uv tool install --force`
-# would otherwise overwrite a developer's globally installed tools (see
-# install-cli.sh, which pins its own uv that way). The cache is deliberately
-# left shared so local runs do not re-download everything.
-#
-# A no-op if there is nowhere suitable to point at: this is best-effort
-# hygiene, not a correctness requirement, and ensure_uv() is reachable from
-# child shells that do not inherit DRIVERS_TOOLS (handle-paths.sh assigns it
-# without exporting). Called automatically by ensure_uv() on success; not
-# meant to be called directly.
+# Best-effort, and a no-op when there is nowhere to point at. Not meant to be
+# called directly.
 _ensure_uv_scope_paths() {
   if [ -n "${CI:-}" ]; then
     declare _tmp="${TMPDIR:-${TEMP:-${TMP:-}}}"
@@ -86,13 +74,13 @@ _ensure_uv_add_user_bin() {
   _ensure_uv_add_path "$base/Scripts"
 }
 
-# _ensure_uv_publish (internal)
+# _ensure_uv_link_into_bin (internal)
 #
 # Link the uv now on PATH into $DRIVERS_TOOLS/.bin, where ensure-binary.sh keeps
 # tool binaries and handle-paths.sh looks, so a later script in a fresh shell
 # skips the install. A no-op when DRIVERS_TOOLS is unset, as it is in child
 # shells that do not inherit it. Not meant to be called directly.
-_ensure_uv_publish() {
+_ensure_uv_link_into_bin() {
   [ -n "${DRIVERS_TOOLS:-}" ] || return 0
 
   declare src
@@ -177,14 +165,14 @@ ensure_uv() {
   _ensure_uv_add_path "$venv_dir/Scripts"
 
   if uv --version >/dev/null 2>&1; then
-    _ensure_uv_publish
+    _ensure_uv_link_into_bin
     _ensure_uv_scope_paths
     return 0
   fi
 
   # Only now is an interpreter worth finding. $DRIVERS_TOOLS_PYTHON wins, the same
   # contract find-python3.sh offers, then the toolchain, which rescues hosts whose
-  # python3 is missing (RHEL 7) or too old for uv (RHEL 8.2 ships 3.6). Absolute,
+  # python3 is missing (RHEL 7) or too old for uv (RHEL 8.2 arm ships 3.6). Absolute,
   # so a venv arriving on PATH later cannot re-point a bare name.
   declare py="" candidate resolved
   for candidate in \
@@ -204,7 +192,7 @@ ensure_uv() {
   [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
 
   if uv --version >/dev/null 2>&1; then
-    _ensure_uv_publish
+    _ensure_uv_link_into_bin
     _ensure_uv_scope_paths
     return 0
   fi
@@ -217,7 +205,7 @@ ensure_uv() {
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
   if uv --version >/dev/null 2>&1; then
-    _ensure_uv_publish
+    _ensure_uv_link_into_bin
     _ensure_uv_scope_paths
     return 0
   fi

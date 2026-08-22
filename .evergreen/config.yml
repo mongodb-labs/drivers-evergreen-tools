@@ -1160,7 +1160,7 @@ task_groups:
 
   # kms_legacy_provisioning switches the remote setup script to a frozen copy of
   # the provisioning as it stood before PYTHON-5985, which installed python3-venv
-  # and no pip. That is the one shape that still needs the virtual environment
+  # and no pip. That is the only case that still needs the virtual environment
   # fallback in ensure_uv, and no current image reproduces it.
   #
   # DRIVERS-XXXX (placeholder, not yet filed) tracks getting driver pins past

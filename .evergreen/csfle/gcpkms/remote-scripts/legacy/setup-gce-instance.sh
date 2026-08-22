@@ -6,8 +6,8 @@
 # python3-pip, taken verbatim from 4c63815^. Release branches still pin
 # drivers-tools revisions from before that change, and their VM-side
 # start-mongodb.sh clones master, so they provision like this and then run
-# current ensure_uv. It installs python3-venv and no pip, which is the one
-# shape that still needs the virtual environment fallback in ensure_uv.
+# current ensure_uv. It installs python3-venv and no pip, the only case that
+# still needs the virtual environment fallback in ensure_uv.
 #
 # Updating this in step with the real script would silently end that
 # coverage. It goes away with the fallback, once DRIVERS-XXXX confirms no
