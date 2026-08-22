@@ -145,7 +145,9 @@ _ensure_uv_install() {
 # says why if it cannot. Safe to call repeatedly.
 ensure_uv() {
   # pyenv shims enforce whichever .python-version they find above the working
-  # directory. Defer to its global version rather than one pyenv may not have.
+  # directory: on the RHEL 8 zseries and power8 hosts, a .python-version file
+  # naming a version pyenv lacks makes even `uv --version` fail. Defer to its
+  # global version instead.
   if command -v pyenv >/dev/null 2>&1; then
     declare pyenv_global
     pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
