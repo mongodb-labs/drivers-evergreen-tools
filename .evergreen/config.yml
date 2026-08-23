@@ -561,7 +561,7 @@ functions:
         binary: bash
         include_expansions_in_env: [kms_legacy_provisioning]
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/server-check.sh
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/test/server-check.sh
 
   "run gcpkms server check":
     - command: subprocess.exec
@@ -570,7 +570,7 @@ functions:
         binary: bash
         include_expansions_in_env: [kms_legacy_provisioning]
         args:
-          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/server-check.sh
+          - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/test/server-check.sh
 
   "run drivers tools archive test":
     - command: subprocess.exec
@@ -1178,7 +1178,7 @@ task_groups:
           binary: bash
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, kms_legacy_provisioning]
           args:
-            - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/server-setup.sh
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/test/server-setup.sh
     teardown_group:
       - command: subprocess.exec
         params:
@@ -1205,7 +1205,7 @@ task_groups:
           binary: bash
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, kms_legacy_provisioning]
           args:
-            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/server-setup.sh
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/test/server-setup.sh
     teardown_group:
       - command: subprocess.exec
         params:

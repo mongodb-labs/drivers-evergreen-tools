@@ -10,8 +10,8 @@ set -o pipefail
 set -o nounset
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
-. "$SCRIPT_DIR/../../handle-paths.sh"
-pushd "$SCRIPT_DIR" > /dev/null
+. "$SCRIPT_DIR/../../../handle-paths.sh"
+pushd "$SCRIPT_DIR/.." > /dev/null
 
 # setup.sh wrote the instance name and the gcloud path here.
 # shellcheck source=/dev/null
