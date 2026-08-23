@@ -1173,24 +1173,12 @@ task_groups:
     setup_group:
       - func: "fetch and prepare resources"
       - func: "assume role"
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: bash
-          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          script: |
-            set -o errexit
-            # ensure HEAD points to current commit, so the archive shipped to the
-            # VM is this checkout
-            cd ${DRIVERS_TOOLS}
-            git add .
-            # Only when something is staged: a build with nothing to commit would
-            # otherwise fail here under errexit.
-            git diff --cached --quiet || git commit -m "add files"
-            export AZUREKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
-            if [ "${kms_legacy_provisioning|}" = "true" ]; then
-              export AZUREKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/remote-scripts/legacy/setup-azure-vm.sh"
-            fi
-            ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/setup.sh
+          binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, kms_legacy_provisioning]
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/azurekms/server-setup.sh
     teardown_group:
       - command: subprocess.exec
         params:
@@ -1212,24 +1200,12 @@ task_groups:
     setup_group:
       - func: "fetch and prepare resources"
       - func: "assume role"
-      - command: shell.exec
+      - command: subprocess.exec
         params:
-          shell: bash
-          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          script: |
-            set -o errexit
-            # ensure HEAD points to current commit, so the archive shipped to the
-            # instance is this checkout
-            cd ${DRIVERS_TOOLS}
-            git add .
-            # Only when something is staged: a build with nothing to commit would
-            # otherwise fail here under errexit.
-            git diff --cached --quiet || git commit -m "add files"
-            export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
-            if [ "${kms_legacy_provisioning|}" = "true" ]; then
-              export GCPKMS_SETUP_SCRIPT="${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/remote-scripts/legacy/setup-gce-instance.sh"
-            fi
-            ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/setup.sh
+          binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, kms_legacy_provisioning]
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/csfle/gcpkms/server-setup.sh
     teardown_group:
       - command: subprocess.exec
         params:
@@ -1257,12 +1233,7 @@ task_groups:
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
-            # ensure HEAD points to current commit
-            cd ${DRIVERS_TOOLS}
-            git add .
-            # Only when something is staged: a build with nothing to commit would
-            # otherwise fail here under errexit.
-            git diff --cached --quiet || git commit -m "add files"
+            ${DRIVERS_TOOLS}/.evergreen/commit-checkout.sh
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
@@ -1292,12 +1263,7 @@ task_groups:
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
-            # ensure HEAD points to current commit
-            cd ${DRIVERS_TOOLS}
-            git add .
-            # Only when something is staged: a build with nothing to commit would
-            # otherwise fail here under errexit.
-            git diff --cached --quiet || git commit -m "add files"
+            ${DRIVERS_TOOLS}/.evergreen/commit-checkout.sh
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
