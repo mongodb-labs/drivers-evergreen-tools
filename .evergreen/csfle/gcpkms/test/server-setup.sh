@@ -10,7 +10,7 @@ set -o nounset
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 . "$SCRIPT_DIR/../../../handle-paths.sh"
 
-"$SCRIPT_DIR/../../../commit-checkout.sh"
+"$SCRIPT_DIR/../../../tests/commit-checkout.sh"
 
 export GCPKMS_VMNAME_PREFIX="DRIVERS_TOOLS"
 

@@ -10,7 +10,7 @@ set -o pipefail
 set -o nounset
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
-. "$SCRIPT_DIR/handle-paths.sh"
+. "$SCRIPT_DIR/../handle-paths.sh"
 
 cd "$DRIVERS_TOOLS"
 git add .

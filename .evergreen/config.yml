@@ -1233,7 +1233,7 @@ task_groups:
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
-            ${DRIVERS_TOOLS}/.evergreen/commit-checkout.sh
+            ${DRIVERS_TOOLS}/.evergreen/tests/commit-checkout.sh
             export AZUREOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/azure/setup.sh
     teardown_group:
@@ -1263,7 +1263,7 @@ task_groups:
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           script: |
             set -o errexit
-            ${DRIVERS_TOOLS}/.evergreen/commit-checkout.sh
+            ${DRIVERS_TOOLS}/.evergreen/tests/commit-checkout.sh
             export GCPOIDC_VMNAME_PREFIX="DRIVERS_TOOLS"
             ${DRIVERS_TOOLS}/.evergreen/auth_oidc/gcp/setup.sh
     teardown_group:
