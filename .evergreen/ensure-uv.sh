@@ -17,13 +17,12 @@ fi
 
 # ensure_uv
 #
-# Put a working uv on PATH, installing one if there is none. Returns non-zero and
-# says why if it cannot. Safe to call repeatedly.
+# Find or install a working uv on PATH. Returns non-zero and prints a debug log on failure. It is safe to call repeatedly.
 ensure_uv() {
   # pyenv shims enforce whichever .python-version they find above the working
   # directory: on the RHEL 8 zseries and power8 hosts, a .python-version file
-  # naming a version pyenv lacks makes even `uv --version` fail. Defer to its
-  # global version instead.
+  # naming a version that pyenv lacks makes even `uv --version` fail.
+  # Defer to its global version instead.
   if command -v pyenv >/dev/null 2>&1; then
     declare pyenv_global
     pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
@@ -34,9 +33,9 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  # The cheap half of the search, needing no interpreter to name: where uv's own
-  # installer or an earlier call put it. Windows uses a Scripts directory
-  # instead of bin.
+  # Look for a usable uv in known locations.
+  # This is the cheap part of the search, needing no interpreter.
+  # Add known possible paths to PATH.
   [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
   [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
   _ensure_uv_add_path "$venv_dir/bin"
@@ -48,10 +47,9 @@ ensure_uv() {
     return 0
   fi
 
-  # Only now is an interpreter worth finding. $DRIVERS_TOOLS_PYTHON wins, the same
-  # contract find-python3.sh offers, then the toolchain, which rescues hosts whose
-  # python3 is missing (RHEL 7) or too old for uv (RHEL 8.2 arm ships 3.6). Absolute,
-  # so a venv arriving on PATH later cannot re-point a bare name.
+  # Now we have to find a suitable interpreter.
+  # Check for $DRIVERS_TOOLS_PYTHON, then the toolchain, falling back to system python3.
+  # Use absolute paths so a venv later on PATH cannot re-point the name.
   declare py="" candidate resolved
   for candidate in \
     "${DRIVERS_TOOLS_PYTHON:-}" \
@@ -65,8 +63,8 @@ ensure_uv() {
     break
   done
 
-  # Naming pip's --user directory takes the interpreter, and on macOS and Windows
-  # it is not the ~/.local/bin added above.
+  # Find the pip --user directory, which is system-dependent,
+  # and see if uv is already there.
   [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
 
   if uv --version >/dev/null 2>&1; then
@@ -75,11 +73,12 @@ ensure_uv() {
     return 0
   fi
 
-  # Collected rather than printed: an attempt is expected to fail on some hosts,
-  # and only a total failure is worth reporting. Discarded if $TMPDIR is read-only.
+  # We collect logs so we can display just the tail later for debugging.
+  # The log is discarded if $TMPDIR is read-only.
   declare log="${venv_dir}-install.log"
   : >"$log" 2>/dev/null || log=/dev/null
 
+  # Attempt to install uv using the interpreter.
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
   if uv --version >/dev/null 2>&1; then
@@ -88,14 +87,13 @@ ensure_uv() {
     return 0
   fi
 
-  # Tail, because pip's connection retries can run to dozens of lines and the
-  # message that explains the failure is the last one.
   if [ "$log" != /dev/null ] && [ -s "$log" ]; then
     echo "Last output from the failed install attempts (full log: $log):" >&2
     tail -n 20 "$log" | sed 's/^/  /' >&2
     echo >&2
   fi
 
+  # Fall back to a helpful message for the user.
   cat <<'EOF' >&2
 ERROR: could not find or install `uv`.
 
@@ -221,7 +219,8 @@ _ensure_uv_install() {
   # that far back; the kms-legacy variant is what still covers it.
   echo "uv not found and $py has no pip; building a virtual environment at $venv_dir..." >&2
 
-  # --clear replaces a previously broken venv; a working one was found already.
+  # --clear replaces a previously broken venv; a working one would have been
+  # found already.
   if "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1; then
     # Windows venvs put the interpreter under Scripts, everything else in bin.
     declare venv_py="$venv_dir/bin/python"
