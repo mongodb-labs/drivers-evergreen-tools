@@ -15,6 +15,100 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
+# ensure_uv
+#
+# Put a working uv on PATH, installing one if there is none. Returns non-zero and
+# says why if it cannot. Safe to call repeatedly.
+ensure_uv() {
+  # pyenv shims enforce whichever .python-version they find above the working
+  # directory: on the RHEL 8 zseries and power8 hosts, a .python-version file
+  # naming a version pyenv lacks makes even `uv --version` fail. Defer to its
+  # global version instead.
+  if command -v pyenv >/dev/null 2>&1; then
+    declare pyenv_global
+    pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
+    [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
+  fi
+
+  # Stable rather than mktemp'd, so a later call in a fresh shell reuses the venv.
+  declare venv_dir="${TMPDIR:-/tmp}"
+  venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
+
+  # The cheap half of the search, needing no interpreter to name: where uv's own
+  # installer or an earlier call put it. Windows uses a Scripts directory
+  # instead of bin.
+  [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
+  [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
+  _ensure_uv_add_path "$venv_dir/bin"
+  _ensure_uv_add_path "$venv_dir/Scripts"
+
+  if uv --version >/dev/null 2>&1; then
+    _ensure_uv_link_into_bin
+    _ensure_uv_scope_paths
+    return 0
+  fi
+
+  # Only now is an interpreter worth finding. $DRIVERS_TOOLS_PYTHON wins, the same
+  # contract find-python3.sh offers, then the toolchain, which rescues hosts whose
+  # python3 is missing (RHEL 7) or too old for uv (RHEL 8.2 arm ships 3.6). Absolute,
+  # so a venv arriving on PATH later cannot re-point a bare name.
+  declare py="" candidate resolved
+  for candidate in \
+    "${DRIVERS_TOOLS_PYTHON:-}" \
+    $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) \
+    python3 \
+    python; do
+    [ -n "$candidate" ] || continue
+    resolved="$(command -v "$candidate" 2>/dev/null)" || continue
+    [ -n "$resolved" ] || continue
+    py="$resolved"
+    break
+  done
+
+  # Naming pip's --user directory takes the interpreter, and on macOS and Windows
+  # it is not the ~/.local/bin added above.
+  [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
+
+  if uv --version >/dev/null 2>&1; then
+    _ensure_uv_link_into_bin
+    _ensure_uv_scope_paths
+    return 0
+  fi
+
+  # Collected rather than printed: an attempt is expected to fail on some hosts,
+  # and only a total failure is worth reporting. Discarded if $TMPDIR is read-only.
+  declare log="${venv_dir}-install.log"
+  : >"$log" 2>/dev/null || log=/dev/null
+
+  [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
+
+  if uv --version >/dev/null 2>&1; then
+    _ensure_uv_link_into_bin
+    _ensure_uv_scope_paths
+    return 0
+  fi
+
+  # Tail, because pip's connection retries can run to dozens of lines and the
+  # message that explains the failure is the last one.
+  if [ "$log" != /dev/null ] && [ -s "$log" ]; then
+    echo "Last output from the failed install attempts (full log: $log):" >&2
+    tail -n 20 "$log" | sed 's/^/  /' >&2
+    echo >&2
+  fi
+
+  cat <<'EOF' >&2
+ERROR: could not find or install `uv`.
+
+Install it manually, then re-run:
+  https://docs.astral.sh/uv/getting-started/installation/
+
+If you believe uv/pip should already be available in this environment,
+please file a ticket in the DEVPROD Jira project:
+  https://jira.mongodb.org/projects/DEVPROD
+EOF
+  return 1
+}
+
 # _ensure_uv_scope_paths (internal)
 #
 # Move uv's cache and tool directories out of the home directory, which Evergreen
@@ -137,98 +231,4 @@ _ensure_uv_install() {
     _ensure_uv_add_path "$venv_dir/bin"
     _ensure_uv_add_path "$venv_dir/Scripts"
   fi
-}
-
-# ensure_uv
-#
-# Put a working uv on PATH, installing one if there is none. Returns non-zero and
-# says why if it cannot. Safe to call repeatedly.
-ensure_uv() {
-  # pyenv shims enforce whichever .python-version they find above the working
-  # directory: on the RHEL 8 zseries and power8 hosts, a .python-version file
-  # naming a version pyenv lacks makes even `uv --version` fail. Defer to its
-  # global version instead.
-  if command -v pyenv >/dev/null 2>&1; then
-    declare pyenv_global
-    pyenv_global="$(pyenv global 2>/dev/null | head -n1)" || true
-    [ -n "$pyenv_global" ] && export PYENV_VERSION="$pyenv_global"
-  fi
-
-  # Stable rather than mktemp'd, so a later call in a fresh shell reuses the venv.
-  declare venv_dir="${TMPDIR:-/tmp}"
-  venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
-
-  # The cheap half of the search, needing no interpreter to name: where uv's own
-  # installer or an earlier call put it. Windows uses a Scripts directory
-  # instead of bin.
-  [ -n "${HOME:-}" ] && _ensure_uv_add_path "$HOME/.local/bin"
-  [ -n "${DRIVERS_TOOLS:-}" ] && _ensure_uv_add_path "$DRIVERS_TOOLS/.bin"
-  _ensure_uv_add_path "$venv_dir/bin"
-  _ensure_uv_add_path "$venv_dir/Scripts"
-
-  if uv --version >/dev/null 2>&1; then
-    _ensure_uv_link_into_bin
-    _ensure_uv_scope_paths
-    return 0
-  fi
-
-  # Only now is an interpreter worth finding. $DRIVERS_TOOLS_PYTHON wins, the same
-  # contract find-python3.sh offers, then the toolchain, which rescues hosts whose
-  # python3 is missing (RHEL 7) or too old for uv (RHEL 8.2 arm ships 3.6). Absolute,
-  # so a venv arriving on PATH later cannot re-point a bare name.
-  declare py="" candidate resolved
-  for candidate in \
-    "${DRIVERS_TOOLS_PYTHON:-}" \
-    $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) \
-    python3 \
-    python; do
-    [ -n "$candidate" ] || continue
-    resolved="$(command -v "$candidate" 2>/dev/null)" || continue
-    [ -n "$resolved" ] || continue
-    py="$resolved"
-    break
-  done
-
-  # Naming pip's --user directory takes the interpreter, and on macOS and Windows
-  # it is not the ~/.local/bin added above.
-  [ -n "$py" ] && _ensure_uv_add_user_bin "$py"
-
-  if uv --version >/dev/null 2>&1; then
-    _ensure_uv_link_into_bin
-    _ensure_uv_scope_paths
-    return 0
-  fi
-
-  # Collected rather than printed: an attempt is expected to fail on some hosts,
-  # and only a total failure is worth reporting. Discarded if $TMPDIR is read-only.
-  declare log="${venv_dir}-install.log"
-  : >"$log" 2>/dev/null || log=/dev/null
-
-  [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
-
-  if uv --version >/dev/null 2>&1; then
-    _ensure_uv_link_into_bin
-    _ensure_uv_scope_paths
-    return 0
-  fi
-
-  # Tail, because pip's connection retries can run to dozens of lines and the
-  # message that explains the failure is the last one.
-  if [ "$log" != /dev/null ] && [ -s "$log" ]; then
-    echo "Last output from the failed install attempts (full log: $log):" >&2
-    tail -n 20 "$log" | sed 's/^/  /' >&2
-    echo >&2
-  fi
-
-  cat <<'EOF' >&2
-ERROR: could not find or install `uv`.
-
-Install it manually, then re-run:
-  https://docs.astral.sh/uv/getting-started/installation/
-
-If you believe uv/pip should already be available in this environment,
-please file a ticket in the DEVPROD Jira project:
-  https://jira.mongodb.org/projects/DEVPROD
-EOF
-  return 1
 }
