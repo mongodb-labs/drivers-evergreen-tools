@@ -10,7 +10,7 @@
 # still needs the virtual environment fallback in ensure_uv.
 #
 # Updating this in step with the real script would silently end that
-# coverage. It goes away with the fallback, once DRIVERS-XXXX confirms no
+# coverage. It goes away with the fallback, once DRIVERS-3624 confirms no
 # branch that runs these tests pins that far back.
 set -o errexit
 set -o pipefail

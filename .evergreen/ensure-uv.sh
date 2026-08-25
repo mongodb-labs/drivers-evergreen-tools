@@ -215,8 +215,8 @@ _ensure_uv_install() {
 
   # No pip at all, which now means only a KMS VM provisioned before PYTHON-5985.
   # Debian refuses ensurepip outside a venv, so a venv is the only route left.
-  # DRIVERS-XXXX (placeholder, not yet filed) retires this once no branch pins
-  # that far back; the kms-legacy variant is what still covers it.
+  # DRIVERS-3624 retires this once no branch pins that far back; the kms-legacy
+  # variant is what still covers it.
   echo "uv not found and $py has no pip; building a virtual environment at $venv_dir..." >&2
 
   # --clear replaces a previously broken venv; a working one would have been

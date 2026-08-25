@@ -1163,8 +1163,8 @@ task_groups:
   # and no pip. That is the only case that still needs the virtual environment
   # fallback in ensure_uv, and no current image reproduces it.
   #
-  # DRIVERS-XXXX (placeholder, not yet filed) tracks getting driver pins past
-  # PYTHON-5985. Delete the kms-legacy variant with the fallback when it closes.
+  # DRIVERS-3624 tracks getting driver pins past PYTHON-5985. Delete the
+  # kms-legacy variant with the fallback when it closes.
   - name: testazurekms_task_group
     setup_group_can_fail_task: true
     setup_group_timeout_secs: 1800 # 30 minutes
