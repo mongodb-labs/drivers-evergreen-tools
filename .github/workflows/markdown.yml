@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v7"
+        with:
+          persist-credentials: false
 
       - name: "Check Markdown"
         uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"

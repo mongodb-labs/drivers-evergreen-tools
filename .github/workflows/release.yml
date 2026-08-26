@@ -1,0 +1,106 @@
+name: "Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: "Which part of the version to bump"
+        required: true
+        type: choice
+        options:
+          - "patch"
+          - "minor"
+          - "major"
+      dry_run:
+        description: "Report the next version and preview the notes without creating anything"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash -eu {0}
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 20
+    permissions:
+      # id-token is for the AWS OIDC login inside the setup action. Every
+      # privileged GitHub call uses the App token minted by secure-checkout.
+      id-token: write
+      contents: read
+
+    steps:
+      - name: "Check the ref"
+        if: ${{ !inputs.dry_run }}
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            echo "A release must run on refs/heads/$DEFAULT_BRANCH, got $GITHUB_REF"
+            exit 1
+          fi
+
+      - name: "Checkout"
+        uses: mongodb-labs/drivers-github-tools/secure-checkout@v3
+        with:
+          app_id: ${{ vars.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          fetch-depth: 0
+
+      - name: "Set up the signing environment"
+        uses: mongodb-labs/drivers-github-tools/setup@v3
+        with:
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_region_name: ${{ vars.AWS_REGION_NAME }}
+          aws_secret_id: ${{ secrets.AWS_SECRET_ID }}
+
+      - name: "Compute the next version"
+        id: bump
+        env:
+          LEVEL: ${{ inputs.level }}
+        run: python3 .github/scripts/bump_version.py "$LEVEL"
+
+      - name: "Preview the release notes"
+        if: ${{ inputs.dry_run }}
+        env:
+          GH_REPO: ${{ github.repository }}
+          CURRENT_VERSION: ${{ steps.bump.outputs.current-version }}
+          NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
+        run: |
+          {
+            echo "## Dry run: $CURRENT_VERSION to $NEXT_VERSION"
+            echo
+            gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f tag_name="$NEXT_VERSION" \
+              -f previous_tag_name="$CURRENT_VERSION" \
+              -f target_commitish="$GITHUB_SHA" \
+              --jq ".body"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Create the signed tag"
+        uses: mongodb-labs/drivers-github-tools/tag-version@v3
+        with:
+          version: ${{ steps.bump.outputs.next-version }}
+          push_tag: ${{ !inputs.dry_run }}
+
+      - name: "Create the release"
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_REPO: ${{ github.repository }}
+          CURRENT_VERSION: ${{ steps.bump.outputs.current-version }}
+          NEXT_VERSION: ${{ steps.bump.outputs.next-version }}
+        run: |
+          gh release create "$NEXT_VERSION" \
+            --verify-tag \
+            --title "$NEXT_VERSION" \
+            --generate-notes \
+            --notes-start-tag "$CURRENT_VERSION"
+          echo "Created release $NEXT_VERSION" >> "$GITHUB_STEP_SUMMARY"

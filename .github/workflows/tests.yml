@@ -57,6 +57,7 @@ jobs:
         uses: "actions/checkout@v7"
         with:
           fetch-depth: 2
+          persist-credentials: false
 
       - id: setup-mongodb
         name: "Run GitHub Action"
@@ -72,17 +73,19 @@ jobs:
       - id: test-mongodb
         name: "Test GitHub Action"
         run: |
-          URI=$(cat uri.txt)
-          ARGS=""
+          MONGOSH_EXTRA_ARGS=""
           if [ ${{ matrix.ssl }} == "ssl" ] && [ -z "${{ matrix.local-atlas }}" ]; then
-            ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
+            MONGOSH_EXTRA_ARGS="--tls --tlsCertificateKeyFile $(pwd)/.evergreen/x509gen/client.pem --tlsCAFile $(pwd)/.evergreen/x509gen/ca.pem"
           fi
-          mongodb/bin/mongosh $URI $ARGS --eval "db.runCommand({ ping: 1 })"
+          export MONGOSH_EXTRA_ARGS
+          make test-connect
 
   pre-commit:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - uses: actions/setup-python@v7
     - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
@@ -90,6 +93,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
       - id: cache-restore
         uses: actions/cache@v6
@@ -103,3 +108,15 @@ jobs:
       - name: Lint
         working-directory: .evergreen/github_app
         run: npm run lint
+
+  bump-version:
+    name: "Bump Version Script"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+      - name: "Run unit tests"
+        run: python3 -m unittest discover -s .github/scripts -p "test_*.py" -v

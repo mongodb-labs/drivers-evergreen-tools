@@ -64,21 +64,23 @@ style.  The python formatting rules are governed by the `ruff.toml` file.
 To set up `pre-commit` locally, run:
 
 ```bash
-brew install pre-commit
-pre-commit install
+make install
 ```
 
 To run pre-commit manually, run:
 
 ```bash
-pre-commit run --all-files
+make lint
 ```
 
 To run an individual hook like `shellcheck` manually, run:
 
 ```bash
-pre-commit run --all-files shellcheck
+make lint HOOK=shellcheck
 ```
+
+`make install` keeps `pre-commit` inside the repo rather than installing it globally, so reach for
+`make lint` instead of a bare `pre-commit` command.
 
 ## New Features
 
@@ -87,6 +89,16 @@ contain a README.md with usage instructions, including example Evergreen config 
 
 It should also have a test file in `.evergreen/tests` and be run as a dedicated task in this repository.
 If it does not use assets like Atlas or a VM, then it should have a "pr" tag so that it runs on PRs.
+
+## Releasing
+
+Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
+`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
+version, then creates that tag and a GitHub release whose notes are generated from the commits
+since the previous tag.
+
+Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
+release. A real release only runs on the default branch, and the tag it creates is signed.
 
 ## Helpful Links
 
