@@ -198,10 +198,13 @@ _ensure_uv_install() {
 
   if "$py" -m pip --version >>"$log" 2>&1; then
     if "$py" -c 'import sys; sys.exit(0 if sys.prefix != sys.base_prefix else 1)'; then
-      # pip refuses --user inside an active venv, and the venv is the right
-      # target anyway. This is how the Node OIDC tests call ensure_uv.
-      echo "uv not found; installing it with '$py -m pip install uv' into the active venv..." >&2
+      # pip refuses --user inside a venv, and the venv is the right target
+      # anyway. This is how the Node OIDC tests call ensure_uv.
+      echo "uv not found; installing it with '$py -m pip install uv' into the venv..." >&2
       "$py" -m pip install -q uv >>"$log" 2>&1 || true
+      # The venv's own bin, which is on PATH already only when it is activated.
+      # An interpreter pinned through $DRIVERS_TOOLS_PYTHON need not be.
+      _ensure_uv_add_path "$(dirname "$py")"
     else
       echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
       # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard,
