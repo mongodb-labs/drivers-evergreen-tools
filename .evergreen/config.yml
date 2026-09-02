@@ -635,6 +635,16 @@ functions:
           rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
+  # Inline rather than a script because this runs before git.get_project, so the
+  # checkout that would hold the script does not exist yet.
+  - command: shell.exec
+    params:
+      shell: bash
+      script: |
+        if [ "${clear_persisted_uv|}" = "true" ]; then
+          echo "Removing any uv an earlier task left behind, so ensure_uv has to pick an interpreter."
+          rm -f "$HOME/.local/bin/uv"
+        fi
   - func: "fetch and prepare resources"
   - func: "assume role"
 
@@ -1541,13 +1551,15 @@ buildvariants:
 
 # RHEL 8.2 arm64 is the host PYTHON-6005 was filed for: its system python3 is
 # 3.6, which uv publishes no distribution for, and that Evergreen image does not
-# ship uv. On a cold host ensure_uv therefore has to reach the toolchain here.
-# It is not a guarantee: a run that finds a uv an earlier task left in the home
-# directory returns before it selects an interpreter at all.
+# ship uv. clear_persisted_uv drops any uv an earlier task installed under the
+# home directory, so ensure_uv has to select an interpreter and only the
+# toolchain can install one. Reversing that precedence fails this variant.
 - name: tests-rhel82-arm64
   display_name: "RHEL 8.2 ARM64"
   run_on:
     - rhel82-arm64-small
+  expansions:
+    clear_persisted_uv: "true"
   tasks:
     - name: "test-latest-standalone"
 
