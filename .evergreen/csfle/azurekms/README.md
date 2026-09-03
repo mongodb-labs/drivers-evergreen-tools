@@ -16,7 +16,7 @@ If another distro is required, consider filing a BUILD ticket similar to [BUILD-
 
 The image of the remote Virtual Machine defaults to the URN `Debian:debian-12:12:0.20260821.2577`. It may be overridden with the environment variable `AZUREKMS_IMAGE` set to the value of `--image` in `az vm create`. See [Azure documentation](https://learn.microsoft.com/en-us/cli/azure/vm?view=azure-cli-latest#az-vm-create) for valid values.
 
-The list of images may be determined with `az vm image --list`. The following script can get the latest version of the `debian-12` image:
+The list of images may be determined with `az vm image list`. The following script can get the latest version of the `debian-12` image:
 ```
 LATEST_DEBIAN_URN=$(az vm image list -p Debian -s 12 --all --query "[?offer=='debian-12'].urn" -o tsv | sort -u | tail -n 1)
 echo "LATEST_DEBIAN_URN=$LATEST_DEBIAN_URN"
