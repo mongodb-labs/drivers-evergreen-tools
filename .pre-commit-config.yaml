@@ -71,3 +71,8 @@ repos:
       (?x)(
           .evergreen/retry-with-backoff.sh
         )
+  - id: mongodb-runner-pin-reaches-runner
+    name: check mongodb-runner pins reach the runner
+    entry: .evergreen/orchestration/mongodb-runner/check-pins.sh
+    language: script
+    files: ^\.evergreen/orchestration/mongodb-runner/.*/package(-lock)?\.json$
