@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 TMPDIR = Path(tempfile.gettempdir()) / "drivers_orchestration"
@@ -61,22 +62,65 @@ def _normalize_path(path: Union[Path, str]) -> str:
     return re.sub("/cygdrive/(.*?)(/)", r"\1://", path, count=1)
 
 
-_MR_VERSION = "6.8.2"
+_MR_PIN_DIR = HERE / "mongodb-runner"
+_MR_DEFAULT_PIN = "default"
 
 
-def _npm_install(install_dir: Path) -> Optional[str]:
-    """Install the pinned mongodb-runner in install_dir.
+def _pin_dir(version: str) -> Path:
+    """The committed pin set for a server version.
+
+    A directory named for the version wins over the default, which is how a server
+    whose wire version the current driver dropped keeps working.
+    """
+    # MONGODB_VERSION is untrusted input: only the captured X.Y group becomes a
+    # path component, and fullmatch stops a "../" from riding along with it.
+    match = re.fullmatch(r"v?(\d+\.\d+)(?:[.-][\w.-]*)?", version or "")
+    if match:
+        candidate = _MR_PIN_DIR / match.group(1)
+        if candidate.is_dir():
+            return candidate
+    return _MR_PIN_DIR / _MR_DEFAULT_PIN
+
+
+def _pinned_versions(pin_dir: Path) -> Tuple[str, str]:
+    """The mongodb-runner and mongodb versions a pin set resolves to."""
+    try:
+        packages = json.loads((pin_dir / "package-lock.json").read_text())["packages"]
+        return (
+            packages["node_modules/mongodb-runner"]["version"],
+            packages["node_modules/mongodb"]["version"],
+        )
+    except (OSError, ValueError, KeyError) as exc:
+        raise RuntimeError(
+            f"could not read {pin_dir / 'package-lock.json'}: {exc}"
+        ) from exc
+
+
+def _pin_digest(pin_dir: Path) -> str:
+    """A short digest of a pin set's committed bytes."""
+    digest = hashlib.sha256()
+    for name in ("package.json", "package-lock.json"):
+        try:
+            digest.update((pin_dir / name).read_bytes())
+        except OSError as exc:
+            raise RuntimeError(f"could not read {pin_dir / name}: {exc}") from exc
+    return digest.hexdigest()[:8]
+
+
+def _npm_ci(install_dir: Path) -> Optional[str]:
+    """Install a pin set's lockfile in install_dir.
 
     Returns None on success, or npm's error output on failure.
 
-    --engine-strict turns the dependency tree's engines ranges into errors
-    instead of warnings, so npm decides whether the Node on PATH will do.
-    Output is captured, not silenced, so that reason reaches the caller.
+    ci rather than install so a lockfile that disagrees with its package.json fails
+    instead of quietly re-resolving. --engine-strict turns the dependency tree's
+    engines ranges into errors instead of warnings, so npm decides whether the Node on
+    PATH will do. Output is captured, not silenced, so that reason reaches the caller.
     """
     npm = shutil.which("npm")
     if npm is None:
         return "npm was not found on PATH"
-    args = ["install", "--loglevel=error", "--engine-strict"]
+    args = ["ci", "--loglevel=error", "--engine-strict"]
     try:
         if PLATFORM == "win32":
             # .cmd files require shell=True on Windows; pass as string to avoid quoting issues.
@@ -115,46 +159,73 @@ def _install_node() -> bool:
     return True
 
 
-def _mongodb_runner_supported() -> bool:
+def _host_lacks_mongodb_runner_support(message: str) -> bool:
+    """Whether an install failure means the host, not the pin, can't do this.
+
+    npm's own EBADENGINE is the host's Node/npm not meeting a package's declared
+    engines range -- exactly the old-glibc-caps-Node-at-16 case from DRIVERS-3558.
+    A missing npm is the same story. Anything else -- a bad package reference, a
+    failed integrity check -- points at the pin's content, not the host, and must
+    not be swallowed here.
+    """
+    return (
+        "npm was not found on PATH" in message or "npm ERR! code EBADENGINE" in message
+    )
+
+
+def _mongodb_runner_supported(version: str) -> bool:
     """Whether mongodb-runner can run on this host.
 
     Installing it is the check: npm enforces the Node its dependencies need, so
     a host that cannot get a new enough Node fails the install and falls back to
-    mongo-orchestration.
+    mongo-orchestration. It installs the same pin set the run will use, so a pin
+    that cannot be installed would be caught here too, except that only a
+    host-capability failure is treated as unsupported; anything else propagates,
+    because it means the committed pin itself is broken.
     """
     if os.environ.get("USE_DEV_MONGODB_RUNNER"):
         # start_mongodb_runner runs the compiled dev runner directly, so the
         # pinned package is never installed and only node has to be present.
         return shutil.which("node") is not None
     try:
-        _install_mongodb_runner()
+        _install_mongodb_runner(version)
     except RuntimeError as exc:
+        if not _host_lacks_mongodb_runner_support(str(exc)):
+            raise
         LOGGER.warning(f"mongodb-runner is unavailable here: {exc}")
         return False
     return True
 
 
-def _install_mongodb_runner() -> Path:
-    """Install mongodb-runner using npm, caching the install for reuse."""
-    install_dir = TMPDIR / f"mongodb-runner-{_MR_VERSION}"
+def _install_mongodb_runner(version: str) -> Path:
+    """Install the pin set for a server version, caching the install for reuse."""
+    pin_dir = _pin_dir(version)
+    runner_version, driver_version = _pinned_versions(pin_dir)
+    # The versions make the directory legible; the digest is what makes it correct.
+    # A transitive-only lockfile bump leaves both versions untouched, so without it
+    # a warm host would reuse the previous tree and ignore the committed update.
+    install_dir = TMPDIR / (
+        f"mongodb-runner-{runner_version}-mongodb-{driver_version}"
+        f"-{_pin_digest(pin_dir)}"
+    )
+    LOGGER.info(f"Using the {pin_dir.name!r} mongodb-runner pin set: {install_dir}")
     ext = ".cmd" if PLATFORM == "win32" else ""
     runner_bin = install_dir / "node_modules" / ".bin" / f"mongodb-runner{ext}"
     # A cached shim still needs a node to run it, and the docker entrypoints
     # delete node-artifacts while the cache under TMPDIR survives.
     if not runner_bin.exists() or shutil.which("node") is None:
-        pkg = {
-            "name": "mongodb-runner-wrapper",
-            "version": "1.0.0",
-            "dependencies": {"mongodb-runner": _MR_VERSION},
-        }
         install_dir.mkdir(parents=True, exist_ok=True)
-        (install_dir / "package.json").write_text(json.dumps(pkg, indent=2))
+        try:
+            for name in ("package.json", "package-lock.json"):
+                shutil.copyfile(pin_dir / name, install_dir / name)
+        except OSError as exc:
+            raise RuntimeError(f"could not copy pin set from {pin_dir}: {exc}") from exc
         # Try the Node already on PATH first, then install our own and retry.
-        error = _npm_install(install_dir)
+        error = _npm_ci(install_dir)
         if error is not None:
             LOGGER.info(f"Installing mongodb-runner failed, installing Node: {error}")
             if _install_node():
-                error = _npm_install(install_dir)
+                error = _npm_ci(install_dir)
         if error is not None:
             raise RuntimeError(f"could not install mongodb-runner: {error}")
     return runner_bin
@@ -182,7 +253,7 @@ def start_mongodb_runner(opts, data):
         binary = _normalize_path(binary)
         cmd = f"{binary} {target} start --debug --config {config_file}"
     else:
-        binary = _normalize_path(_install_mongodb_runner())
+        binary = _normalize_path(_install_mongodb_runner(opts.version))
         cmd = f"{binary} start --debug --config {config_file}"
     LOGGER.info(f"Running mongodb-runner using {binary}...")
     try:

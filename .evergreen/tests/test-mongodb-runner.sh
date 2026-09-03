@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Test usage of start-server.sh
-set -eu
+set -eu -o pipefail
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
@@ -52,8 +52,35 @@ function connect_mongodb() {
   return $result
 }
 
+# Start a deployment and fail unless mongodb-runner started it, or the host is one
+# where mongodb-runner is known not to run at all (old glibc capping Node below what
+# the current mongodb-runner needs, see install-node.sh). A silent fallback on a host
+# that could have used mongodb-runner would hide a broken pin set; a fallback on a
+# host that never could is the designed behavior from DRIVERS-3558.
+function start_with_runner() {
+  local log
+  log=$(mktemp)
+  # Clean up the temp log on function return without leaving a RETURN trap installed.
+  trap 'rm -f "$log"; trap - RETURN' RETURN
+
+  if ! bash ./run-mongodb.sh start "$@" 2>&1 | tee "$log"; then
+    echo "ERROR: 'run-mongodb.sh start $*' failed"
+    return 1
+  fi
+
+  if grep -q "Running mongodb-runner using" "$log"; then
+    return 0
+  fi
+  if grep -q "mongodb-runner is not supported on this platform" "$log"; then
+    echo "NOTE: mongodb-runner is unsupported here; started through mongo-orchestration instead"
+    return 0
+  fi
+  echo "ERROR: 'run-mongodb.sh start $*' did not start through mongodb-runner"
+  return 1
+}
+
 # Test for default, then test cli options.
-bash ./run-mongodb.sh start
+start_with_runner
 connect_mongodb
 
 bash ./run-mongodb.sh start --topology standalone --auth
@@ -89,11 +116,16 @@ if [ "${1:-}" == "partial" ]; then
   exit 0
 fi
 
-for version in rapid 8.0 6.0 5.0 4.4 4.2
+for version in rapid 8.0 6.0 5.0 4.4
 do
   bash ./run-mongodb.sh start --version "$version"
   connect_mongodb
 done
+
+# 4.2 predates the wire version the current Node driver requires, so it only starts
+# if the per-version pin held.
+start_with_runner --version 4.2
+connect_mongodb
 
 popd > /dev/null
 make -C ${DRIVERS_TOOLS} test

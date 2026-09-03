@@ -14,21 +14,36 @@ PATH="$(dirname "$PYTHON_BINARY"):$PATH"
 
 ./install-node.sh
 . ./init-node-and-npm-env.sh
-if "$PYTHON_BINARY" -c "
+# Exit 0: supported. Exit 1: genuinely unsupported here, skip below. Exit 2: the
+# committed pin itself is broken, which must fail the task rather than look like
+# a platform skip -- _mongodb_runner_supported raises for exactly that case.
+"$PYTHON_BINARY" -c "
 import sys
 sys.path.insert(0, 'orchestration')
 from mongodb_runner import _mongodb_runner_supported
-sys.exit(0 if _mongodb_runner_supported() else 1)
-"; then
+try:
+    supported = _mongodb_runner_supported('8.0')
+except Exception as exc:
+    print(f'mongodb-runner pin is broken: {exc}', file=sys.stderr)
+    sys.exit(2)
+sys.exit(0 if supported else 1)
+" && support_status=0 || support_status=$?
+if [ "$support_status" -eq 2 ]; then
+  exit 1
+elif [ "$support_status" -eq 0 ]; then
   # Invoke node directly on the installed runner.js rather than the npm .bin
   # shim, which can fail on Windows (CRLF shebang line or missing interpreter).
   RUNNER_JS=$("$PYTHON_BINARY" -c "
 import shutil
 import sys
 sys.path.insert(0, 'orchestration')
-from mongodb_runner import _MR_VERSION, TMPDIR, _install_mongodb_runner, _normalize_path
-shutil.rmtree(TMPDIR / f'mongodb-runner-{_MR_VERSION}', ignore_errors=True)
-runner_bin = _install_mongodb_runner()
+from mongodb_runner import TMPDIR, _install_mongodb_runner, _normalize_path
+# Clear every cached pin install so this is a fresh install, not just the one
+# '8.0' resolves to. TMPDIR also doubles as mongodb-runner's runnerDir, so the
+# glob is scoped to install directory names rather than the whole prefix.
+for path in TMPDIR.glob('mongodb-runner-*-mongodb-*'):
+    shutil.rmtree(path, ignore_errors=True)
+runner_bin = _install_mongodb_runner('8.0')
 runner_js = runner_bin.parent.parent / 'mongodb-runner' / 'bin' / 'runner.js'
 print(_normalize_path(runner_js))
 " | tr -d '\r')
