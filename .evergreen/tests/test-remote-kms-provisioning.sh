@@ -206,16 +206,16 @@ test_start_mongodb_uses_archive azurekms .evergreen/csfle/azurekms/remote-script
 
 # Keep these in sync with the defaults in create-and-setup-instance.sh
 # (GCPKMS_IMAGEFAMILY) and create-and-setup-vm.sh (AZUREKMS_IMAGE).
-test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh debian:12
-test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh debian:12
+test_provisioning gcpkms .evergreen/csfle/gcpkms/remote-scripts/setup-gce-instance.sh debian:13
+test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-vm.sh debian:13
 
-# debian:12 matches both defaults above. ubuntu:20.04 is a supported
+# debian:13 matches both defaults above. ubuntu:20.04 is a supported
 # AZUREKMS_IMAGE (see azurekms/README.md) and additionally covers a system
 # interpreter whose bundled pip predates PEP 600.
-test_no_system_pip nopip-debian12 debian:12
+test_no_system_pip nopip-debian13 debian:13
 test_no_system_pip nopip-ubuntu2004 ubuntu:20.04
 
-# debian:12 matches the current default VM image; this case covers hosts where python3-venv is missing.
-test_no_venv_module novenv-debian12 debian:12
+# debian:13 matches the current default VM image; this case covers hosts where python3-venv is missing.
+test_no_venv_module novenv-debian13 debian:13
 
-test_inside_active_venv invenv-debian12 debian:12
+test_inside_active_venv invenv-debian13 debian:13

@@ -1,7 +1,7 @@
 # Mirrors the environment the gcpkms/azurekms remote-scripts actually run in:
 # a fresh host reached as a non-root user with passwordless sudo. BASE_IMAGE
 # lets gcpkms and azurekms test against their own default VM image versions.
-ARG BASE_IMAGE=debian:12
+ARG BASE_IMAGE=debian:13
 FROM ${BASE_IMAGE}
 # man-db ships preinstalled on the real GCE/Azure base images; the
 # remote-scripts assume it's there when they silence its update trigger.

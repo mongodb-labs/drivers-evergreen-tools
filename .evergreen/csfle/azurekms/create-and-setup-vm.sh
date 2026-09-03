@@ -47,7 +47,7 @@ done
 # Set defaults.
 # If this default changes, update the azurekms base_image in
 # .evergreen/tests/test-remote-kms-provisioning.sh to match.
-export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-12:12:0.20260821.2577"}
+export AZUREKMS_IMAGE=${AZUREKMS_IMAGE:-"Debian:debian-13:13:0.20260831.2587"}
 
 # Login.
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
