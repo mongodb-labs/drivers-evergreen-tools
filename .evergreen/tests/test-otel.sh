@@ -46,10 +46,12 @@ $MONGODB_BINARIES/mongosh "mongodb://localhost:27017/?directConnection=true" --e
     opentelemetryTraceDirectory: 1,
     openTelemetryExternalTracing: 1,
     openTelemetryTracingSampling: 1,
+    openTelemetryTracingFileFlushCount: 1,
   });
   if (!p.opentelemetryTraceDirectory.endsWith("27017") ||
       p.openTelemetryExternalTracing.tokenBucketRateLimit.maxTokens !== 1000 ||
-      p.openTelemetryTracingSampling.defaultSampling.samplingFactor !== 1.0) {
+      p.openTelemetryTracingSampling.defaultSampling.samplingFactor !== 1.0 ||
+      p.openTelemetryTracingFileFlushCount !== 1) {
     throw new Error("unexpected OTel parameters: " + JSON.stringify(p));
   }
   print("OTEL_PARAMS_OK");

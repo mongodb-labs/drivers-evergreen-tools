@@ -23,6 +23,7 @@ EXPECTED_PARAMS = {
     "featureFlagOtelTraceSampling": "true",
     "openTelemetryTracingSampling": OTEL_SAMPLING_JSON,
     "openTelemetryExternalTracing": OTEL_EXTERNAL_TRACING_JSON,
+    "openTelemetryTracingFileFlushCount": 1,
 }
 
 
@@ -173,6 +174,15 @@ class TestValidateOtelOpts(unittest.TestCase):
 
     def test_bare_major_version_90_allowed(self):
         validate_otel_opts(make_opts(version="9"))
+
+    def test_v_prefixed_perf_aliases_rejected(self):
+        # mongodl resolves these to 6.0.x / 8.0.x servers.
+        for version in ("v6.0-perf", "v8.0-perf"):
+            with self.assertRaisesRegex(ValueError, "9.0"):
+                validate_otel_opts(make_opts(version=version))
+
+    def test_v_prefixed_90_allowed(self):
+        validate_otel_opts(make_opts(version="v9.0"))
 
     def test_docker_running_rejected(self):
         os.environ["DOCKER_RUNNING"] = "true"

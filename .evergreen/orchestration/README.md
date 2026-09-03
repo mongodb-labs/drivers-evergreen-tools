@@ -44,8 +44,11 @@ alongside `MONGODB_URI`. Driver test suites should:
   `VERSION: latest`, never in a shared orchestration function — the version
   fail-fast will break every variant pinned below 9.0 otherwise.
 - Poll for span files with a generous timeout (e.g. 30 s) rather than a
-  single sleep: the exporter flushes every
+  single sleep: spans are batched every
   `openTelemetryTracingBatchExportIntervalMillis` (default 1000 ms).
+  Orchestration sets `openTelemetryTracingFileFlushCount: 1` so every
+  exported batch is written to disk immediately (the server default buffers
+  256 batches with a 30 s flush interval).
 - Read files recursively under `OTEL_TRACE_DIR`; match server spans to
   client spans by hex `traceId` / `parentSpanId`.
 

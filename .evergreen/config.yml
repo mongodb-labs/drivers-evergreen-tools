@@ -302,6 +302,7 @@ functions:
           - AUTH
           - LOAD_BALANCER
           - LOCAL_ATLAS
+          - OTEL
           - REQUIRE_API_VERSION,
           - SSL
           - STORAGE_ENGINE
@@ -342,6 +343,7 @@ functions:
           SSL: ${SSL}
           MONGODB_URI: ${MONGODB_URI}
           CRYPT_SHARED_LIB_PATH: ${CRYPT_SHARED_LIB_PATH}
+          OTEL_TRACE_DIR: ${OTEL_TRACE_DIR}
         args:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 

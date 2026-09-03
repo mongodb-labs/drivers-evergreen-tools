@@ -339,6 +339,10 @@ def handle_otel_config(data, otel_root):
         set_param["featureFlagOtelTraceSampling"] = "true"
         set_param["openTelemetryTracingSampling"] = OTEL_SAMPLING_JSON
         set_param["openTelemetryExternalTracing"] = OTEL_EXTERNAL_TRACING_JSON
+        # The file exporter buffers 256 export batches (flushed every 30s) by
+        # default, on top of the 1s batch processor; tests emit few spans, so
+        # flush every batch to disk like the server's own file-export tests.
+        set_param["openTelemetryTracingFileFlushCount"] = 1
 
 
 def validate_otel_opts(opts):
@@ -349,7 +353,9 @@ def validate_otel_opts(opts):
     """
     if not getattr(opts, "otel", False):
         return
-    match = re.match(r"^(\d+)(?:\.(\d+))?", opts.version)
+    # Optional "v" prefix: mongodl aliases like v8.0-perf resolve to servers
+    # below 9.0 and must be caught here rather than failing at startup.
+    match = re.match(r"^v?(\d+)(?:\.(\d+))?", opts.version)
     if match and (int(match.group(1)), int(match.group(2) or 0)) < (9, 0):
         raise ValueError(
             f"--otel requires MongoDB 9.0+ (OTel setParameters do not exist "
