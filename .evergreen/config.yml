@@ -641,8 +641,6 @@ pre:
     params:
       shell: bash
       script: |
-        # ${clear_persisted_uv|} is an Evergreen expansion default, substituted
-        # before bash sees this script; it is not bash's own parameter expansion.
         if [ "${clear_persisted_uv|}" = "true" ]; then
           echo "Removing any uv an earlier task left behind, so ensure_uv has to pick an interpreter."
           rm -f "$HOME/.local/bin/uv"
