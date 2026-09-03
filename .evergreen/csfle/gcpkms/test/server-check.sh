@@ -45,6 +45,8 @@ if [ "${kms_legacy_provisioning:-}" = "true" ]; then
   fi
 fi
 
+# A successful ping here is also the only proof that the venv-fallback ensure_uv
+# took above actually produced a working uv: nothing here calls uv directly.
 GCPKMS_CMD='./drivers-evergreen-tools/mongodb/bin/mongosh --quiet --eval "db.runCommand({ping:1})" mongodb://localhost:27017' \
   ./run-command.sh < /dev/null
 

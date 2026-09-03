@@ -219,14 +219,14 @@ _ensure_uv_install() {
       PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
     fi
     _ensure_uv_add_user_bin "$py"
-    return 0
+    uv --version >/dev/null 2>&1 && return 0
   fi
 
-  # No pip at all, which now means only a KMS VM provisioned before PYTHON-5985.
-  # Debian refuses ensurepip outside a venv, so a venv is the only route left.
-  # DRIVERS-3624 retires this once no branch pins that far back; the kms-legacy
-  # variant is what still covers it.
-  echo "uv not found and $py has no pip; building a virtual environment at $venv_dir..." >&2
+  # Reached with no pip at all (only a KMS VM provisioned before PYTHON-5985,
+  # per DRIVERS-3624; the kms-legacy variant is what still covers it), or the
+  # pip install above ran but still left uv missing. Debian refuses ensurepip
+  # outside a venv, so a venv is the fallback either way.
+  echo "uv still not found; building a virtual environment at $venv_dir..." >&2
 
   # --clear replaces a previously broken venv; a working one would have been
   # found already.
