@@ -215,7 +215,7 @@ test_provisioning azurekms .evergreen/csfle/azurekms/remote-scripts/setup-azure-
 test_no_system_pip nopip-debian12 debian:12
 test_no_system_pip nopip-ubuntu2004 ubuntu:20.04
 
-# debian:12 matches the Evergreen image whose missing python3-venv this covers.
+# debian:12 matches the current default VM image; this case covers hosts where python3-venv is missing.
 test_no_venv_module novenv-debian12 debian:12
 
 test_inside_active_venv invenv-debian12 debian:12
