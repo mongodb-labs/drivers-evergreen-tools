@@ -48,17 +48,23 @@ ensure_uv() {
   fi
 
   # Now we have to find a suitable interpreter.
-  # Check for $DRIVERS_TOOLS_PYTHON, then the toolchain, falling back to system python3.
+  # Check for $DRIVERS_TOOLS_PYTHON, then an active venv, then the toolchain,
+  # falling back to system python3. A candidate below uv's own floor is
+  # skipped rather than accepted, so a too-old toolchain does not preempt a
+  # working system python3.
   # Use absolute paths so a venv later on PATH cannot re-point the name.
   declare py="" candidate resolved
   for candidate in \
     "${DRIVERS_TOOLS_PYTHON:-}" \
+    "${VIRTUAL_ENV:+$VIRTUAL_ENV/bin/python}" \
+    "${VIRTUAL_ENV:+$VIRTUAL_ENV/Scripts/python.exe}" \
     $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) \
     python3 \
     python; do
     [ -n "$candidate" ] || continue
     resolved="$(command -v "$candidate" 2>/dev/null)" || continue
     [ -n "$resolved" ] || continue
+    "$resolved" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1 || continue
     py="$resolved"
     break
   done
