@@ -20,7 +20,7 @@ export AZUREKMS_PRIVATEKEYPATH="$SCRIPT_DIR/keyfile"
 export AZUREKMS_CERTFILE="$SCRIPT_DIR/cert.pem"
 export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
 export AZUREOIDC_ENVPATH="$SCRIPT_DIR/env.sh"
-export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
+export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-12:12:0.20260821.2577"}
 
 # Handle secrets from AWS vault.
 if [ ! -f ./secrets-export.sh ]; then
