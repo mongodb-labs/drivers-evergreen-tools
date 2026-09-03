@@ -72,4 +72,6 @@ fi
 ./orchestration/drivers-orchestration stop
 
 popd > /dev/null
+# Overwrite the placeholder FAIL result seeded by setup.sh with a PASS entry.
+make -C ${DRIVERS_TOOLS} test
 echo "OTel orchestration test... done."
