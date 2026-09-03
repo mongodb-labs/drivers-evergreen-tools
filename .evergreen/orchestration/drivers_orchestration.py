@@ -567,16 +567,16 @@ def run(opts):
     if opts.local_atlas:
         opts.mongodb_runner = False
 
-    # mongodb-runner drives the server with the Node driver, which dropped 4.2 in
-    # mongodb 7.6.0. mongodb-runner asks for ^7.2.0, so it can no longer reach a
-    # 4.2 server at all: the handshake fails on wire version 8.
-    if opts.mongodb_runner and version in ("3.6", "4.0", "4.2"):
+    # A bare match on version misses "4.0.28" or "v4.0", which are exactly as
+    # unreachable as "4.0" itself, so compare the X.Y prefix instead.
+    major_minor = re.match(r"v?(\d+\.\d+)", version or "")
+    if opts.mongodb_runner and major_minor and major_minor.group(1) in ("3.6", "4.0"):
         LOGGER.warning(
-            "mongodb-runner does not support MongoDB < 4.4, using mongo-orchestration"
+            "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
         )
         opts.mongodb_runner = False
 
-    if opts.mongodb_runner and not _mongodb_runner_supported():
+    if opts.mongodb_runner and not _mongodb_runner_supported(opts.version):
         LOGGER.warning(
             "mongodb-runner is not supported on this platform; "
             "falling back to mongo-orchestration"
