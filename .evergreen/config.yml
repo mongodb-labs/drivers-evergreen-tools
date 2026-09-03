@@ -596,6 +596,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-cli.sh]
 
+  "run otel test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-otel.sh]
+
   "run ocsp test":
     - command: subprocess.exec
       type: test
@@ -1077,6 +1084,11 @@ tasks:
       commands:
         - func: "run cli test full"
 
+    - name: "test-otel"
+      tags: ["latest", "pr"]
+      commands:
+        - func: "run otel test"
+
     - name: "test-mongodb-runner-full"
       tags: ["pr"]
       commands:
@@ -1525,6 +1537,7 @@ buildvariants:
           - "test-csfle"
           - "test-drivers-tools-archive"
           - "test-cli-full"
+          - "test-otel"
           - "test-mongodb-runner-full"
           - "test-happy-eyeballs"
           - "test-ocsp"

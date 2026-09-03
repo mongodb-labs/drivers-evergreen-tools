@@ -47,6 +47,29 @@ CRYPT_NAME_MAP = {
 # Remove an entry once its GA release appears in full.json.
 UNPUBLISHED_VERSIONS = {"9.0"}
 
+# OpenTelemetry file-exporter configuration for trace-context prose tests
+# (DRIVERS-3454). Requires MongoDB 9.0+.
+# samplingFactor 1.0 samples every span (production default is ~0.000045,
+# which would make span assertions flake). Per the server IDL
+# (src/mongo/otel/traces/trace_sampling_parameters.idl), every sampling
+# strategy -- including defaultSampling -- also carries its own
+# tokenBucketRateLimit (default refillRate 1/s, maxTokens 10) that throttles
+# spans independently of samplingFactor, so it must be raised here too or
+# internally-initiated spans still get capped at a 10-burst. Externally-
+# propagated contexts (driver traceparents) bypass the probability sampler
+# entirely and go through the separate openTelemetryExternalTracing
+# setParameter -- NOT nested under openTelemetryTracingSampling -- which
+# needs the same raise. The values are JSON strings because
+# mongo-orchestration setParameter values must be scalars.
+OTEL_SAMPLING_JSON = (
+    '{"defaultSampling":{"samplingFactor":1.0,'
+    '"tokenBucketRateLimit":{"refillRate":1000.0,"maxTokens":1000}}}'
+)
+OTEL_EXTERNAL_TRACING_JSON = (
+    '{"tokenBucketRateLimit":{"refillRate":1000.0,"maxTokens":1000}}'
+)
+OTEL_DIR_NAME = "otel"
+
 # Top level files
 URI_TXT = DRIVERS_TOOLS / "uri.txt"
 MO_EXPANSION_SH = Path("mo-expansion.sh")
@@ -157,6 +180,12 @@ def get_options():
         other_group.add_argument(
             "--arch",
             help="the architecture.  if unspecified, the arch will be inferred.",
+        )
+        other_group.add_argument(
+            "--otel",
+            action="store_true",
+            help="Whether to configure the OpenTelemetry file exporter on every "
+            "mongod/mongos (requires MongoDB 9.0+; exports OTEL_TRACE_DIR)",
         )
 
     other_group.add_argument(
@@ -274,6 +303,67 @@ def handle_docker_config(data):
             router["ipv6"] = False
             router["bind_ip"] = "0.0.0.0,::1"
             router["logpath"] = f"/tmp/mongodb-{item['port']}.log"
+
+
+def handle_otel_config(data, otel_root):
+    """Configure every mongod/mongos to export OTel spans as NDJSON files.
+
+    Each member gets its own trace directory (keyed by port) under otel_root
+    so files from different members never interleave.
+    """
+    members = []
+
+    def traverse(root):
+        if isinstance(root, list):
+            [traverse(i) for i in root]
+            return
+        if "ipv6" in root:
+            members.append(root)
+            return
+        for value in root.values():
+            if isinstance(value, (dict, list)):
+                traverse(value)
+
+    traverse(data)
+
+    for member in members:
+        if "port" not in member:
+            raise ValueError(
+                "--otel requires an explicit port for every cluster member "
+                "so each gets its own trace directory"
+            )
+        member_dir = Path(otel_root) / str(member["port"])
+        os.makedirs(member_dir, exist_ok=True)
+        set_param = member.setdefault("setParameter", {})
+        set_param["opentelemetryTraceDirectory"] = normalize_path(member_dir)
+        set_param["featureFlagOtelTraceSampling"] = "true"
+        set_param["openTelemetryTracingSampling"] = OTEL_SAMPLING_JSON
+        set_param["openTelemetryExternalTracing"] = OTEL_EXTERNAL_TRACING_JSON
+
+
+def validate_otel_opts(opts):
+    """Fail fast on option combinations incompatible with --otel.
+
+    The OTel file exporter requires MongoDB 9.0+ and a cluster that shares
+    the host filesystem with the test process (the only way to read spans).
+    """
+    if not getattr(opts, "otel", False):
+        return
+    match = re.match(r"^(\d+)(?:\.(\d+))?", opts.version)
+    if match and (int(match.group(1)), int(match.group(2) or 0)) < (9, 0):
+        raise ValueError(
+            f"--otel requires MongoDB 9.0+ (OTel setParameters do not exist "
+            f"on {opts.version})"
+        )
+    if os.environ.get("DOCKER_RUNNING"):
+        raise ValueError(
+            "--otel is not supported with DOCKER_RUNNING: the container "
+            "filesystem is not readable by the host test process"
+        )
+    if opts.local_atlas:
+        raise ValueError("--otel is not supported with --local-atlas")
+    if opts.mongodb_runner:
+        raise ValueError("--otel is not supported with --mongodb-runner")
 
 
 def normalize_path(path: Path | str) -> str:
@@ -460,6 +550,9 @@ def clean_run(opts):
     crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
     crypt_path.unlink(missing_ok=True)
 
+    otel_dir = DRIVERS_TOOLS / OTEL_DIR_NAME
+    shutil.rmtree(normalize_path(otel_dir), ignore_errors=True)
+
 
 def run(opts):
     # Deferred import so we can run as a script without the cli installed.
@@ -467,6 +560,11 @@ def run(opts):
     from mongosh_dl import main as mongosh_dl
 
     LOGGER.info("Running orchestration...")
+    try:
+        validate_otel_opts(opts)
+    except ValueError as e:
+        LOGGER.error(str(e))
+        sys.exit(1)
     stop(opts)
     clean_run(opts)
 
@@ -562,6 +660,15 @@ def run(opts):
 
     data = get_orchestration_data(opts)
 
+    otel_root = DRIVERS_TOOLS / OTEL_DIR_NAME
+    if opts.otel:
+        LOGGER.info("Configuring OTel trace export to %s...", otel_root)
+        try:
+            handle_otel_config(data, otel_root)
+        except ValueError as e:
+            LOGGER.error(str(e))
+            sys.exit(1)
+
     # run-mongodb.sh passes --mongodb-runner even for --local-atlas, where
     # probing for runner support would install a Node we never use.
     if opts.local_atlas:
@@ -616,12 +723,18 @@ def run(opts):
         uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
 
     # Handle the cluster uri.
+    expansions = {"MONGODB_URI": uri}
+    if opts.otel:
+        expansions["OTEL_TRACE_DIR"] = normalize_path(otel_root)
     MO_EXPANSION_YML.touch()
-    MO_EXPANSION_YML.write_text(
-        MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
-    )
     MO_EXPANSION_SH.touch()
-    MO_EXPANSION_SH.write_text(MO_EXPANSION_SH.read_text() + f'\nMONGODB_URI="{uri}"')
+    yml_text = MO_EXPANSION_YML.read_text()
+    sh_text = MO_EXPANSION_SH.read_text()
+    for key, value in expansions.items():
+        yml_text += f'\n{key}: "{value}"'
+        sh_text += f'\n{key}="{value}"'
+    MO_EXPANSION_YML.write_text(yml_text)
+    MO_EXPANSION_SH.write_text(sh_text)
     URI_TXT.write_text(uri)
     LOGGER.info(f"Cluster URI: {uri}")
 
