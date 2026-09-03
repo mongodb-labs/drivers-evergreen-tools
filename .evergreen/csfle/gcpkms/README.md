@@ -12,6 +12,8 @@ The included mock_server may be useful for local development. It simulates a [Me
 
 If you need a larger GCP [VM](https://cloud.google.com/compute/docs/machine-resource), set `GCPKMS_MACHINETYPE`.
 
+The instance image family defaults to `debian-11` and may be overridden with `GCPKMS_IMAGEFAMILY`. The image must ship Python 3.9 or newer, which drivers-evergreen-tools needs to install uv on the instance. `debian-11` and `debian-12` both qualify; `ubuntu-2004` and older do not.
+
 # Usage with AWS Vault
 
 See [Secrets Handling](../../secrets_handling/README.md) for details on how to access the secrets
