@@ -115,6 +115,14 @@ export TLS_PEM_KEY_FILE=<path-to>/server.pem
 export TLS_CA_FILE=<path-to>/ca.pem
 ```
 
+### OpenTelemetry trace export (MongoDB 9.0+)
+
+Orchestration can start clusters with the server's OpenTelemetry file
+exporter enabled (opt-in via `OTEL=1`), for the trace-context propagation
+prose tests ([DRIVERS-3454](https://jira.mongodb.org/browse/DRIVERS-3454)).
+See [.evergreen/orchestration/README.md](.evergreen/orchestration/README.md)
+for usage, requirements, and driver integration guidance.
+
 ### Manual use of start-orchestration
 
 The [start-orchestration.sh](./.evergreen/start-orchestration.sh) script can be used directly as a way to
