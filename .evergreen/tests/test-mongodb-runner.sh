@@ -52,11 +52,21 @@ function connect_mongodb() {
   return $result
 }
 
-# Start a deployment and fail unless mongodb-runner started it, or the host is one
-# where mongodb-runner is known not to run at all (old glibc capping Node below what
-# the current mongodb-runner needs, see install-node.sh). A silent fallback on a host
-# that could have used mongodb-runner would hide a broken pin set; a fallback on a
-# host that never could is the designed behavior from DRIVERS-3558.
+# Hosts too old to run mongodb-runner at all exist only in the os-requires-50
+# matrix, which runs this script in partial mode; the full run is os-fully-featured
+# (rhel8, macos, windows), where nothing legitimately falls back. So tolerate a
+# fallback only in partial mode. Tolerating it everywhere would let a pin whose
+# engines floor outruns install-node.sh degrade silently on every variant, with
+# mongodb-runner never exercised and the run still green.
+if [ "${1:-}" == "partial" ]; then
+  fallback_is_expected=true
+else
+  fallback_is_expected=false
+fi
+
+# Start a deployment and fail unless mongodb-runner started it, or a fallback is
+# expected on this host class per DRIVERS-3558. A silent fallback on a host that
+# could have used mongodb-runner would hide a broken pin set.
 function start_with_runner() {
   local log
   log=$(mktemp)
@@ -72,8 +82,13 @@ function start_with_runner() {
     return 0
   fi
   if grep -q "mongodb-runner is not supported on this platform" "$log"; then
-    echo "NOTE: mongodb-runner is unsupported here; started through mongo-orchestration instead"
-    return 0
+    if [ "$fallback_is_expected" == "true" ]; then
+      echo "NOTE: mongodb-runner is unsupported here; started through mongo-orchestration instead"
+      return 0
+    fi
+    echo "ERROR: mongodb-runner fell back to mongo-orchestration on a host that" \
+      "should support it; the pin's engines floor may outrun install-node.sh"
+    return 1
   fi
   echo "ERROR: 'run-mongodb.sh start $*' did not start through mongodb-runner"
   return 1

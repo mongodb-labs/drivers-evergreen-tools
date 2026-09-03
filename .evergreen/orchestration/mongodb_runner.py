@@ -167,10 +167,13 @@ def _host_lacks_mongodb_runner_support(message: str) -> bool:
     A missing npm is the same story. Anything else -- a bad package reference, a
     failed integrity check -- points at the pin's content, not the host, and must
     not be swallowed here.
+
+    Match the bare EBADENGINE code, never the line around it: npm prints
+    "npm ERR! code EBADENGINE" through npm 10.1 and "npm error code EBADENGINE"
+    from 10.2 on, and this repo installs both (install-node.sh pins npm 9 for
+    old-glibc hosts). The code itself is stable across both.
     """
-    return (
-        "npm was not found on PATH" in message or "npm ERR! code EBADENGINE" in message
-    )
+    return "npm was not found on PATH" in message or "EBADENGINE" in message
 
 
 def _mongodb_runner_supported(version: str) -> bool:

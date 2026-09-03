@@ -20,13 +20,30 @@ while IFS= read -r pin; do
 import json, pathlib, sys
 
 pin = pathlib.Path(sys.argv[1])
-manifest = json.loads((pin / "package.json").read_text()).get("dependencies", {})
-locked = json.loads((pin / "package-lock.json").read_text())["packages"][""]
-if manifest != locked.get("dependencies", {}):
+for name in ("package.json", "package-lock.json"):
+    if not (pin / name).is_file():
+        sys.exit(f"{pin}: {name} is missing")
+
+manifest = json.loads((pin / "package.json").read_text())
+lock = json.loads((pin / "package-lock.json").read_text())
+packages = lock["packages"]
+
+# npm never writes overrides into the lockfile, so npm ci cannot tell that one
+# went stale. Name the driver as a direct dependency instead; see the README.
+for field in ("overrides", "resolutions"):
+    if manifest.get(field):
+        sys.exit(f"{pin}: pin the driver as a direct dependency, not {field!r}")
+
+if manifest.get("dependencies", {}) != packages[""].get("dependencies", {}):
     sys.exit(
         f"{pin}: package.json and package-lock.json disagree; regenerate it with "
         "npm install --package-lock-only"
     )
+
+# mongodb_runner.py reads both of these to build the install cache key.
+for required in ("node_modules/mongodb-runner", "node_modules/mongodb"):
+    if required not in packages:
+        sys.exit(f"{pin}: package-lock.json has no {required} entry")
 ' "$pin"; then
     status=1
   fi

@@ -20,17 +20,15 @@ PATH="$(dirname "$PYTHON_BINARY"):$PATH"
 "$PYTHON_BINARY" -c "
 import sys
 sys.path.insert(0, 'orchestration')
-from mongodb_runner import _mongodb_runner_supported
 try:
+    from mongodb_runner import _mongodb_runner_supported
     supported = _mongodb_runner_supported('8.0')
 except Exception as exc:
     print(f'mongodb-runner pin is broken: {exc}', file=sys.stderr)
     sys.exit(2)
 sys.exit(0 if supported else 1)
 " && support_status=0 || support_status=$?
-if [ "$support_status" -eq 2 ]; then
-  exit 1
-elif [ "$support_status" -eq 0 ]; then
+if [ "$support_status" -eq 0 ]; then
   # Invoke node directly on the installed runner.js rather than the npm .bin
   # shim, which can fail on Windows (CRLF shebang line or missing interpreter).
   RUNNER_JS=$("$PYTHON_BINARY" -c "
@@ -48,8 +46,11 @@ runner_js = runner_bin.parent.parent / 'mongodb-runner' / 'bin' / 'runner.js'
 print(_normalize_path(runner_js))
 " | tr -d '\r')
   node "$RUNNER_JS" --help
-else
+elif [ "$support_status" -eq 1 ]; then
   echo "mongodb-runner is not supported on this platform; skipping check"
+else
+  echo "mongodb-runner support check failed unexpectedly (exit $support_status)"
+  exit 1
 fi
 
 source ./install-rust.sh
