@@ -302,7 +302,8 @@ functions:
           - AUTH
           - LOAD_BALANCER
           - LOCAL_ATLAS
-          - REQUIRE_API_VERSION,
+          - OTEL
+          - REQUIRE_API_VERSION
           - SSL
           - STORAGE_ENGINE
           - TOPOLOGY
@@ -342,6 +343,7 @@ functions:
           SSL: ${SSL}
           MONGODB_URI: ${MONGODB_URI}
           CRYPT_SHARED_LIB_PATH: ${CRYPT_SHARED_LIB_PATH}
+          OTEL_TRACE_DIR: ${OTEL_TRACE_DIR}
         args:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
@@ -599,6 +601,13 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-cli.sh]
+
+  "run otel test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-otel.sh]
 
   "run ocsp test":
     - command: subprocess.exec
@@ -1083,6 +1092,11 @@ tasks:
       commands:
         - func: "run cli test full"
 
+    - name: "test-otel"
+      tags: ["latest", "pr"]
+      commands:
+        - func: "run otel test"
+
     - name: "test-mongodb-runner-full"
       tags: ["pr"]
       commands:
@@ -1531,6 +1545,7 @@ buildvariants:
           - "test-csfle"
           - "test-drivers-tools-archive"
           - "test-cli-full"
+          - "test-otel"
           - "test-mongodb-runner-full"
           - "test-happy-eyeballs"
           - "test-ocsp"

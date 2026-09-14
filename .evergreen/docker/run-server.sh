@@ -52,6 +52,7 @@ DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS:-}
 MONGODB_VERSION=${MONGODB_VERSION:-latest-stable}
 MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL:-}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE:-}
+OTEL=${OTEL:-}
 
 # Build up the args.
 ARGS="$PLATFORM --rm -i --name mongodb"
@@ -65,6 +66,9 @@ ARGS+=" -e STORAGE_ENGINE=$STORAGE_ENGINE"
 ARGS+=" -e REQUIRE_API_VERSION=$REQUIRE_API_VERSION"
 ARGS+=" -e DISABLE_TEST_COMMANDS=$DISABLE_TEST_COMMANDS"
 ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
+# Forwarded so the in-container DOCKER_RUNNING fail-fast fires instead of
+# silently running without OTel.
+ARGS+=" -e OTEL=$OTEL"
 
 # Forward the host's AWS identity into the container for the private nightly
 # keywords, or for any unpublished version the caller opts into by setting

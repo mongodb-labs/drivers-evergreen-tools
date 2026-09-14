@@ -27,6 +27,12 @@ import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mongodb_runner import _mongodb_runner_supported, start_mongodb_runner
+from otel import (
+    OTEL_DIR_NAME,
+    check_mongod_version,
+    handle_otel_config,
+    validate_otel_opts,
+)
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
@@ -153,12 +159,18 @@ def get_options():
             "--arch",
             help="the architecture.  if unspecified, the arch will be inferred.",
         )
+        other_group.add_argument(
+            "--otel",
+            action="store_true",
+            help="Whether to configure the OpenTelemetry file exporter on every "
+            "mongod/mongos (requires MongoDB 9.0+; exports OTEL_TRACE_DIR)",
+        )
 
     other_group.add_argument(
         "--mongo-orchestration-home", help="The path to mongo-orchestration home"
     )
 
-    if command in ["start", "run"]:
+    if command in ["start", "run", "clean"]:
         other_group.add_argument(
             "--mongodb-binaries", help="The path to store the MongoDB binaries"
         )
@@ -187,7 +199,7 @@ def get_options():
 
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
-    if command in ["start", "run"]:
+    if command in ["start", "run", "clean"]:
         if opts.mongodb_binaries is None:
             opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
     if command == "run":
@@ -457,6 +469,9 @@ def clean_run(opts):
     crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
     crypt_path.unlink(missing_ok=True)
 
+    otel_dir = DRIVERS_TOOLS / OTEL_DIR_NAME
+    shutil.rmtree(normalize_path(otel_dir), ignore_errors=True)
+
 
 def run(opts):
     # Deferred import so we can run as a script without the cli installed.
@@ -464,8 +479,27 @@ def run(opts):
     from mongosh_dl import main as mongosh_dl
 
     LOGGER.info("Running orchestration...")
+    try:
+        validate_otel_opts(opts)
+    except ValueError as e:
+        LOGGER.error(str(e))
+        sys.exit(1)
     stop(opts)
     clean_run(opts)
+
+    # Load (and, for --otel, mutate) the orchestration config before the
+    # downloads: it only reads local files, and its failure modes -- a bad
+    # config file, or an OTel conflict -- should not cost a ~200MB download.
+    data = get_orchestration_data(opts)
+
+    otel_root = DRIVERS_TOOLS / OTEL_DIR_NAME
+    if opts.otel:
+        LOGGER.info("Configuring OTel trace export to %s...", otel_root)
+        try:
+            handle_otel_config(data, otel_root)
+        except ValueError as e:
+            LOGGER.error(str(e))
+            sys.exit(1)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries = Path(opts.mongodb_binaries)
@@ -515,6 +549,16 @@ def run(opts):
 
         run_command(f"{mdb_binaries_str}/mongod --version")
 
+        # The authoritative --otel version gate: probe the binary that will
+        # actually run (covers aliases, nightlies, and existing binaries),
+        # before the remaining downloads and the deployment.
+        if opts.otel:
+            try:
+                check_mongod_version(mdb_binaries)
+            except ValueError as e:
+                LOGGER.error(str(e))
+                sys.exit(1)
+
     # Download legacy shell.
     if opts.install_legacy_shell:
         args = f"{default_args} --version 5.0"
@@ -544,8 +588,12 @@ def run(opts):
                 f"Could not find expected crypt_shared_path: {crypt_shared_path}"
             )
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
-        MO_EXPANSION_YML.write_text(crypt_text)
-        MO_EXPANSION_SH.write_text(crypt_text.replace(": ", "="))
+        # Explicit LF: these files are sourced by sh, and Windows text-mode
+        # writes would give interior lines a trailing \r.
+        with MO_EXPANSION_YML.open("w", newline="\n") as fid:
+            fid.write(crypt_text)
+        with MO_EXPANSION_SH.open("w", newline="\n") as fid:
+            fid.write(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
@@ -559,8 +607,6 @@ def run(opts):
 
     dl_end = datetime.now()
     mo_start = datetime.now()
-
-    data = get_orchestration_data(opts)
 
     # run-mongodb.sh passes --mongodb-runner even for --local-atlas, where
     # probing for runner support would install a Node we never use.
@@ -616,12 +662,25 @@ def run(opts):
         uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
 
     # Handle the cluster uri.
+    expansions = {"MONGODB_URI": uri}
+    # Always emit OTEL_TRACE_DIR: an empty value on non-OTel runs overwrites
+    # any stale value left in the environment or Evergreen expansions by an
+    # earlier --otel run (whose directory clean_run has since deleted), so
+    # driver tests gating on "unset or empty" reliably skip.
+    expansions["OTEL_TRACE_DIR"] = normalize_path(otel_root) if opts.otel else ""
     MO_EXPANSION_YML.touch()
-    MO_EXPANSION_YML.write_text(
-        MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
-    )
     MO_EXPANSION_SH.touch()
-    MO_EXPANSION_SH.write_text(MO_EXPANSION_SH.read_text() + f'\nMONGODB_URI="{uri}"')
+    yml_text = MO_EXPANSION_YML.read_text()
+    sh_text = MO_EXPANSION_SH.read_text()
+    for key, value in expansions.items():
+        yml_text += f'\n{key}: "{value}"'
+        sh_text += f'\n{key}="{value}"'
+    # Explicit LF: these files are sourced by sh, and Windows text-mode
+    # writes would give interior lines a trailing \r.
+    with MO_EXPANSION_YML.open("w", newline="\n") as fid:
+        fid.write(yml_text)
+    with MO_EXPANSION_SH.open("w", newline="\n") as fid:
+        fid.write(sh_text)
     URI_TXT.write_text(uri)
     LOGGER.info(f"Cluster URI: {uri}")
 
