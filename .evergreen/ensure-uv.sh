@@ -135,6 +135,10 @@ _ensure_uv_install() {
     fi
   fi
 
+  # A pip install above may have placed a fresh uv on PATH, or a shadow entry
+  # earlier in PATH may have been cached by bash. Clear the hash so bash re-scans
+  # PATH rather than reusing the binary it found before the install.
+  hash -r
   uv --version >/dev/null 2>&1 && return 0
 
   echo "uv not found; installing it into a virtual environment at $venv_dir..." >&2
@@ -237,6 +241,9 @@ ensure_uv() {
 
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
+  # The fallback venv above added its bin to PATH; re-resolve uv so bash does not
+  # keep pointing at whatever it found before the install.
+  hash -r
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
     return 0

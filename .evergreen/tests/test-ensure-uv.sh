@@ -64,16 +64,15 @@ reset_env() {
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
   export PYTHONUSERBASE="$user_base"
   unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
-  # Drop any PATH entry that already holds a uv, so ensure_uv has to install its
-  # own rather than reusing whatever the host ships.
-  local cleaned="" p
-  local IFS=":"
-  for p in $PATH; do
-    [ -n "$p" ] || continue
-    if [ -x "$p/uv" ] || [ -x "$p/uv.exe" ]; then continue; fi
-    cleaned="${cleaned:+${cleaned}:}$p"
-  done
-  export PATH="$cleaned"
+  # Shadow any preinstalled uv with a failing stub on PATH so ensure_uv has to
+  # install its own instead of reusing whatever the host ships. Shadowing, rather
+  # than dropping the PATH entry, keeps interpreters and other tools that live in
+  # the same directory (e.g. uv and python3 under /usr/local/bin) available.
+  local stub_dir="$WORK/stub"
+  mkdir -p "$stub_dir"
+  printf '#!/usr/bin/env bash\nexit 1\n' >"$stub_dir/uv"
+  chmod +x "$stub_dir/uv"
+  export PATH="$stub_dir:$PATH"
 }
 
 # Fail unless a uv is on PATH and runs.
