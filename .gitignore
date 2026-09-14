@@ -99,10 +99,12 @@ test-env.sh
 /results.json
 /test-results.json
 /mongodb
+/otel
 node_index.tab
 mongodb-binaries.tgz
 .evergreen/orchestration/configs/*/auth-oidc.json
 /.evergreen/docker/ubuntu*/mongodb
+/otel
 /mongosh
 tmp.json
 haproxy.conf
