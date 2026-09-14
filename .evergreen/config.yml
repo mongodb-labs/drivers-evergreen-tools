@@ -1488,11 +1488,8 @@ buildvariants:
     - ".local-atlas"
     - ".github-app"
 
-# RHEL 8.2 arm64 is the host PYTHON-6005 was filed for: its system python3 is
-# 3.6, which uv publishes no distribution for, and that Evergreen image does not
-# ship uv. clear_persisted_uv drops any uv an earlier task installed under the
-# home directory, so ensure_uv has to select an interpreter and only the
-# toolchain can install one. Reversing that precedence fails this variant.
+# RHEL 8.2 arm64's system python3 is 3.6 and the image ships no uv, so
+# ensure_uv must use the toolchain interpreter; reversing the precedence fails.
 - name: tests-rhel82-arm64
   display_name: "RHEL 8.2 ARM64"
   run_on:
