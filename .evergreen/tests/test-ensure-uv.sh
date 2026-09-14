@@ -124,7 +124,11 @@ test_no_venv_module() {
   (
     reset_env
     export PYTHONPATH="$stub"
-    if python3 -c 'import venv' >/dev/null 2>&1; then
+    # Use the pre-resolved interpreter rather than a bare `python3` from PATH:
+    # reset_env drops entries holding uv, and on hosts where uv and python3 are
+    # co-located (e.g. /usr/local/bin) that would hide the interpreter this check
+    # needs.
+    if "$PY_BIN" -c 'import venv' >/dev/null 2>&1; then
       echo "expected the venv module to be disabled; this test is no longer testing anything" >&2
       exit 1
     fi

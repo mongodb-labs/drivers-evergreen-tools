@@ -91,16 +91,19 @@ _ensure_uv_add_user_bin() {
 # Install uv using interpreter $1, building a virtual environment at $2 if needed,
 # with all output appended to $3. Not meant to be called directly.
 #
-# Tries `pip install --user` and then a virtual environment, because no single
-# method covers every host we run on:
+# Install uv into the active environment when possible; otherwise use
+# `pip install --user`, falling back to a throwaway virtual environment, because
+# no single method covers every host we run on:
 #
+# - Callers inside an active venv have pip, but pip refuses `--user` there, so
+#   uv installs into that venv and PATH points at it directly.
+# - Callers not in a venv install with `pip install --user`, which leaves the
+#   system Python's site-packages alone.
 # - Remote KMS VMs provisioned before python3-pip was added to their setup scripts
 #   have no system pip. These are real Debian 11 cloud images, and Debian disables
 #   `ensurepip` for the system python, so only the venv works there.
 # - Evergreen's debian11 images have pip but no python3-venv, so `python3 -m venv`
 #   fails outright and only pip works there.
-# - Callers already inside an active venv have pip, but pip refuses `--user`
-#   inside one, so again only the venv works.
 #
 # Keep the venv fallback. The legacy KMS VMs still need it, and it is the
 # backstop for any host where the pip path cannot install uv.
