@@ -21,6 +21,7 @@ set -eu
 #   INSTALL_LEGACY_SHELL   Set to a non-empty string to install the legacy mongo shell.
 #   TLS_PEM_KEY_FILE       Set a .pem file that contains the TLS certificate and key for the server
 #   TLS_CA_FILE            Set a .pem file that contains the root certificate chain for the server
+#   OTEL                   Set to a non-empty string to enable the OpenTelemetry file exporter on every mongod/mongos (requires MongoDB 9.0+; exports OTEL_TRACE_DIR via mo-expansion). See .evergreen/orchestration/README.md.
 
 # See https://stackoverflow.com/questions/35006457/choosing-between-0-and-bash-source/35006505#35006505
 # Why we need this syntax when sh is not aliased to bash (this script must be able to be called from sh)
