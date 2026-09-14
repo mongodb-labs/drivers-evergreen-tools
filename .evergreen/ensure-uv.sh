@@ -104,8 +104,8 @@ _ensure_uv_add_user_bin() {
 # - The docker test images install a deadsnakes python with venv but no pip, so the
 #   venv covers them as well.
 #
-# Keep the venv path as the backstop: the legacy KMS scripts still rely on it, and
-# it covers any host or future edge case the pip route misses.
+# Keep the venv fallback. The legacy KMS VMs still need it, and it is the
+# backstop for any host where the pip path cannot install uv.
 #
 # Every step tolerates failure, since a later one may still succeed.
 _ensure_uv_install() {
