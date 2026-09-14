@@ -98,9 +98,8 @@ rm -rf ${EXISTING_BIN_LATEST}
 OTEL=1 MONGODB_VERSION=latest bash ./run-mongodb.sh start
 # run() silently falls back to mongo-orchestration when mongodb-runner is
 # unsupported on the host, which would make the assertions below meaningless
-# for this leg. Only the runner path writes out.log as JSON-serialized
-# cluster info; mongo-orchestration writes plain daemon log text.
-if ! uv run python -c "import json; json.load(open('orchestration/out.log'))" 2>/dev/null; then
+MO_HOME=${MONGO_ORCHESTRATION_HOME:-${DRIVERS_TOOLS}/.evergreen/orchestration}
+if ! uv run python -c "import json; json.load(open('${MO_HOME}/out.log'))" 2>/dev/null; then
   echo "ERROR: mongodb-runner path fell back to mongo-orchestration"
   exit 1
 fi

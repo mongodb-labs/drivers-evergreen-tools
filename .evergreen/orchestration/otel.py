@@ -50,7 +50,6 @@ def handle_otel_config(data, otel_root):
 
     def traverse(root):
         if isinstance(root, list):
-            # Guard items: custom configs can hold lists of scalars.
             [traverse(i) for i in root if isinstance(i, (dict, list))]
             return
         if "ipv6" in root:
@@ -63,9 +62,6 @@ def handle_otel_config(data, otel_root):
     traverse(data)
 
     if not members:
-        # A config this traversal cannot recognize would otherwise be
-        # silently left un-instrumented while OTEL_TRACE_DIR is still
-        # exported, and the prose test would poll for spans that never come.
         raise ValueError(
             "--otel found no cluster members to configure in the "
             "orchestration config (members are identified by an 'ipv6' key "

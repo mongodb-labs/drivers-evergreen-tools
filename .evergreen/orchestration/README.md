@@ -53,7 +53,7 @@ stale value from an earlier opt-in run is always overwritten). Driver test
 suites should:
 
 - Skip the prose test when `OTEL_TRACE_DIR` is unset or empty (this covers
-  every environment that did not opt in — no same-host detection needed).
+  every environment that did not opt in).
 - Enable `OTEL` only in a dedicated task or variant pinned to a 9.0+
   version (e.g. `VERSION: latest` or an explicit `9.x`), never in a shared
   orchestration function — the version fail-fast will break every variant
