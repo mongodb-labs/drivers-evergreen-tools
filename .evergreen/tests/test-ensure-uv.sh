@@ -34,8 +34,8 @@ for c in python3 $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr)
   fi
 done
 
-if [ -z "$PY_BIN" ] || ! "$PY_BIN" -m venv --help >/dev/null 2>&1 || ! "$PY_BIN" -m pip --version >/dev/null 2>&1; then
-  echo "test-ensure-uv.sh: no Python 3.8+ with venv and pip; skipping."
+if [ -z "$PY_BIN" ] || ! "$PY_BIN" -m pip --version >/dev/null 2>&1; then
+  echo "test-ensure-uv.sh: no Python 3.8+ with pip; skipping."
   make -C "$DRIVERS_TOOLS" test
   exit 0
 fi
@@ -57,6 +57,12 @@ reset_env() {
   local tools_dir
   tools_dir="$(mktemp -d "$WORK/tools.XXXXXX")"
   export DRIVERS_TOOLS="$tools_dir"
+  # pip's user install dir is %APPDATA% on Windows, not HOME, so isolate it too.
+  # Without this a uv left by an earlier case or task can satisfy ensure_uv
+  # without exercising an install path.
+  local user_base
+  user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
+  export PYTHONUSERBASE="$user_base"
   unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
   # Drop any PATH entry that already holds a uv, so ensure_uv has to install its
   # own rather than reusing whatever the host ships.
@@ -79,7 +85,14 @@ assert_uv_available() {
 test_inside_active_venv() {
   local outer="$WORK/outer"
   local venv_bin="$outer/$VENV_SUBDIR"
-  "$PY_BIN" -m venv --clear "$outer"
+  # venv --help does not prove creation works: Debian-family pythons without the
+  # python3-venv package still print help, then fail for want of ensurepip.
+  # Probe the real thing and skip only this case so the pip-without-venv case
+  # below still runs.
+  if ! "$PY_BIN" -m venv --clear "$outer" >/dev/null 2>&1; then
+    echo "Testing ensure_uv inside an active venv ... skipped (venv creation unavailable)."
+    return 0
+  fi
   echo "Testing ensure_uv inside an active venv ..."
   (
     reset_env
