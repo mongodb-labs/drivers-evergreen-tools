@@ -101,8 +101,6 @@ _ensure_uv_add_user_bin() {
 #   fails outright and only pip works there.
 # - Callers already inside an active venv have pip, but pip refuses `--user`
 #   inside one, so again only the venv works.
-# - The docker test images install a deadsnakes python with venv but no pip, so the
-#   venv covers them as well.
 #
 # Keep the venv fallback. The legacy KMS VMs still need it, and it is the
 # backstop for any host where the pip path cannot install uv.
