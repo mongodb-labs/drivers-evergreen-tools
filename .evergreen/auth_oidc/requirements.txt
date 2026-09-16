@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements-in.txt
 #
+--only-binary=pydantic-core
 annotated-types==0.7.0
     # via pydantic
 azure-core==1.38.0
@@ -64,9 +65,9 @@ pycryptodomex==3.23.0
     #   oic
     #   pyjwkest
     #   pyop
-pydantic==2.11.7
+pydantic==2.12.5
     # via pydantic-settings
-pydantic-core==2.33.2
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.10.1
     # via oic
@@ -105,7 +106,7 @@ typing-extensions==4.14.1
     #   pydantic-core
     #   pyopenssl
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
