@@ -168,7 +168,7 @@ _ensure_uv_install() {
 # Sets the following environment variables:
 #
 # - PYENV_VERSION (only when pyenv is installed)
-# - PATH (~/.local/bin, the venv, and pip's `--user` script directory)
+# - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
