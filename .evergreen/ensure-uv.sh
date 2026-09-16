@@ -173,7 +173,8 @@ _ensure_uv_install() {
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
 # Looks everywhere uv may already be, and only then hands off to
-# _ensure_uv_install, which documents why installing it takes two attempts.
+# _ensure_uv_install, which tries the active venv, then `pip install --user`,
+# then a fallback venv.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {

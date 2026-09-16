@@ -25,9 +25,9 @@ case "$(uname -s)" in
 esac
 
 # ensure_uv only uses a Python 3.8+ interpreter, so build its test venv with one.
-# On RHEL 8 the system python3 is 3.6; fall back to the toolchain when needed.
+# Try candidates in ensure_uv's own order: the MongoDB toolchain, then the system.
 PY_BIN=""
-for c in python3 $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) python; do
+for c in $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) python3 python; do
   if command -v "$c" >/dev/null 2>&1 && "$(command -v "$c")" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
     PY_BIN="$(command -v "$c")"
     break
@@ -44,10 +44,9 @@ ENSURE_UV="$SCRIPT_DIR/../ensure-uv.sh"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/ensure-uv-test.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 
-# ensure_uv points PATH at the uv it uses and isolates its cache/tool dirs.
-# Point DRIVERS_TOOLS at a temp dir so nothing leaks into the checkout, clear
-# the interpreter hints, and drop any preinstalled uv so ensure_uv has to
-# install one.
+# Isolate each case from the host: private HOME/TMPDIR, a temp DRIVERS_TOOLS
+# (uv's cache/tool dirs live under it), cleared interpreter hints, and no
+# working uv already on PATH.
 reset_env() {
   mkdir -p "$WORK/home" "$WORK/tmp"
   export HOME="$WORK/home"
@@ -57,15 +56,12 @@ reset_env() {
   local tools_dir
   tools_dir="$(mktemp -d "$WORK/tools.XXXXXX")"
   export DRIVERS_TOOLS="$tools_dir"
-  # pip's user install dir is %APPDATA% on Windows, not HOME, so isolate it too.
-  # Without this a uv left by an earlier case or task can satisfy ensure_uv
-  # without exercising an install path.
+  # Isolate pip's user install dir too; it is %APPDATA% on Windows, not HOME.
   local user_base
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
   export PYTHONUSERBASE="$user_base"
   unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
-  # Shadow preinstalled uv with a failing stub so ensure_uv has to install its own,
-  # rather than dropping the PATH entry and hiding tools co-located with uv.
+  # A failing uv stub forces an install while keeping co-located tools visible.
   local stub_dir="$WORK/stub"
   mkdir -p "$stub_dir"
   printf '#!/usr/bin/env bash\nexit 1\n' >"$stub_dir/uv"
@@ -82,10 +78,8 @@ assert_uv_available() {
 test_inside_active_venv() {
   local outer="$WORK/outer"
   local venv_bin="$outer/$VENV_SUBDIR"
-  # venv --help does not prove creation works: Debian-family pythons without the
-  # python3-venv package still print help, then fail for want of ensurepip.
-  # Probe the real thing and skip only this case so the pip-without-venv case
-  # below still runs.
+  # Probe real venv creation: help text is no proof (Debian without
+  # python3-venv). Skip this case only, so the next one still runs.
   if ! "$PY_BIN" -m venv --clear "$outer" >/dev/null 2>&1; then
     echo "Testing ensure_uv inside an active venv ... skipped (venv creation unavailable)."
     return 0
@@ -99,8 +93,7 @@ test_inside_active_venv() {
     . "$ENSURE_UV"
     ensure_uv
     assert_uv_available
-    # The venv branch installs into the active venv and points PATH at it, so
-    # the venv now carries uv of its own and that is the uv on PATH.
+    # uv should be installed into the active venv and be the uv on PATH.
     [ -x "$venv_bin/$UV_NAME" ] || {
       echo "expected $UV_NAME installed into the active venv" >&2
       return 1
@@ -121,10 +114,7 @@ test_no_venv_module() {
   (
     reset_env
     export PYTHONPATH="$stub"
-    # Use the pre-resolved interpreter rather than a bare `python3` from PATH:
-    # reset_env drops entries holding uv, and on hosts where uv and python3 are
-    # co-located (e.g. /usr/local/bin) that would hide the interpreter this check
-    # needs.
+    # The pre-resolved interpreter, already vetted for pip and 3.8+ above.
     if "$PY_BIN" -c 'import venv' >/dev/null 2>&1; then
       echo "expected the venv module to be disabled; this test is no longer testing anything" >&2
       exit 1
