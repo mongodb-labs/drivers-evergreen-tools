@@ -1,3 +1,6 @@
+# Fail fast rather than building pydantic-core from source when it has no
+# wheel for the host interpreter (e.g. CPython 3.14, DRIVERS-3649).
+--only-binary=pydantic-core
 boto3~=1.35.0
 pyop~=3.4.0
 pymongo[aws]~=4.0
