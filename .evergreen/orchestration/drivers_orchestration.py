@@ -27,6 +27,7 @@ import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mongodb_runner import _mongodb_runner_supported, start_mongodb_runner
+
 from otel import (
     OTEL_DIR_NAME,
     check_mongod_version,
