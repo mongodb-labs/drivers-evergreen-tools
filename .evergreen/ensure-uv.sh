@@ -79,7 +79,9 @@ _ensure_uv_add_path() {
 # A no-op if the interpreter cannot report it. Not meant to be called directly.
 _ensure_uv_add_user_bin() {
   declare base
-  base="$("${1:?}" -c 'import os, sysconfig; print(sysconfig.get_path("scripts", "nt_user" if os.name == "nt" else "posix_user"))' 2>/dev/null)" || return 0
+  # A native Windows interpreter ends its stdout lines with \r\n; a trailing
+  # \r would corrupt the PATH entry and break bash's lookup of the directory.
+  base="$("${1:?}" -c 'import os, sysconfig; print(sysconfig.get_path("scripts", "nt_user" if os.name == "nt" else "posix_user"))' 2>/dev/null | tr -d '\r')" || return 0
   [ -n "$base" ] || return 0
   if [ "${OSTYPE:-}" = cygwin ]; then
     # A native Windows interpreter reports a C:\ style path; cygpath it for
@@ -132,7 +134,9 @@ _ensure_uv_install() {
       # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
       # Ubuntu 20.04) mis-resolves uv's wheel tags.
       PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
-      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
+      # --force-reinstall because pip no-ops when site-packages already has uv,
+      # leaving nothing for the user bin to shadow a broken uv on PATH with.
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --force-reinstall uv >>"$log" 2>&1 || true
 
       _ensure_uv_add_user_bin "$py"
     fi
