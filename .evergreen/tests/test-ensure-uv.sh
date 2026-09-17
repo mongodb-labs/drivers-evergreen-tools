@@ -25,9 +25,15 @@ case "$(uname -s)" in
 esac
 
 # ensure_uv only uses a Python 3.8+ interpreter, so build its test venv with one.
-# Try candidates in ensure_uv's own order: the MongoDB toolchain, then the system.
+# Try candidates in ensure_uv's own order: the python toolchain's Current
+# interpreter, the MongoDB toolchain, then the system.
+case "$(uname -s)" in
+  Linux) CURRENT_PY=/opt/python/Current/bin/python3 ;;
+  Darwin) CURRENT_PY="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
+  *) CURRENT_PY="C:/python/Current/python.exe" ;;
+esac
 PY_BIN=""
-for c in $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) python3 python; do
+for c in "$CURRENT_PY" $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr) python3 python; do
   if command -v "$c" >/dev/null 2>&1 && "$(command -v "$c")" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
     PY_BIN="$(command -v "$c")"
     break

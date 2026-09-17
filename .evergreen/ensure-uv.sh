@@ -196,10 +196,12 @@ ensure_uv() {
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
   # Use the active venv's interpreter so uv installs into it; see the in-venv
-  # branch of _ensure_uv_install. Otherwise prefer the MongoDB toolchain's
-  # python3, which is modern, over the system one: it is 3.6 on
-  # rhel82-arm64-small, and rhel7 has no python3 on PATH at all.
-  declare py="" toolchain_py
+  # branch of _ensure_uv_install. Otherwise prefer the python toolchain's
+  # Current interpreter when it is new enough to bootstrap uv from (it always
+  # exists on Windows images), then the MongoDB toolchain's python3, then the
+  # system python3/python. The system python3 is 3.6 on rhel82-arm64-small,
+  # and rhel7 has no python3 on PATH at all.
+  declare py="" current_py toolchain_py
   if [ -n "${VIRTUAL_ENV:-}" ]; then
     if [ -x "$VIRTUAL_ENV/bin/python" ]; then
       py="$VIRTUAL_ENV/bin/python"
@@ -208,13 +210,23 @@ ensure_uv() {
     fi
   fi
   if [ -z "$py" ]; then
-    toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
-    if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
-      py="$toolchain_py"
-    elif command -v python3 >/dev/null 2>&1; then
-      py="$(command -v python3)"
-    elif command -v python >/dev/null 2>&1; then
-      py="$(command -v python)"
+    case "${OSTYPE:-}" in
+    cygwin) current_py="C:/python/Current/python.exe" ;;
+    darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
+    *) current_py="/opt/python/Current/bin/python3" ;;
+    esac
+    if [ -x "$current_py" ] &&
+      "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+      py="$current_py"
+    else
+      toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
+      if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
+        py="$toolchain_py"
+      elif command -v python3 >/dev/null 2>&1; then
+        py="$(command -v python3)"
+      elif command -v python >/dev/null 2>&1; then
+        py="$(command -v python)"
+      fi
     fi
   fi
 

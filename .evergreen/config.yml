@@ -1536,6 +1536,17 @@ buildvariants:
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
 
+# An alternate Windows host that runs a subset of the test suites.
+- name: tests-windows-2022-latest
+  display_name: "Windows 2022 partial tests"
+  run_on:
+    - windows-2022-latest-small
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
+
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
   display_name: "${os-fully-featured} ${auth} ${ssl}"
