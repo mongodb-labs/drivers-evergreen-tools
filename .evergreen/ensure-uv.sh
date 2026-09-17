@@ -196,11 +196,8 @@ ensure_uv() {
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
   # Use the active venv's interpreter so uv installs into it; see the in-venv
-  # branch of _ensure_uv_install. Otherwise prefer the python toolchain's
-  # Current interpreter when it is new enough to bootstrap uv from (it always
-  # exists on Windows images), then the MongoDB toolchain's python3, then the
-  # system python3/python. The system python3 is 3.6 on rhel82-arm64-small,
-  # and rhel7 has no python3 on PATH at all.
+  # branch of _ensure_uv_install. Otherwise prefer the toolchain interpreters
+  # over the system python3, which can be old (rhel82-arm64: 3.6) or absent.
   declare py="" current_py toolchain_py
   if [ -n "${VIRTUAL_ENV:-}" ]; then
     if [ -x "$VIRTUAL_ENV/bin/python" ]; then
