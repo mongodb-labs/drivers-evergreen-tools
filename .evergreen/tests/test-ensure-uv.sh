@@ -115,8 +115,10 @@ test_inside_active_venv() {
       echo "expected $UV_NAME installed into the active venv" >&2
       return 1
     }
-    [ "$(command -v uv)" = "$venv_bin/$UV_NAME" ] || {
-      echo "expected uv on PATH from the active venv, got $(command -v uv)" >&2
+    # Cygwin bash reports `command -v` results without the .exe suffix.
+    found="$(command -v uv)"
+    [ "${found%.exe}" = "${venv_bin}/${UV_NAME%.exe}" ] || {
+      echo "expected uv on PATH from the active venv, got $found" >&2
       return 1
     }
   )
