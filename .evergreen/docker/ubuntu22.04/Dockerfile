@@ -25,10 +25,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 && apt-get -qq update \
 && apt-get -qq -y install $PYTHON $PYTHON-venv < /dev/null > /dev/null \
 && ln -sf /usr/bin/$PYTHON /usr/bin/python3 \
-&& ( $PYTHON -m ensurepip < /dev/null > /dev/null 2>&1 \
-     || ( curl --retry 5 -sSfL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
-          && $PYTHON /tmp/get-pip.py < /dev/null > /dev/null 2>&1 \
-          && rm -f /tmp/get-pip.py ) ) \
+&& $PYTHON -m ensurepip < /dev/null > /dev/null 2>&1 \
 && rm -rf /var/lib/apt/lists/*
 
 ARG USER_ID

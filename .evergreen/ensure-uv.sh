@@ -84,8 +84,6 @@ _ensure_uv_add_user_bin() {
   base="$("${1:?}" -c 'import os, sysconfig; print(sysconfig.get_path("scripts", "nt_user" if os.name == "nt" else "posix_user"))' 2>/dev/null | tr -d '\r')" || return 0
   [ -n "$base" ] || return 0
   if [ "${OSTYPE:-}" = cygwin ]; then
-    # A native Windows interpreter reports a C:\ style path; cygpath it for
-    # PATH. A Cygwin python's POSIX path passes through unchanged.
     base="$(cygpath -m "$base")"
   fi
   _ensure_uv_add_path "$base"
@@ -226,7 +224,7 @@ ensure_uv() {
     *) current_py="/opt/python/Current/bin/python3" ;;
     esac
     if [ -x "$current_py" ] &&
-      "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+      "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
       py="$current_py"
     else
       toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true

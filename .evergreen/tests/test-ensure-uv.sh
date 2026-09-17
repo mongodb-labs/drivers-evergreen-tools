@@ -13,7 +13,7 @@ case "$(uname -s)" in
     VENV_SUBDIR=bin
     UV_NAME=uv
     ;;
-  MINGW* | MSYS* | CYGWIN*)
+  CYGWIN*)
     VENV_SUBDIR=Scripts
     UV_NAME=uv.exe
     ;;
