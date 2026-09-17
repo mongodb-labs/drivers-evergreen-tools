@@ -1547,6 +1547,18 @@ buildvariants:
     - "test-mongodb-runner-partial"
     - "test-csfle"
 
+# Both Windows hosts have a python toolchain; the suites run on each variant
+# to make sure they pass on both.
+- name: tests-windows-vsCurrent
+  display_name: "Windows vsCurrent partial tests"
+  run_on:
+    - windows-vsCurrent-small
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
+
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
   display_name: "${os-fully-featured} ${auth} ${ssl}"
