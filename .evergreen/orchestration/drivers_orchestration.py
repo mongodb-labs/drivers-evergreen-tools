@@ -75,8 +75,9 @@ def get_options():
             "--version",
             help='The version to download. "latest" downloads the newest nightly '
             'build and "latest-stable" the newest stable release; the GitHub '
-            'Action maps "latest" to "latest-stable". Under --local-atlas this '
-            "is the Docker image tag.",
+            'Action maps "latest" to "latest-stable". For an authorized user, '
+            '"latest-build" passes through and reaches the private bucket. '
+            "Under --local-atlas this is the Docker image tag.",
         )
         parser.add_argument(
             "--topology",
@@ -519,6 +520,11 @@ def run(opts):
     if (
         "GITHUB_ACTION" in os.environ or opts.local_atlas
     ) and mongodl_version == "latest":
+        LOGGER.warning(
+            'Using "latest-stable" in place of the requested "latest" to avoid '
+            'needing AWS credentials; use "latest-build" to request the nightly '
+            "build explicitly."
+        )
         mongodl_version = "latest-stable"
     cache_dir = DRIVERS_TOOLS / ".local/cache"
     cache_dir_str = normalize_path(cache_dir)

@@ -42,7 +42,7 @@ def _has_s3_access(s3, key: str) -> bool:
 
 
 def _resolve_s3_client(key: str):
-    from botocore.exceptions import ClientError, NoCredentialsError
+    from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 
     # Stage 1: use whatever identity is already ambient.
     s3 = _boto3_client("s3", _SERVER_ARTIFACTS_REGION)
@@ -55,7 +55,16 @@ def _resolve_s3_client(key: str):
         config = json.loads(
             secretsmanager.get_secret_value(SecretId=vault)["SecretString"]
         )
-    except (ClientError, NoCredentialsError) as err:
+    except BotoCoreError as err:
+        # Covers NoCredentialsError, ProfileNotFound, and the other client-side
+        # errors: there is no usable ambient identity at all.
+        raise RuntimeError(
+            "cannot resolve credentials for the private server artifacts: no "
+            "usable AWS identity. Set AWS_PROFILE (or AWS_ACCESS_KEY_ID / "
+            "AWS_SECRET_ACCESS_KEY), or use --version latest-stable, which "
+            "needs no AWS access."
+        ) from err
+    except ClientError as err:
         raise RuntimeError(
             "cannot resolve credentials for the private server artifacts; the "
             f"ambient identity cannot read the {vault!r} vault"

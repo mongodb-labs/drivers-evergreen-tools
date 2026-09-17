@@ -5,7 +5,8 @@ inputs:
     description: >-
       MongoDB version to install. Defaults to "latest-stable"; "latest" is
       mapped to "latest-stable", since GitHub Actions runners typically lack
-      AWS credentials for the nightly builds. Under "local-atlas" the default
+      AWS credentials for the nightly builds. Use "latest-build" to request
+      the nightly build explicitly. Under "local-atlas" the default
       is "latest", the mongodb-atlas-local Docker image tag.
     required: false
   topology:
