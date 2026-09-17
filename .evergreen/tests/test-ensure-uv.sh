@@ -46,6 +46,16 @@ if [ -z "$PY_BIN" ] || ! "$PY_BIN" -m pip --version >/dev/null 2>&1; then
   exit 0
 fi
 
+# Native Windows interpreters resolve /cygdrive/... against the current drive's
+# root, so hand them a C:/ style path.
+to_py_path() {
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    cygpath -m "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 ENSURE_UV="$SCRIPT_DIR/../ensure-uv.sh"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/ensure-uv-test.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
@@ -63,9 +73,10 @@ reset_env() {
   tools_dir="$(mktemp -d "$WORK/tools.XXXXXX")"
   export DRIVERS_TOOLS="$tools_dir"
   # Isolate pip's user install dir too; it is %APPDATA% on Windows, not HOME.
-  local user_base
+  local user_base py_user_base
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
-  export PYTHONUSERBASE="$user_base"
+  py_user_base="$(to_py_path "$user_base")"
+  export PYTHONUSERBASE="$py_user_base"
   unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
   # A failing uv stub forces an install while keeping co-located tools visible.
   local stub_dir="$WORK/stub"
@@ -86,7 +97,7 @@ test_inside_active_venv() {
   local venv_bin="$outer/$VENV_SUBDIR"
   # Probe real venv creation: help text is no proof (Debian without
   # python3-venv). Skip this case only, so the next one still runs.
-  if ! "$PY_BIN" -m venv --clear "$outer" >/dev/null 2>&1; then
+  if ! "$PY_BIN" -m venv --clear "$(to_py_path "$outer")" >/dev/null 2>&1; then
     echo "Testing ensure_uv inside an active venv ... skipped (venv creation unavailable)."
     return 0
   fi
@@ -114,12 +125,14 @@ test_inside_active_venv() {
 
 test_no_venv_module() {
   local stub="$WORK/novenv"
+  local py_stub
+  py_stub="$(to_py_path "$stub")"
   mkdir -p "$stub/venv"
   printf 'raise ImportError("venv disabled for test")\n' >"$stub/venv/__init__.py"
   echo "Testing ensure_uv without a venv module ..."
   (
     reset_env
-    export PYTHONPATH="$stub"
+    export PYTHONPATH="$py_stub"
     # The pre-resolved interpreter, already vetted for pip and 3.8+ above.
     if "$PY_BIN" -c 'import venv' >/dev/null 2>&1; then
       echo "expected the venv module to be disabled; this test is no longer testing anything" >&2

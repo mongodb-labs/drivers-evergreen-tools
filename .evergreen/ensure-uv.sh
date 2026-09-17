@@ -72,18 +72,21 @@ _ensure_uv_add_path() {
 # _ensure_uv_add_user_bin (internal)
 #
 # Put $1's `pip install --user` script directory on PATH. That directory is
-# version and platform specific (~/.local/bin on Linux, ~/Library/Python/X.Y/bin
-# on macOS, %APPDATA%\Python\PythonXY\Scripts on Windows), so ask the interpreter
-# rather than assuming. Only one of bin/Scripts exists on any given platform, so
-# adding both is harmless.
+# version and platform specific, so ask the interpreter's sysconfig for the
+# user scheme rather than deriving it from --user-base: on Windows it is
+# %APPDATA%\Python\PythonXY\Scripts, not $base/Scripts.
 #
 # A no-op if the interpreter cannot report it. Not meant to be called directly.
 _ensure_uv_add_user_bin() {
   declare base
-  base="$("${1:?}" -m site --user-base 2>/dev/null)" || return 0
+  base="$("${1:?}" -c 'import os, sysconfig; print(sysconfig.get_path("scripts", "nt_user" if os.name == "nt" else "posix_user"))' 2>/dev/null)" || return 0
   [ -n "$base" ] || return 0
-  _ensure_uv_add_path "$base/bin"
-  _ensure_uv_add_path "$base/Scripts"
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    # A native Windows interpreter reports a C:\ style path; cygpath it for
+    # PATH. A Cygwin python's POSIX path passes through unchanged.
+    base="$(cygpath -m "$base")"
+  fi
+  _ensure_uv_add_path "$base"
 }
 
 # _ensure_uv_install (internal)
@@ -144,7 +147,13 @@ _ensure_uv_install() {
   echo "uv not found; installing it into a virtual environment at $venv_dir..." >&2
 
   # --clear replaces a previously broken venv; a working one was found already.
-  "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1 || return 0
+  # Native Windows interpreters resolve /cygdrive/... against the current
+  # drive's root, so hand them a C:/ style path; see _ensure_uv_scope_paths.
+  declare venv_arg="$venv_dir"
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    venv_arg="$(cygpath -m "$venv_dir")"
+  fi
+  "$py" -m venv --clear "$venv_arg" >>"$log" 2>&1 || return 0
 
   # Windows venvs put the interpreter under Scripts, everything else in bin. A
   # venv seeds itself with the system interpreter's pip, so it needs the same
