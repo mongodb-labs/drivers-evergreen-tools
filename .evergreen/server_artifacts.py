@@ -9,6 +9,10 @@ _SERVER_ARTIFACTS_REGION = "us-east-1"
 _DEFAULT_SECRET_VAULT = "drivers/devprod-release-infrastructure"
 
 
+class NoAWSCredentialsError(RuntimeError):
+    """Raised when no usable AWS credentials are available at all."""
+
+
 def _boto3_client(service: str, region: str, creds: "dict|None" = None):
     import boto3
 
@@ -58,7 +62,7 @@ def _resolve_s3_client(key: str):
     except BotoCoreError as err:
         # Covers NoCredentialsError, ProfileNotFound, and the other client-side
         # errors: there is no usable ambient identity at all.
-        raise RuntimeError(
+        raise NoAWSCredentialsError(
             "cannot resolve credentials for the private server artifacts: no "
             "usable AWS identity. Set AWS_PROFILE (or AWS_ACCESS_KEY_ID / "
             "AWS_SECRET_ACCESS_KEY), or use --version latest-stable, which "

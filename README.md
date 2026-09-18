@@ -59,6 +59,15 @@ it names (the same setup documented in
 than `latest`/`latest-build` (e.g. `latest-stable`, or a pinned version like
 `8.0`) is unaffected and needs no AWS access.
 
+As a migration fallback, if there are no AWS credentials at all, `mongodl`
+falls back to the old public `downloads.10gen.com` download link and emits a
+prominent `FALLBACK:` warning in the logs. The legacy link is deprecated and
+will be removed in a future release, so treat that warning as a signal to
+configure AWS credentials as described above (see the DRIVERS-3628 migration
+guide); AWS-related failures with
+credentials present (e.g. an identity that cannot reach the bucket or the
+vault) still fail the download.
+
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub
 Action also maps `latest` to `latest-stable` since runners typically lack AWS

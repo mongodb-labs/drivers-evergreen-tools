@@ -815,6 +815,51 @@ def _published_build_url(
     return data[value], checksum
 
 
+def _legacy_latest_build_url(
+    target: str,
+    arch: str,
+    edition: str,
+    component: str,
+    branch: "str|None",
+) -> str:
+    """
+    Get the URL for an "unpublished" "latest" build from the legacy public host.
+
+    This is the pre-S3 download path, kept as a fallback for environments
+    without AWS credentials. These builds aren't published in a JSON manifest,
+    so we have to form the URL according to the user's parameters. We might
+    fail to download a build if there is no matching file.
+    """
+    # Normalize the filename components based on the download target
+    platform = {
+        "windows": "windows",
+        "win32": "win32",
+        "macos": "osx",
+    }.get(target, "linux")
+    typ = {
+        "windows": "windows",
+        "win32": "win32",
+        "macos": "macos",
+    }.get(target, "linux")
+    component_name = {
+        "archive": "mongodb",
+        "crypt_shared": "mongo_crypt_shared_v1",
+    }.get(component, component)
+    base = f"https://downloads.10gen.com/{platform}"
+    # Windows has Zip files
+    ext = "zip" if target == "windows" else "tgz"
+    # Enterprise builds have an "enterprise" infix
+    ent_infix = "enterprise-" if edition == "enterprise" else ""
+    # Some platforms have a filename infix
+    tgt_infix = (target + "-") if target not in ("windows", "win32", "macos") else ""
+    # Non-master branch uses a filename infix
+    br_infix = (branch + "-") if (branch is not None and branch != "master") else ""
+    filename = (
+        f"{component_name}-{typ}-{arch}-{ent_infix}{tgt_infix}{br_infix}latest.{ext}"
+    )
+    return f"{base}/{filename}"
+
+
 def _latest_build_url(
     cache: Cache,
     target: str,
@@ -829,8 +874,11 @@ def _latest_build_url(
     These builds aren't published in a JSON manifest, so we have to form the
     S3 key according to the user's parameters. We might fail to download a
     build if there is no matching file.
+
+    If there are no AWS credentials, fall back to the legacy public download
+    link with a pronounced warning.
     """
-    from server_artifacts import presigned_url
+    from server_artifacts import NoAWSCredentialsError, presigned_url
 
     # Normalize the filename components based on the download target
     typ = {
@@ -866,7 +914,24 @@ def _latest_build_url(
         if branch is None or branch == "master"
         else f"mongodb-mongo-{branch}-staging"
     )
-    return presigned_url(f"{branch_folder}/{filename}")
+    try:
+        return presigned_url(f"{branch_folder}/{filename}")
+    except NoAWSCredentialsError:
+        legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
+        LOGGER.warning("*" * 78)
+        LOGGER.warning(
+            "FALLBACK: No AWS credentials were found, so the latest build will "
+            "be downloaded from the LEGACY public host instead of the private "
+            "S3 bucket:",
+        )
+        LOGGER.warning("    %s", legacy_url)
+        LOGGER.warning(
+            "This legacy link is deprecated and will be removed in a future "
+            "release. Configure AWS credentials (see the DRIVERS-3628 "
+            "migration guide) to download from S3."
+        )
+        LOGGER.warning("*" * 78)
+        return legacy_url
 
 
 def _dl_component(
