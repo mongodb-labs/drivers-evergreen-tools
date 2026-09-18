@@ -562,6 +562,13 @@ functions:
         binary: bash
         args: [src/.evergreen/tests/test-drivers-tools-archive.sh]
 
+  "run ensure uv test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-ensure-uv.sh]
+
   "run mongodb runner test partial":
     - command: subprocess.exec
       type: test
@@ -595,6 +602,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-otel.sh]
 
   "run ocsp test":
@@ -625,6 +633,16 @@ functions:
           rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
+  # Inline rather than a script because this runs before git.get_project, so the
+  # checkout that would hold the script does not exist yet.
+  - command: shell.exec
+    params:
+      shell: bash
+      script: |
+        if [ "${clear_persisted_uv|}" = "true" ]; then
+          echo "Removing any uv an earlier task left behind, so ensure_uv has to pick an interpreter."
+          rm -f "$HOME/.local/bin/uv"
+        fi
   - func: "fetch and prepare resources"
   - func: "assume role"
 
@@ -1054,6 +1072,11 @@ tasks:
       commands:
         - func: "run drivers tools archive test"
 
+    - name: "test-ensure-uv"
+      tags: ["pr"]
+      commands:
+        - func: "run ensure uv test"
+
     - name: "test-legacy-versions"
       commands:
         - func: "run legacy versions test"
@@ -1466,6 +1489,17 @@ buildvariants:
     - ".local-atlas"
     - ".github-app"
 
+# RHEL 8.2 arm64's system python3 is 3.6 and the image ships no uv, so
+# ensure_uv must use the toolchain interpreter; reversing the precedence fails.
+- name: tests-rhel82-arm64
+  display_name: "RHEL 8.2 ARM64"
+  run_on:
+    - rhel82-arm64-small
+  expansions:
+    clear_persisted_uv: "true"
+  tasks:
+    - name: "test-latest-standalone"
+
 - name: tests-rhel
   display_name: RHEL Tests
   run_on:
@@ -1486,6 +1520,29 @@ buildvariants:
     # - "test_oidc_azure_func_task_group"
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
+
+# An alternate Windows host that runs a subset of the test suites.
+- name: tests-windows-2022-latest
+  display_name: "Windows 2022 partial tests"
+  run_on:
+    - windows-2022-latest-small
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
+
+# Both Windows hosts have a python toolchain; the suites run on each variant
+# to make sure they pass on both.
+- name: tests-windows-vsCurrent
+  display_name: "Windows vsCurrent partial tests"
+  run_on:
+    - windows-vsCurrent-small
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
@@ -1523,6 +1580,7 @@ buildvariants:
           - "test-install-binaries"
           - "test-csfle"
           - "test-drivers-tools-archive"
+          - "test-ensure-uv"
           - "test-cli-full"
           - "test-otel"
           - "test-mongodb-runner-full"

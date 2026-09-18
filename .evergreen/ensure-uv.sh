@@ -72,18 +72,21 @@ _ensure_uv_add_path() {
 # _ensure_uv_add_user_bin (internal)
 #
 # Put $1's `pip install --user` script directory on PATH. That directory is
-# version and platform specific (~/.local/bin on Linux, ~/Library/Python/X.Y/bin
-# on macOS, %APPDATA%\Python\PythonXY\Scripts on Windows), so ask the interpreter
-# rather than assuming. Only one of bin/Scripts exists on any given platform, so
-# adding both is harmless.
+# version and platform specific, so ask the interpreter's sysconfig for the
+# user scheme rather than deriving it from --user-base: on Windows it is
+# %APPDATA%\Python\PythonXY\Scripts, not $base/Scripts.
 #
 # A no-op if the interpreter cannot report it. Not meant to be called directly.
 _ensure_uv_add_user_bin() {
   declare base
-  base="$("${1:?}" -m site --user-base 2>/dev/null)" || return 0
+  # A native Windows interpreter ends its stdout lines with \r\n; a trailing
+  # \r would corrupt the PATH entry and break bash's lookup of the directory.
+  base="$("${1:?}" -c 'import os, sysconfig; print(sysconfig.get_path("scripts", "nt_user" if os.name == "nt" else "posix_user"))' 2>/dev/null | tr -d '\r')" || return 0
   [ -n "$base" ] || return 0
-  _ensure_uv_add_path "$base/bin"
-  _ensure_uv_add_path "$base/Scripts"
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    base="$(cygpath -m "$base")"
+  fi
+  _ensure_uv_add_path "$base"
 }
 
 # _ensure_uv_install (internal)
@@ -91,42 +94,68 @@ _ensure_uv_add_user_bin() {
 # Install uv using interpreter $1, building a virtual environment at $2 if needed,
 # with all output appended to $3. Not meant to be called directly.
 #
-# Tries `pip install --user` and then a virtual environment, because no single
-# method covers every host we run on:
+# Install uv into the active environment when possible; otherwise use
+# `pip install --user`, falling back to a throwaway virtual environment, because
+# no single method covers every host we run on:
 #
+# - Callers inside an active venv have pip, but pip refuses `--user` there, so
+#   uv installs into that venv and PATH points at it directly.
+# - Callers not in a venv install with `pip install --user`, which leaves the
+#   system Python's site-packages alone.
 # - Remote KMS VMs provisioned before python3-pip was added to their setup scripts
 #   have no system pip. These are real Debian 11 cloud images, and Debian disables
 #   `ensurepip` for the system python, so only the venv works there.
 # - Evergreen's debian11 images have pip but no python3-venv, so `python3 -m venv`
 #   fails outright and only pip works there.
-# - Callers already inside an active venv have pip, but pip refuses `--user`
-#   inside one, so again only the venv works.
-# - The docker test images install a deadsnakes python with venv but no pip, so the
-#   venv covers them as well.
+#
+# Keep the venv fallback. The legacy KMS VMs still need it, and it is the
+# backstop for any host where the pip path cannot install uv.
 #
 # Every step tolerates failure, since a later one may still succeed.
 _ensure_uv_install() {
   declare py="${1:?}" venv_dir="${2:?}" log="${3:?}"
 
   if "$py" -m pip --version >/dev/null 2>&1; then
-    echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
+    if "$py" -c 'import sys; sys.exit(0 if sys.prefix != sys.base_prefix else 1)'; then
+      # Callers inside an active venv (e.g. the Node OIDC tests) have pip, but
+      # pip refuses `--user` there, so uv goes into the venv instead.
+      echo "uv not found; installing it with '$py -m pip install uv' into the venv..." >&2
+      "$py" -m pip install -q --upgrade pip >>"$log" 2>&1 || true
+      "$py" -m pip install -q uv >>"$log" 2>&1 || true
+      # The venv's bin, which is on PATH already only when the venv is activated.
+      _ensure_uv_add_path "$(dirname "$py")"
+    else
+      echo "uv not found; installing it with '$py -m pip install --user uv'..." >&2
 
-    # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
-    # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
-    # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
-    # Ubuntu 20.04) mis-resolves uv's wheel tags.
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
-    PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q uv >>"$log" 2>&1 || true
+      # PIP_BREAK_SYSTEM_PACKAGES bypasses PEP 668's externally-managed guard, which
+      # Debian and Ubuntu enable. Safe here: `--user` leaves system site-packages
+      # alone. Upgrading pip first matters because one predating PEP 600 (20.0.2 on
+      # Ubuntu 20.04) mis-resolves uv's wheel tags.
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --upgrade pip >>"$log" 2>&1 || true
+      # --force-reinstall because pip no-ops when site-packages already has uv,
+      # leaving nothing for the user bin to shadow a broken uv on PATH with.
+      PIP_BREAK_SYSTEM_PACKAGES=1 "$py" -m pip install --user -q --force-reinstall uv >>"$log" 2>&1 || true
 
-    _ensure_uv_add_user_bin "$py"
+      _ensure_uv_add_user_bin "$py"
+    fi
   fi
 
+  # A pip install above may have placed a fresh uv on PATH, or a shadow entry
+  # earlier in PATH may have been cached by bash. Clear the hash so bash re-scans
+  # PATH rather than reusing the binary it found before the install.
+  hash -r
   uv --version >/dev/null 2>&1 && return 0
 
   echo "uv not found; installing it into a virtual environment at $venv_dir..." >&2
 
   # --clear replaces a previously broken venv; a working one was found already.
-  "$py" -m venv --clear "$venv_dir" >>"$log" 2>&1 || return 0
+  # Native Windows interpreters resolve /cygdrive/... against the current
+  # drive's root, so hand them a C:/ style path; see _ensure_uv_scope_paths.
+  declare venv_arg="$venv_dir"
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    venv_arg="$(cygpath -m "$venv_dir")"
+  fi
+  "$py" -m venv --clear "$venv_arg" >>"$log" 2>&1 || return 0
 
   # Windows venvs put the interpreter under Scripts, everything else in bin. A
   # venv seeds itself with the system interpreter's pip, so it needs the same
@@ -150,12 +179,13 @@ _ensure_uv_install() {
 # Sets the following environment variables:
 #
 # - PYENV_VERSION (only when pyenv is installed)
-# - PATH (~/.local/bin, the venv, and pip's `--user` script directory)
+# - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
 #
 # Looks everywhere uv may already be, and only then hands off to
-# _ensure_uv_install, which documents why installing it takes two attempts.
+# _ensure_uv_install, which tries the active venv, then `pip install --user`,
+# then a fallback venv.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -176,19 +206,35 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  declare py=""
-  if command -v python3 >/dev/null 2>&1; then
-    py=python3
-  else
-    # Some legacy hosts (e.g. RHEL7) have no python3 on PATH at all, only an
-    # ancient Python 2 `python` that uv does not support. Prefer the MongoDB
-    # toolchain's python3, which those hosts do have.
-    declare toolchain_py
-    toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
-    if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
-      py="$toolchain_py"
-    elif command -v python >/dev/null 2>&1; then
-      py=python
+  # Use the active venv's interpreter so uv installs into it; see the in-venv
+  # branch of _ensure_uv_install. Otherwise prefer the toolchain interpreters
+  # over the system python3, which can be old (rhel82-arm64: 3.6) or absent.
+  declare py="" current_py toolchain_py
+  if [ -n "${VIRTUAL_ENV:-}" ]; then
+    if [ -x "$VIRTUAL_ENV/bin/python" ]; then
+      py="$VIRTUAL_ENV/bin/python"
+    elif [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+      py="$VIRTUAL_ENV/Scripts/python.exe"
+    fi
+  fi
+  if [ -z "$py" ]; then
+    case "${OSTYPE:-}" in
+    cygwin) current_py="C:/python/Current/python.exe" ;;
+    darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
+    *) current_py="/opt/python/Current/bin/python3" ;;
+    esac
+    if [ -x "$current_py" ] &&
+      "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
+      py="$current_py"
+    else
+      toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
+      if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
+        py="$toolchain_py"
+      elif command -v python3 >/dev/null 2>&1; then
+        py="$(command -v python3)"
+      elif command -v python >/dev/null 2>&1; then
+        py="$(command -v python)"
+      fi
     fi
   fi
 
@@ -216,6 +262,9 @@ ensure_uv() {
 
   [ -n "$py" ] && _ensure_uv_install "$py" "$venv_dir" "$log"
 
+  # The fallback venv above added its bin to PATH; re-resolve uv so bash does not
+  # keep pointing at whatever it found before the install.
+  hash -r
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
     return 0

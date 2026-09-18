@@ -120,8 +120,8 @@ test_no_venv_module() {
 
 # ensure_uv called from an active virtual environment, which is how the Node OIDC
 # tests invoke it. pip is present there, but pip refuses `--user` inside a venv, so
-# the venv fallback is the only way through, and it has to build its venv using a
-# venv's own interpreter. Neither of the cases above covers that.
+# uv installs into the active environment directly. Neither of the cases above
+# covers that.
 test_inside_active_venv() {
   local name="$1" base_image="$2"
   echo "Testing ensure_uv inside an active venv ($base_image) ..."
@@ -147,10 +147,6 @@ test_inside_active_venv() {
     . .evergreen/ensure-uv.sh
     ensure_uv
     uv --version
-    case "$(command -v uv)" in
-    *drivers-tools-uv-venv*) ;;
-    *) echo "expected uv from the fallback venv, got $(command -v uv)" >&2; exit 1 ;;
-    esac
   '
   echo "Testing ensure_uv inside an active venv ($base_image) ... done."
 }
