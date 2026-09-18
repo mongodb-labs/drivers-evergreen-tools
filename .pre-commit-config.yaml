@@ -10,7 +10,6 @@ repos:
   - id: check-toml
   - id: check-yaml
   - id: check-json
-    exclude: .evergreen/atlas_data_lake/test.driverdata.json
   - id: debug-statements
   - id: end-of-file-fixer
   - id: forbid-new-submodules

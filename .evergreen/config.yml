@@ -511,14 +511,6 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-aws.sh]
 
-  "run data lake test":
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: bash
-        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
-        args: [src/.evergreen/tests/test-data-lake.sh]
-
   "run github app test":
     - command: subprocess.exec
       type: test
@@ -1076,11 +1068,6 @@ tasks:
       commands:
         - func: "run github app test"
 
-    - name: "test-atlas-data-lake"
-      tags: ["pr", "data_lake"]
-      commands:
-        - func: "run data lake test"
-
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
@@ -1474,7 +1461,6 @@ buildvariants:
     - ubuntu2204-small
   tasks:
     - ".aws"
-    - ".data_lake"
     - ".ocsp"
     - ".docker"
     - ".local-atlas"
@@ -1485,7 +1471,6 @@ buildvariants:
   run_on:
     - rhel94-small
   tasks:
-    - ".data_lake"
     - ".docker"
     - ".local-atlas"
     - ".github-app"
