@@ -24,7 +24,7 @@ if [[ -z $PLATFORM && -n $ARCH ]]; then
 fi
 
 if command -v podman &> /dev/null; then
-    DOCKER="sudo podman --storage-opt ignore_chown_errors=true"
+    DOCKER="sudo --preserve-env=AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_PROFILE podman --storage-opt ignore_chown_errors=true"
 else
     DOCKER=docker
 fi
@@ -49,7 +49,7 @@ LOAD_BALANCER=${LOAD_BALANCER:-}
 STORAGE_ENGINE=${STORAGE_ENGINE:-}
 REQUIRE_API_VERSION=${REQUIRE_API_VERSION:-}
 DISABLE_TEST_COMMANDS=${DISABLE_TEST_COMMANDS:-}
-MONGODB_VERSION=${MONGODB_VERSION:-latest}
+MONGODB_VERSION=${MONGODB_VERSION:-latest-stable}
 MONGODB_DOWNLOAD_URL=${MONGODB_DOWNLOAD_URL:-}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE:-}
 OTEL=${OTEL:-}
@@ -69,6 +69,22 @@ ARGS+=" -e MONGODB_DOWNLOAD_URL=$MONGODB_DOWNLOAD_URL"
 # Forwarded so the in-container DOCKER_RUNNING fail-fast fires instead of
 # silently running without OTel.
 ARGS+=" -e OTEL=$OTEL"
+
+# Forward the host's AWS identity into the container for the private nightly
+# keywords, or for any unpublished version the caller opts into by setting
+# MONGODL_PRIVATE_ARTIFACTS=1. Pass by name so secret values stay out of the
+# start command.
+if [ "$MONGODB_VERSION" = "latest" ] \
+  || [ "$MONGODB_VERSION" = "latest-build" ] \
+  || [ "${MONGODL_PRIVATE_ARTIFACTS:-}" = "1" ]; then
+  ARGS+=" -e AWS_ACCESS_KEY_ID"
+  ARGS+=" -e AWS_SECRET_ACCESS_KEY"
+  ARGS+=" -e AWS_SESSION_TOKEN"
+  ARGS+=" -e AWS_PROFILE"
+  if [ -n "${AWS_PROFILE:-}" ]; then
+    ARGS+=" -v ${HOME}/.aws:/root/.aws:ro"
+  fi
+fi
 
 # Use the ECR pull-through registry for Ubuntu images when running in CI.
 if [[ "$IMAGE" =~ ^ubuntu.* ]] && [[ -n "${CI:-}" ]]; then

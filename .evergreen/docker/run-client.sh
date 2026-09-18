@@ -19,7 +19,7 @@ if [ -n "${DOCKER_COMMAND:-}" ]; then
 fi
 
 # Mongo orchestration related variables.
-MONGODB_VERSION=${MONGODB_VERSION:-latest}
+MONGODB_VERSION=${MONGODB_VERSION:-latest-stable}
 TOPOLOGY=${TOPOLOGY:-replica_set}
 ORCHESTRATION_FILE=${ORCHESTRATION_FILE:-basic.json}
 SKIP_CRYPT_SHARED_LIB=${SKIP_CRYPT_SHARED_LIB:-false}

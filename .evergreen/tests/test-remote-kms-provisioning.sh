@@ -153,7 +153,7 @@ test_inside_active_venv() {
 
 # Asserts start-mongodb.sh unpacks the archive the host ships instead of cloning.
 # Runs locally rather than in a container: the branch under test is pure shell, and
-# the archive here holds a stub run-orchestration.sh so no server is started.
+# the archive here holds a stub run-mongodb.sh so no server is started.
 test_start_mongodb_uses_archive() {
   local name="$1" script="$2"
   echo "Testing $name start-mongodb.sh uses the archive ..."
@@ -166,8 +166,8 @@ test_start_mongodb_uses_archive() {
   git -C "$stub" config user.email test@example.com
   git -C "$stub" config user.name "Test"
   printf '#!/usr/bin/env bash\necho ran-from-archive > "$(dirname "${BASH_SOURCE[0]}")/../marker"\n' \
-    >"$stub/.evergreen/run-orchestration.sh"
-  chmod +x "$stub/.evergreen/run-orchestration.sh"
+    >"$stub/.evergreen/run-mongodb.sh"
+  chmod +x "$stub/.evergreen/run-mongodb.sh"
   # start-mongodb.sh writes orchestration.config here, and git does not track
   # empty directories, so the directory needs a file to survive the archive.
   touch "$stub/.evergreen/orchestration/.keep"
@@ -184,7 +184,7 @@ test_start_mongodb_uses_archive() {
     cat "$work/out.log" >&2; rm -rf "$work"; return 1
   }
   if [ ! -f "$work/vm/drivers-evergreen-tools/marker" ]; then
-    echo "  FAIL: $name did not run run-orchestration.sh from the archive" >&2
+    echo "  FAIL: $name did not run run-mongodb.sh from the archive" >&2
     cat "$work/out.log" >&2; rm -rf "$work"; return 1
   fi
   if grep -q "cloning the default branch" "$work/out.log"; then

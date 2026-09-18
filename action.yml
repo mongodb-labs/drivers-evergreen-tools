@@ -2,7 +2,12 @@ name: "Set up MongoDB Cluster"
 description: "Downloads MongoDB and runs a cluster using mongo-orchestration"
 inputs:
   version:
-    description: "MongoDB version to install"
+    description: >-
+      MongoDB version to install. Defaults to "latest-stable"; "latest" is
+      mapped to "latest-stable", since GitHub Actions runners typically lack
+      AWS credentials for the nightly builds. Use "latest-build" to request
+      the nightly build explicitly. Under "local-atlas" the default
+      is "latest", the mongodb-atlas-local Docker image tag.
     required: false
   topology:
     description: "Topology of the deployment"

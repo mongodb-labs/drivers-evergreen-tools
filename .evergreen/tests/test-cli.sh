@@ -44,7 +44,7 @@ fi
 rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
 ./mongodl --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
-./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR}
+./orchestration/drivers-orchestration run --existing-binaries-dir=${DOWNLOAD_DIR} --version 7.0
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 ./orchestration/drivers-orchestration stop
 
