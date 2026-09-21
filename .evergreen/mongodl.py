@@ -875,10 +875,12 @@ def _latest_build_url(
     S3 key according to the user's parameters. We might fail to download a
     build if there is no matching file.
 
-    If there are no AWS credentials, fall back to the legacy public download
-    link with a pronounced warning.
+    If credentials for the private server artifacts cannot be resolved (none
+    present, or the ambient identity is not authorized to reach the bucket or
+    the vault), fall back to the legacy public download link with a pronounced
+    warning.
     """
-    from server_artifacts import NoAWSCredentialsError, presigned_url
+    from server_artifacts import PrivateArtifactsUnavailableError, presigned_url
 
     # Normalize the filename components based on the download target
     typ = {
@@ -916,13 +918,13 @@ def _latest_build_url(
     )
     try:
         return presigned_url(f"{branch_folder}/{filename}")
-    except NoAWSCredentialsError:
+    except PrivateArtifactsUnavailableError:
         legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
         LOGGER.warning("*" * 78)
         LOGGER.warning(
-            "FALLBACK: No AWS credentials were found, so the latest build will "
-            "be downloaded from the LEGACY public host instead of the private "
-            "S3 bucket:",
+            "FALLBACK: Could not resolve AWS credentials for the private S3 "
+            "bucket, so the latest build will be downloaded from the LEGACY "
+            "public host instead:",
         )
         LOGGER.warning("    %s", legacy_url)
         LOGGER.warning(

@@ -9,8 +9,20 @@ _SERVER_ARTIFACTS_REGION = "us-east-1"
 _DEFAULT_SECRET_VAULT = "drivers/devprod-release-infrastructure"
 
 
-class NoAWSCredentialsError(RuntimeError):
+class PrivateArtifactsUnavailableError(RuntimeError):
+    """Raised when credentials for the private server artifacts cannot be resolved."""
+
+
+class NoAWSCredentialsError(PrivateArtifactsUnavailableError):
     """Raised when no usable AWS credentials are available at all."""
+
+
+class VaultAccessDeniedError(PrivateArtifactsUnavailableError):
+    """Raised when the ambient identity may not read the credentials vault."""
+
+
+class RoleAssumptionError(PrivateArtifactsUnavailableError):
+    """Raised when the ambient identity may not assume the required roles."""
 
 
 def _boto3_client(service: str, region: str, creds: "dict|None" = None):
@@ -69,7 +81,7 @@ def _resolve_s3_client(key: str):
             "needs no AWS access."
         ) from err
     except ClientError as err:
-        raise RuntimeError(
+        raise VaultAccessDeniedError(
             "cannot resolve credentials for the private server artifacts; the "
             f"ambient identity cannot read the {vault!r} vault"
         ) from err
@@ -99,7 +111,7 @@ def _resolve_s3_client(key: str):
             RoleArn=config["SERVER_ARTIFACTS_ROLE_ARN"], RoleSessionName="mongodl"
         )["Credentials"]
     except (ClientError, NoCredentialsError) as err:
-        raise RuntimeError(
+        raise RoleAssumptionError(
             "cannot resolve credentials for the private server artifacts; the "
             "ambient identity cannot assume the required roles"
         ) from err
