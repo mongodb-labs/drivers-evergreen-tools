@@ -47,13 +47,6 @@ CRYPT_NAME_MAP = {
     "linux": "mongo_crypt_v1.so",
 }
 
-# Server versions that are still in development and whose release candidates are
-# not published in full.json (https://downloads.mongodb.org/full.json).  These
-# are satisfied with the latest nightly build of the corresponding branch.
-# Remove an entry once its GA release appears in full.json.
-UNPUBLISHED_VERSIONS = {"9.0"}
-
-
 # Top level files
 URI_TXT = DRIVERS_TOOLS / "uri.txt"
 MO_EXPANSION_SH = Path("mo-expansion.sh")
@@ -80,9 +73,11 @@ def get_options():
     if command == "run":
         parser.add_argument(
             "--version",
-            default="latest",
-            help='The version to download. Use "latest" to download '
-            "the newest available version (including release candidates).",
+            help='The version to download. "latest" downloads the newest nightly '
+            'build and "latest-stable" the newest stable release; the GitHub '
+            'Action maps "latest" to "latest-stable". For an authorized user, '
+            '"latest-build" passes through and reaches the private bucket. '
+            "Under --local-atlas this is the Docker image tag.",
         )
         parser.add_argument(
             "--topology",
@@ -216,8 +211,10 @@ def get_options():
             opts.orchestration_file = "auth-aws.json"
         if opts.topology == "standalone" or not opts.topology:
             opts.topology = "server"
+        # Under --local-atlas the version is a Docker tag, which only publishes
+        # "latest"; otherwise default to the newest stable release.
         if not opts.version:
-            opts.version = "latest"
+            opts.version = "latest" if opts.local_atlas else "latest-stable"
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
@@ -515,6 +512,20 @@ def run(opts):
     dl_start = datetime.now()
 
     version = opts.version
+    # GitHub Actions runners and local-atlas users have no AWS credentials for
+    # the private "latest" nightly, so map it to the newest stable release for
+    # the mongodl download. opts.version is untouched (it is the Docker image
+    # tag under --local-atlas).
+    mongodl_version = version
+    if (
+        "GITHUB_ACTION" in os.environ or opts.local_atlas
+    ) and mongodl_version == "latest":
+        LOGGER.warning(
+            'Using "latest-stable" in place of the requested "latest" to avoid '
+            'needing AWS credentials; use "latest-build" to request the nightly '
+            "build explicitly."
+        )
+        mongodl_version = "latest-stable"
     cache_dir = DRIVERS_TOOLS / ".local/cache"
     cache_dir_str = normalize_path(cache_dir)
     default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
@@ -526,22 +537,16 @@ def run(opts):
     if opts.arch:
         default_args += f" --arch={opts.arch}"
 
-    if version in UNPUBLISHED_VERSIONS:
-        LOGGER.warning(
-            f"MongoDB {version} is not published in full.json; "
-            f"using the latest v{version} nightly build instead."
-        )
-        default_args += f" --latest-build-branch v{version}"
-        version = "latest-build"
-
     if not opts.local_atlas:
         # Download the archive.
-        args = f"{default_args} --version {version}"
+        args = f"{default_args} --version {mongodl_version}"
         args += " --strip-path-components 2 --component archive"
         if not opts.existing_binaries_dir:
-            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}...")
+            LOGGER.info(f"Downloading mongodb {mongodl_version} to {mdb_binaries}...")
             mongodl(shlex.split(args))
-            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}... done.")
+            LOGGER.info(
+                f"Downloading mongodb {mongodl_version} to {mdb_binaries}... done."
+            )
         else:
             LOGGER.info(
                 f"Using existing mongod binaries dir: {opts.existing_binaries_dir}"
@@ -575,7 +580,7 @@ def run(opts):
         # path location than the other binaries, which is required for
         # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
         args = default_args + (
-            f" --version {version} --strip-path-components 1 --component crypt_shared"
+            f" --version {mongodl_version} --strip-path-components 1 --component crypt_shared"
         )
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))

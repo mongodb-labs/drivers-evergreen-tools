@@ -22,6 +22,9 @@ dependencies = [
   # the interpreter's own default cert paths, which don't always match the
   # host (e.g. uv's managed Python builds on less common architectures).
   "certifi",
+  # mongodl.py's "latest"/"latest-build" download path fetches from a
+  # private S3 bucket, requiring an assumed-role chain through boto3.
+  "boto3",
 ]
 
 [project.scripts]
@@ -30,4 +33,4 @@ mongosh-dl = "mongosh_dl:main"
 socks5srv = "socks5srv:main"
 
 [tool.hatch.build]
-include = ["mongodl.py", "mongosh_dl.py", "socks5srv.py"]
+include = ["mongodl.py", "mongosh_dl.py", "server_artifacts.py", "socks5srv.py"]

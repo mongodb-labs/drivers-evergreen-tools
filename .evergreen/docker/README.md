@@ -57,6 +57,12 @@ MONGODB_DOWNLOAD_URL
 ORCHESTRATION_FILE
 ```
 
+The container does not receive AWS credentials by default. Requesting the
+private nightly build with `MONGODB_VERSION=latest` or `latest-build`
+forwards the host's AWS identity automatically. For an unpublished version
+that maps to a nightly build, set `MONGODL_PRIVATE_ARTIFACTS=1` to forward
+those credentials too.
+
 Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration/configs/servers) and the default `ORCHESTRATION_FILE` is `basic.json`. For example, to run a replica using the [auth](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/configs/replica_sets/auth.json) orchestration:
 
 ```bash

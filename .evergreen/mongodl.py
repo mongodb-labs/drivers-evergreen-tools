@@ -30,6 +30,7 @@ import tarfile
 import textwrap
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import warnings
 import zipfile
@@ -562,6 +563,14 @@ class CacheDB:
             yield DownloadableComponent(*row)  # type: ignore
 
 
+def _strip_presigned_query(url: str) -> str:
+    """Remove the query string from an AWS presigned URL, leaving others intact."""
+    parsed = urllib.parse.urlsplit(url)
+    if "X-Amz-" not in parsed.query and "AWSAccessKeyId" not in parsed.query:
+        return url
+    return parsed._replace(query="").geturl()
+
+
 class Cache:
     """
     Abstraction over a mongodl downloads cache directory.
@@ -596,9 +605,12 @@ class Cache:
         """
         Obtain a local copy of the file at the given URL.
         """
+        # Presigned URLs carry a fresh signature on every call, so key the
+        # cache by the query-less URL to reuse the download across runs.
+        cache_url = _strip_presigned_query(url)
         info = self._db(
             "SELECT etag, last_modified " "FROM mdl_http_downloads WHERE url=:url",
-            url=url,
+            url=cache_url,
         )
         etag = None  # type: str|None
         modtime = None  # type: str|None
@@ -608,8 +620,10 @@ class Cache:
             headers["If-None-Match"] = etag
         if modtime:
             headers["If-Modified-Since"] = modtime
-        digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:4]
-        file_name = PurePosixPath(url).name
+        digest = hashlib.sha256(cache_url.encode("utf-8")).hexdigest()[:4]
+        # Strip any query string (e.g. presigned S3 URL parameters) before
+        # deriving the cached filename.
+        file_name = PurePosixPath(urllib.parse.urlsplit(cache_url).path).name
         dest = self._dirpath / "files" / digest / file_name
         if not dest.exists():
             headers = {}
@@ -619,7 +633,7 @@ class Cache:
             resp = urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30)
         except urllib.error.HTTPError as e:
             if e.code != 304:
-                raise RuntimeError(f"Failed to download [{url}]") from e
+                raise RuntimeError(f"Failed to download [{cache_url}]") from e
             assert dest.is_file(), (
                 "The download cache is missing an expected file",
                 dest,
@@ -641,7 +655,7 @@ class Cache:
         self._db(
             "INSERT OR REPLACE INTO mdl_http_downloads (url, etag, last_modified) "
             "VALUES (:url, :etag, :mtime)",
-            url=url,
+            url=cache_url,
             etag=got_etag,
             mtime=got_modtime,
         )
@@ -801,8 +815,7 @@ def _published_build_url(
     return data[value], checksum
 
 
-def _latest_build_url(
-    cache: Cache,
+def _legacy_latest_build_url(
     target: str,
     arch: str,
     edition: str,
@@ -810,11 +823,12 @@ def _latest_build_url(
     branch: "str|None",
 ) -> str:
     """
-    Get the URL for an "unpublished" "latest" build.
+    Get the URL for an "unpublished" "latest" build from the legacy public host.
 
-    These builds aren't published in a JSON manifest, so we have to form the URL
-    according to the user's parameters. We might fail to download a build if
-    there is no matching file.
+    This is the pre-S3 download path, kept as a fallback for environments
+    without AWS credentials. These builds aren't published in a JSON manifest,
+    so we have to form the URL according to the user's parameters. We might
+    fail to download a build if there is no matching file.
     """
     # Normalize the filename components based on the download target
     platform = {
@@ -836,6 +850,52 @@ def _latest_build_url(
     ext = "zip" if target == "windows" else "tgz"
     # Enterprise builds have an "enterprise" infix
     ent_infix = "enterprise-" if edition == "enterprise" else ""
+    # Some platforms have a filename infix
+    tgt_infix = (target + "-") if target not in ("windows", "win32", "macos") else ""
+    # Non-master branch uses a filename infix
+    br_infix = (branch + "-") if (branch is not None and branch != "master") else ""
+    filename = (
+        f"{component_name}-{typ}-{arch}-{ent_infix}{tgt_infix}{br_infix}latest.{ext}"
+    )
+    return f"{base}/{filename}"
+
+
+def _latest_build_url(
+    cache: Cache,
+    target: str,
+    arch: str,
+    edition: str,
+    component: str,
+    branch: "str|None",
+) -> str:
+    """
+    Get the URL for an "unpublished" "latest" build.
+
+    These builds aren't published in a JSON manifest, so we have to form the
+    S3 key according to the user's parameters. We might fail to download a
+    build if there is no matching file.
+
+    If credentials for the private server artifacts cannot be resolved (none
+    present, or the ambient identity is not authorized to reach the bucket or
+    the vault), fall back to the legacy public download link with a pronounced
+    warning.
+    """
+    from server_artifacts import PrivateArtifactsUnavailableError, presigned_url
+
+    # Normalize the filename components based on the download target
+    typ = {
+        "windows": "windows",
+        "win32": "win32",
+        "macos": "macos",
+    }.get(target, "linux")
+    component_name = {
+        "archive": "mongodb",
+        "crypt_shared": "mongo_crypt_shared_v1",
+    }.get(component, component)
+    # Windows has Zip files
+    ext = "zip" if target == "windows" else "tgz"
+    # Enterprise builds have an "enterprise" infix
+    ent_infix = "enterprise-" if edition == "enterprise" else ""
     if "rhel" in target:
         # Some RHEL targets include a minor version, like "rhel93". Check the URL of the latest release.
         latest_release_url, _ = _published_build_url(
@@ -847,12 +907,33 @@ def _latest_build_url(
             target = got.group(0)
     # Some platforms have a filename infix
     tgt_infix = (target + "-") if target not in ("windows", "win32", "macos") else ""
-    # Non-master branch uses a filename infix
-    br_infix = (branch + "-") if (branch is not None and branch != "master") else ""
-    filename = (
-        f"{component_name}-{typ}-{arch}-{ent_infix}{tgt_infix}{br_infix}latest.{ext}"
+    filename = f"{component_name}-{typ}-{arch}-{ent_infix}{tgt_infix}".rstrip("-")
+    filename = f"{filename}.{ext}"
+    # The branch is encoded by the S3 prefix, not the filename. Master uses
+    # its nightly prefix; named branches use their staging prefix.
+    branch_folder = (
+        "mongodb-mongo-master-nightly"
+        if branch is None or branch == "master"
+        else f"mongodb-mongo-{branch}-staging"
     )
-    return f"{base}/{filename}"
+    try:
+        return presigned_url(f"{branch_folder}/{filename}")
+    except PrivateArtifactsUnavailableError:
+        legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
+        LOGGER.warning("*" * 78)
+        LOGGER.warning(
+            "FALLBACK: Could not resolve AWS credentials for the private S3 "
+            "bucket, so the latest build will be downloaded from the LEGACY "
+            "public host instead:",
+        )
+        LOGGER.warning("    %s", legacy_url)
+        LOGGER.warning(
+            "This legacy link is deprecated and will be removed in a future "
+            "release. Configure AWS credentials (see the DRIVERS-3628 "
+            "migration guide) to download from S3."
+        )
+        LOGGER.warning("*" * 78)
+        return legacy_url
 
 
 def _dl_component(
@@ -897,10 +978,11 @@ def _dl_component(
                 cache, version, target, arch, edition, component
             )
 
-    # This must go to stdout to be consumed by the calling program.
-    print(dl_url)
-
-    LOGGER.info("Download url: %s", dl_url)
+    # The presigned URL embeds short-lived credentials, so keep log output
+    # redacted. --no-download prints the full URL for the calling program.
+    redacted_url = _strip_presigned_query(dl_url)
+    LOGGER.info("Download url: %s", redacted_url)
+    print(dl_url if no_download else redacted_url)
 
     if no_download:
         return None

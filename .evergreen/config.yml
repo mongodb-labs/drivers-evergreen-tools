@@ -354,7 +354,7 @@ functions:
         binary: bash
         env:
           ENTRYPOINT: /root/test-entrypoint.sh
-        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, TARGET_IMAGE, ARCH]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, TARGET_IMAGE, ARCH, MONGODB_VERSION]
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: subprocess.exec
@@ -574,6 +574,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-mongodb-runner.sh, partial]
 
   "run mongodb runner test full":
@@ -581,6 +582,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-mongodb-runner.sh]
 
   "run cli test partial":
@@ -588,6 +590,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-cli.sh, partial]
 
   "run cli test full":
@@ -595,6 +598,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-cli.sh]
 
   "run otel test":
@@ -991,6 +995,8 @@ tasks:
       tags: ["latest", "docker", "pr"]
       commands:
         - func: "run docker test"
+          vars:
+            MONGODB_VERSION: latest
 
     - name: "test-docker-4.2"
       tags: ["latest", "docker", "pr"]

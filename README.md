@@ -41,6 +41,39 @@ The `** Release Archive Creator` buildvariant is special, and does not run the "
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
 
+### Downloading "latest" MongoDB Binaries
+
+Requesting `MONGODB_VERSION=latest` or `latest-build` downloads an unpublished
+nightly build from a private S3 bucket, rather than the old public
+`downloads.mongodb.com`/`downloads.10gen.com` HTTP hosts. `mongodl.py` handles
+authentication itself, using whatever AWS identity is already active. No
+separate setup script or manually-exported secrets are required. In Evergreen,
+this just needs an `ec2.assume_role` step for `drivers_test_secrets_role`
+before the download step (wired into the global
+[`pre` block](.evergreen/config.yml), which assumes the role for every task).
+Locally, it needs a working AWS identity: one with direct access to the
+`origin-mongodb-server-latest` bucket, or a profile that can reach the
+`drivers/devprod-release-infrastructure` AWS Secrets Vault and assume the roles
+it names (the same setup documented in
+[Secrets Handling](.evergreen/secrets_handling/README.md)). Any version other
+than `latest`/`latest-build` (e.g. `latest-stable`, or a pinned version like
+`8.0`) is unaffected and needs no AWS access.
+
+As a migration fallback, if AWS credentials for the private server artifacts
+cannot be resolved — either none are available, or the ambient identity is not
+authorized to reach the bucket or the vault — `mongodl` falls back to the old
+public `downloads.10gen.com` download link and emits a prominent `FALLBACK:`
+warning in the logs. The legacy link is deprecated and will be removed in a
+future release, so treat that warning as a signal to configure AWS credentials
+as described above (see the DRIVERS-3628 migration guide).
+
+`run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
+GitHub Actions composite action) defaults to `latest-stable`. The GitHub
+Action also maps `latest` to `latest-stable` since runners typically lack AWS
+credentials; elsewhere an explicit `MONGODB_VERSION=latest` downloads the
+nightly build. Under `--local-atlas` the default stays `latest`, which is the
+`mongodb-atlas-local` Docker image tag.
+
 ## Using With GitHub Actions
 
 This repository includes a metadata file for GitHub Actions to allow downloading
@@ -61,7 +94,7 @@ The following inputs exist:
 
 | Name | Description |
 | --- | --- |
-| `version` | MongoDB version to install |
+| `version` | MongoDB version to install. Defaults to `latest-stable` (or `latest` under `local-atlas`, the Docker image tag); `latest` is otherwise mapped to `latest-stable`. `latest-build` downloads the newest nightly build, which needs AWS credentials that GitHub Actions runners typically lack (see [Downloading "latest" MongoDB Binaries](#downloading-latest-mongodb-binaries) for that path). |
 | `topology` | Topology of the deployment (server, replica_set, sharded_cluster) |
 | `auth` | Whether to enable auth |
 | `ssl` | Whether to enable SSL |
