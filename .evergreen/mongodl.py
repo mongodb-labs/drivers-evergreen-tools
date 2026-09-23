@@ -1094,15 +1094,21 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         # too). Every field is checked rather than a fixed index, since the
         # number of VALIDSIG arguments varies across gpg versions.
         fingerprints = set()
+        expired_or_revoked = False
         for line in proc.stdout.splitlines():
             fields = line.split()
-            if len(fields) < 3 or fields[0] != "[GNUPG:]" or fields[1] != "VALIDSIG":
+            if len(fields) < 3 or fields[0] != "[GNUPG:]":
                 continue
-            fingerprints.update(
-                field for field in fields if field in PINNED_FINGERPRINTS
-            )
-        if proc.returncode != 0 or not fingerprints:
-            if proc.returncode == 0:
+            if fields[1] == "VALIDSIG":
+                fingerprints.update(
+                    field for field in fields if field in PINNED_FINGERPRINTS
+                )
+            elif fields[1] in ("EXPKEYSIG", "REVKEYSIG"):
+                expired_or_revoked = True
+        if proc.returncode != 0 or expired_or_revoked or not fingerprints:
+            if expired_or_revoked:
+                detail = "the signature was made by an expired or revoked key"
+            elif proc.returncode == 0:
                 detail = (
                     "the signature was not made by a pinned MongoDB release "
                     "signing key"
