@@ -18,3 +18,14 @@ updates:
       actions:
         patterns:
           - "*"
+  # mongodb-runner pins. See .evergreen/orchestration/mongodb-runner/README.md.
+  - package-ecosystem: "npm"
+    directory: "/.evergreen/orchestration/mongodb-runner/default"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    groups:
+      mongodb-runner:
+        patterns:
+          - "*"

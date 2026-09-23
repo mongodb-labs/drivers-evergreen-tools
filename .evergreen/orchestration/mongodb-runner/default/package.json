@@ -1,0 +1,7 @@
+{
+  "name": "mongodb-runner-wrapper",
+  "version": "1.0.0",
+  "dependencies": {
+    "mongodb-runner": "6.8.2"
+  }
+}
