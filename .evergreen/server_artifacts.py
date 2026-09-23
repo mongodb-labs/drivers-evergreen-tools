@@ -127,10 +127,26 @@ def presigned_url(key: str) -> str:
     assumed directly, then the artifacts role reached through the
     drivers-test-secrets role.
     """
-    s3 = _resolve_s3_client(key)
-    full_key = f"{_SERVER_ARTIFACTS_PREFIX}/{key}"
-    return s3.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": _SERVER_ARTIFACTS_BUCKET, "Key": full_key},
-        ExpiresIn=3600,
-    )
+    return presigned_urls(key)[0]
+
+
+def presigned_urls(*keys: str) -> "list[str]":
+    """
+    Build presigned HTTPS URLs for several private server artifacts.
+
+    Credentials are resolved once, probing the first key; the other keys are
+    presigned with the same client without probing, so an absent or
+    access-hidden object among them cannot degrade the credential resolution.
+    """
+    s3 = _resolve_s3_client(keys[0])
+    return [
+        s3.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": _SERVER_ARTIFACTS_BUCKET,
+                "Key": f"{_SERVER_ARTIFACTS_PREFIX}/{key}",
+            },
+            ExpiresIn=3600,
+        )
+        for key in keys
+    ]

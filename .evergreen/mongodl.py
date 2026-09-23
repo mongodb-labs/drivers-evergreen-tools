@@ -887,7 +887,7 @@ def _latest_build_url(
     Returns a tuple of the archive URL and the URL of the detached GPG
     signature published next to it.
     """
-    from server_artifacts import PrivateArtifactsUnavailableError, presigned_url
+    from server_artifacts import PrivateArtifactsUnavailableError, presigned_urls
 
     # Normalize the filename components based on the download target
     typ = {
@@ -924,10 +924,10 @@ def _latest_build_url(
         else f"mongodb-mongo-{branch}-staging"
     )
     try:
-        return (
-            presigned_url(f"{branch_folder}/{filename}"),
-            presigned_url(f"{branch_folder}/{filename}.sig"),
+        archive_url, sig_url = presigned_urls(
+            f"{branch_folder}/{filename}", f"{branch_folder}/{filename}.sig"
         )
+        return archive_url, sig_url
     except PrivateArtifactsUnavailableError:
         legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
         LOGGER.warning("*" * 78)
