@@ -1038,16 +1038,17 @@ def _fetch_signature(sig_url: str) -> "bytes | None":
         raise
 
 
-def _import_gpg_keys(gpg_exe: str, home: Path) -> None:
+def _import_gpg_keys(gpg_exe: str, home_arg: str, cwd: Path) -> None:
     """
     Import the pinned MongoDB release signing keys into the given gpg home.
     """
     for key in (SERVER_9_KEY, SERVER_8_0_KEY):
         proc = subprocess.run(
-            [gpg_exe, "--homedir", str(home), "--batch", "--import"],
+            [gpg_exe, "--homedir", home_arg, "--batch", "--import"],
             input=key,
             capture_output=True,
             text=True,
+            cwd=cwd,
             check=False,
         )
         if proc.returncode != 0:
@@ -1067,24 +1068,37 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         home = Path(tmp)
         # gpg refuses to use a home directory with loose permissions.
         home.chmod(0o700)
-        _import_gpg_keys(gpg_exe, home)
+        # All paths are passed to gpg relative (with forward slashes), with
+        # the working directory at the archive: the native Windows path
+        # spelling (C:\\...) is not understood by the Cygwin/MSYS gpg builds
+        # on the Windows CI hosts.
+        cwd = archive.parent
+        try:
+            home_arg = os.path.relpath(home, cwd)
+        except ValueError:
+            # The temporary directory and archive live on different drives.
+            home_arg = home.as_posix()
+        home_arg = home_arg.replace(os.sep, "/")
         sig_path = home / f"{archive.name}.sig"
         sig_path.write_bytes(signature)
+        sig_arg = f"{home_arg}/{archive.name}.sig"
+        _import_gpg_keys(gpg_exe, home_arg, cwd)
         proc = subprocess.run(
             [
                 gpg_exe,
                 "--homedir",
-                str(home),
+                home_arg,
                 "--batch",
                 "--no-tty",
                 "--status-fd",
                 "1",
                 "--verify",
-                str(sig_path),
-                str(archive),
+                sig_arg,
+                archive.name,
             ],
             capture_output=True,
             text=True,
+            cwd=cwd,
             check=False,
         )
         # A good signature reports a "VALIDSIG" line naming the fingerprint
