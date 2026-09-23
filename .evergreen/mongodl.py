@@ -1038,6 +1038,32 @@ def _fetch_signature(sig_url: str) -> "bytes | None":
         raise
 
 
+def _gpg_path(path: Path) -> str:
+    """
+    Spell 'path' the way the host's gpg expects.
+
+    The Cygwin/MSYS gpg builds on the Windows CI hosts resolve POSIX-style
+    paths only: both the native spelling (C:\\...) and the forward-slash form
+    (C:/...) are taken for a relative path. cygpath (or a MSYS equivalent)
+    yields the right spelling, /cygdrive/c/... or /c/...; on hosts whose gpg
+    is a native Windows build there is no cygpath, and the forward-slash form
+    is correct instead. Elsewhere the absolute native path is what gpg, and
+    the gpg-agent it starts, expect.
+    """
+    if sys.platform == "win32":
+        try:
+            proc = subprocess.run(
+                ["cygpath", "-u", str(path)],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except (OSError, subprocess.CalledProcessError):
+            return path.as_posix()
+        return proc.stdout.strip()
+    return str(path)
+
+
 def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
     """
     Import the pinned MongoDB release signing keys into the given gpg home.
@@ -1067,14 +1093,10 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         home = Path(tmp)
         # gpg refuses to use a home directory with loose permissions.
         home.chmod(0o700)
-        # Every path is handed to gpg absolute with forward slashes: a native
-        # Windows spelling (C:\\...) is not understood by the Cygwin/MSYS gpg
-        # builds on the Windows CI hosts, and gpg-agent refuses a relative
-        # home directory.
-        home_arg = home.as_posix()
+        home_arg = _gpg_path(home)
         sig_path = home / f"{archive.name}.sig"
         sig_path.write_bytes(signature)
-        sig_arg = sig_path.as_posix()
+        sig_arg = _gpg_path(sig_path)
         _import_gpg_keys(gpg_exe, home_arg)
         proc = subprocess.run(
             [
@@ -1087,7 +1109,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
                 "1",
                 "--verify",
                 sig_arg,
-                archive.as_posix(),
+                _gpg_path(archive),
             ],
             capture_output=True,
             text=True,
