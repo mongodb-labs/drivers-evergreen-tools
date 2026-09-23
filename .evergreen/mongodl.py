@@ -52,8 +52,6 @@ from typing import (
     cast,
 )
 
-from release_keys import PINNED_FINGERPRINTS, SERVER_8_0_KEY, SERVER_9_KEY
-
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
@@ -151,6 +149,24 @@ DISTRO_ID_TO_TARGET = {
 
 # The list of valid targets that are not related to a specific Linux distro.
 TARGETS_THAT_ARE_NOT_DISTROS = ["linux_i686", "linux_x86_64", "osx", "macos", "windows"]
+
+#: The MongoDB release signing public keys, fetched at verification time.
+#: Detached signatures for "latest"/"latest-build" builds are verified
+#: against these keys.
+MONGODB_GPG_KEY_URLS = (
+    "https://pgp.mongodb.com/server-9.asc",
+    "https://pgp.mongodb.com/server-8.0.asc",
+)
+
+#: The fingerprints of the MongoDB release signing keys that a signature of a
+#: "latest"/"latest-build" build must match. A signature made by any other key
+#: fails the download.
+MONGODB_GPG_KEY_FINGERPRINTS = frozenset(
+    (
+        "B3B42B6C39E5CDDEC0A27E3CF366D55B602E502D",
+        "4B0752C1BCA238C0B4EE14DC41DE058A4E7DCA05",
+    )
+)
 
 
 def infer_target(version: Optional[str] = None) -> str:
@@ -1069,7 +1085,8 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
     """
     Import the pinned MongoDB release signing keys into the given gpg home.
     """
-    for key in (SERVER_9_KEY, SERVER_8_0_KEY):
+    for url in MONGODB_GPG_KEY_URLS:
+        key = _download_bytes(url)
         proc = subprocess.run(
             [gpg_exe, "--homedir", home_arg, "--batch", "--import"],
             input=key,
@@ -1079,7 +1096,7 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
         )
         if proc.returncode != 0:
             raise RuntimeError(
-                f"Failed to import an embedded MongoDB release signing key:\n{proc.stderr}"
+                f"Failed to import the MongoDB release signing key [{url}]:\n{proc.stderr}"
             )
 
 
@@ -1130,7 +1147,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
                 continue
             if fields[1] == "VALIDSIG":
                 fingerprints.update(
-                    field for field in fields if field in PINNED_FINGERPRINTS
+                    field for field in fields if field in MONGODB_GPG_KEY_FINGERPRINTS
                 )
             elif fields[1] in ("EXPKEYSIG", "REVKEYSIG"):
                 expired_or_revoked = True

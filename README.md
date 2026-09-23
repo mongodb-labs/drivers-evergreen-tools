@@ -69,10 +69,11 @@ as described above (see the DRIVERS-3628 migration guide).
 
 `latest`/`latest-build` archives are also signature-verified: `mongodl`
 downloads the detached GPG signature published next to the artifact and
-verifies it against the pinned MongoDB release signing keys (embedded in
-[`.evergreen/release_keys.py`](.evergreen/release_keys.py); the master-nightly
-builds are signed by the MongoDB 9 release key and the legacy-host builds by
-the 8.0 release key). A bad signature — or a signature made by any other key —
+verifies it against the MongoDB release signing keys, pinned by fingerprint
+and fetched at verification time from
+[pgp.mongodb.com](https://pgp.mongodb.com/) (the master-nightly builds are
+signed by the MongoDB 9 release key and the legacy-host builds by the 8.0
+release key). A bad signature — or a signature made by any other key —
 fails the download. If a signature was not published for the artifact
 (stable-branch staging builds may not be signed yet), or the host has no `gpg`
 binary, `mongodl` only logs a warning and the download continues. Published

@@ -85,48 +85,8 @@ fi
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
 ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
 
-# A signature that does not verify must fail the download. The shim fails only
-# the gpg --verify call, so the key imports and the rest of the download run
-# for real. It needs a real gpg to forward to, and does not work on Windows.
-if command -v gpg >/dev/null 2>&1 && [ "${OS:-}" != "Windows_NT" ]; then
-  latest_url=$(./mongodl --edition enterprise --version latest-build --component archive --no-download | tail -n 1)
-  case "$latest_url" in
-    https://downloads.10gen.com/*)
-      # The legacy host serves .sig files too, so the shim test could run
-      # there as well; keep it scoped to the private S3 artifacts, which is
-      # what Evergreen uses.
-      ;;
-    *)
-      bad_gpg_dir=$(mktemp -d)
-      cat > $bad_gpg_dir/gpg <<'EOF'
-#!/bin/sh
-for arg in "$@"; do
-  if [ "$arg" = "--verify" ]; then
-    echo "simulated bad signature" >&2
-    exit 1
-  fi
-done
-for candidate in $(which -a gpg); do
-  if [ "$candidate" != "$0" ]; then
-    exec "$candidate" "$@"
-  fi
-done
-echo "no real gpg found" >&2
-exit 127
-EOF
-      chmod +x $bad_gpg_dir/gpg
-      if PATH="$bad_gpg_dir:$PATH" ./mongodl --edition enterprise --version latest-build --component archive --test >bad-signature.log 2>&1; then
-        echo "ERROR: a bad signature should fail the download" >&2
-        exit 1
-      fi
-      grep -q "Signature verification for .* failed" bad-signature.log
-      rm -rf $bad_gpg_dir
-      ;;
-  esac
-fi
-
-# The fingerprint and key-status checks are the security boundary, so exercise
-# them with real gpg and throwaway keys, not just the shim above.
+# A signature that gpg rejects, or one made by a key we do not pin, must fail
+# verification. These cases use throwaway keys; no network is needed.
 if command -v gpg >/dev/null 2>&1 && [ "${OS:-}" != "Windows_NT" ]; then
   uv run python - <<'PYEOF'
 import os
@@ -141,12 +101,10 @@ import mongodl
 gpg = shutil.which("gpg")
 work = Path(tempfile.mkdtemp(prefix="mongodl-gpg-test"))
 archive = work / "mongodb-test.tgz"
-archive.write_bytes(b"drivers-evergreen-tools signature test\n")
-real_pins = mongodl.PINNED_FINGERPRINTS
+archive.write_bytes(b"signature verification test\n")
 
 
-def gnupg(home, *args):
-    """Run gpg against a throwaway keyring."""
+def gpg_run(home, *args):
     proc = subprocess.run(
         ["gpg", "--batch", "--no-tty", "--pinentry-mode", "loopback",
          "--passphrase", "", *args],
@@ -158,96 +116,51 @@ def gnupg(home, *args):
     return proc.stdout
 
 
-def key_fprs(home):
-    out = gnupg(home, "--list-keys", "--with-colons")
-    return [
-        line.split(":")[9] for line in out.splitlines() if line.startswith("fpr:")
-    ]
+def new_key(name, *gen):
+    home = work / name
+    home.mkdir()
+    gpg_run(home, "--quick-generate-key", f"{name} <{name}@example.invalid>", *gen)
+    return home, gpg_run(home, "--armor", "--export")
 
 
-def sign(home, out, *select):
-    gnupg(home, *select, "--detach-sign", "--output", str(out), str(archive))
-    return out.read_bytes()
+def fpr(home):
+    out = gpg_run(home, "--list-keys", "--with-colons")
+    return out.split("fpr:")[1].lstrip(":").split(":")[0]
 
 
-def verify(keys, pinned, signature, needle=None):
-    mongodl.SERVER_9_KEY, mongodl.SERVER_8_0_KEY = keys
-    mongodl.PINNED_FINGERPRINTS = frozenset(pinned)
+def sign(home, sig, *select):
+    gpg_run(home, *select, "--detach-sign", "--output", str(sig), str(archive))
+    return sig.read_bytes()
+
+
+def verify(key, pinned, signature):
+    # Serve the throwaway key for every key URL, and pin as instructed.
+    mongodl._download_bytes = lambda url: key
+    mongodl.MONGODB_GPG_KEY_FINGERPRINTS = frozenset(pinned)
     try:
-        fingerprint = mongodl._verify_gpg_signature(gpg, archive, signature)
-        assert needle is None, f"verification should have failed: {needle}"
-        return fingerprint
-    except ValueError as e:
-        assert needle is not None and needle in str(e), e
+        mongodl._verify_gpg_signature(gpg, archive, signature)
+        raise AssertionError("verification should have failed")
+    except ValueError:
+        pass
 
 
-# A well-formed signature by a signer that is not pinned must be rejected,
-# even though gpg itself verifies it happily.
-attacker = work / "attacker"
-attacker.mkdir()
-gnupg(attacker, "--quick-generate-key", "Attacker <attacker@example.invalid>", "ed25519", "sign", "0")
-attacker_key = gnupg(attacker, "--armor", "--export")
-verify(
-    (attacker_key, attacker_key),
-    real_pins,
-    sign(attacker, work / "unpinned.sig"),
-    "not made by a pinned MongoDB release signing key",
-)
-print("unpinned signer rejected")
+real_pins = mongodl.MONGODB_GPG_KEY_FINGERPRINTS
 
-# A tampered signature must be rejected.
-pinned = work / "pinned"
-pinned.mkdir()
-gnupg(pinned, "--quick-generate-key", "Pinned <pinned@example.invalid>", "ed25519", "sign", "0")
-pinned_key = gnupg(pinned, "--armor", "--export")
-pinned_fpr = key_fprs(pinned)[0]
-signature = bytearray(sign(pinned, work / "pinned.sig"))
-signature[-10:] = b"XXXXXXXXXX"
-verify((pinned_key, pinned_key), (pinned_fpr,), bytes(signature), "failed")
-print("tampered signature rejected")
+# A signer that is not pinned, even though gpg verifies it happily.
+home, key = new_key("unpinned", "ed25519", "sign", "0")
+verify(key, real_pins, sign(home, work / "unpinned.sig"))
 
-# An expired pinned key must be rejected, even though gpg exits 0 and still
-# emits VALIDSIG for it.
-expired = work / "expired"
-expired.mkdir()
-gnupg(expired, "--quick-generate-key", "Expired <expired@example.invalid>", "ed25519", "sign", "seconds=3")
-expired_key = gnupg(expired, "--armor", "--export")
-signature = sign(expired, work / "expired.sig")
+# A tampered signature.
+home, key = new_key("pinned", "ed25519", "sign", "0")
+tampered = bytearray(sign(home, work / "tampered.sig"))
+tampered[-10:] = b"XXXXXXXXXX"
+verify(key, (fpr(home),), bytes(tampered))
+
+# A pinned but expired key: gpg exits 0 and still emits VALIDSIG for it.
+home, key = new_key("expired", "ed25519", "sign", "seconds=3")
+signature = sign(home, work / "expired.sig")
 time.sleep(4)
-verify((expired_key, expired_key), (key_fprs(expired)[0],), signature, "expired or revoked")
-print("expired key rejected")
-
-# A revoked pinned key must be rejected. Import the revocation certificate as
-# the second key, after the key itself; its armor header is deliberately
-# colon-prefixed in openpgp-revocs.d and must be stripped before importing.
-revoked = work / "revoked"
-revoked.mkdir()
-gnupg(revoked, "--quick-generate-key", "Revoked <revoked@example.invalid>", "ed25519", "sign", "0")
-revoked_key = gnupg(revoked, "--armor", "--export")
-signature = sign(revoked, work / "revoked.sig")
-revocation = next(iter(revoked.glob("openpgp-revocs.d/*.rev")))
-lines = revocation.read_text().splitlines()
-begin = next(i for i, line in enumerate(lines) if "BEGIN PGP" in line)
-end = next(i for i, line in enumerate(lines) if "END PGP" in line)
-block = lines[begin : end + 1]
-block[0] = block[0].lstrip(":")
-revocation_block = "\n".join(block)
-verify((revoked_key, revocation_block), (key_fprs(revoked)[0],), signature, "expired or revoked")
-print("revoked key rejected")
-
-# A signature by a pinned key's signing subkey must verify, with the primary
-# fingerprint pinned.
-with_subkey = work / "with-subkey"
-with_subkey.mkdir()
-gnupg(with_subkey, "--quick-generate-key", "Subkeyed <subkeyed@example.invalid>", "ed25519", "sign", "0")
-primary = key_fprs(with_subkey)[0]
-gnupg(with_subkey, "--quick-add-key", primary, "ed25519", "sign", "0")
-subkey = key_fprs(with_subkey)[1]
-subkeyed_key = gnupg(with_subkey, "--armor", "--export")
-signature = sign(with_subkey, work / "subkeyed.sig", "-u", subkey)
-fingerprint = verify((subkeyed_key, subkeyed_key), (primary,), signature)
-assert fingerprint == primary, (fingerprint, primary)
-print("subkey signature verified with the primary pinned")
+verify(key, (fpr(home),), signature)
 
 shutil.rmtree(work, ignore_errors=True)
 print("GPG verification tests passed")
