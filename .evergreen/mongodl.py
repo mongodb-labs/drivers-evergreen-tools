@@ -25,8 +25,10 @@ import re
 import shutil
 import sqlite3
 import ssl
+import subprocess
 import sys
 import tarfile
+import tempfile
 import textwrap
 import time
 import urllib.error
@@ -147,6 +149,23 @@ DISTRO_ID_TO_TARGET = {
 
 # The list of valid targets that are not related to a specific Linux distro.
 TARGETS_THAT_ARE_NOT_DISTROS = ["linux_i686", "linux_x86_64", "osx", "macos", "windows"]
+
+#: URLs of the MongoDB release signing public keys. Detached signatures for
+#: "latest"/"latest-build" builds are verified against these keys.
+MONGODB_GPG_KEY_URLS = (
+    "https://pgp.mongodb.com/server-8.0.asc",
+    "https://pgp.mongodb.com/server-7.0.asc",
+)
+
+#: The fingerprints of the MongoDB release signing keys that a signature of a
+#: "latest"/"latest-build" build must match. A signature made by any other key
+#: fails the download.
+MONGODB_GPG_KEY_FINGERPRINTS = frozenset(
+    (
+        "4B0752C1BCA238C0B4EE14DC41DE058A4E7DCA05",
+        "E58830201F7DD82CD808AA84160D26BB1785BA38",
+    )
+)
 
 
 def infer_target(version: Optional[str] = None) -> str:
@@ -867,9 +886,9 @@ def _latest_build_url(
     edition: str,
     component: str,
     branch: "str|None",
-) -> str:
+) -> "tuple[str, str]":
     """
-    Get the URL for an "unpublished" "latest" build.
+    Get the URL for an "unpublished" "latest" build and its detached signature.
 
     These builds aren't published in a JSON manifest, so we have to form the
     S3 key according to the user's parameters. We might fail to download a
@@ -879,6 +898,9 @@ def _latest_build_url(
     present, or the ambient identity is not authorized to reach the bucket or
     the vault), fall back to the legacy public download link with a pronounced
     warning.
+
+    Returns a tuple of the archive URL and the URL of the detached GPG
+    signature published next to it.
     """
     from server_artifacts import PrivateArtifactsUnavailableError, presigned_url
 
@@ -917,7 +939,10 @@ def _latest_build_url(
         else f"mongodb-mongo-{branch}-staging"
     )
     try:
-        return presigned_url(f"{branch_folder}/{filename}")
+        return (
+            presigned_url(f"{branch_folder}/{filename}"),
+            presigned_url(f"{branch_folder}/{filename}.sig"),
+        )
     except PrivateArtifactsUnavailableError:
         legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
         LOGGER.warning("*" * 78)
@@ -933,7 +958,7 @@ def _latest_build_url(
             "migration guide) to download from S3."
         )
         LOGGER.warning("*" * 78)
-        return legacy_url
+        return legacy_url, f"{legacy_url}.sig"
 
 
 def _dl_component(
@@ -952,8 +977,9 @@ def _dl_component(
     retries: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
+    sig_url = None
     if version in ("latest-build", "latest"):
-        dl_url = _latest_build_url(
+        dl_url, sig_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
         sha256 = None
@@ -993,6 +1019,8 @@ def _dl_component(
             cached = cache.download_file(dl_url).path
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
+            if sig_url is not None:
+                _verify_latest_build(cached, sig_url)
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
@@ -1000,6 +1028,132 @@ def _dl_component(
             LOGGER.exception(e)
             if not retrier.retry():
                 raise
+
+
+def _download_bytes(url: str) -> bytes:
+    """Download the content at the given URL as bytes."""
+    req = urllib.request.Request(url)
+    with urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30) as resp:
+        return resp.read()
+
+
+def _fetch_signature(sig_url: str) -> "bytes | None":
+    """
+    Download a detached GPG signature, or None if it was not published.
+
+    S3 answers 404 for a missing key, and 403 when the caller cannot list the
+    bucket to distinguish the two, so both codes mean "not published here".
+    Any other failure propagates and fails the download.
+    """
+    try:
+        return _download_bytes(sig_url)
+    except urllib.error.HTTPError as e:
+        if e.code in (403, 404):
+            return None
+        raise
+
+
+def _import_gpg_keys(gpg_exe: str, home: Path) -> None:
+    """
+    Import the pinned MongoDB release signing keys into the given gpg home.
+    """
+    for url in MONGODB_GPG_KEY_URLS:
+        key_bytes = _download_bytes(url)
+        proc = subprocess.run(
+            [gpg_exe, "--homedir", str(home), "--batch", "--import"],
+            input=key_bytes,
+            capture_output=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"Failed to import the MongoDB release signing key [{url}]:\n"
+                f"{proc.stderr}"
+            )
+
+
+def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
+    """
+    Verify a detached GPG signature against the pinned MongoDB release keys.
+
+    Returns the fingerprint of the signing key, or raises RuntimeError if the
+    signature is bad or was not made by a pinned key.
+    """
+    with tempfile.TemporaryDirectory(prefix="mongodl-gpg") as tmp:
+        home = Path(tmp)
+        # gpg refuses to use a home directory with loose permissions.
+        home.chmod(0o700)
+        _import_gpg_keys(gpg_exe, home)
+        sig_path = home / f"{archive.name}.sig"
+        sig_path.write_bytes(signature)
+        proc = subprocess.run(
+            [
+                gpg_exe,
+                "--homedir",
+                str(home),
+                "--batch",
+                "--no-tty",
+                "--status-fd",
+                "1",
+                "--verify",
+                str(sig_path),
+                str(archive),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        # A good signature reports "VALIDSIG <fingerprint> ... <primary_fpr>".
+        # Parse the fingerprints ourselves: only a pinned key may sign a
+        # build, even if gpg itself is happy (it exits 0 for expired keys).
+        fingerprints = set()
+        for line in proc.stdout.splitlines():
+            fields = line.split()
+            if len(fields) < 3 or fields[0] != "[GNUPG:]" or fields[1] != "VALIDSIG":
+                continue
+            fingerprints.add(fields[2])
+            if len(fields) > 9:
+                fingerprints.add(fields[9])
+        fingerprints &= MONGODB_GPG_KEY_FINGERPRINTS
+        if proc.returncode != 0 or not fingerprints:
+            if proc.returncode == 0:
+                detail = (
+                    "the signature was not made by a pinned MongoDB release "
+                    "signing key"
+                )
+            else:
+                detail = proc.stderr
+            raise RuntimeError(
+                f"Signature verification for [{archive.name}] failed: {detail}"
+            )
+        return next(iter(fingerprints))
+
+
+def _verify_latest_build(archive: Path, sig_url: str) -> None:
+    """
+    Verify the detached signature of a "latest"/"latest-build" archive.
+
+    A bad signature raises, failing the download. A signature that was not
+    published (stable-branch staging builds may not be signed yet), or a host
+    without gpg, logs a warning and continues without verification.
+    """
+    gpg_exe = shutil.which("gpg")
+    if gpg_exe is None:
+        LOGGER.warning(
+            "gpg is not installed, so the signature of %s will not be verified",
+            archive.name,
+        )
+        return
+    signature = _fetch_signature(sig_url)
+    if signature is None:
+        LOGGER.warning(
+            "No signature was published for this build, so the signature of "
+            "%s will not be verified",
+            archive.name,
+        )
+        return
+    fingerprint = _verify_gpg_signature(gpg_exe, archive, signature)
+    LOGGER.info("Verified GPG signature of %s with key %s", archive.name, fingerprint)
 
 
 def _check_shasum256(filename, shasum):

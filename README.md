@@ -67,6 +67,16 @@ warning in the logs. The legacy link is deprecated and will be removed in a
 future release, so treat that warning as a signal to configure AWS credentials
 as described above (see the DRIVERS-3628 migration guide).
 
+`latest`/`latest-build` archives are also signature-verified: `mongodl`
+downloads the detached GPG signature published next to the artifact and
+verifies it against the pinned MongoDB release signing keys (the keys
+published at [pgp.mongodb.com](https://pgp.mongodb.com/)). A bad signature —
+or a signature made by any other key — fails the download. A signature that
+was not published for the artifact (stable-branch staging builds may not be
+signed yet), or a host without the `gpg` binary, only logs a warning and the
+download continues. Published builds and other version selectors are
+unaffected and keep using the SHA-256 checksums from `full.json`.
+
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub
 Action also maps `latest` to `latest-stable` since runners typically lack AWS

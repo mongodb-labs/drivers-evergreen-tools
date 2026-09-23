@@ -71,11 +71,42 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version 8.0 --component archive --test --retries 5
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 5
-./mongodl --edition enterprise --version latest-build --component archive --test --retries 5
+./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build.log 2>&1
+# The "latest" build must either verify against the pinned MongoDB release
+# signing keys, or report why it could not (no published signature yet, or no
+# gpg on the host).
+grep -E "Verified GPG signature|will not be verified" latest-build.log
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
 ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
+
+# A signature that does not verify must fail the download. This only applies
+# to the private S3 artifacts (the legacy fallback does not publish
+# signatures), and the gpg shim trick does not work on Windows.
+latest_url=$(./mongodl --edition enterprise --version latest-build --component archive --no-download | tail -n 1)
+case "$latest_url" in
+  https://downloads.10gen.com/*)
+    echo "Skipping the bad-signature test: no AWS credentials, so the legacy fallback is in use."
+    ;;
+  *)
+    if [ "${OS:-}" != "Windows_NT" ]; then
+      bad_gpg_dir=$(mktemp -d)
+      cat > $bad_gpg_dir/gpg <<'EOF'
+#!/bin/sh
+echo "simulated bad signature" >&2
+exit 1
+EOF
+      chmod +x $bad_gpg_dir/gpg
+      if PATH="$bad_gpg_dir:$PATH" ./mongodl --edition enterprise --version latest-build --component archive --test >bad-signature.log 2>&1; then
+        echo "ERROR: a bad signature should fail the download" >&2
+        exit 1
+      fi
+      grep -q "Signature verification for .* failed" bad-signature.log
+      rm -rf $bad_gpg_dir
+    fi
+    ;;
+esac
 
 popd
 make -C ${DRIVERS_TOOLS} test
