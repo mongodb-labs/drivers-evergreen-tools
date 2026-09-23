@@ -1026,9 +1026,10 @@ def _fetch_signature(sig_url: str) -> "bytes | None":
     """
     Download a detached GPG signature, or None if it was not published.
 
-    S3 answers 404 for a missing key, and 403 when the caller cannot list the
-    bucket to distinguish the two, so both codes mean "not published here".
-    Any other failure propagates and fails the download.
+    S3 answers 404 for a missing key, or 403 when the caller cannot list the
+    bucket and the missing object is hidden behind the denial, so both codes
+    mean "not published here". Any other failure propagates and fails the
+    download.
     """
     try:
         return _download_bytes(sig_url)
@@ -1044,7 +1045,7 @@ def _gpg_path(path: Path) -> str:
 
     The Cygwin/MSYS gpg builds on the Windows CI hosts resolve POSIX-style
     paths only: both the native spelling (C:\\...) and the forward-slash form
-    (C:/...) are taken for a relative path. cygpath (or a MSYS equivalent)
+    (C:/...) are taken for a relative path. cygpath (or an MSYS equivalent)
     yields the right spelling, /cygdrive/c/... or /c/...; on hosts whose gpg
     is a native Windows build there is no cygpath, and the forward-slash form
     is correct instead. Elsewhere the absolute native path is what gpg, and
@@ -1153,9 +1154,9 @@ def _verify_latest_build(archive: Path, sig_url: str) -> None:
     """
     Verify the detached signature of a "latest"/"latest-build" archive.
 
-    A bad signature raises, failing the download. A signature that was not
-    published (stable-branch staging builds may not be signed yet), or a host
-    without gpg, logs a warning and continues without verification.
+    A bad signature raises, failing the download. A missing signature
+    (stable-branch staging builds may not be signed yet), or a missing gpg,
+    only produces a warning, and the download continues.
     """
     gpg_exe = shutil.which("gpg")
     if gpg_exe is None:

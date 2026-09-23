@@ -1,10 +1,10 @@
 """Embedded MongoDB release signing public keys.
 
-The public keys of the MongoDB release signing keys that "latest" and
-"latest-build" server builds may be signed with. The keys are embedded so
-that signature verification does not depend on reaching pgp.mongodb.com at
-download time; the fingerprints in PINNED_FINGERPRINTS are what a signature
-must actually match, so a rotated key served here cannot sneak in.
+The MongoDB release signing keys that "latest" and "latest-build" server
+builds may be signed with. The keys are embedded so that signature
+verification does not depend on reaching pgp.mongodb.com at download time; the
+fingerprints in PINNED_FINGERPRINTS are what a signature must actually match,
+so a rotated key served here cannot sneak in.
 """
 
 SERVER_9_KEY = """\
