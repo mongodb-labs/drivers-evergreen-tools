@@ -72,10 +72,14 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 5
 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build.log 2>&1
-# The "latest" build must either verify against the pinned MongoDB release
-# signing keys, or report why it could not (no published signature yet, or no
-# gpg on the host).
-grep -E "Verified GPG signature|will not be verified" latest-build.log
+# The master-nightly artifact is always published with a signature, so a host
+# with gpg must verify it; only a host without gpg may skip verification. A
+# missing signature would be a publication regression.
+if command -v gpg >/dev/null 2>&1; then
+  grep -q "Verified GPG signature" latest-build.log
+else
+  grep -q "gpg is not installed" latest-build.log
+fi
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
