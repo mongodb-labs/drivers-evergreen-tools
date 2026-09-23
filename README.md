@@ -69,13 +69,15 @@ as described above (see the DRIVERS-3628 migration guide).
 
 `latest`/`latest-build` archives are also signature-verified: `mongodl`
 downloads the detached GPG signature published next to the artifact and
-verifies it against the pinned MongoDB release signing keys (the keys
-published at [pgp.mongodb.com](https://pgp.mongodb.com/)). A bad signature —
-or a signature made by any other key — fails the download. A signature that
-was not published for the artifact (stable-branch staging builds may not be
-signed yet), or a host without the `gpg` binary, only logs a warning and the
-download continues. Published builds and other version selectors are
-unaffected and keep using the SHA-256 checksums from `full.json`.
+verifies it against the pinned MongoDB release signing keys (embedded in
+[`.evergreen/release_keys.py`](.evergreen/release_keys.py); the master-nightly
+builds are signed by the MongoDB 9 release key and the legacy-host builds by
+the 8.0 release key). A bad signature — or a signature made by any other key —
+fails the download. A signature that was not published for the artifact
+(stable-branch staging builds may not be signed yet), or a host without the
+`gpg` binary, only logs a warning and the download continues. Published builds
+and other version selectors are unaffected and keep using the SHA-256
+checksums from `full.json`.
 
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub

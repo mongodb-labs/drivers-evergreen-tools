@@ -52,6 +52,8 @@ from typing import (
     cast,
 )
 
+from release_keys import PINNED_FINGERPRINTS, SERVER_8_0_KEY, SERVER_9_KEY
+
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
@@ -149,23 +151,6 @@ DISTRO_ID_TO_TARGET = {
 
 # The list of valid targets that are not related to a specific Linux distro.
 TARGETS_THAT_ARE_NOT_DISTROS = ["linux_i686", "linux_x86_64", "osx", "macos", "windows"]
-
-#: URLs of the MongoDB release signing public keys. Detached signatures for
-#: "latest"/"latest-build" builds are verified against these keys.
-MONGODB_GPG_KEY_URLS = (
-    "https://pgp.mongodb.com/server-8.0.asc",
-    "https://pgp.mongodb.com/server-7.0.asc",
-)
-
-#: The fingerprints of the MongoDB release signing keys that a signature of a
-#: "latest"/"latest-build" build must match. A signature made by any other key
-#: fails the download.
-MONGODB_GPG_KEY_FINGERPRINTS = frozenset(
-    (
-        "4B0752C1BCA238C0B4EE14DC41DE058A4E7DCA05",
-        "E58830201F7DD82CD808AA84160D26BB1785BA38",
-    )
-)
 
 
 def infer_target(version: Optional[str] = None) -> str:
@@ -1057,18 +1042,17 @@ def _import_gpg_keys(gpg_exe: str, home: Path) -> None:
     """
     Import the pinned MongoDB release signing keys into the given gpg home.
     """
-    for url in MONGODB_GPG_KEY_URLS:
-        key_bytes = _download_bytes(url)
+    for key in (SERVER_9_KEY, SERVER_8_0_KEY):
         proc = subprocess.run(
             [gpg_exe, "--homedir", str(home), "--batch", "--import"],
-            input=key_bytes,
+            input=key,
             capture_output=True,
+            text=True,
             check=False,
         )
         if proc.returncode != 0:
             raise RuntimeError(
-                f"Failed to import the MongoDB release signing key [{url}]:\n"
-                f"{proc.stderr}"
+                f"Failed to import an embedded MongoDB release signing key:\n{proc.stderr}"
             )
 
 
@@ -1076,7 +1060,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
     """
     Verify a detached GPG signature against the pinned MongoDB release keys.
 
-    Returns the fingerprint of the signing key, or raises RuntimeError if the
+    Returns the fingerprint of the signing key, or raises ValueError if the
     signature is bad or was not made by a pinned key.
     """
     with tempfile.TemporaryDirectory(prefix="mongodl-gpg") as tmp:
@@ -1103,18 +1087,20 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
             text=True,
             check=False,
         )
-        # A good signature reports "VALIDSIG <fingerprint> ... <primary_fpr>".
-        # Parse the fingerprints ourselves: only a pinned key may sign a
-        # build, even if gpg itself is happy (it exits 0 for expired keys).
+        # A good signature reports a "VALIDSIG" line naming the fingerprint
+        # of the signing key and (for a subkey signature) of the primary
+        # key. Parse the fingerprints ourselves: only a pinned key may sign
+        # a build, even if gpg itself is happy (it exits 0 for expired keys,
+        # too). Every field is checked rather than a fixed index, since the
+        # number of VALIDSIG arguments varies across gpg versions.
         fingerprints = set()
         for line in proc.stdout.splitlines():
             fields = line.split()
             if len(fields) < 3 or fields[0] != "[GNUPG:]" or fields[1] != "VALIDSIG":
                 continue
-            fingerprints.add(fields[2])
-            if len(fields) > 9:
-                fingerprints.add(fields[9])
-        fingerprints &= MONGODB_GPG_KEY_FINGERPRINTS
+            fingerprints.update(
+                field for field in fields if field in PINNED_FINGERPRINTS
+            )
         if proc.returncode != 0 or not fingerprints:
             if proc.returncode == 0:
                 detail = (
@@ -1123,7 +1109,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
                 )
             else:
                 detail = proc.stderr
-            raise RuntimeError(
+            raise ValueError(
                 f"Signature verification for [{archive.name}] failed: {detail}"
             )
         return next(iter(fingerprints))
@@ -1398,7 +1384,8 @@ def main(argv=None):
         '"latest-stable" to download the newest version, excluding release '
         'candidates. Use "rapid" to download the latest rapid release. '
         ' Use "latest-build" or "latest" to download the most recent build of '
-        'the named component. Use "--list" to list available versions.',
+        "the named component, verified against the pinned MongoDB release "
+        'signing keys when gpg is available. Use "--list" to list available versions.',
     )
     dl_grp.add_argument(
         "--component",

@@ -33,4 +33,4 @@ mongosh-dl = "mongosh_dl:main"
 socks5srv = "socks5srv:main"
 
 [tool.hatch.build]
-include = ["mongodl.py", "mongosh_dl.py", "server_artifacts.py", "socks5srv.py"]
+include = ["mongodl.py", "mongosh_dl.py", "release_keys.py", "server_artifacts.py", "socks5srv.py"]

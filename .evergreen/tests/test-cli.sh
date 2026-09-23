@@ -81,21 +81,34 @@ grep -E "Verified GPG signature|will not be verified" latest-build.log
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
 ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
 
-# A signature that does not verify must fail the download. This only applies
-# to the private S3 artifacts (the legacy fallback does not publish
-# signatures), and the gpg shim trick does not work on Windows.
-latest_url=$(./mongodl --edition enterprise --version latest-build --component archive --no-download | tail -n 1)
-case "$latest_url" in
-  https://downloads.10gen.com/*)
-    echo "Skipping the bad-signature test: no AWS credentials, so the legacy fallback is in use."
-    ;;
-  *)
-    if [ "${OS:-}" != "Windows_NT" ]; then
+# A signature that does not verify must fail the download. The shim fails only
+# the gpg --verify call, so the key imports and the rest of the download run
+# for real. It needs a real gpg to forward to, and does not work on Windows.
+if command -v gpg >/dev/null 2>&1 && [ "${OS:-}" != "Windows_NT" ]; then
+  latest_url=$(./mongodl --edition enterprise --version latest-build --component archive --no-download | tail -n 1)
+  case "$latest_url" in
+    https://downloads.10gen.com/*)
+      # The legacy host serves .sig files too, so the shim test could run
+      # there as well; keep it scoped to the private S3 artifacts, which is
+      # what Evergreen uses.
+      ;;
+    *)
       bad_gpg_dir=$(mktemp -d)
       cat > $bad_gpg_dir/gpg <<'EOF'
 #!/bin/sh
-echo "simulated bad signature" >&2
-exit 1
+for arg in "$@"; do
+  if [ "$arg" = "--verify" ]; then
+    echo "simulated bad signature" >&2
+    exit 1
+  fi
+done
+for candidate in $(which -a gpg); do
+  if [ "$candidate" != "$0" ]; then
+    exec "$candidate" "$@"
+  fi
+done
+echo "no real gpg found" >&2
+exit 127
 EOF
       chmod +x $bad_gpg_dir/gpg
       if PATH="$bad_gpg_dir:$PATH" ./mongodl --edition enterprise --version latest-build --component archive --test >bad-signature.log 2>&1; then
@@ -104,9 +117,9 @@ EOF
       fi
       grep -q "Signature verification for .* failed" bad-signature.log
       rm -rf $bad_gpg_dir
-    fi
-    ;;
-esac
+      ;;
+  esac
+fi
 
 popd
 make -C ${DRIVERS_TOOLS} test
