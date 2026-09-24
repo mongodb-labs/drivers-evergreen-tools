@@ -802,7 +802,6 @@ def start(opts):
         LOGGER.info(f"out.log:\n{output_file.read_text().strip()}")
 
     # Wait for the server to be available.
-    attempt = 0
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -814,8 +813,7 @@ def start(opts):
                     LOGGER.error("Orchestration failed!")
                     LOGGER.error(f"server.log: {server_file.read_text()}")
                     raise TimeoutError("Server failed to start") from None
-        attempt += 1
-        time.sleep(attempt * 1000)
+        time.sleep(1)
 
     LOGGER.info("Starting mongo-orchestration... done.")
 
