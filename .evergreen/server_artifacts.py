@@ -294,9 +294,10 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         # A good signature reports a "VALIDSIG" line naming the fingerprint
         # of the signing key and (for a subkey signature) of the primary
         # key. Parse the fingerprints ourselves: only a pinned key may sign
-        # a build, even if gpg itself is happy (it exits 0 for expired keys,
-        # too). Every field is checked rather than a fixed index, since the
-        # number of VALIDSIG arguments varies across gpg versions.
+        # a build, even if gpg itself is happy (it exits 0 for expired keys
+        # and expired signatures, too). Every field is checked rather than a
+        # fixed index, since the number of VALIDSIG arguments varies across
+        # gpg versions.
         fingerprints = set()
         expired_or_revoked = False
         for line in proc.stdout.splitlines():
@@ -307,11 +308,14 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
                 fingerprints.update(
                     field for field in fields if field in MONGODB_GPG_KEY_FINGERPRINTS
                 )
-            elif fields[1] in ("EXPKEYSIG", "REVKEYSIG"):
+            elif fields[1] in ("EXPKEYSIG", "EXPSIG", "REVKEYSIG"):
                 expired_or_revoked = True
         if proc.returncode != 0 or expired_or_revoked or not fingerprints:
             if expired_or_revoked:
-                detail = "the signature was made by an expired or revoked key"
+                detail = (
+                    "the signature or the key that made it has expired, or "
+                    "the key has been revoked"
+                )
             elif proc.returncode == 0:
                 detail = (
                     "the signature was not made by a pinned MongoDB release "

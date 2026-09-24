@@ -78,9 +78,11 @@ export VALIDATE_DISTROS=1
 if command -v gpg >/dev/null 2>&1; then
   grep -q "Verified GPG signature" latest-build.log
   # A regression that accepts any signature must fail the download: check
-  # that a garbage signature is rejected. This exercises the real gpg and
-  # the real pinned keys, so no gpg shim is needed.
+  # that garbage bytes, and a cryptographically valid signature made by an
+  # unpinned key, are both rejected. This exercises the real gpg and the
+  # real pinned keys, so no gpg shim is needed.
   uv run --no-project python - <<'EOF'
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -88,15 +90,46 @@ from pathlib import Path
 sys.path.insert(0, ".evergreen")
 from server_artifacts import _verify_gpg_signature
 
-with tempfile.TemporaryDirectory() as tmp:
-    archive = Path(tmp) / "archive.tgz"
-    archive.write_bytes(b"an archive body")
+
+def expect_rejected(archive, signature, what):
     try:
-        _verify_gpg_signature("gpg", archive, b"not really a signature")
+        _verify_gpg_signature("gpg", archive, signature)
     except ValueError:
-        pass  # expected: the garbage signature must be rejected
+        pass  # expected: this signature must be rejected
     else:
-        raise AssertionError("a garbage signature was accepted")
+        raise AssertionError(f"a {what} signature was accepted")
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    tmp = Path(tmp)
+    archive = tmp / "archive.tgz"
+    archive.write_bytes(b"an archive body")
+    expect_rejected(archive, b"not really a signature", "garbage")
+    gpg_home = tmp / "gpg"
+    gpg_home.mkdir()
+    gpg_home.chmod(0o700)
+    gpg = [
+        "gpg",
+        "--homedir",
+        str(gpg_home),
+        "--batch",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase",
+        "",
+    ]
+    subprocess.run(
+        gpg + ["--quick-gen-key", "unpinned-test-key"],
+        check=True,
+        capture_output=True,
+    )
+    sig = tmp / "archive.tgz.sig"
+    subprocess.run(
+        gpg + ["--output", str(sig), "--detach-sign", str(archive)],
+        check=True,
+        capture_output=True,
+    )
+    expect_rejected(archive, sig.read_bytes(), "unpinned-key")
 EOF
 else
   grep -q "gpg is not installed" latest-build.log
