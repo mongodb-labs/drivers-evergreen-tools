@@ -104,7 +104,9 @@ connect_mongodb --auth
 bash ./run-mongodb.sh start --version 7.0 --topology replica_set --ssl
 connect_mongodb --ssl
 
-bash ./run-mongodb.sh start --version latest-stable --topology sharded_cluster --auth --ssl
+# The version honors a MONGODB_VERSION pin (e.g. the 7.0 pin on
+# tests-windows-vsCurrent, where 8.3+ cannot run); latest-stable otherwise.
+bash ./run-mongodb.sh start --version "${MONGODB_VERSION:-latest-stable}" --topology sharded_cluster --auth --ssl
 connect_mongodb --ssl --auth
 
 # Verify that auth is enforced when starting with AUTH=auth SSL=yes.
