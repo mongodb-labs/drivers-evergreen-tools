@@ -574,7 +574,7 @@ functions:
       type: test
       params:
         binary: bash
-        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, MONGODB_VERSION]
         args: [src/.evergreen/tests/test-mongodb-runner.sh, partial]
 
   "run mongodb runner test full":
@@ -1539,11 +1539,14 @@ buildvariants:
     - "test-csfle"
 
 # Both Windows hosts have a python toolchain; the suites run on each variant
-# to make sure they pass on both.
+# to make sure they pass on both. MongoDB 8.3+ does not run on the vsCurrent
+# image (Windows Server 2019), so that variant is pinned to 7.0 (DRIVERS-3658).
 - name: tests-windows-vsCurrent
   display_name: "Windows vsCurrent partial tests"
   run_on:
     - windows-vsCurrent-small
+  expansions:
+    MONGODB_VERSION: "7.0"
   tasks:
     - "test-ensure-uv"
     - "test-cli-partial"
