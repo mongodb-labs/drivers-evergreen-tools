@@ -9,7 +9,13 @@ pushd $SCRIPT_DIR/..
 # Ensure uv is available, then resolve the interpreter it would use.
 . ./ensure-uv.sh
 ensure_uv || exit 1
-PYTHON_BINARY=$(uv python find)
+# uv prints a native Windows path with backslashes, which bash on a Cygwin
+# host cannot exec (DRIVERS-3626); convert it like ensure-uv.sh converts the
+# paths it owns, and drop a trailing \r as _ensure_uv_add_user_bin does.
+PYTHON_BINARY=$(uv python find | tr -d '\r')
+if [ "${OSTYPE:-}" = cygwin ]; then
+  PYTHON_BINARY=$(cygpath -m "$PYTHON_BINARY")
+fi
 PATH="$(dirname "$PYTHON_BINARY"):$PATH"
 
 ./install-node.sh
