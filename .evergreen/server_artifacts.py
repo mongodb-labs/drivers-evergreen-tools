@@ -11,6 +11,7 @@ import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Callable
 
 LOGGER = logging.getLogger(__name__)
 
@@ -203,7 +204,9 @@ def _fetch_signature(sig_url: str) -> "bytes | None":
     S3 answers 404 for a missing key, or 403 when the caller cannot list the
     bucket and the missing object is hidden behind the denial, so both codes
     mean "not published here". Any other failure propagates and fails the
-    download.
+    download. Callers must pass a freshly authorized URL: an expired
+    presigned URL also answers 403, and would be mistaken for a signature
+    that was never published.
     """
     try:
         return _download_bytes(sig_url)
@@ -329,13 +332,16 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         return next(iter(fingerprints))
 
 
-def verify_latest_build(archive: Path, sig_url: str) -> None:
+def verify_latest_build(archive: Path, get_sig_url: "Callable[[], str]") -> None:
     """
     Verify the detached signature of a "latest"/"latest-build" archive.
 
     A bad signature raises, failing the download. A missing signature
     (stable-branch staging builds may not be signed yet), or a missing gpg,
-    only produces a warning, and the download continues.
+    only produces a warning, and the download continues. The signature URL
+    is fetched through get_sig_url, so the caller authorizes the fetch when
+    it happens: a presigned URL that outlived the archive download would
+    answer 403 and be mistaken for a missing signature.
     """
     gpg_exe = shutil.which("gpg")
     if gpg_exe is None:
@@ -344,7 +350,7 @@ def verify_latest_build(archive: Path, sig_url: str) -> None:
             archive.name,
         )
         return
-    signature = _fetch_signature(sig_url)
+    signature = _fetch_signature(get_sig_url())
     if signature is None:
         LOGGER.warning(
             "No signature was published for this build, so the signature of "

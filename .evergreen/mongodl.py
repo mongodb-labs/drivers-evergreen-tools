@@ -867,7 +867,7 @@ def _latest_build_url(
     edition: str,
     component: str,
     branch: "str|None",
-) -> "tuple[str, str]":
+) -> "tuple[str, Callable[[], str]]":
     """
     Get the URL for an "unpublished" "latest" build and its detached signature.
 
@@ -880,8 +880,11 @@ def _latest_build_url(
     the vault), fall back to the legacy public download link with a pronounced
     warning.
 
-    Returns a tuple of the archive URL and the URL of the detached GPG
-    signature published next to it.
+    Returns a tuple of the archive URL and a callable yielding the URL of
+    the detached GPG signature published next to it. The callable
+    reauthorizes the signature fetch when it happens, so a download whose
+    retries outlive the presigned URLs' one-hour lifetime cannot turn their
+    expiry into a skipped verification.
     """
     from server_artifacts import PrivateArtifactsUnavailableError, presigned_urls
 
@@ -920,10 +923,17 @@ def _latest_build_url(
         else f"mongodb-mongo-{branch}-staging"
     )
     try:
-        archive_url, sig_url = presigned_urls(
-            f"{branch_folder}/{filename}", f"{branch_folder}/{filename}.sig"
-        )
-        return archive_url, sig_url
+        archive_key = f"{branch_folder}/{filename}"
+        sig_key = f"{archive_key}.sig"
+        archive_url, _ = presigned_urls(archive_key, sig_key)
+
+        def get_sig_url() -> str:
+            # Authorize the signature fetch when it happens: the presigned
+            # URLs expire after an hour, and a 403 from an expired URL
+            # would be mistaken for a missing signature.
+            return presigned_urls(archive_key, sig_key)[1]
+
+        return archive_url, get_sig_url
     except PrivateArtifactsUnavailableError:
         legacy_url = _legacy_latest_build_url(target, arch, edition, component, branch)
         LOGGER.warning("*" * 78)
@@ -939,7 +949,7 @@ def _latest_build_url(
             "migration guide) to download from S3."
         )
         LOGGER.warning("*" * 78)
-        return legacy_url, f"{legacy_url}.sig"
+        return legacy_url, lambda: f"{legacy_url}.sig"
 
 
 def _dl_component(
@@ -958,9 +968,9 @@ def _dl_component(
     retries: int,
 ) -> ExpandResult:
     LOGGER.info(f"Download {component} {version}-{edition} for {target}-{arch}")
-    sig_url = None
+    get_sig_url = None
     if version in ("latest-build", "latest"):
-        dl_url, sig_url = _latest_build_url(
+        dl_url, get_sig_url = _latest_build_url(
             cache, target, arch, edition, component, latest_build_branch
         )
         sha256 = None
@@ -1000,10 +1010,10 @@ def _dl_component(
             cached = cache.download_file(dl_url).path
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
-            if sig_url is not None:
+            if get_sig_url is not None:
                 from server_artifacts import verify_latest_build
 
-                verify_latest_build(cached, sig_url)
+                verify_latest_build(cached, get_sig_url)
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
