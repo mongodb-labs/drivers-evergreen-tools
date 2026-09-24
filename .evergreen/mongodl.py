@@ -25,10 +25,8 @@ import re
 import shutil
 import sqlite3
 import ssl
-import subprocess
 import sys
 import tarfile
-import tempfile
 import textwrap
 import time
 import urllib.error
@@ -149,24 +147,6 @@ DISTRO_ID_TO_TARGET = {
 
 # The list of valid targets that are not related to a specific Linux distro.
 TARGETS_THAT_ARE_NOT_DISTROS = ["linux_i686", "linux_x86_64", "osx", "macos", "windows"]
-
-#: The MongoDB release signing public keys, fetched at verification time.
-#: Detached signatures for "latest"/"latest-build" builds are verified
-#: against these keys.
-MONGODB_GPG_KEY_URLS = (
-    "https://pgp.mongodb.com/server-9.asc",
-    "https://pgp.mongodb.com/server-8.0.asc",
-)
-
-#: The fingerprints of the MongoDB release signing keys that a signature of a
-#: "latest"/"latest-build" build must match. A signature made by any other key
-#: fails the download.
-MONGODB_GPG_KEY_FINGERPRINTS = frozenset(
-    (
-        "B3B42B6C39E5CDDEC0A27E3CF366D55B602E502D",
-        "4B0752C1BCA238C0B4EE14DC41DE058A4E7DCA05",
-    )
-)
 
 
 def infer_target(version: Optional[str] = None) -> str:
@@ -1021,7 +1001,9 @@ def _dl_component(
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
             if sig_url is not None:
-                _verify_latest_build(cached, sig_url)
+                from server_artifacts import verify_latest_build
+
+                verify_latest_build(cached, sig_url)
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
@@ -1029,169 +1011,6 @@ def _dl_component(
             LOGGER.exception(e)
             if not retrier.retry():
                 raise
-
-
-def _download_bytes(url: str) -> bytes:
-    """Download the content at the given URL as bytes."""
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, context=SSL_CONTEXT, timeout=30) as resp:
-        return resp.read()
-
-
-def _fetch_signature(sig_url: str) -> "bytes | None":
-    """
-    Download a detached GPG signature, or None if it was not published.
-
-    S3 answers 404 for a missing key, or 403 when the caller cannot list the
-    bucket and the missing object is hidden behind the denial, so both codes
-    mean "not published here". Any other failure propagates and fails the
-    download.
-    """
-    try:
-        return _download_bytes(sig_url)
-    except urllib.error.HTTPError as e:
-        if e.code in (403, 404):
-            return None
-        raise
-
-
-def _gpg_path(path: Path) -> str:
-    """
-    Spell 'path' the way the host's gpg expects.
-
-    The Cygwin/MSYS gpg builds on the Windows CI hosts resolve POSIX-style
-    paths only: both the native spelling (C:\\...) and the forward-slash form
-    (C:/...) are taken for a relative path. cygpath (or an MSYS equivalent)
-    yields the right spelling, /cygdrive/c/... or /c/...; on hosts whose gpg
-    is a native Windows build there is no cygpath, and the forward-slash form
-    is correct instead. Elsewhere the absolute native path is what gpg, and
-    the gpg-agent it starts, expect.
-    """
-    if sys.platform == "win32":
-        try:
-            proc = subprocess.run(
-                ["cygpath", "-u", str(path)],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-        except (OSError, subprocess.CalledProcessError):
-            return path.as_posix()
-        return proc.stdout.strip()
-    return str(path)
-
-
-def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
-    """
-    Import the pinned MongoDB release signing keys into the given gpg home.
-    """
-    for url in MONGODB_GPG_KEY_URLS:
-        key = _download_bytes(url)
-        proc = subprocess.run(
-            [gpg_exe, "--homedir", home_arg, "--batch", "--import"],
-            input=key,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if proc.returncode != 0:
-            raise RuntimeError(
-                f"Failed to import the MongoDB release signing key [{url}]:\n{proc.stderr}"
-            )
-
-
-def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
-    """
-    Verify a detached GPG signature against the pinned MongoDB release keys.
-
-    Returns the fingerprint of the signing key, or raises ValueError if the
-    signature is bad or was not made by a pinned key.
-    """
-    with tempfile.TemporaryDirectory(prefix="mongodl-gpg") as tmp:
-        home = Path(tmp)
-        # gpg refuses to use a home directory with loose permissions.
-        home.chmod(0o700)
-        home_arg = _gpg_path(home)
-        sig_path = home / f"{archive.name}.sig"
-        sig_path.write_bytes(signature)
-        sig_arg = _gpg_path(sig_path)
-        _import_gpg_keys(gpg_exe, home_arg)
-        proc = subprocess.run(
-            [
-                gpg_exe,
-                "--homedir",
-                home_arg,
-                "--batch",
-                "--no-tty",
-                "--status-fd",
-                "1",
-                "--verify",
-                sig_arg,
-                _gpg_path(archive),
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        # A good signature reports a "VALIDSIG" line naming the fingerprint
-        # of the signing key and (for a subkey signature) of the primary
-        # key. Parse the fingerprints ourselves: only a pinned key may sign
-        # a build, even if gpg itself is happy (it exits 0 for expired keys,
-        # too). Every field is checked rather than a fixed index, since the
-        # number of VALIDSIG arguments varies across gpg versions.
-        fingerprints = set()
-        expired_or_revoked = False
-        for line in proc.stdout.splitlines():
-            fields = line.split()
-            if len(fields) < 3 or fields[0] != "[GNUPG:]":
-                continue
-            if fields[1] == "VALIDSIG":
-                fingerprints.update(
-                    field for field in fields if field in MONGODB_GPG_KEY_FINGERPRINTS
-                )
-            elif fields[1] in ("EXPKEYSIG", "REVKEYSIG"):
-                expired_or_revoked = True
-        if proc.returncode != 0 or expired_or_revoked or not fingerprints:
-            if expired_or_revoked:
-                detail = "the signature was made by an expired or revoked key"
-            elif proc.returncode == 0:
-                detail = (
-                    "the signature was not made by a pinned MongoDB release "
-                    "signing key"
-                )
-            else:
-                detail = proc.stderr
-            raise ValueError(
-                f"Signature verification for [{archive.name}] failed: {detail}"
-            )
-        return next(iter(fingerprints))
-
-
-def _verify_latest_build(archive: Path, sig_url: str) -> None:
-    """
-    Verify the detached signature of a "latest"/"latest-build" archive.
-
-    A bad signature raises, failing the download. A missing signature
-    (stable-branch staging builds may not be signed yet), or a missing gpg,
-    only produces a warning, and the download continues.
-    """
-    gpg_exe = shutil.which("gpg")
-    if gpg_exe is None:
-        LOGGER.warning(
-            "gpg is not installed, so the signature of %s will not be verified",
-            archive.name,
-        )
-        return
-    signature = _fetch_signature(sig_url)
-    if signature is None:
-        LOGGER.warning(
-            "No signature was published for this build, so the signature of "
-            "%s will not be verified",
-            archive.name,
-        )
-        return
-    fingerprint = _verify_gpg_signature(gpg_exe, archive, signature)
-    LOGGER.info("Verified GPG signature of %s with key %s", archive.name, fingerprint)
 
 
 def _check_shasum256(filename, shasum):
