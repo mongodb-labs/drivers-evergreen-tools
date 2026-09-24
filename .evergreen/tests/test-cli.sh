@@ -5,8 +5,13 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/..
+
+# The gpg checks below invoke uv directly, and install-cli.sh's own ensure_uv
+# runs in a child process, whose PATH changes never reach this shell.
+ensure_uv || exit 1
 
 # Ensure we can run clean before the cli is installed.
 make clean
