@@ -85,7 +85,9 @@ if command -v gpg >/dev/null 2>&1; then
   # A regression that accepts any signature must fail the download: check
   # that garbage bytes, and a cryptographically valid signature made by an
   # unpinned key, are both rejected. This exercises the real gpg and the
-  # real pinned keys, so no gpg shim is needed.
+  # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
+  # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
+  # native paths as relative.
   uv run --no-project python - <<'EOF'
 import subprocess
 import sys
@@ -93,7 +95,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, ".evergreen")
-from server_artifacts import _verify_gpg_signature
+from server_artifacts import _gpg_path, _verify_gpg_signature
 
 
 def expect_rejected(archive, signature, what):
@@ -116,7 +118,7 @@ with tempfile.TemporaryDirectory() as tmp:
     gpg = [
         "gpg",
         "--homedir",
-        str(gpg_home),
+        _gpg_path(gpg_home),
         "--batch",
         "--pinentry-mode",
         "loopback",
@@ -130,7 +132,7 @@ with tempfile.TemporaryDirectory() as tmp:
     )
     sig = tmp / "archive.tgz.sig"
     subprocess.run(
-        gpg + ["--output", str(sig), "--detach-sign", str(archive)],
+        gpg + ["--output", _gpg_path(sig), "--detach-sign", _gpg_path(archive)],
         check=True,
         capture_output=True,
     )
