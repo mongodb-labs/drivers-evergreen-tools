@@ -77,6 +77,27 @@ export VALIDATE_DISTROS=1
 # missing signature would be a publication regression.
 if command -v gpg >/dev/null 2>&1; then
   grep -q "Verified GPG signature" latest-build.log
+  # A regression that accepts any signature must fail the download: check
+  # that a garbage signature is rejected. This exercises the real gpg and
+  # the real pinned keys, so no gpg shim is needed.
+  uv run --no-project python - <<'EOF'
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, ".evergreen")
+from server_artifacts import _verify_gpg_signature
+
+with tempfile.TemporaryDirectory() as tmp:
+    archive = Path(tmp) / "archive.tgz"
+    archive.write_bytes(b"an archive body")
+    try:
+        _verify_gpg_signature("gpg", archive, b"not really a signature")
+    except ValueError:
+        pass  # expected: the garbage signature must be rejected
+    else:
+        raise AssertionError("a garbage signature was accepted")
+EOF
 else
   grep -q "gpg is not installed" latest-build.log
 fi
