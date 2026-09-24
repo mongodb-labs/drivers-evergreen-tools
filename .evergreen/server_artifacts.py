@@ -249,12 +249,12 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
             [gpg_exe, "--homedir", home_arg, "--batch", "--import"],
             input=key,
             capture_output=True,
-            text=True,
             check=False,
         )
         if proc.returncode != 0:
+            stderr = proc.stderr.decode(errors="replace")
             raise RuntimeError(
-                f"Failed to import the MongoDB release signing key [{url}]:\n{proc.stderr}"
+                f"Failed to import the MongoDB release signing key [{url}]:\n{stderr}"
             )
 
 
