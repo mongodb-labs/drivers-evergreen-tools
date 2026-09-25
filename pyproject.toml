@@ -1,0 +1,19 @@
+[tool.uv.workspace]
+members = [
+    ".evergreen",
+    ".evergreen/orchestration",
+]
+
+[tool.uv.sources]
+# .evergreen/orchestration depends on the .evergreen package. Declared here
+# rather than in the member's own pyproject because uv cannot resolve a
+# workspace source from a member for another member that is its own ancestor
+# directory.
+drivers-evergreen-tools = { workspace = true }
+
+[dependency-groups]
+# Shared boto3 constraint for the tool folders that need AWS access
+# (docker, auth_aws, auth_oidc, csfle): follow-up DRIVERS-3564 migrations
+# will add the per-folder groups that extend this one with
+# {include-group = "boto"}.
+boto = ["boto3>=1.35.0"]

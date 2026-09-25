@@ -9,13 +9,13 @@ updates:
       actions:
         patterns:
           - "*"
-  # Python
-  - package-ecosystem: "pip"
+  # Python (uv workspace root: pyproject.toml + uv.lock)
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
     groups:
-      actions:
+      python:
         patterns:
           - "*"
   # mongodb-runner pins. See .evergreen/orchestration/mongodb-runner/README.md.

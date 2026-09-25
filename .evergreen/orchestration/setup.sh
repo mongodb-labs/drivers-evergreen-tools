@@ -15,6 +15,7 @@ printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 case "${MONGODB_VERSION:-"latest"}" in
 3.6) echo "pymongo<4.11" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
 4.0) echo "pymongo<4.14" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
+4.2) echo "pymongo<4.18" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
 esac
 
 # Install CLIs into this directory (default path for $PROJECT_ORCHESTRATION_HOME
