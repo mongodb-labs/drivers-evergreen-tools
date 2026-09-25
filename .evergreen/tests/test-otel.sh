@@ -13,7 +13,11 @@ ensure_uv || exit 1
 
 # Unit tests for the injection and gating helpers.
 pushd orchestration > /dev/null
-uv run python -m unittest test_drivers_orchestration -v
+# --project lets uv discover the root workspace (it cannot from inside the
+# nested orchestration member, whose parent .evergreen/ has its own
+# pyproject.toml), and --package selects the drivers-orchestration
+# environment, whose dependencies the tests import.
+uv run --project .. --package drivers-orchestration python -m unittest test_drivers_orchestration -v
 popd > /dev/null
 
 bash install-cli.sh "$(pwd)/orchestration"

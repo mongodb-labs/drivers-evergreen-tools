@@ -29,11 +29,16 @@ We use isolated virtual environments to run all of the python scripts.
 
 ### Updating Dependencies
 
-The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
-depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
-[`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
-lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
-still in use by downstream projects.
+The repository is a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/) rooted at
+the top-level `pyproject.toml`, with [`.evergreen`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen)
+and [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
+as members. Their Python dependencies — including the PyMongo that the mongo-orchestration
+scripts depend on — are pinned by the single root [`uv.lock`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/uv.lock)
+lockfile, and [Dependabot](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml)
+keeps it updated automatically. PyMongo is only needed for mongo-orchestration support, which
+[DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335) removes along with the dependency.
+The per-feature `requirements.txt` files under the `.evergreen/<feature>/`
+folders are not covered by the workspace yet; they migrate onto it in follow-up work ([DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to
