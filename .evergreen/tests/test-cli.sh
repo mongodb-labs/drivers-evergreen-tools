@@ -5,8 +5,13 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/..
+
+# The gpg checks below invoke uv directly, and install-cli.sh's own ensure_uv
+# runs in a child process, whose PATH changes never reach this shell.
+ensure_uv || exit 1
 
 # Ensure we can run clean before the cli is installed.
 make clean
@@ -71,7 +76,71 @@ export VALIDATE_DISTROS=1
 ./mongodl --edition enterprise --version 8.0 --component archive --test --retries 5
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 5
-./mongodl --edition enterprise --version latest-build --component archive --test --retries 5
+./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build.log 2>&1
+# The master-nightly artifact is always published with a signature, so a host
+# with gpg must verify it; only a host without gpg may skip verification. A
+# missing signature would be a publication regression.
+if command -v gpg >/dev/null 2>&1; then
+  grep -q "Verified GPG signature" latest-build.log
+  # A regression that accepts any signature must fail the download: check
+  # that garbage bytes, and a cryptographically valid signature made by an
+  # unpinned key, are both rejected. This exercises the real gpg and the
+  # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
+  # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
+  # native paths as relative.
+  uv run --no-project python - <<'EOF'
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, ".evergreen")
+from server_artifacts import _gpg_path, _verify_gpg_signature
+
+
+def expect_rejected(archive, signature, what):
+    try:
+        _verify_gpg_signature("gpg", archive, signature)
+    except ValueError:
+        pass  # expected: this signature must be rejected
+    else:
+        raise AssertionError(f"a {what} signature was accepted")
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    tmp = Path(tmp)
+    archive = tmp / "archive.tgz"
+    archive.write_bytes(b"an archive body")
+    expect_rejected(archive, b"not really a signature", "garbage")
+    gpg_home = tmp / "gpg"
+    gpg_home.mkdir()
+    gpg_home.chmod(0o700)
+    gpg = [
+        "gpg",
+        "--homedir",
+        _gpg_path(gpg_home),
+        "--batch",
+        "--pinentry-mode",
+        "loopback",
+        "--passphrase",
+        "",
+    ]
+    subprocess.run(
+        gpg + ["--quick-gen-key", "unpinned-test-key"],
+        check=True,
+        capture_output=True,
+    )
+    sig = tmp / "archive.tgz.sig"
+    subprocess.run(
+        gpg + ["--output", _gpg_path(sig), "--detach-sign", _gpg_path(archive)],
+        check=True,
+        capture_output=True,
+    )
+    expect_rejected(archive, sig.read_bytes(), "unpinned-key")
+EOF
+else
+  grep -q "gpg is not installed" latest-build.log
+fi
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
