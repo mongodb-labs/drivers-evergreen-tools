@@ -48,7 +48,9 @@ from mongodb_runner import TMPDIR, _install_mongodb_runner, _normalize_path
 for path in TMPDIR.glob('mongodb-runner-*-mongodb-*'):
     shutil.rmtree(path, ignore_errors=True)
 runner_bin = _install_mongodb_runner('8.0')
-runner_js = runner_bin.parent.parent / 'mongodb-runner' / 'bin' / 'runner.js'
+runner_js = (
+    runner_bin.parent.parent / '@mongodb-js' / 'mongodb-runner' / 'bin' / 'runner.js'
+)
 print(_normalize_path(runner_js))
 " | tr -d '\r')
   node "$RUNNER_JS" --help
