@@ -173,7 +173,7 @@ As part of [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335) we are m
 using `mongo-orchestration` and its associated scripts (`run-orchestration.sh`, `stop-orchestration.sh`,
 and `start-orchestration.sh`).
 
-We are instead using [mongodb-runner](https://www.npmjs.com/package/mongodb-runner) using the new script
+We are instead using [@mongodb-js/mongodb-runner](https://www.npmjs.com/package/@mongodb-js/mongodb-runner) using the new script
 `run-mongodb.sh` script with either `start` or `stop` as the argument, e.g.:
 
 ```bash

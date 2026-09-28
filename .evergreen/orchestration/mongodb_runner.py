@@ -87,7 +87,7 @@ def _pinned_versions(pin_dir: Path) -> Tuple[str, str]:
     try:
         packages = json.loads((pin_dir / "package-lock.json").read_text())["packages"]
         return (
-            packages["node_modules/mongodb-runner"]["version"],
+            packages["node_modules/@mongodb-js/mongodb-runner"]["version"],
             packages["node_modules/mongodb"]["version"],
         )
     except (OSError, ValueError, KeyError) as exc:

@@ -9,7 +9,7 @@ command -v "$python" >/dev/null 2>&1 || python=python
 
 status=0
 while IFS= read -r pin; do
-  if grep -q '"node_modules/mongodb-runner/node_modules/mongodb"' \
+  if grep -q '"node_modules/@mongodb-js/mongodb-runner/node_modules/mongodb"' \
     "$pin/package-lock.json"; then
     echo "$pin: mongodb is nested under mongodb-runner, so this pin never reaches" \
       "the runner. See .evergreen/orchestration/mongodb-runner/README.md."
@@ -41,7 +41,7 @@ if manifest.get("dependencies", {}) != packages[""].get("dependencies", {}):
     )
 
 # mongodb_runner.py reads both of these to build the install cache key.
-for required in ("node_modules/mongodb-runner", "node_modules/mongodb"):
+for required in ("node_modules/@mongodb-js/mongodb-runner", "node_modules/mongodb"):
     if required not in packages:
         sys.exit(f"{pin}: package-lock.json has no {required} entry")
 ' "$pin"; then
