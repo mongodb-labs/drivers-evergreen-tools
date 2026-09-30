@@ -17,7 +17,7 @@ pushd orchestration > /dev/null
 # nested orchestration member, whose parent .evergreen/ has its own
 # pyproject.toml), and --package selects the drivers-orchestration
 # environment, whose dependencies the tests import.
-uv run --project .. --package drivers-orchestration python -m unittest test_drivers_orchestration -v
+uv run --project "${root_dir:?}" --package drivers-orchestration python -m unittest test_drivers_orchestration -v
 popd > /dev/null
 
 bash install-cli.sh "$(pwd)/orchestration"
