@@ -62,9 +62,10 @@ if [[ -z "${pkg_name:-}" ]]; then
   exit 1
 fi
 
-# Keep in sync with the uv Dependabot uses to regenerate uv.lock
-# (https://github.com/dependabot/dependabot-core/blob/main/uv/Dockerfile);
-# this floats to the latest 0.12.x, so only Dependabot minor bumps matter.
+# Pin to Dependabot's uv minor series so older revisions of this repo keep
+# getting a uv compatible with their lock file. Bump the minor when
+# Dependabot's uv
+# (https://github.com/dependabot/dependabot-core/blob/main/uv/Dockerfile) does.
 uv tool install -q --force "uv~=0.12.0"
 [[ "${PATH:-}" =~ (^|:)"${UV_TOOL_BIN_DIR:?}"(:|$) ]] || PATH="${UV_TOOL_BIN_DIR:?}:${PATH:-}"
 command -V uv
