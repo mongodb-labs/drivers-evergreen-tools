@@ -4,6 +4,7 @@
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 . $SCRIPT_DIR/../handle-paths.sh
 . $SCRIPT_DIR/../ensure-uv.sh
 
@@ -17,7 +18,7 @@ pushd orchestration > /dev/null
 # nested orchestration member, whose parent .evergreen/ has its own
 # pyproject.toml), and --package selects the drivers-orchestration
 # environment, whose dependencies the tests import.
-uv run --project "${root_dir:?}" --package drivers-orchestration python -m unittest test_drivers_orchestration -v
+uv run --project "${ROOT_DIR:?}" --package drivers-orchestration python -m unittest test_drivers_orchestration -v
 popd > /dev/null
 
 bash install-cli.sh "$(pwd)/orchestration"
