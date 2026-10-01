@@ -78,17 +78,12 @@ fails the download. If a signature was not published for the artifact
 (stable-branch staging builds may not be signed yet), or the host has no `gpg`
 binary, `mongodl` only logs a warning and the download continues. Until
 [DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,
-`amazon2023` hosts (which ship `gnupg2-minimal`, without a working
-`gpg-agent`) cannot verify: `mongodl` attempts verification there anyway
-and tolerates that specific environment failure with a warning that
-references DEVPROD-44314, continuing with an unverified download. A bad or
-unpinned signature still fails the download, on every host. On hosts where
-the gpg environment is broken but not amazon2023, `mongodl` fails fast
-instead of retrying. Published
+amazon2023 hosts (whose `gnupg2-minimal` gpg cannot verify) tolerate that
+environment failure with a DEVPROD-44314 warning; a broken gpg environment
+elsewhere fails fast. Published
 builds and other version selectors are unaffected and keep using the SHA-256
-checksums from `full.json`. Verification can also be skipped manually on any
-host by setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` to any
-non-empty value (e.g. `1`).
+checksums from `full.json`. Verification can also be skipped manually by
+setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` (any non-empty value).
 
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub

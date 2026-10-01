@@ -233,11 +233,8 @@ def infer_target_from_os_release(osr: Path) -> str:
 
 def _is_amazon2023_host() -> bool:
     """
-    Check whether mongodl is running on Amazon Linux 2023.
-
-    That image ships gnupg2-minimal, whose gpg cannot verify signatures, so
-    GpgEnvironmentError failures are only warned about there. Keyed to the
-    host OS, not the download target.
+    Whether the host is Amazon Linux 2023, whose gnupg2-minimal gpg cannot
+    verify signatures. Keyed to the host OS, not the download target.
     """
     cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
     found = next((p for p in cands if p.is_file()), None)
@@ -1036,10 +1033,8 @@ def _dl_component(
                 except GpgEnvironmentError as e:
                     if not _is_amazon2023_host():
                         raise
-                    # The amazon2023 image ships gnupg2-minimal, whose gpg
-                    # cannot verify signatures. Until verification switches
-                    # to gpgv, tolerate exactly this failure there (see
-                    # DEVPROD-44314); a bad signature still fails.
+                    # gnupg2-minimal cannot verify; tolerate exactly this
+                    # failure until the gpgv switch (DEVPROD-44314).
                     LOGGER.warning(
                         "Signature verification failed on amazon2023; "
                         "continuing without a verified signature, see "
@@ -1050,7 +1045,7 @@ def _dl_component(
                 cached, out_dir, pattern, strip_components, test=test
             )
         except GpgEnvironmentError:
-            # A broken gpg environment is permanent: retrying cannot fix it.
+            # A broken gpg environment is permanent: never retried.
             raise
         except Exception as e:
             LOGGER.exception(e)

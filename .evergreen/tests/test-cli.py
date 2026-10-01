@@ -1,9 +1,4 @@
-"""
-Tests for mongodl's signature-verification and retry behavior.
-
-Invoked by test-cli.sh after install-cli.sh. Host-specific tests skip
-themselves where they cannot apply.
-"""
+"""Tests for mongodl signature verification, invoked by test-cli.sh."""
 
 import shutil
 import subprocess
@@ -115,9 +110,8 @@ class _FakeCache:
 
 class VerificationToleranceTest(unittest.TestCase):
     """
-    _dl_component must tolerate GpgEnvironmentError on amazon2023 hosts
-    (with a DEVPROD-44314 note), fail it fast elsewhere, and retry any
-    other error everywhere.
+    _dl_component tolerates GpgEnvironmentError on amazon2023 (with a
+    DEVPROD-44314 note), fails it fast elsewhere, and retries other errors.
     """
 
     def setUp(self):
@@ -145,8 +139,7 @@ class VerificationToleranceTest(unittest.TestCase):
         ) = self.saved
 
     def _drive(self, error, amazon_host, expect_raise):
-        """Drive _dl_component with a verifier that always raises; return
-        the list recording the verification attempts."""
+        """Drive _dl_component with an always-raising verifier; return attempts."""
         attempts = []
 
         def verify(archive, sig_url):

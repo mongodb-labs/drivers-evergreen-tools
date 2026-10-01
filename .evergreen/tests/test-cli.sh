@@ -89,8 +89,7 @@ fi
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 5
 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build.log 2>&1
-# The master-nightly artifact is always published with a signature, so a host
-# with gpg must verify it; only a host without gpg may skip verification. A
+# The master-nightly artifact is always published with a signature; a
 # missing signature would be a publication regression.
 if command -v gpg >/dev/null 2>&1; then
   if [ ${IS_AMAZON2023} = 1 ]; then
@@ -109,18 +108,14 @@ else
 fi
 SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
-# Signature-verification and retry-loop tests. Each test skips itself where
-# it cannot apply (e.g. real-gpg checks on hosts without gpg). Invoke the
-# test relative to the cwd: SCRIPT_DIR is relative to the Evergreen working
-# directory and is invalid after the pushd above.
+# Signature-verification and retry-loop tests; each test skips itself where
+# it cannot apply. Relative to cwd: SCRIPT_DIR is invalid after the pushd.
 uv run --no-project python tests/test-cli.py
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 if [ ${IS_AMAZON2023} = 0 ]; then
-  # The cryptd builds for the perf tags may not be published for every
-  # target (the 6.0 pin predates amazon2023), and per-target availability
-  # is not worth tracking here: the perf-tag resolution is still exercised
-  # on the fully-featured distros.
+  # The perf tags' cryptd builds may not exist for every target (the 6.0
+  # pin predates amazon2023); the fully-featured distros cover them.
   ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
   ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
 fi

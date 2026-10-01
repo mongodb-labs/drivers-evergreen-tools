@@ -64,12 +64,7 @@ class RoleAssumptionError(PrivateArtifactsUnavailableError):
 
 
 class GpgEnvironmentError(RuntimeError):
-    """
-    Raised when gpg is installed but unusable (e.g. gpg-agent missing).
-
-    Temporary until verification switches to gpgv, which does not need an
-    agent (DRIVERS-3666 follow-up).
-    """
+    """gpg is unusable (e.g. gpg-agent missing); temporary until the gpgv switch."""
 
 
 def _gpg_agent_failure(detail: str) -> bool:
