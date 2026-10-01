@@ -112,7 +112,7 @@ SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
 # Signature-verification and retry-loop tests; each test skips itself where
 # it cannot apply. Relative to cwd: SCRIPT_DIR is invalid after the pushd.
-uv run --no-project python tests/test-cli.py
+PYTHONPATH=. uv run --no-project python tests/test-cli.py
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 if [ ${IS_AMAZON2023} = 0 ]; then

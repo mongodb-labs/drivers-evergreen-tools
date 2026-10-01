@@ -64,11 +64,11 @@ class RoleAssumptionError(PrivateArtifactsUnavailableError):
 
 
 class GpgEnvironmentError(RuntimeError):
-    """gpg is unusable (e.g. gpg-agent missing); temporary until the gpgv switch."""
+    """gpg is installed but cannot verify signatures (see DEVPROD-44314)."""
 
 
 def _gpg_agent_failure(detail: str) -> bool:
-    """Tell whether a gpg failure means the agent is missing or unusable."""
+    """Tell whether a gpg failure is an environment failure."""
     return "gpg-agent" in detail or "connect to the agent" in detail
 
 
@@ -267,7 +267,7 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
             stderr = proc.stderr.decode(errors="replace")
             if _gpg_agent_failure(stderr):
                 raise GpgEnvironmentError(
-                    "gpg is installed but gpg-agent is missing or unusable; "
+                    "gpg cannot verify signatures on this host; "
                     "install the full gnupg2 package (see DEVPROD-44314):\n"
                     f"{stderr}"
                 )
@@ -334,7 +334,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
         if proc.returncode != 0 or expired_or_revoked or not fingerprints:
             if proc.returncode != 0 and _gpg_agent_failure(proc.stderr):
                 raise GpgEnvironmentError(
-                    "gpg is installed but gpg-agent is missing or unusable; "
+                    "gpg cannot verify signatures on this host; "
                     "install the full gnupg2 package (see DEVPROD-44314):\n"
                     f"{proc.stderr}"
                 )

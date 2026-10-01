@@ -1034,7 +1034,7 @@ def _dl_component(
                     if not _is_amazon2023_host():
                         raise
                     # gnupg2-minimal cannot verify; tolerate exactly this
-                    # failure until the gpgv switch (DEVPROD-44314).
+                    # failure (DEVPROD-44314).
                     LOGGER.warning(
                         "Signature verification failed on amazon2023; "
                         "continuing without a verified signature, see "

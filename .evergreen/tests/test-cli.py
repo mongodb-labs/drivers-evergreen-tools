@@ -7,8 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 import mongodl
 from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signature
 
@@ -68,9 +66,9 @@ class VerifySignatureRejectionTest(unittest.TestCase):
                 _verify_gpg_signature("gpg", archive, sig.read_bytes())
 
     def test_deep_tmpdir_signature_rejected(self):
-        # A deep $TMPDIR must not push the gpg-agent socket past the AF_UNIX
-        # limit (108 bytes on Linux, 104 on macOS), or the key import fails
-        # with a RuntimeError (DRIVERS-3663).
+        # A deep $TMPDIR must not push the gpg home's sockets past the
+        # AF_UNIX limit (108 bytes on Linux, 104 on macOS), or the key
+        # import fails with a RuntimeError (DRIVERS-3663).
         if sys.platform == "win32":
             self.skipTest("windows gpg does not use AF_UNIX sockets")
         with tempfile.TemporaryDirectory() as tmp:
@@ -87,7 +85,7 @@ class VerifySignatureRejectionTest(unittest.TestCase):
 
 
 class Amazon2023HostTest(unittest.TestCase):
-    """amazon2023 images ship gnupg2-minimal: gpg without gpg-agent."""
+    """amazon2023 images ship gnupg2-minimal, which cannot verify."""
 
     @unittest.skipUnless(IS_AMAZON2023, "only meaningful on amazon2023 hosts")
     def test_verification_raises_gpg_environment_error(self):
