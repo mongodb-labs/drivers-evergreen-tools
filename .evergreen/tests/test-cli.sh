@@ -138,7 +138,8 @@ with tempfile.TemporaryDirectory() as tmp:
     )
     expect_rejected(archive, sig.read_bytes(), "unpinned-key")
     # A deep $TMPDIR must not push the gpg-agent socket past the AF_UNIX
-    # limit, or the key import fails with a RuntimeError (DRIVERS-3663).
+    # limit (108 bytes on Linux, 104 on macOS), or the key import fails with
+    # a RuntimeError (DRIVERS-3663).
     if sys.platform != "win32":
         deep = tmp / ("d" * 100)
         deep.mkdir()
