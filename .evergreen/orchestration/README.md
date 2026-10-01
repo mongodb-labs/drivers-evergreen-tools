@@ -4,6 +4,17 @@ Scripts to manage MongoDB server deployments for driver testing, used by
 [run-orchestration.sh](../run-orchestration.sh). See the repository
 [README](../../README.md) for general usage.
 
+## uv workspace
+
+This directory is a member of the uv workspace rooted at the repository
+checkout, which uv cannot discover from in here (the intermediate
+`.evergreen/pyproject.toml` blocks the upward search), so pass the root
+explicitly:
+
+```bash
+uv run --project "$DRIVERS_TOOLS" --package drivers-orchestration python ...
+```
+
 ## OpenTelemetry trace export (MongoDB 9.0+)
 
 For the trace-context propagation prose tests

@@ -56,7 +56,13 @@ _workspace_root="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 pushd "$_workspace_root" >/dev/null
 
-pkg_name=$(sed -n -E 's/^name[[:space:]]*=[[:space:]]*"([^"]*)".*$/\1/p' "$TARGET_DIR/pyproject.toml" | head -n1)
+# [project] table's name; awk-scoped so another table's name key can't match.
+pkg_name=$(awk '
+  /^[[:space:]]*\[/ { in_project = ($0 ~ /^\[[[:space:]]*project[[:space:]]*\][[:space:]]*$/) }
+  in_project && $0 ~ /^[[:space:]]*name[[:space:]]*=/ {
+    if (match($0, /"[^"]+"/)) { print substr($0, RSTART + 1, RLENGTH - 2); exit }
+  }
+' "$TARGET_DIR/pyproject.toml")
 if [[ -z "${pkg_name:-}" ]]; then
   echo "No project name found in ${TARGET_DIR}/pyproject.toml!" 1>&2
   exit 1
@@ -73,7 +79,10 @@ uv --version
 
 # Workaround for https://github.com/astral-sh/uv/issues/5815: uv tool install
 # ignores uv.lock, so feed it the locked pins via --with-requirements below.
-uv export --quiet --frozen --package "$pkg_name" --format requirements.txt -o "$TARGET_DIR/uv-requirements.txt"
+# --no-emit-project drops the target's own editable entry (the positional
+# $TARGET_DIR below installs it); remaining -e lines resolve against the cwd,
+# hence the pushd above.
+uv export --quiet --frozen --no-emit-project --package "$pkg_name" --format requirements.txt -o "$TARGET_DIR/uv-requirements.txt"
 
 # Support overriding lockfile dependencies.
 if [[ ! -f "${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:-}" ]]; then
