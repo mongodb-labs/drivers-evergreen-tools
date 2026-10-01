@@ -15,14 +15,18 @@ for the CI that runs it.
 
 ## Repo layout
 
-- Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`.
+- Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
+  `pyproject.toml` (uv workspace root + shared `[dependency-groups]`), and `uv.lock`
+  (the single lockfile for the workspace members; Dependabot updates it via the `uv`
+  ecosystem — the per-feature `requirements.txt` files are not covered until their
+  DRIVERS-3564 migrations land).
 - `.evergreen/pyproject.toml` packages `mongodl`, `mongosh-dl`, and `socks5srv`.
 - `.evergreen/<feature>/`: one subfolder per feature (e.g. `csfle`, `atlas`, `auth_oidc`,
   `k8s`), each with its own README and scripts. New features follow this layout; see
   [CONTRIBUTING.md#new-features](./CONTRIBUTING.md#new-features).
 - `.evergreen/orchestration/`: the MongoDB server/topology launcher. Has its own
-  `pyproject.toml` and its own dependency lockfile (`uv.lock`), independent of
-  `.evergreen/pyproject.toml`.
+  `pyproject.toml`; as a workspace member its dependencies resolve through the root
+  `uv.lock`.
 - `.evergreen/tests/`: `test-<feature>.sh` scripts. These are the test suite (see Testing
   below), run as Evergreen tasks, not a pytest suite.
 

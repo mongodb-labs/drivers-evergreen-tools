@@ -18,7 +18,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "drivers-evergreen-tools @ {root:parent:uri}",
+  "drivers-evergreen-tools",
   "mongo-orchestration>=0.11.2",
   "psutil>=7.1"
 ]
@@ -28,6 +28,3 @@ drivers-orchestration = "drivers_orchestration:main"
 
 [tool.hatch.build]
 include = ["drivers_orchestration.py", "mongodb_runner.py", "otel.py"]
-
-[tool.hatch.metadata]
-allow-direct-references=true

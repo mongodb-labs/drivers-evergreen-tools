@@ -128,9 +128,13 @@ mo-expansion.sh
 .local
 .evergreen/orchestration/config.json
 .evergreen/orchestration/drivers-orchestration
+.evergreen/orchestration/drivers-orchestration.exe
 .evergreen/socks5srv
+.evergreen/socks5srv.exe
 .evergreen/mongodl
+.evergreen/mongodl.exe
 .evergreen/mongosh-dl
+.evergreen/mongosh-dl.exe
 .evergreen/run-mongodb-aws-eks-test.sh
 .evergreen/mongoproxy/bin
 .dockerignore
@@ -141,8 +145,14 @@ perf-report.md
 perf-report.txt
 uv-requirements.txt
 uv-override-dependencies.txt
+.evergreen/uv
+.evergreen/uvx
+.evergreen/uv.exe
+.evergreen/uvx.exe
 .evergreen/orchestration/uv
 .evergreen/orchestration/uvx
+.evergreen/orchestration/uv.exe
+.evergreen/orchestration/uvx.exe
 devtools-shared
 
 # Azure functions.
