@@ -67,11 +67,23 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
-./mongodl --edition enterprise --version 3.6 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.0 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.2 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.4 --component archive --test --retries 5
-./mongodl --edition enterprise --version 5.0 --component archive --test --retries 5
+IS_AMAZON2023=0
+if [ -r /etc/os-release ]; then
+  . /etc/os-release
+  if [ "${ID:-}" = "amzn" ] && [ "${VERSION_ID:-}" = "2023" ]; then
+    IS_AMAZON2023=1
+  fi
+fi
+if [ ${IS_AMAZON2023} = 0 ]; then
+  # MongoDB has never published enterprise builds of the legacy series
+  # (3.6-5.0) for amazon2023, so their URL resolution can only be exercised
+  # on other distros.
+  ./mongodl --edition enterprise --version 3.6 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.0 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.2 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.4 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 5.0 --component archive --test --retries 5
+fi
 ./mongodl --edition enterprise --version 6.0 --component crypt_shared --test --retries 5
 ./mongodl --edition enterprise --version 8.0 --component archive --test --retries 5
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
@@ -80,13 +92,6 @@ export VALIDATE_DISTROS=1
 # The master-nightly artifact is always published with a signature, so a host
 # with gpg must verify it; only a host without gpg may skip verification. A
 # missing signature would be a publication regression.
-IS_AMAZON2023=0
-if [ -r /etc/os-release ]; then
-  . /etc/os-release
-  if [ "${ID:-}" = "amzn" ] && [ "${VERSION_ID:-}" = "2023" ]; then
-    IS_AMAZON2023=1
-  fi
-fi
 if command -v gpg >/dev/null 2>&1; then
   if [ ${IS_AMAZON2023} = 1 ]; then
     grep -q "DEVPROD-44314" latest-build.log
