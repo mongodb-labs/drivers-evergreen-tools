@@ -110,8 +110,10 @@ fi
 SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
 # Signature-verification and retry-loop tests. Each test skips itself where
-# it cannot apply (e.g. real-gpg checks on hosts without gpg).
-uv run --no-project python ${SCRIPT_DIR}/test-cli.py
+# it cannot apply (e.g. real-gpg checks on hosts without gpg). Invoke the
+# test relative to the cwd: SCRIPT_DIR is relative to the Evergreen working
+# directory and is invalid after the pushd above.
+uv run --no-project python tests/test-cli.py
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 if [ ${IS_AMAZON2023} = 0 ]; then
