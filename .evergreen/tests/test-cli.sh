@@ -95,6 +95,9 @@ fi
 if command -v gpg >/dev/null 2>&1; then
   if [ ${IS_AMAZON2023} = 1 ]; then
     grep -q "DEVPROD-44314" latest-build.log
+    # Broken gpg is a host property: --target must not re-enable verification.
+    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
+    grep -q "DEVPROD-44314" latest-build-target.log
     uv run --no-project python - <<'EOF'
 import tempfile
 from pathlib import Path
@@ -116,6 +119,9 @@ with tempfile.TemporaryDirectory() as tmp:
 EOF
   else
     grep -q "Verified GPG signature" latest-build.log
+    # A capable host still verifies amazon2023 artifacts: skip is host-keyed.
+    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
+    grep -q "Verified GPG signature" latest-build-target.log
     # A regression that accepts any signature must fail the download: check
     # that garbage bytes, and a cryptographically valid signature made by an
     # unpinned key, are both rejected. This exercises the real gpg and the

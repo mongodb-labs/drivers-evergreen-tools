@@ -231,6 +231,21 @@ def infer_target_from_os_release(osr: Path) -> str:
     )
 
 
+def _is_amazon2023_host() -> bool:
+    """
+    Check whether mongodl is running on Amazon Linux 2023, which ships gpg
+    without gpg-agent. Keyed to the host OS, not the download target.
+    """
+    cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
+    found = next((p for p in cands if p.is_file()), None)
+    if found is None:
+        return False
+    os_rel = found.read_text(encoding="utf-8")
+    id_mat = re.search(r'\bID=("?)(amzn)\1', os_rel)
+    ver_mat = re.search(r'\bVERSION_ID=("?)(2023)\1', os_rel)
+    return bool(id_mat and ver_mat)
+
+
 def user_caches_root() -> Path:
     """
     Obtain the directory for user-local caches
@@ -1016,16 +1031,16 @@ def _dl_component(
                 "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION"
             )
             if get_sig_url is not None and (
-                skip_verification or target != "amazon2023"
+                skip_verification or not _is_amazon2023_host()
             ):
                 # TODO (DRIVERS-3666): remove the amazon2023 exception when
                 # DEVPROD-44314 is fixed.
                 verify_latest_build(cached, get_sig_url)
             elif get_sig_url is not None:
                 LOGGER.warning(
-                    "Skipping signature verification on %s: the image ships "
-                    "gnupg2-minimal (gpg without gpg-agent), see DEVPROD-44314",
-                    target,
+                    "Skipping signature verification on amazon2023: the image "
+                    "ships gnupg2-minimal (gpg without gpg-agent), see "
+                    "DEVPROD-44314",
                 )
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
