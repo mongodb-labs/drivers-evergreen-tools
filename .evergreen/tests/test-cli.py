@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import mongodl
-from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signature
+from server_artifacts import _gpg_path, _verify_gpg_signature
 
 IS_AMAZON2023 = mongodl._is_amazon2023_host()
 
@@ -93,10 +93,10 @@ class Amazon2023HostTest(unittest.TestCase):
     """amazon2023 images ship gnupg2-minimal: gpg without gpg-agent."""
 
     @unittest.skipUnless(IS_AMAZON2023, "only meaningful on amazon2023 hosts")
-    def test_unusable_agent_raises_gpg_environment_error(self):
+    def test_verification_raises_on_broken_gpg(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive = _write_archive(tmp)
-            with self.assertRaises(GpgEnvironmentError):
+            with self.assertRaises(ValueError):
                 _verify_gpg_signature("gpg", archive, b"not really a signature")
 
 
@@ -113,10 +113,10 @@ class _FakeCache:
         return _FakeDownloadedFile(self._path)
 
 
-class FailFastRetryTest(unittest.TestCase):
+class VerificationToleranceTest(unittest.TestCase):
     """
-    _dl_component's retry loop must propagate GpgEnvironmentError after a
-    single attempt while retrying other errors.
+    _dl_component must tolerate verification failures on amazon2023 hosts
+    (with a DEVPROD-44314 note) while other hosts fail after retries.
     """
 
     def setUp(self):
@@ -124,13 +124,14 @@ class FailFastRetryTest(unittest.TestCase):
             mongodl.verify_latest_build,
             mongodl._latest_build_url,
             mongodl._is_amazon2023_host,
+            mongodl._expand_archive,
             mongodl.time.sleep,
         )
         mongodl._latest_build_url = lambda *args, **kwargs: (
             "http://x/archive.tgz",
             "http://x/archive.tgz.sig",
         )
-        mongodl._is_amazon2023_host = lambda: False
+        mongodl._expand_archive = lambda *args, **kwargs: None
         mongodl.time.sleep = lambda seconds: None
 
     def tearDown(self):
@@ -138,10 +139,11 @@ class FailFastRetryTest(unittest.TestCase):
             mongodl.verify_latest_build,
             mongodl._latest_build_url,
             mongodl._is_amazon2023_host,
+            mongodl._expand_archive,
             mongodl.time.sleep,
         ) = self.saved
 
-    def _drive(self, error):
+    def _drive(self, error, amazon_host):
         """Drive _dl_component with a verifier that always raises; return
         the list recording the verification attempts."""
         attempts = []
@@ -151,8 +153,45 @@ class FailFastRetryTest(unittest.TestCase):
             raise error
 
         mongodl.verify_latest_build = verify
+        mongodl._is_amazon2023_host = lambda: amazon_host
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(type(error)):
+            mongodl._dl_component(
+                _FakeCache(Path(tmp) / "archive.tgz"),
+                Path(tmp),
+                "latest-build",
+                "amazon2023",
+                "x86_64",
+                "enterprise",
+                "archive",
+                None,
+                0,
+                True,
+                False,
+                None,
+                5,
+            )
+        return attempts
+
+    def test_amazon_host_tolerates_verification_failure(self):
+        with self.assertLogs("mongodl", level="WARNING") as logs:
+            attempts = self._drive(ValueError("broken gpg"), amazon_host=True)
+        self.assertEqual(len(attempts), 1)
+        self.assertTrue(
+            any("DEVPROD-44314" in line for line in logs.output),
+            f"no DEVPROD-44314 note in {logs.output}",
+        )
+
+    def test_other_hosts_fail_after_retries(self):
+        attempts = []
+
+        def verify(archive, sig_url):
+            attempts.append(1)
+            raise ValueError("bad signature")
+
+        mongodl.verify_latest_build = verify
+        mongodl._is_amazon2023_host = lambda: False
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
                 mongodl._dl_component(
                     _FakeCache(Path(tmp) / "archive.tgz"),
                     Path(tmp),
@@ -168,14 +207,6 @@ class FailFastRetryTest(unittest.TestCase):
                     None,
                     5,
                 )
-        return attempts
-
-    def test_gpg_environment_error_fails_fast(self):
-        attempts = self._drive(GpgEnvironmentError("no agent"))
-        self.assertEqual(len(attempts), 1)
-
-    def test_other_errors_are_retried(self):
-        attempts = self._drive(ValueError("bad download"))
         self.assertEqual(len(attempts), 6)
 
 

@@ -100,7 +100,7 @@ if command -v gpg >/dev/null 2>&1; then
     grep -q "DEVPROD-44314" latest-build-target.log
   else
     grep -q "Verified GPG signature" latest-build.log
-    # A capable host still verifies amazon2023 artifacts: skip is host-keyed.
+    # A capable host must verify amazon2023 artifacts: tolerance is host-keyed.
     ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
     grep -q "Verified GPG signature" latest-build-target.log
     # A regression that accepts any signature must fail the download: check

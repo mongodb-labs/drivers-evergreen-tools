@@ -50,7 +50,7 @@ from typing import (
     cast,
 )
 
-from server_artifacts import GpgEnvironmentError, verify_latest_build
+from server_artifacts import verify_latest_build
 
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
@@ -233,8 +233,11 @@ def infer_target_from_os_release(osr: Path) -> str:
 
 def _is_amazon2023_host() -> bool:
     """
-    Check whether mongodl is running on Amazon Linux 2023, which ships gpg
-    without gpg-agent. Keyed to the host OS, not the download target.
+    Check whether mongodl is running on Amazon Linux 2023.
+
+    That image ships gnupg2-minimal, whose gpg cannot verify signatures, so
+    verification failures are only warned about there. Keyed to the host OS,
+    not the download target.
     """
     cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
     found = next((p for p in cands if p.is_file()), None)
@@ -1027,26 +1030,25 @@ def _dl_component(
             cached = cache.download_file(dl_url).path
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
-            skip_verification = os.environ.get(
-                "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION"
-            )
-            if get_sig_url is not None and (
-                skip_verification or not _is_amazon2023_host()
-            ):
-                # TODO (DRIVERS-3666): remove the amazon2023 exception when
-                # DEVPROD-44314 is fixed.
-                verify_latest_build(cached, get_sig_url)
-            elif get_sig_url is not None:
-                LOGGER.warning(
-                    "Skipping signature verification on amazon2023: the image "
-                    "ships gnupg2-minimal (gpg without gpg-agent), see "
-                    "DEVPROD-44314",
-                )
+            if get_sig_url is not None:
+                try:
+                    verify_latest_build(cached, get_sig_url)
+                except Exception as e:
+                    if not _is_amazon2023_host():
+                        raise
+                    # The amazon2023 image ships gnupg2-minimal, whose gpg
+                    # cannot verify signatures. Until verification switches
+                    # to gpgv, attempt it anyway and tolerate failure there
+                    # (see DEVPROD-44314).
+                    LOGGER.warning(
+                        "Signature verification failed on amazon2023; "
+                        "continuing without a verified signature, see "
+                        "DEVPROD-44314: %s",
+                        e,
+                    )
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
-        except GpgEnvironmentError:
-            raise
         except Exception as e:
             LOGGER.exception(e)
             if not retrier.retry():
