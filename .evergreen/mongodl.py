@@ -1039,7 +1039,9 @@ def _dl_component(
                     # The amazon2023 image ships gnupg2-minimal, whose gpg
                     # cannot verify signatures. Until verification switches
                     # to gpgv, attempt it anyway and tolerate failure there
-                    # (see DEVPROD-44314).
+                    # (see DEVPROD-44314). This also tolerates transient
+                    # signature-fetch errors, which is accepted: the host
+                    # cannot verify anything regardless.
                     LOGGER.warning(
                         "Signature verification failed on amazon2023; "
                         "continuing without a verified signature, see "

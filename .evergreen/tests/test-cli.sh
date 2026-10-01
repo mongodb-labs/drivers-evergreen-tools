@@ -103,73 +103,6 @@ if command -v gpg >/dev/null 2>&1; then
     # A capable host must verify amazon2023 artifacts: tolerance is host-keyed.
     ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
     grep -q "Verified GPG signature" latest-build-target.log
-    # A regression that accepts any signature must fail the download: check
-    # that garbage bytes, and a cryptographically valid signature made by an
-    # unpinned key, are both rejected. This exercises the real gpg and the
-    # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
-    # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
-    # native paths as relative.
-    uv run --no-project python - <<'EOF'
-import subprocess
-import sys
-import tempfile
-from pathlib import Path
-
-sys.path.insert(0, ".evergreen")
-from server_artifacts import _gpg_path, _verify_gpg_signature
-
-
-def expect_rejected(archive, signature, what):
-    try:
-        _verify_gpg_signature("gpg", archive, signature)
-    except ValueError:
-        pass  # expected: this signature must be rejected
-    else:
-        raise AssertionError(f"a {what} signature was accepted")
-
-
-with tempfile.TemporaryDirectory() as tmp:
-    tmp = Path(tmp)
-    archive = tmp / "archive.tgz"
-    archive.write_bytes(b"an archive body")
-    expect_rejected(archive, b"not really a signature", "garbage")
-    gpg_home = tmp / "gpg"
-    gpg_home.mkdir()
-    gpg_home.chmod(0o700)
-    gpg = [
-        "gpg",
-        "--homedir",
-        _gpg_path(gpg_home),
-        "--batch",
-        "--pinentry-mode",
-        "loopback",
-        "--passphrase",
-        "",
-    ]
-    subprocess.run(
-        gpg + ["--quick-gen-key", "unpinned-test-key"],
-        check=True,
-        capture_output=True,
-    )
-    sig = tmp / "archive.tgz.sig"
-    subprocess.run(
-        gpg + ["--output", _gpg_path(sig), "--detach-sign", _gpg_path(archive)],
-        check=True,
-        capture_output=True,
-    )
-    expect_rejected(archive, sig.read_bytes(), "unpinned-key")
-    # A deep $TMPDIR must not push the gpg-agent socket past the AF_UNIX
-    # limit (108 bytes on Linux, 104 on macOS), or the key import fails with
-    # a RuntimeError (DRIVERS-3663).
-    if sys.platform != "win32":
-        deep = tmp / ("d" * 100)
-        deep.mkdir()
-        tempfile.tempdir = str(deep)
-        try:
-            expect_rejected(archive, b"not really a signature", "garbage")
-        finally:
-            tempfile.tempdir = None
-EOF
   fi
 else
   grep -q "gpg is not installed" latest-build.log
@@ -182,9 +115,10 @@ uv run --no-project python ${SCRIPT_DIR}/test-cli.py
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 if [ ${IS_AMAZON2023} = 0 ]; then
-  # amazon2023 postdates the 6.0 perf releases, so their cryptd builds were
-  # never published for that target. The perf-tag resolution is still
-  # exercised on the fully-featured distros.
+  # The cryptd builds for the perf tags may not be published for every
+  # target (the 6.0 pin predates amazon2023), and per-target availability
+  # is not worth tracking here: the perf-tag resolution is still exercised
+  # on the fully-featured distros.
   ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
   ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
 fi

@@ -85,7 +85,8 @@ with an unverified download. On any other host, a verification failure fails
 the download after the usual retries. Published
 builds and other version selectors are unaffected and keep using the SHA-256
 checksums from `full.json`. Verification can also be skipped manually on any
-host by setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1`.
+host by setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` to any
+non-empty value (e.g. `1`).
 
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub

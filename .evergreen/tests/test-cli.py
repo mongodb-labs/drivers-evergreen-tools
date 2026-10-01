@@ -96,7 +96,9 @@ class Amazon2023HostTest(unittest.TestCase):
     def test_verification_raises_on_broken_gpg(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive = _write_archive(tmp)
-            with self.assertRaises(ValueError):
+            # Depending on the gpg version, the agent-less failure surfaces
+            # at key import (RuntimeError) or at verify (ValueError).
+            with self.assertRaises((ValueError, RuntimeError)):
                 _verify_gpg_signature("gpg", archive, b"not really a signature")
 
 
@@ -180,6 +182,10 @@ class VerificationToleranceTest(unittest.TestCase):
             any("DEVPROD-44314" in line for line in logs.output),
             f"no DEVPROD-44314 note in {logs.output}",
         )
+
+    def test_amazon_host_tolerates_any_error_type(self):
+        attempts = self._drive(RuntimeError("import failed"), amazon_host=True)
+        self.assertEqual(len(attempts), 1)
 
     def test_other_hosts_fail_after_retries(self):
         attempts = []
