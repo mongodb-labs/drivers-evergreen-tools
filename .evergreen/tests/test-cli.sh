@@ -80,15 +80,44 @@ export VALIDATE_DISTROS=1
 # The master-nightly artifact is always published with a signature, so a host
 # with gpg must verify it; only a host without gpg may skip verification. A
 # missing signature would be a publication regression.
+IS_AMAZON2023=0
+if [ -r /etc/os-release ]; then
+  . /etc/os-release
+  if [ "${ID:-}" = "amzn" ] && [ "${VERSION_ID:-}" = "2023" ]; then
+    IS_AMAZON2023=1
+  fi
+fi
 if command -v gpg >/dev/null 2>&1; then
-  grep -q "Verified GPG signature" latest-build.log
-  # A regression that accepts any signature must fail the download: check
-  # that garbage bytes, and a cryptographically valid signature made by an
-  # unpinned key, are both rejected. This exercises the real gpg and the
-  # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
-  # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
-  # native paths as relative.
-  uv run --no-project python - <<'EOF'
+  if [ ${IS_AMAZON2023} = 1 ]; then
+    grep -q "DEVPROD-44314" latest-build.log
+    uv run --no-project python - <<'EOF'
+import tempfile
+from pathlib import Path
+
+from server_artifacts import GpgEnvironmentError, _verify_gpg_signature
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    archive = Path(tmp) / "archive.tgz"
+    archive.write_bytes(b"an archive body")
+    try:
+        _verify_gpg_signature("gpg", archive, b"not really a signature")
+    except GpgEnvironmentError:
+        pass
+    else:
+        raise AssertionError(
+            "a host without a working gpg-agent did not raise GpgEnvironmentError"
+        )
+EOF
+  else
+    grep -q "Verified GPG signature" latest-build.log
+    # A regression that accepts any signature must fail the download: check
+    # that garbage bytes, and a cryptographically valid signature made by an
+    # unpinned key, are both rejected. This exercises the real gpg and the
+    # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
+    # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
+    # native paths as relative.
+    uv run --no-project python - <<'EOF'
 import subprocess
 import sys
 import tempfile
@@ -149,9 +178,12 @@ with tempfile.TemporaryDirectory() as tmp:
         finally:
             tempfile.tempdir = None
 EOF
+  fi
 else
   grep -q "gpg is not installed" latest-build.log
 fi
+SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
+grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5

@@ -76,9 +76,14 @@ signed by the MongoDB 9 release key and the legacy-host builds by the 8.0
 release key). A bad signature — or a signature made by any other key —
 fails the download. If a signature was not published for the artifact
 (stable-branch staging builds may not be signed yet), or the host has no `gpg`
-binary, `mongodl` only logs a warning and the download continues. Published
+binary, `mongodl` only logs a warning and the download continues. Until
+[DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,
+`amazon2023` hosts (which ship `gnupg2-minimal`, without a working
+`gpg-agent`) skip verification with a warning. On any other host where `gpg`
+cannot run, `mongodl` fails fast instead of retrying the download. Published
 builds and other version selectors are unaffected and keep using the SHA-256
-checksums from `full.json`.
+checksums from `full.json`. Verification can also be skipped manually on any
+host by setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1`.
 
 `run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
 GitHub Actions composite action) defaults to `latest-stable`. The GitHub

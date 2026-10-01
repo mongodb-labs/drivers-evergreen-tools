@@ -50,6 +50,8 @@ from typing import (
     cast,
 )
 
+from server_artifacts import GpgEnvironmentError, verify_latest_build
+
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
 
@@ -1010,13 +1012,26 @@ def _dl_component(
             cached = cache.download_file(dl_url).path
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
-            if get_sig_url is not None:
-                from server_artifacts import verify_latest_build
-
+            skip_verification = os.environ.get(
+                "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION"
+            )
+            if get_sig_url is not None and (
+                skip_verification or target != "amazon2023"
+            ):
+                # TODO (DRIVERS-3666): remove the amazon2023 exception when
+                # DEVPROD-44314 is fixed.
                 verify_latest_build(cached, get_sig_url)
+            elif get_sig_url is not None:
+                LOGGER.warning(
+                    "Skipping signature verification on %s: the image ships "
+                    "gnupg2-minimal (gpg without gpg-agent), see DEVPROD-44314",
+                    target,
+                )
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
+        except GpgEnvironmentError:
+            raise
         except Exception as e:
             LOGGER.exception(e)
             if not retrier.retry():
