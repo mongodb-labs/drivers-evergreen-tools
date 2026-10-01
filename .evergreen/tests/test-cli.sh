@@ -98,25 +98,6 @@ if command -v gpg >/dev/null 2>&1; then
     # Broken gpg is a host property: --target must not re-enable verification.
     ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
     grep -q "DEVPROD-44314" latest-build-target.log
-    uv run --no-project python - <<'EOF'
-import tempfile
-from pathlib import Path
-
-from server_artifacts import GpgEnvironmentError, _verify_gpg_signature
-
-
-with tempfile.TemporaryDirectory() as tmp:
-    archive = Path(tmp) / "archive.tgz"
-    archive.write_bytes(b"an archive body")
-    try:
-        _verify_gpg_signature("gpg", archive, b"not really a signature")
-    except GpgEnvironmentError:
-        pass
-    else:
-        raise AssertionError(
-            "a host without a working gpg-agent did not raise GpgEnvironmentError"
-        )
-EOF
   else
     grep -q "Verified GPG signature" latest-build.log
     # A capable host still verifies amazon2023 artifacts: skip is host-keyed.
@@ -195,6 +176,9 @@ else
 fi
 SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
+# Signature-verification and retry-loop tests. Each test skips itself where
+# it cannot apply (e.g. real-gpg checks on hosts without gpg).
+uv run --no-project python ${SCRIPT_DIR}/test-cli.py
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
 if [ ${IS_AMAZON2023} = 0 ]; then
