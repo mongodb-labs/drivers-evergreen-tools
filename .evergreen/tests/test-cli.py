@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import mongodl
 from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signature
 
+# TODO (DRIVERS-3666): remove the amazon2023 skip markers and
+# Amazon2023HostTest once DEVPROD-44314 ships full gnupg2.
 IS_AMAZON2023 = mongodl._is_amazon2023_host()
 
 
