@@ -50,7 +50,7 @@ from typing import (
     cast,
 )
 
-from server_artifacts import verify_latest_build
+from server_artifacts import GpgEnvironmentError, verify_latest_build
 
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
@@ -236,8 +236,8 @@ def _is_amazon2023_host() -> bool:
     Check whether mongodl is running on Amazon Linux 2023.
 
     That image ships gnupg2-minimal, whose gpg cannot verify signatures, so
-    verification failures are only warned about there. Keyed to the host OS,
-    not the download target.
+    GpgEnvironmentError failures are only warned about there. Keyed to the
+    host OS, not the download target.
     """
     cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
     found = next((p for p in cands if p.is_file()), None)
@@ -1033,15 +1033,13 @@ def _dl_component(
             if get_sig_url is not None:
                 try:
                     verify_latest_build(cached, get_sig_url)
-                except Exception as e:
+                except GpgEnvironmentError as e:
                     if not _is_amazon2023_host():
                         raise
                     # The amazon2023 image ships gnupg2-minimal, whose gpg
                     # cannot verify signatures. Until verification switches
-                    # to gpgv, attempt it anyway and tolerate failure there
-                    # (see DEVPROD-44314). This also tolerates transient
-                    # signature-fetch errors, which is accepted: the host
-                    # cannot verify anything regardless.
+                    # to gpgv, tolerate exactly this failure there (see
+                    # DEVPROD-44314); a bad signature still fails.
                     LOGGER.warning(
                         "Signature verification failed on amazon2023; "
                         "continuing without a verified signature, see "
@@ -1051,6 +1049,9 @@ def _dl_component(
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
+        except GpgEnvironmentError:
+            # A broken gpg environment is permanent: retrying cannot fix it.
+            raise
         except Exception as e:
             LOGGER.exception(e)
             if not retrier.retry():

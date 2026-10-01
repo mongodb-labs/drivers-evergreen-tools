@@ -63,6 +63,20 @@ class RoleAssumptionError(PrivateArtifactsUnavailableError):
     """Raised when the ambient identity may not assume the required roles."""
 
 
+class GpgEnvironmentError(RuntimeError):
+    """
+    Raised when gpg is installed but unusable (e.g. gpg-agent missing).
+
+    Temporary until verification switches to gpgv, which does not need an
+    agent (DRIVERS-3666 follow-up).
+    """
+
+
+def _gpg_agent_failure(detail: str) -> bool:
+    """Tell whether a gpg failure means the agent is missing or unusable."""
+    return "gpg-agent" in detail or "connect to the agent" in detail
+
+
 def _boto3_client(service: str, region: str, creds: "dict|None" = None):
     import boto3
 
@@ -256,6 +270,12 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
         )
         if proc.returncode != 0:
             stderr = proc.stderr.decode(errors="replace")
+            if _gpg_agent_failure(stderr):
+                raise GpgEnvironmentError(
+                    "gpg is installed but gpg-agent is missing or unusable; "
+                    "install the full gnupg2 package (see DEVPROD-44314):\n"
+                    f"{stderr}"
+                )
             raise RuntimeError(
                 f"Failed to import the MongoDB release signing key [{url}]:\n{stderr}"
             )
@@ -317,6 +337,12 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
             elif fields[1] in ("EXPKEYSIG", "EXPSIG", "REVKEYSIG"):
                 expired_or_revoked = True
         if proc.returncode != 0 or expired_or_revoked or not fingerprints:
+            if proc.returncode != 0 and _gpg_agent_failure(proc.stderr):
+                raise GpgEnvironmentError(
+                    "gpg is installed but gpg-agent is missing or unusable; "
+                    "install the full gnupg2 package (see DEVPROD-44314):\n"
+                    f"{proc.stderr}"
+                )
             if expired_or_revoked:
                 detail = (
                     "the signature or the key that made it has expired, or "

@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import mongodl
-from server_artifacts import _gpg_path, _verify_gpg_signature
+from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signature
 
 IS_AMAZON2023 = mongodl._is_amazon2023_host()
 
@@ -93,12 +93,10 @@ class Amazon2023HostTest(unittest.TestCase):
     """amazon2023 images ship gnupg2-minimal: gpg without gpg-agent."""
 
     @unittest.skipUnless(IS_AMAZON2023, "only meaningful on amazon2023 hosts")
-    def test_verification_raises_on_broken_gpg(self):
+    def test_verification_raises_gpg_environment_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive = _write_archive(tmp)
-            # Depending on the gpg version, the agent-less failure surfaces
-            # at key import (RuntimeError) or at verify (ValueError).
-            with self.assertRaises((ValueError, RuntimeError)):
+            with self.assertRaises(GpgEnvironmentError):
                 _verify_gpg_signature("gpg", archive, b"not really a signature")
 
 
@@ -117,8 +115,9 @@ class _FakeCache:
 
 class VerificationToleranceTest(unittest.TestCase):
     """
-    _dl_component must tolerate verification failures on amazon2023 hosts
-    (with a DEVPROD-44314 note) while other hosts fail after retries.
+    _dl_component must tolerate GpgEnvironmentError on amazon2023 hosts
+    (with a DEVPROD-44314 note), fail it fast elsewhere, and retry any
+    other error everywhere.
     """
 
     def setUp(self):
@@ -145,7 +144,7 @@ class VerificationToleranceTest(unittest.TestCase):
             mongodl.time.sleep,
         ) = self.saved
 
-    def _drive(self, error, amazon_host):
+    def _drive(self, error, amazon_host, expect_raise):
         """Drive _dl_component with a verifier that always raises; return
         the list recording the verification attempts."""
         attempts = []
@@ -157,47 +156,8 @@ class VerificationToleranceTest(unittest.TestCase):
         mongodl.verify_latest_build = verify
         mongodl._is_amazon2023_host = lambda: amazon_host
         with tempfile.TemporaryDirectory() as tmp:
-            mongodl._dl_component(
-                _FakeCache(Path(tmp) / "archive.tgz"),
-                Path(tmp),
-                "latest-build",
-                "amazon2023",
-                "x86_64",
-                "enterprise",
-                "archive",
-                None,
-                0,
-                True,
-                False,
-                None,
-                5,
-            )
-        return attempts
-
-    def test_amazon_host_tolerates_verification_failure(self):
-        with self.assertLogs("mongodl", level="WARNING") as logs:
-            attempts = self._drive(ValueError("broken gpg"), amazon_host=True)
-        self.assertEqual(len(attempts), 1)
-        self.assertTrue(
-            any("DEVPROD-44314" in line for line in logs.output),
-            f"no DEVPROD-44314 note in {logs.output}",
-        )
-
-    def test_amazon_host_tolerates_any_error_type(self):
-        attempts = self._drive(RuntimeError("import failed"), amazon_host=True)
-        self.assertEqual(len(attempts), 1)
-
-    def test_other_hosts_fail_after_retries(self):
-        attempts = []
-
-        def verify(archive, sig_url):
-            attempts.append(1)
-            raise ValueError("bad signature")
-
-        mongodl.verify_latest_build = verify
-        mongodl._is_amazon2023_host = lambda: False
-        with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(ValueError):
+            raised = None
+            try:
                 mongodl._dl_component(
                     _FakeCache(Path(tmp) / "archive.tgz"),
                     Path(tmp),
@@ -213,6 +173,47 @@ class VerificationToleranceTest(unittest.TestCase):
                     None,
                     5,
                 )
+            except type(error) as raised_exc:
+                raised = raised_exc
+        if expect_raise:
+            self.assertIsNotNone(raised, "expected the error to propagate")
+        return attempts
+
+    def test_amazon_host_tolerates_gpg_environment_error(self):
+        with self.assertLogs("mongodl", level="WARNING") as logs:
+            attempts = self._drive(
+                GpgEnvironmentError("no agent"),
+                amazon_host=True,
+                expect_raise=False,
+            )
+        self.assertEqual(len(attempts), 1)
+        self.assertTrue(
+            any("DEVPROD-44314" in line for line in logs.output),
+            f"no DEVPROD-44314 note in {logs.output}",
+        )
+
+    def test_amazon_host_retries_bad_signatures(self):
+        attempts = self._drive(
+            ValueError("bad signature"),
+            amazon_host=True,
+            expect_raise=True,
+        )
+        self.assertEqual(len(attempts), 6)
+
+    def test_gpg_environment_error_fails_fast_on_other_hosts(self):
+        attempts = self._drive(
+            GpgEnvironmentError("no agent"),
+            amazon_host=False,
+            expect_raise=True,
+        )
+        self.assertEqual(len(attempts), 1)
+
+    def test_other_hosts_retry_other_errors(self):
+        attempts = self._drive(
+            ValueError("bad download"),
+            amazon_host=False,
+            expect_raise=True,
+        )
         self.assertEqual(len(attempts), 6)
 
 

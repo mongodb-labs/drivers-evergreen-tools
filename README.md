@@ -80,9 +80,11 @@ binary, `mongodl` only logs a warning and the download continues. Until
 [DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,
 `amazon2023` hosts (which ship `gnupg2-minimal`, without a working
 `gpg-agent`) cannot verify: `mongodl` attempts verification there anyway
-and, if it fails, logs a warning that references DEVPROD-44314 and continues
-with an unverified download. On any other host, a verification failure fails
-the download after the usual retries. Published
+and tolerates that specific environment failure with a warning that
+references DEVPROD-44314, continuing with an unverified download. A bad or
+unpinned signature still fails the download, on every host. On hosts where
+the gpg environment is broken but not amazon2023, `mongodl` fails fast
+instead of retrying. Published
 builds and other version selectors are unaffected and keep using the SHA-256
 checksums from `full.json`. Verification can also be skipped manually on any
 host by setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` to any
