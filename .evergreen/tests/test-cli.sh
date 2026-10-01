@@ -67,6 +67,8 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
+# TODO (DRIVERS-3666): remove the IS_AMAZON2023 detection and its guards
+# once DEVPROD-44314 ships full gnupg2.
 IS_AMAZON2023=0
 if [ -r /etc/os-release ]; then
   . /etc/os-release
