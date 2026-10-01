@@ -137,6 +137,17 @@ with tempfile.TemporaryDirectory() as tmp:
         capture_output=True,
     )
     expect_rejected(archive, sig.read_bytes(), "unpinned-key")
+    # A deep $TMPDIR must not push the gpg-agent socket past the AF_UNIX
+    # limit (108 bytes on Linux, 104 on macOS), or the key import fails with
+    # a RuntimeError (DRIVERS-3663).
+    if sys.platform != "win32":
+        deep = tmp / ("d" * 100)
+        deep.mkdir()
+        tempfile.tempdir = str(deep)
+        try:
+            expect_rejected(archive, b"not really a signature", "garbage")
+        finally:
+            tempfile.tempdir = None
 EOF
 else
   grep -q "gpg is not installed" latest-build.log

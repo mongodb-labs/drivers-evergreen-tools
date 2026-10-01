@@ -268,7 +268,10 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
     Returns the fingerprint of the signing key, or raises ValueError if the
     signature is bad or was not made by a pinned key.
     """
-    with tempfile.TemporaryDirectory(prefix="mongodl-gpg") as tmp:
+    # gpg-agent's sockets live in the gpg home; a deep $TMPDIR would push them
+    # past the AF_UNIX path limit.
+    tmp_parent = None if sys.platform == "win32" else "/tmp"
+    with tempfile.TemporaryDirectory(prefix="mongodl-gpg", dir=tmp_parent) as tmp:
         home = Path(tmp)
         # gpg refuses to use a home directory with loose permissions.
         home.chmod(0o700)
