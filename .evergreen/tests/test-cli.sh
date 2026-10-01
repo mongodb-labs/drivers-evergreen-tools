@@ -191,8 +191,13 @@ SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
-./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
-./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
+if [ ${IS_AMAZON2023} = 0 ]; then
+  # amazon2023 postdates the 6.0 perf releases, so their cryptd builds were
+  # never published for that target. The perf-tag resolution is still
+  # exercised on the fully-featured distros.
+  ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
+  ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
+fi
 
 popd
 make -C ${DRIVERS_TOOLS} test
