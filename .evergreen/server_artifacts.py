@@ -63,6 +63,15 @@ class RoleAssumptionError(PrivateArtifactsUnavailableError):
     """Raised when the ambient identity may not assume the required roles."""
 
 
+class GpgEnvironmentError(RuntimeError):
+    """gpg is installed but cannot verify signatures (see DEVPROD-44314)."""
+
+
+def _gpg_agent_failure(detail: str) -> bool:
+    """Tell whether a gpg failure is an environment failure."""
+    return "gpg-agent" in detail or "connect to the agent" in detail
+
+
 def _boto3_client(service: str, region: str, creds: "dict|None" = None):
     import boto3
 
@@ -256,6 +265,12 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
         )
         if proc.returncode != 0:
             stderr = proc.stderr.decode(errors="replace")
+            if _gpg_agent_failure(stderr):
+                raise GpgEnvironmentError(
+                    "gpg cannot verify signatures on this host; "
+                    "install the full gnupg2 package (see DEVPROD-44314):\n"
+                    f"{stderr}"
+                )
             raise RuntimeError(
                 f"Failed to import the MongoDB release signing key [{url}]:\n{stderr}"
             )
@@ -317,6 +332,12 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
             elif fields[1] in ("EXPKEYSIG", "EXPSIG", "REVKEYSIG"):
                 expired_or_revoked = True
         if proc.returncode != 0 or expired_or_revoked or not fingerprints:
+            if proc.returncode != 0 and _gpg_agent_failure(proc.stderr):
+                raise GpgEnvironmentError(
+                    "gpg cannot verify signatures on this host; "
+                    "install the full gnupg2 package (see DEVPROD-44314):\n"
+                    f"{proc.stderr}"
+                )
             if expired_or_revoked:
                 detail = (
                     "the signature or the key that made it has expired, or "
@@ -344,8 +365,17 @@ def verify_latest_build(archive: Path, get_sig_url: "Callable[[], str]") -> None
     only produces a warning, and the download continues. The signature URL
     is fetched through get_sig_url, so the caller authorizes the fetch when
     it happens: a presigned URL that outlived the archive download would
-    answer 403 and be mistaken for a missing signature.
+    answer 403 and be mistaken for a missing signature. Setting the
+    SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION environment variable skips
+    verification with only a warning.
     """
+    if os.environ.get("SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION"):
+        LOGGER.warning(
+            "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set, so the "
+            "signature of %s will not be verified",
+            archive.name,
+        )
+        return
     gpg_exe = shutil.which("gpg")
     if gpg_exe is None:
         LOGGER.warning(

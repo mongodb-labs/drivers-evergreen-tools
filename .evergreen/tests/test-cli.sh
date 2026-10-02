@@ -67,95 +67,60 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
-./mongodl --edition enterprise --version 3.6 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.0 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.2 --component archive --test --retries 5
-./mongodl --edition enterprise --version 4.4 --component archive --test --retries 5
-./mongodl --edition enterprise --version 5.0 --component archive --test --retries 5
+# TODO (DRIVERS-3666): remove the IS_AMAZON2023 detection and its guards
+# once DEVPROD-44314 ships full gnupg2.
+IS_AMAZON2023=0
+if [ -r /etc/os-release ]; then
+  . /etc/os-release
+  if [ "${ID:-}" = "amzn" ] && [ "${VERSION_ID:-}" = "2023" ]; then
+    IS_AMAZON2023=1
+  fi
+fi
+if [ ${IS_AMAZON2023} = 0 ]; then
+  # MongoDB has never published enterprise builds of the legacy series
+  # (3.6-5.0) for amazon2023, so their URL resolution can only be exercised
+  # on other distros.
+  ./mongodl --edition enterprise --version 3.6 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.0 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.2 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 4.4 --component archive --test --retries 5
+  ./mongodl --edition enterprise --version 5.0 --component archive --test --retries 5
+fi
 ./mongodl --edition enterprise --version 6.0 --component crypt_shared --test --retries 5
 ./mongodl --edition enterprise --version 8.0 --component archive --test --retries 5
 ./mongodl --edition enterprise --version rapid --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest --component archive --out ${DOWNLOAD_DIR} --retries 5
 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build.log 2>&1
-# The master-nightly artifact is always published with a signature, so a host
-# with gpg must verify it; only a host without gpg may skip verification. A
+# The master-nightly artifact is always published with a signature; a
 # missing signature would be a publication regression.
 if command -v gpg >/dev/null 2>&1; then
-  grep -q "Verified GPG signature" latest-build.log
-  # A regression that accepts any signature must fail the download: check
-  # that garbage bytes, and a cryptographically valid signature made by an
-  # unpinned key, are both rejected. This exercises the real gpg and the
-  # real pinned keys, so no gpg shim is needed. Temporary paths are spelled
-  # with _gpg_path, since the MSYS/Cygwin gpg on the Windows hosts treats
-  # native paths as relative.
-  uv run --no-project python - <<'EOF'
-import subprocess
-import sys
-import tempfile
-from pathlib import Path
-
-sys.path.insert(0, ".evergreen")
-from server_artifacts import _gpg_path, _verify_gpg_signature
-
-
-def expect_rejected(archive, signature, what):
-    try:
-        _verify_gpg_signature("gpg", archive, signature)
-    except ValueError:
-        pass  # expected: this signature must be rejected
-    else:
-        raise AssertionError(f"a {what} signature was accepted")
-
-
-with tempfile.TemporaryDirectory() as tmp:
-    tmp = Path(tmp)
-    archive = tmp / "archive.tgz"
-    archive.write_bytes(b"an archive body")
-    expect_rejected(archive, b"not really a signature", "garbage")
-    gpg_home = tmp / "gpg"
-    gpg_home.mkdir()
-    gpg_home.chmod(0o700)
-    gpg = [
-        "gpg",
-        "--homedir",
-        _gpg_path(gpg_home),
-        "--batch",
-        "--pinentry-mode",
-        "loopback",
-        "--passphrase",
-        "",
-    ]
-    subprocess.run(
-        gpg + ["--quick-gen-key", "unpinned-test-key"],
-        check=True,
-        capture_output=True,
-    )
-    sig = tmp / "archive.tgz.sig"
-    subprocess.run(
-        gpg + ["--output", _gpg_path(sig), "--detach-sign", _gpg_path(archive)],
-        check=True,
-        capture_output=True,
-    )
-    expect_rejected(archive, sig.read_bytes(), "unpinned-key")
-    # A deep $TMPDIR must not push the gpg-agent socket past the AF_UNIX
-    # limit (108 bytes on Linux, 104 on macOS), or the key import fails with
-    # a RuntimeError (DRIVERS-3663).
-    if sys.platform != "win32":
-        deep = tmp / ("d" * 100)
-        deep.mkdir()
-        tempfile.tempdir = str(deep)
-        try:
-            expect_rejected(archive, b"not really a signature", "garbage")
-        finally:
-            tempfile.tempdir = None
-EOF
+  if [ ${IS_AMAZON2023} = 1 ]; then
+    grep -q "DEVPROD-44314" latest-build.log
+    # Broken gpg is a host property: --target must not re-enable verification.
+    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
+    grep -q "DEVPROD-44314" latest-build-target.log
+  else
+    grep -q "Verified GPG signature" latest-build.log
+    # A capable host must verify amazon2023 artifacts: tolerance is host-keyed.
+    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
+    grep -q "Verified GPG signature" latest-build-target.log
+  fi
 else
   grep -q "gpg is not installed" latest-build.log
 fi
+SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
+grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
+# Signature-verification and retry-loop tests; each test skips itself where
+# it cannot apply. Relative to cwd: SCRIPT_DIR is invalid after the pushd.
+PYTHONPATH=. uv run --no-project python tests/test-cli.py -v
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
-./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
-./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
+if [ ${IS_AMAZON2023} = 0 ]; then
+  # The perf tags' cryptd builds may not exist for every target (the 6.0
+  # pin predates amazon2023); the fully-featured distros cover them.
+  ./mongodl --edition enterprise --version v6.0-perf --component cryptd --test --retries 5
+  ./mongodl --edition enterprise --version v8.0-perf --component cryptd --test --retries 5
+fi
 
 popd
 make -C ${DRIVERS_TOOLS} test
