@@ -73,8 +73,9 @@ verifies it against the MongoDB release signing keys, pinned by fingerprint
 and fetched at verification time from
 [pgp.mongodb.com](https://pgp.mongodb.com/) (the master-nightly builds are
 signed by the MongoDB 9 release key and the legacy-host builds by the 8.0
-release key). A bad signature — or a signature made by any other key —
-fails the download. If a signature was not published for the artifact
+release key). When verification runs, a bad signature — or a signature
+made by any other key — fails the download. If a signature was not
+published for the artifact
 (stable-branch staging builds may not be signed yet), or the host has no `gpg`
 binary, `mongodl` only logs a warning and the download continues. Until
 [DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,

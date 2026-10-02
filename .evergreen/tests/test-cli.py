@@ -21,10 +21,16 @@ def _write_archive(directory):
     return archive
 
 
-@unittest.skipUnless(shutil.which("gpg"), "gpg is not installed")
 @unittest.skipIf(IS_AMAZON2023, "amazon2023 hosts cannot verify signatures")
 class VerifySignatureRejectionTest(unittest.TestCase):
     """A working gpg must reject signatures it cannot trust."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        assert (
+            shutil.which("gpg") is not None
+        ), "gpg must be installed on test hosts; install the full gnupg2 package"
 
     def test_garbage_signature_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -152,19 +158,19 @@ class VerificationToleranceTest(unittest.TestCase):
             raised = None
             try:
                 mongodl._dl_component(
-                    _FakeCache(Path(tmp) / "archive.tgz"),
-                    Path(tmp),
-                    "latest-build",
-                    "amazon2023",
-                    "x86_64",
-                    "enterprise",
-                    "archive",
-                    None,
-                    0,
-                    True,
-                    False,
-                    None,
-                    5,
+                    cache=_FakeCache(Path(tmp) / "archive.tgz"),
+                    out_dir=Path(tmp),
+                    version="latest-build",
+                    target="amazon2023",
+                    arch="x86_64",
+                    edition="enterprise",
+                    component="archive",
+                    pattern=None,
+                    strip_components=0,
+                    test=True,
+                    no_download=False,
+                    latest_build_branch=None,
+                    retries=5,
                 )
             except type(error) as raised_exc:
                 raised = raised_exc
