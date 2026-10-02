@@ -33,6 +33,16 @@ the root `pyproject.toml` (the root is passed explicitly because the group is de
 uv run --project "$DRIVERS_TOOLS" --group auth_aws python aws_tester.py <variant>
 ```
 
+Downstream repositories can also source `activate-authawsvenv.sh` to create and activate a
+Python environment with the `auth_aws` dependencies installed. It syncs the `auth_aws`
+dependency group into the root `.venv` with uv and activates it — the same environment the
+`uv run` command above uses:
+
+```bash
+cd $DRIVERS_TOOLS/.evergreen/auth_aws
+. ./activate-authawsvenv.sh
+```
+
 It is recommended that these actions be broken into scripts that can be run locally as well as in CI.  The instructions
 for setting up local secrets handling are in the wiki page.
 
