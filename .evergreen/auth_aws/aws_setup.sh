@@ -13,8 +13,9 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 pushd $SCRIPT_DIR
 
-# Activate the venv and source the secrets file.
-. ./activate-authawsvenv.sh
+# Ensure uv is available and source the secrets file.
+. $SCRIPT_DIR/../ensure-uv.sh
+ensure_uv || exit 1
 
 # Ensure that secrets have already been set up.
 if [ ! -f "./secrets-export.sh" ]; then
@@ -36,7 +37,9 @@ if [ -f $SCRIPT_DIR/test-env.sh ]; then
 fi
 
 export PROJECT_DIRECTORY
-python aws_tester.py "$@"
+# The auth_aws group is defined in the root pyproject.toml, so run from the
+# root project context. DRIVERS_TOOLS is set absolutely by handle-paths.sh.
+uv run --project "$DRIVERS_TOOLS" --group auth_aws python aws_tester.py "$@"
 
 # Remove any AWS creds that might be set in the parent env.
 if [ $1 == "eks" ]; then

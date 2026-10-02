@@ -1,6 +1,7 @@
 [tool.uv.workspace]
 members = [
     ".evergreen",
+    ".evergreen/auth_aws",
     ".evergreen/docker",
     ".evergreen/orchestration",
 ]
@@ -14,10 +15,18 @@ drivers-evergreen-tools = { workspace = true }
 
 [dependency-groups]
 # Shared boto3 constraint for the tool folders that need AWS access
-# (auth_aws, auth_oidc, csfle): follow-up DRIVERS-3564 migrations
+# (auth_oidc, csfle): follow-up DRIVERS-3564 migrations
 # will add the per-folder groups that extend this one with
 # {include-group = "boto"}.
 boto = ["boto3>=1.35.0"]
+# boto3 for the AWS credential flows (assume-role, instance-profile assignment,
+# container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
+# pyop for the OIDC proxy (lib/aws_handle_oidc_creds.py, also imported by auth_oidc).
+auth_aws = [
+  {include-group = "boto"},
+  "pymongo[aws]~=4.0",
+  "pyop~=3.4.0",
+]
 # boto3 for .evergreen/docker/login.py's ECR token flow.
 docker = [{include-group = "boto"}]
 
