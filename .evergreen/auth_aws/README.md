@@ -21,11 +21,26 @@ from the `drivers/auth_aws` vault using the `setup-secrets.sh` script in th  `$D
 
 ```bash
 cd $DRIVERS_TOOLS/.evergreen/auth_aws
-# Create a python virtual environment.
-. ./activate-authawsvenv.sh
 # Source the environment variables. Configure the environment and the server.
 . aws_setup.sh <variant>
 # Run your driver-specific tests here.
+```
+
+The setup scripts run Python via `uv`, with dependencies coming from the `auth_aws` group in
+the root `pyproject.toml` (the root is passed explicitly because the group is defined there):
+
+```bash
+uv run --project "$DRIVERS_TOOLS" --group auth_aws python aws_tester.py <variant>
+```
+
+Downstream repositories can also source `activate-authawsvenv.sh` to create and activate a
+Python environment with the `auth_aws` dependencies installed. It syncs the `auth_aws`
+dependency group into the root `.venv` with uv and activates it — the same environment the
+`uv run` command above uses:
+
+```bash
+cd $DRIVERS_TOOLS/.evergreen/auth_aws
+. ./activate-authawsvenv.sh
 ```
 
 It is recommended that these actions be broken into scripts that can be run locally as well as in CI.  The instructions

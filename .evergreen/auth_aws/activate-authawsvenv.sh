@@ -5,17 +5,12 @@
 # Usage:
 #   . ./activate-authawsvenv.sh
 #
-# This file creates and/or activates the authawsvenv virtual environment in the
-# current working directory. This file must be invoked from within the
-# .evergreen/auth_aws directory in the Drivers Evergreen Tools repository.
-#
-# If a authawsvenv virtual environment already exists, it will be activated and
-# no further action will be taken. If a authawsvenv virtual environment must be
-# created, required packages will also be installed.
-
-# If an error occurs during creation, activation, or installation of packages,
-# the authawsvenv virtual environment will be deactivated and activate_authawsvenv
-# will return a non-zero value.
+# Creates and/or activates the Python environment for the auth_aws test
+# scripts, leaving `python` pointing at an environment with the auth_aws
+# dependencies (pymongo[aws], boto3, pyop). The environment is the root uv
+# workspace's .venv, built from the auth_aws group in the root pyproject.toml.
+# May be invoked from any working directory. On error, nothing is left
+# activated and activate_authawsvenv returns non-zero.
 
 if [ -z "$BASH" ]; then
   echo "activate-authawsvenv.sh must be run in a Bash shell!" 1>&2
@@ -24,24 +19,32 @@ fi
 
 # Automatically invoked by activate-authawsvenv.sh.
 activate_authawsvenv() {
-  # shellcheck source=.evergreen/venv-utils.sh
-  . ../venv-utils.sh || return
+  # Repo root, relative to this script. uv needs a native Windows path on
+  # Cygwin (it rejects /cygdrive/... paths).
+  local root
+  root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd) || return 1
+  if [ "${OSTYPE:-}" = cygwin ]; then
+    root="$(cygpath -m "$root")"
+  fi
 
-  if [[ -d authawsvenv ]]; then
-    venvactivate authawsvenv || return
+  # Ensure uv is available.
+  # shellcheck source=.evergreen/ensure-uv.sh
+  . "$root/.evergreen/ensure-uv.sh" || return
+  ensure_uv || return
+
+  # Sync the auth_aws group into the root .venv (idempotent).
+  uv sync --project "$root" --group auth_aws || return
+
+  # Activate the environment (Scripts/ instead of bin/ on Windows).
+  if [ -f "$root/.venv/bin/activate" ]; then
+    # shellcheck source=/dev/null
+    . "$root/.venv/bin/activate"
+  elif [ -f "$root/.venv/Scripts/activate" ]; then
+    # shellcheck source=/dev/null
+    . "$root/.venv/Scripts/activate"
   else
-    # shellcheck source=.evergreen/find-python3.sh
-    . ../find-python3.sh || return
-    PYTHON=$(ensure_python3) || return
-
-    venvcreate "${PYTHON:?}" authawsvenv || return
-
-    python -m pip install -q -r requirements.txt || {
-      local -r ret="$?"
-      deactivate || return 1 # Deactivation should never fail!
-      return "$ret"
-    }
-    echo "Creating virtual environment 'authawsvenv'... done."
+    echo "Could not find the activate script in $root/.venv!" 1>&2
+    return 1
   fi
 }
 

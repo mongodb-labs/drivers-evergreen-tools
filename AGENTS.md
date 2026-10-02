@@ -40,9 +40,9 @@ for the CI that runs it.
   only redirects the tool dir, so a local `uv tool install --force` can't overwrite
   globally installed tools, and the cache stays shared to avoid re-downloading.
 - `uv` runs most Python scripts (`uv run`) and manages CLI installs, but not all: some
-  scripts (`.evergreen/clean.sh`) call `python3` directly, and some features (`auth_aws`)
-  still use the legacy `find-python3.sh`/`venvcreate` virtual environments. Check the
-  script before assuming uv isolation.
+  scripts (`.evergreen/clean.sh`) call `python3` directly, and some features (`auth_oidc`,
+  `csfle`, `ocsp`) still use the legacy `find-python3.sh`/`venvcreate` virtual
+  environments. Check the script before assuming uv isolation.
 
 ## Running things
 
@@ -66,9 +66,10 @@ Two independently packaged CLI projects, both installed with
 - `.evergreen/orchestration/pyproject.toml` packages `drivers-orchestration`.
 
 Everything else under `.evergreen/` is an unpackaged script. Check the script and its
-feature directory for a setup wrapper (e.g. `auth_aws/activate-authawsvenv.sh`) before
+feature directory for a setup wrapper (e.g. `auth_oidc/activate-authoidcvenv.sh`) before
 running it: some import dependencies (`pymongo`) that only exist in a feature-specific
-virtual environment, so a direct `python3 <path>.py --help` fails on import first.
+virtual environment (or a uv dependency group), so a direct `python3 <path>.py --help`
+fails on import first.
 
 Not everything under `.evergreen/` is Python: `.evergreen/github_app/` is an npm project
 (its own `package.json`, linted separately), and `.evergreen/mongoproxy/` and

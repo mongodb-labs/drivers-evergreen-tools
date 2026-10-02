@@ -32,9 +32,9 @@ EOF
 # Ensure uv is available for the CLI install step below.
 ensure_uv || exit 1
 
-# Set the python binary to use, for the per-folder virtualenv scripts (auth_aws,
-# auth_oidc, csfle, docker, ocsp) that are still on the find-python3.sh
-# mechanism, and for downstream repos that read this from .env.
+# Set the python binary to use, for the per-folder virtualenv scripts (auth_oidc,
+# csfle, ocsp) that are still on the find-python3.sh mechanism, and for downstream
+# repos that read this from .env.
 #
 # This must come from ensure_python3, not from uv. ensure_python3 selects in a
 # specific order (toolchain, then `python3`, then `python`) and the value is fed
