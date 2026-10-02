@@ -25,6 +25,13 @@ cache that DevProd maintains.  This script can be run after assuming the Drivers
     args: ["${DRIVERS_TOOLS}/.evergreen/docker/setup.sh"]
 ```
 
+`login.py` runs via `uv`, with its boto3 dependency coming from the `docker` group in the root
+`pyproject.toml` (the root is passed explicitly because the group is defined there):
+
+```bash
+uv run --project "$DRIVERS_TOOLS" --group docker python login.py
+```
+
 ## Run Local Server
 
 To run a local server, change to this directory and run:
