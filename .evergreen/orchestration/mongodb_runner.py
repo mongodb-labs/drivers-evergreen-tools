@@ -242,6 +242,7 @@ def start_mongodb_runner(opts, data):
         out_log.unlink()
     config = _get_cluster_options(data, opts)
     config["runnerDir"] = config["tmpDir"]
+    config["logDir"] = _normalize_path(mo_home / "logs")
     config["host"] = "localhost"
     # Write the config file.
     config_file = mo_home / "config.json"
