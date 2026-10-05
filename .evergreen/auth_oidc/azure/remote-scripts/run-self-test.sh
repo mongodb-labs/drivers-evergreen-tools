@@ -9,12 +9,12 @@ cp env.sh secrets-export.sh
 pushd ./drivers-evergreen-tools/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 
-# Run the Python Driver Test
+# Run the Python Driver Test. The activated environment is uv-managed and has
+# no pip of its own, so install with `uv pip` (targets the active venv).
 git clone https://github.com/mongodb/mongo-python-driver
 pushd mongo-python-driver
-pip install -U -q pip
-pip install .
+uv pip install -q .
 popd
-pip install -q requests
+uv pip install -q requests
 python azure/remote-scripts/test.py
 popd

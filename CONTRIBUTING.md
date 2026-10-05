@@ -31,7 +31,7 @@ We use isolated virtual environments to run all of the python scripts.
 
 All Python dependencies are described by the top-level `pyproject.toml` and pinned by the top-level `uv.lock`.
 Dependencies are regularly updated via [Dependabot](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
-The `.evergreen`, `.evergreen/auth_aws`, `.evergreen/docker`, and `.evergreen/orchestration` subdirectories are included as workspaces.
+The `.evergreen`, `.evergreen/auth_aws`, `.evergreen/auth_oidc`, `.evergreen/docker`, and `.evergreen/orchestration` subdirectories are included as workspaces.
 PyMongo is only required by mongo-orchestration scripts for backward compatibility (removed by [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335)).
 Individual `requirements.txt` files under `.evergreen` subdirectories are not yet supported (see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
 

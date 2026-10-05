@@ -40,10 +40,11 @@ export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
-pushd ..
-. ./activate-authoidcvenv.sh
-popd
-python ./handle_secrets.py
+# The auth_oidc group is defined in the root pyproject.toml, so run from the
+# root project context. DRIVERS_TOOLS is set absolutely by handle-paths.sh.
+. "$DRIVERS_TOOLS"/.evergreen/ensure-uv.sh
+ensure_uv || exit 1
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python ./handle_secrets.py
 # shellcheck source=env.sh
 source $AZUREOIDC_ENVPATH
 

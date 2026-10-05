@@ -5,13 +5,13 @@
 set -eu
 export ORCHESTRATION_FILE=auth-oidc.json
 
-trap "rm -rf authoidcvenv" EXIT HUP
-
 rm -f $DRIVERS_TOOLS/results.json
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-rm -rf authoidcvenv
-. ./activate-authoidcvenv.sh
-python oidc_write_orchestration.py
+# The auth_oidc group is defined in the root pyproject.toml, so run from the
+# root project context.
+. $DRIVERS_TOOLS/.evergreen/ensure-uv.sh
+ensure_uv || exit 1
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_write_orchestration.py
 
 bash /root/base-entrypoint.sh
 
