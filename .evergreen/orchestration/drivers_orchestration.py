@@ -926,9 +926,7 @@ def stop(opts):
                 LOGGER.info(f"Stopping {image} by image name... done.")
 
     # Finally, look for any processes that are named mongod or mongos.
-    # The -real names are the tee-wrapped servers from mongodb_runner.py: the
-    # runner only knows the wrapper shell's pid, so without these the real
-    # server would be orphaned here and hold its port into the next start.
+    # TODO(DRIVERS-3673): drop the -real names when the tee wrappers go away.
     for proc in all_procs:
         try:
             name = proc.name()

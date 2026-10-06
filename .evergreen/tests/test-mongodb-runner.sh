@@ -98,10 +98,10 @@ function start_with_runner() {
 start_with_runner
 connect_mongodb
 
-# The runner CLI exits right after starting the deployment, which orphans the
-# servers' stdout. The tee wrappers must keep the servers logging to disk
-# anyway; only hosts that have the wrappers installed can assert this (Windows
-# has no POSIX shell and skips them, see _tee_wrap_server_binaries).
+# Only hosts with the tee wrappers installed can assert that servers keep
+# logging after the runner CLI exits (Windows skips the wrappers).
+# TODO(DRIVERS-3673): assert the logDir capture instead once the upstream
+# runner writes server logs to the logDir file itself.
 if [ -f "${MONGODB_BINARIES}/mongod-real" ]; then
   log_file=$(ls -t "${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log | head -n1)
   size1=$(wc -c < "$log_file")
