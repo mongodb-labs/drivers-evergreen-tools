@@ -98,6 +98,22 @@ function start_with_runner() {
 start_with_runner
 connect_mongodb
 
+# The runner CLI exits right after starting the deployment, which orphans the
+# servers' stdout. The tee wrappers must keep the servers logging to disk
+# anyway; only hosts that have the wrappers installed can assert this (Windows
+# has no POSIX shell and skips them, see _tee_wrap_server_binaries).
+if [ -f "${MONGODB_BINARIES}/mongod-real" ]; then
+  log_file=$(ls -t "${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log | head -n1)
+  size1=$(wc -c < "$log_file")
+  connect_mongodb
+  sleep 1
+  size2=$(wc -c < "$log_file")
+  if [ "$size2" -le "$size1" ]; then
+    echo "ERROR: mongod's log file is not being updated: $log_file"
+    exit 1
+  fi
+fi
+
 bash ./run-mongodb.sh start --topology standalone --auth
 connect_mongodb --auth
 
