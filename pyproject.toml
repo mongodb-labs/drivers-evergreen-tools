@@ -2,6 +2,7 @@
 members = [
     ".evergreen",
     ".evergreen/auth_aws",
+    ".evergreen/auth_oidc",
     ".evergreen/docker",
     ".evergreen/orchestration",
 ]
@@ -14,10 +15,8 @@ members = [
 drivers-evergreen-tools = { workspace = true }
 
 [dependency-groups]
-# Shared boto3 constraint for the tool folders that need AWS access
-# (auth_oidc, csfle): follow-up DRIVERS-3564 migrations
-# will add the per-folder groups that extend this one with
-# {include-group = "boto"}.
+# Shared boto3 constraint; csfle (follow-up DRIVERS-3564 migrations) will add
+# per-folder groups extending this one with {include-group = "boto"}.
 boto = ["boto3>=1.35.0"]
 # boto3 for the AWS credential flows (assume-role, instance-profile assignment,
 # container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
@@ -27,11 +26,24 @@ auth_aws = [
   "pymongo[aws]~=4.0",
   "pyop~=3.4.0",
 ]
+# boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
+# the legacy requirements, and azure-* for the Key Vault secrets.
+auth_oidc = [
+  {include-group = "boto"},
+  "pyop~=3.4.0",
+  "pyopenssl>=23.2.0",
+  "azure-identity",
+  "azure-keyvault-secrets",
+]
 # boto3 for .evergreen/docker/login.py's ECR token flow.
 docker = [{include-group = "boto"}]
 
 [tool.uv]
 exclude-newer = "1 week"
+
+# Fail fast rather than building pydantic-core from source when no wheel
+# exists for the interpreter (DRIVERS-3649).
+no-build-package = ["pydantic-core"]
 
 required-environments = [
     "platform_system == 'Linux' and platform_machine == 'x86_64'",

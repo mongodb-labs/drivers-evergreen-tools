@@ -40,9 +40,9 @@ for the CI that runs it.
   only redirects the tool dir, so a local `uv tool install --force` can't overwrite
   globally installed tools, and the cache stays shared to avoid re-downloading.
 - `uv` runs most Python scripts (`uv run`) and manages CLI installs, but not all: some
-  scripts (`.evergreen/clean.sh`) call `python3` directly, and some features (`auth_oidc`,
-  `csfle`, `ocsp`) still use the legacy `find-python3.sh`/`venvcreate` virtual
-  environments. Check the script before assuming uv isolation.
+  scripts (`.evergreen/clean.sh`) call `python3` directly, and some features (`csfle`,
+  `ocsp`) still use the legacy `find-python3.sh`/`venvcreate` virtual environments. Check
+  the script before assuming uv isolation.
 
 ## Running things
 

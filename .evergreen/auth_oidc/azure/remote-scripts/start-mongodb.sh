@@ -16,8 +16,10 @@ export SKIP_LEGACY_SHELL=true
 export NO_IPV6=${NO_IPV6:-""}
 
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-. ./activate-authoidcvenv.sh
-python oidc_write_orchestration.py --azure
+# The auth_oidc group lives in the root pyproject.toml.
+. $DRIVERS_TOOLS/.evergreen/ensure-uv.sh
+ensure_uv || exit 1
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_write_orchestration.py --azure
 
 bash $DRIVERS_TOOLS/.evergreen/run-orchestration.sh
 $DRIVERS_TOOLS/mongodb/bin/mongosh $DRIVERS_TOOLS/.evergreen/auth_oidc/setup_oidc.js

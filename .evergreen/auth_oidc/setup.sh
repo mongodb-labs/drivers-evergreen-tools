@@ -15,8 +15,10 @@ bash ./oidc_get_tokens.sh
 
 if [ "$(uname -s)" = "Linux" ]; then
     # On Linux, we start a local server so we can have better control of the idp configuration.
-    . ./activate-authoidcvenv.sh
-    python oidc_write_orchestration.py
+    # The auth_oidc group lives in the root pyproject.toml.
+    . $SCRIPT_DIR/../ensure-uv.sh
+    ensure_uv || exit 1
+    uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_write_orchestration.py
     TOPOLOGY=replica_set ORCHESTRATION_FILE=auth-oidc.json bash ../run-orchestration.sh
     URI="mongodb://127.0.0.1:27017/?directConnection=true"
     $MONGODB_BINARIES/mongosh -f ./setup_oidc.js "$URI&serverSelectionTimeoutMS=10000"
