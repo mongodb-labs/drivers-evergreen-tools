@@ -236,13 +236,10 @@ def _install_mongodb_runner(version: str) -> Path:
 
 
 def _tee_wrap_server_binaries(bin_dir: Path, log_dir: Path) -> None:
-    """Tee-wrap the server binaries on POSIX hosts.
+    """Tee server output to log_dir; the runner drops the stdout pipe when
+    its CLI exits, right after startup.
 
-    mongodb-runner stops draining a server's stdout when its CLI exits, which
-    is right after startup, losing every later log line; the wrapper keeps a
-    durable copy under log_dir. The stdout passthrough must survive that exit,
-    hence the ignored SIGPIPE. TODO(DRIVERS-3673): remove once the upstream
-    runner writes server logs to the logDir file itself and the pin is bumped.
+    TODO(DRIVERS-3673): remove once the upstream runner honors logDir itself.
     """
     if PLATFORM == "win32":
         return
