@@ -9,11 +9,9 @@ cp env.sh secrets-export.sh
 pushd ./drivers-evergreen-tools/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 
-# Run the Python Driver Test. The activated environment is uv-managed and has
-# no pip of its own, so install with `uv pip` (targets the active venv). Run
-# uv from this directory, not from inside the clone: uv enforces a project's
-# own [tool.uv] required-version based on the CWD, and mongo-python-driver
-# pins an exact uv version for its own development.
+# The activated environment has no pip, so install with `uv pip`. Run uv from
+# this directory: inside the clone, uv enforces mongo-python-driver's own
+# required-version pin.
 git clone https://github.com/mongodb/mongo-python-driver
 uv pip install -q ./mongo-python-driver
 uv pip install -q requests

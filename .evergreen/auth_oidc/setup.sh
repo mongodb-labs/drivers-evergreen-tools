@@ -15,8 +15,7 @@ bash ./oidc_get_tokens.sh
 
 if [ "$(uname -s)" = "Linux" ]; then
     # On Linux, we start a local server so we can have better control of the idp configuration.
-    # The auth_oidc group is defined in the root pyproject.toml, so run from the
-    # root project context. DRIVERS_TOOLS is set absolutely by handle-paths.sh.
+    # The auth_oidc group lives in the root pyproject.toml.
     . $SCRIPT_DIR/../ensure-uv.sh
     ensure_uv || exit 1
     uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_write_orchestration.py

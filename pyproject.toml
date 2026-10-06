@@ -15,10 +15,8 @@ members = [
 drivers-evergreen-tools = { workspace = true }
 
 [dependency-groups]
-# Shared boto3 constraint for the tool folders that need AWS access
-# (csfle): follow-up DRIVERS-3564 migrations
-# will add the per-folder groups that extend this one with
-# {include-group = "boto"}.
+# Shared boto3 constraint; csfle (follow-up DRIVERS-3564 migrations) will add
+# per-folder groups extending this one with {include-group = "boto"}.
 boto = ["boto3>=1.35.0"]
 # boto3 for the AWS credential flows (assume-role, instance-profile assignment,
 # container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
@@ -28,10 +26,8 @@ auth_aws = [
   "pymongo[aws]~=4.0",
   "pyop~=3.4.0",
 ]
-# boto3 for utils.py's vault access and the AWS credential flows, pyop for
-# aws_handle_oidc_creds.py (imported from auth_aws/lib by utils.py), pyopenssl
-# per the legacy requirements, and azure-* for the Azure Key Vault secret
-# handling (azure/handle_secrets.py).
+# boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
+# the legacy requirements, and azure-* for the Key Vault secrets.
 auth_oidc = [
   {include-group = "boto"},
   "pyop~=3.4.0",
@@ -45,11 +41,8 @@ docker = [{include-group = "boto"}]
 [tool.uv]
 exclude-newer = "1 week"
 
-# Fail fast rather than building pydantic-core from source when it has no
-# wheel for the host interpreter (e.g. CPython 3.14, DRIVERS-3649). Replaces
-# the --only-binary=pydantic-core pin from the legacy per-folder
-# requirements-in.txt files. pyop (pulled in by both auth_aws and auth_oidc)
-# depends on pydantic, so this applies workspace-wide.
+# Fail fast rather than building pydantic-core from source when no wheel
+# exists for the interpreter (DRIVERS-3649).
 no-build-package = ["pydantic-core"]
 
 required-environments = [

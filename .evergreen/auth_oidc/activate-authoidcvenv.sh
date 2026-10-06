@@ -5,13 +5,9 @@
 # Usage:
 #   . ./activate-authoidcvenv.sh
 #
-# Creates and/or activates the Python environment for the auth_oidc test
-# scripts, leaving `python` pointing at an environment with the auth_oidc
-# dependencies (boto3, pyop, pyopenssl, azure-identity, azure-keyvault-secrets).
-# The environment is the root uv workspace's .venv, built from the auth_oidc
-# group in the root pyproject.toml. May be invoked from any working directory.
-# On error, nothing is left activated and activate_authoidcvenv returns
-# non-zero.
+# Creates and/or activates the root workspace .venv with the auth_oidc group
+# from the root pyproject.toml. May be invoked from any working directory; on
+# error, nothing is left activated and activate_authoidcvenv returns non-zero.
 
 if [ -z "$BASH" ]; then
   echo "activate-authoidcvenv.sh must be run in a Bash shell!" 1>&2

@@ -7,8 +7,7 @@ export ORCHESTRATION_FILE=auth-oidc.json
 
 rm -f $DRIVERS_TOOLS/results.json
 cd $DRIVERS_TOOLS/.evergreen/auth_oidc
-# The auth_oidc group is defined in the root pyproject.toml, so run from the
-# root project context.
+# The auth_oidc group lives in the root pyproject.toml.
 . $DRIVERS_TOOLS/.evergreen/ensure-uv.sh
 ensure_uv || exit 1
 uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_write_orchestration.py
