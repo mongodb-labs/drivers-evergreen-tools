@@ -43,6 +43,9 @@ cd $DRIVERS_TOOLS/.evergreen/auth_aws
 . ./activate-authawsvenv.sh
 ```
 
+The activated environment has `pip` for backwards compatibility with the legacy
+virtualenv workflow; `uv pip` works as well.
+
 It is recommended that these actions be broken into scripts that can be run locally as well as in CI.  The instructions
 for setting up local secrets handling are in the wiki page.
 

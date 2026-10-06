@@ -11,6 +11,9 @@
 # workspace's .venv, built from the auth_aws group in the root pyproject.toml.
 # May be invoked from any working directory. On error, nothing is left
 # activated and activate_authawsvenv returns non-zero.
+#
+# pip is installed for backwards compatibility with the legacy virtualenv
+# workflow; `uv pip` works as well.
 
 if [ -z "$BASH" ]; then
   echo "activate-authawsvenv.sh must be run in a Bash shell!" 1>&2
@@ -32,8 +35,13 @@ activate_authawsvenv() {
   . "$root/.evergreen/ensure-uv.sh" || return
   ensure_uv || return
 
-  # Sync the auth_aws group into the root .venv (idempotent).
-  uv sync --project "$root" --group auth_aws || return
+  # Sync the auth_aws group into the root .venv (idempotent). --inexact keeps
+  # other groups' packages (and pip, which is not part of the group), so
+  # sourcing another feature's activate script does not uninstall the
+  # auth_aws dependencies.
+  uv sync --project "$root" --group auth_aws --inexact || return
+  # Restore pip, which uv does not seed into managed venvs.
+  uv pip install --python "$root/.venv" --quiet pip || return
 
   # Activate the environment (Scripts/ instead of bin/ on Windows).
   if [ -f "$root/.venv/bin/activate" ]; then

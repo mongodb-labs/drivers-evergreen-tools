@@ -69,6 +69,9 @@ cd $DRIVERS_TOOLS/.evergreen/auth_oidc
 . ./activate-authoidcvenv.sh
 ```
 
+The activated environment has `pip` for backwards compatibility with the legacy
+virtualenv workflow; `uv pip` works as well.
+
 ## Local Server Testing
 
 `MONGODB-OIDC` is only supported on Linux, but we support running locally in

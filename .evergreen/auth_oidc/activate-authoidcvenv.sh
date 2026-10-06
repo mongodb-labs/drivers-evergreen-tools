@@ -8,6 +8,9 @@
 # Creates and/or activates the root workspace .venv with the auth_oidc group
 # from the root pyproject.toml. May be invoked from any working directory; on
 # error, nothing is left activated and activate_authoidcvenv returns non-zero.
+#
+# pip is installed for backwards compatibility with the legacy virtualenv
+# workflow; `uv pip` works as well.
 
 if [ -z "$BASH" ]; then
   echo "activate-authoidcvenv.sh must be run in a Bash shell!" 1>&2
@@ -29,8 +32,13 @@ activate_authoidcvenv() {
   . "$root/.evergreen/ensure-uv.sh" || return
   ensure_uv || return
 
-  # Sync the auth_oidc group into the root .venv (idempotent).
-  uv sync --project "$root" --group auth_oidc || return
+  # Sync the auth_oidc group into the root .venv (idempotent). --inexact keeps
+  # other groups' packages (and pip, which is not part of the group), so
+  # sourcing another feature's activate script does not uninstall the
+  # auth_oidc dependencies.
+  uv sync --project "$root" --group auth_oidc --inexact || return
+  # Restore pip, which uv does not seed into managed venvs.
+  uv pip install --python "$root/.venv" --quiet pip || return
 
   # Activate the environment (Scripts/ instead of bin/ on Windows).
   if [ -f "$root/.venv/bin/activate" ]; then
