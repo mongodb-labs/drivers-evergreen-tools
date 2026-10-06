@@ -45,6 +45,13 @@ docker = [{include-group = "boto"}]
 [tool.uv]
 exclude-newer = "1 week"
 
+# Fail fast rather than building pydantic-core from source when it has no
+# wheel for the host interpreter (e.g. CPython 3.14, DRIVERS-3649). Replaces
+# the --only-binary=pydantic-core pin from the legacy per-folder
+# requirements-in.txt files. pyop (pulled in by both auth_aws and auth_oidc)
+# depends on pydantic, so this applies workspace-wide.
+no-build-package = ["pydantic-core"]
+
 required-environments = [
     "platform_system == 'Linux' and platform_machine == 'x86_64'",
     "platform_system == 'Linux' and platform_machine == 'aarch64'",
