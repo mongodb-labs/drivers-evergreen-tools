@@ -4,6 +4,7 @@ members = [
     ".evergreen/auth_aws",
     ".evergreen/auth_oidc",
     ".evergreen/docker",
+    ".evergreen/ocsp",
     ".evergreen/orchestration",
 ]
 
@@ -37,6 +38,16 @@ auth_oidc = [
 ]
 # boto3 for .evergreen/docker/login.py's ECR token flow.
 docker = [{include-group = "boto"}]
+# asn1crypto for the mock OCSP responder's ASN.1 certificate handling
+# (mock_ocsp_responder.py), cryptography for private key loading and OCSP
+# response signing, flask for its HTTP interface, and waitress for WSGI
+# serving (ocsp_mock.py).
+ocsp = [
+  "asn1crypto~=1.5.1",
+  "cryptography>=42",
+  "flask~=2.2.5",
+  "waitress~=3.0.2",
+]
 
 [tool.uv]
 exclude-newer = "1 week"
