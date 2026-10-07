@@ -42,7 +42,7 @@ docker = [{include-group = "boto"}]
 # (mock_ocsp_responder.py), flask for its HTTP interface, and waitress for
 # WSGI serving (ocsp_mock.py). oscrypto is pinned to a commit with a
 # necessary fix for newer OpenSSL versions
-# (see: https://github.com/wbond/oscrypto/issues/78).
+# (see https://github.com/wbond/oscrypto/issues/78).
 ocsp = [
   "asn1crypto~=1.5.1",
   "flask~=2.2.5",
