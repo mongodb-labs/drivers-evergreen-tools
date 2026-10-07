@@ -38,15 +38,14 @@ auth_oidc = [
 ]
 # boto3 for .evergreen/docker/login.py's ECR token flow.
 docker = [{include-group = "boto"}]
-# asn1crypto and oscrypto for the mock OCSP responder's certificate handling
-# (mock_ocsp_responder.py), flask for its HTTP interface, and waitress for
-# WSGI serving (ocsp_mock.py). oscrypto is pinned to a commit with a
-# necessary fix for newer OpenSSL versions
-# (see https://github.com/wbond/oscrypto/issues/78).
+# asn1crypto for the mock OCSP responder's ASN.1 certificate handling
+# (mock_ocsp_responder.py), cryptography for private key loading and OCSP
+# response signing, flask for its HTTP interface, and waitress for WSGI
+# serving (ocsp_mock.py).
 ocsp = [
   "asn1crypto~=1.5.1",
+  "cryptography>=42",
   "flask~=2.2.5",
-  "oscrypto @ git+https://github.com/wbond/oscrypto.git@d5f3437ed24257895ae1edd9e503cfb352e635a8",
   "waitress~=3.0.2",
 ]
 

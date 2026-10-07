@@ -48,10 +48,15 @@ import re
 import textwrap
 from datetime import datetime, timedelta, timezone
 
-from asn1crypto import core, keys, ocsp, x509
+from asn1crypto import core, ocsp, pem, x509
 from asn1crypto.ocsp import OCSPRequest, OCSPResponse
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import dsa, ec, padding, rsa
+from cryptography.hazmat.primitives.serialization import (
+    load_der_private_key,
+    load_pem_private_key,
+)
 from flask import Flask, Response, request
-from oscrypto import asymmetric
 
 __version__ = "0.10.2"
 __version_info__ = (0, 10, 2)
@@ -110,6 +115,32 @@ def _writer(func):
 
     name = func.__name__
     return property(fget=lambda self: getattr(self, "_%s" % name), fset=func)
+
+
+def _load_certificate(path):
+    """
+    Load the first certificate from a PEM or DER file into an
+    asn1crypto.x509.Certificate object.
+    """
+
+    with open(path, "rb") as f:
+        data = f.read()
+    if pem.detect(data):
+        _, _, der_bytes = pem.unarmor(data)
+        return x509.Certificate.load(der_bytes)
+    return x509.Certificate.load(data)
+
+
+def _load_private_key(path):
+    """
+    Load a PEM or DER private key file into a cryptography private key object.
+    """
+
+    with open(path, "rb") as f:
+        data = f.read()
+    if pem.detect(data):
+        return load_pem_private_key(data, password=None)
+    return load_der_private_key(data, password=None)
 
 
 class OCSPResponseBuilder:
@@ -197,22 +228,16 @@ class OCSPResponseBuilder:
         responses.
         """
 
-        if value is not None:
-            is_oscrypto = isinstance(value, asymmetric.Certificate)
-            if not is_oscrypto and not isinstance(value, x509.Certificate):
-                raise TypeError(
-                    _pretty_message(
-                        """
-                    certificate_issuer must be an instance of
-                    asn1crypto.x509.Certificate or
-                    oscrypto.asymmetric.Certificate, not %s
-                    """,
-                        _type_name(value),
-                    )
+        if value is not None and not isinstance(value, x509.Certificate):
+            raise TypeError(
+                _pretty_message(
+                    """
+                certificate_issuer must be an instance of
+                asn1crypto.x509.Certificate, not %s
+                """,
+                    _type_name(value),
                 )
-
-            if is_oscrypto:
-                value = value.asn1
+            )
 
         self._certificate_issuer = value
 
@@ -243,51 +268,43 @@ class OCSPResponseBuilder:
         The responder_private_key and responder_certificate parameters are onlystr
         required if the response_status is "successful".
         :param responder_private_key:
-            An asn1crypto.keys.PrivateKeyInfo or oscrypto.asymmetric.PrivateKey
-            object for the private key to sign the response with
+            A cryptography private key object (rsa.RSAPrivateKey,
+            dsa.DSAPrivateKey or ec.EllipticCurvePrivateKey) for the private
+            key to sign the response with
         :param responder_certificate:
-            An asn1crypto.x509.Certificate or oscrypto.asymmetric.Certificate
-            object of the certificate associated with the private key
+            An asn1crypto.x509.Certificate object of the certificate
+            associated with the private key
         :return:
             An asn1crypto.ocsp.OCSPResponse object of the response
         """
         if self._response_status != "successful":
             return ocsp.OCSPResponse({"response_status": self._response_status})
 
-        is_oscrypto = isinstance(responder_private_key, asymmetric.PrivateKey)
-        if (
-            not isinstance(responder_private_key, keys.PrivateKeyInfo)
-            and not is_oscrypto
+        if not isinstance(
+            responder_private_key,
+            (rsa.RSAPrivateKey, dsa.DSAPrivateKey, ec.EllipticCurvePrivateKey),
         ):
             raise TypeError(
                 _pretty_message(
                     """
-                responder_private_key must be an instance of the c
-                asn1crypto.keys.PrivateKeyInfo or
-                oscrypto.asymmetric.PrivateKey, not %s
+                responder_private_key must be an instance of a cryptography
+                private key type (rsa.RSAPrivateKey, dsa.DSAPrivateKey or
+                ec.EllipticCurvePrivateKey), not %s
                 """,
                     _type_name(responder_private_key),
                 )
             )
 
-        cert_is_oscrypto = isinstance(responder_certificate, asymmetric.Certificate)
-        if (
-            not isinstance(responder_certificate, x509.Certificate)
-            and not cert_is_oscrypto
-        ):
+        if not isinstance(responder_certificate, x509.Certificate):
             raise TypeError(
                 _pretty_message(
                     """
                 responder_certificate must be an instance of
-                asn1crypto.x509.Certificate or
-                oscrypto.asymmetric.Certificate, not %s
+                asn1crypto.x509.Certificate, not %s
                 """,
                     _type_name(responder_certificate),
                 )
             )
-
-        if cert_is_oscrypto:
-            responder_certificate = responder_certificate.asn1
 
         if self._certificate_status_list is None:
             raise ValueError(
@@ -392,24 +409,29 @@ class OCSPResponseBuilder:
             }
         )
 
-        signature_algo = responder_private_key.algorithm
-        if signature_algo == "ec":
+        hash_alg = {
+            "sha1": hashes.SHA1,
+            "sha224": hashes.SHA224,
+            "sha256": hashes.SHA256,
+            "sha384": hashes.SHA384,
+            "sha512": hashes.SHA512,
+        }[self._hash_algo]()
+
+        if isinstance(responder_private_key, rsa.RSAPrivateKey):
+            signature_algo = "rsa"
+            signature_bytes = responder_private_key.sign(
+                response_data.dump(), padding.PKCS1v15(), hash_alg
+            )
+        elif isinstance(responder_private_key, dsa.DSAPrivateKey):
+            signature_algo = "dsa"
+            signature_bytes = responder_private_key.sign(response_data.dump(), hash_alg)
+        else:
             signature_algo = "ecdsa"
+            signature_bytes = responder_private_key.sign(
+                response_data.dump(), ec.ECDSA(hash_alg)
+            )
 
         signature_algorithm_id = "%s_%s" % (self._hash_algo, signature_algo)
-
-        if responder_private_key.algorithm == "rsa":
-            sign_func = asymmetric.rsa_pkcs1v15_sign
-        elif responder_private_key.algorithm == "dsa":
-            sign_func = asymmetric.dsa_sign
-        elif responder_private_key.algorithm == "ec":
-            sign_func = asymmetric.ecdsa_sign
-
-        if not is_oscrypto:
-            responder_private_key = asymmetric.load_private_key(responder_private_key)
-        signature_bytes = sign_func(
-            responder_private_key, response_data.dump(), self._hash_algo
-        )
 
         certs = None
         if (
@@ -495,9 +517,9 @@ class OCSPResponder:
 
         """
         # Certs and keys
-        self._issuer_cert = asymmetric.load_certificate(issuer_cert)
-        self._responder_cert = asymmetric.load_certificate(responder_cert)
-        self._responder_key = asymmetric.load_private_key(responder_key)
+        self._issuer_cert = _load_certificate(issuer_cert)
+        self._responder_cert = _load_certificate(responder_cert)
+        self._responder_key = _load_private_key(responder_key)
 
         # Next update
         self._next_update_seconds = next_update_seconds

@@ -47,8 +47,8 @@ boto = [{ name = "boto3", specifier = ">=1.35.0" }]
 docker = [{ name = "boto3", specifier = ">=1.35.0" }]
 ocsp = [
     { name = "asn1crypto", specifier = "~=1.5.1" },
+    { name = "cryptography", specifier = ">=42" },
     { name = "flask", specifier = "~=2.2.5" },
-    { name = "oscrypto", git = "https://github.com/wbond/oscrypto.git?rev=d5f3437ed24257895ae1edd9e503cfb352e635a8" },
     { name = "waitress", specifier = "~=3.0.2" },
 ]
 
@@ -1227,14 +1227,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bc/22/1f46483b2095750161b862a034e334bf471f4a8c865e39058502983a73ea/oic-1.7.0.tar.gz", hash = "sha256:e51705d0c14c97e9ca594374bfb54269a72c9b489e0e979598344c0189bfcb64", size = 260752, upload-time = "2024-04-25T15:13:52.807Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4b/1d/7a8f80ab17f9d78c05de9d998d501baf71c81d2f3a27b86bde45ca14c55f/oic-1.7.0-py3-none-any.whl", hash = "sha256:b74bd06c7de1ab4f8e798f714062e6a68f68ad9cdbed1f1c30a7fb887602f321", size = 192399, upload-time = "2024-04-25T15:13:50.535Z" },
-]
-
-[[package]]
-name = "oscrypto"
-version = "1.3.0"
-source = { git = "https://github.com/wbond/oscrypto.git?rev=d5f3437ed24257895ae1edd9e503cfb352e635a8#d5f3437ed24257895ae1edd9e503cfb352e635a8" }
-dependencies = [
-    { name = "asn1crypto" },
 ]
 
 [[package]]
