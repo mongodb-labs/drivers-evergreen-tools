@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -eu
 
+# Preserve the caller's SCRIPT_DIR: this script is sourced (e.g. by the
+# activate-*.sh scripts), and callers may use SCRIPT_DIR afterwards to source
+# their own scripts (e.g. csfle/setup.sh sources start-servers.sh relative to
+# its own directory).
+_saved_script_dir=${SCRIPT_DIR:-}
+
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 pushd $SCRIPT_DIR
@@ -35,5 +41,11 @@ echo "rustc version: $(rustc --version)"
 export RUSTUP_HOME
 export CARGO_HOME
 export PATH
+
+# Restore the caller's SCRIPT_DIR (clobbered above and by handle-paths.sh).
+if [ -n "${_saved_script_dir:-}" ]; then
+  SCRIPT_DIR=$_saved_script_dir
+fi
+unset _saved_script_dir
 
 popd
