@@ -36,6 +36,18 @@ activate_ocspvenv() {
   # other groups' packages (and pip, which is not part of the group), so
   # sourcing another feature's activate script does not uninstall the
   # ocsp dependencies.
+  #
+  # s390x (zSeries) hosts have no cryptography wheels: uv builds the sdist,
+  # which requires a Rust toolchain. install-rust.sh exports RUSTUP_HOME,
+  # CARGO_HOME, and PATH for the uv sync below.
+  if [ "$(uname -m)" = "s390x" ]; then
+    local _shopts="$-"
+    # shellcheck source=../install-rust.sh
+    . "$root/.evergreen/install-rust.sh" || return
+    # install-rust.sh enables `set -eu`; restore the caller's shell options.
+    [[ "$_shopts" == *e* ]] || set +e
+    [[ "$_shopts" == *u* ]] || set +u
+  fi
   uv sync --project "$root" --group ocsp --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return

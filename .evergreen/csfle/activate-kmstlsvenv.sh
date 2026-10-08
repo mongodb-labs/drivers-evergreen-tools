@@ -35,8 +35,19 @@ activate_kmstlsvenv() {
   # Sync the csfle group into the root .venv (idempotent). --inexact keeps
   # other groups' packages (and pip, which is not part of the group), so
   # sourcing another feature's activate script does not uninstall the
-  # csfle dependencies. The group's s390x marker fork selects the Rust-free
-  # cryptography pins on zSeries (see the root pyproject.toml).
+  # csfle dependencies.
+  #
+  # s390x (zSeries) hosts have no cryptography wheels: uv builds the sdist,
+  # which requires a Rust toolchain. install-rust.sh exports RUSTUP_HOME,
+  # CARGO_HOME, and PATH for the uv sync below.
+  if [ "$(uname -m)" = "s390x" ]; then
+    local _shopts="$-"
+    # shellcheck source=../install-rust.sh
+    . "$root/.evergreen/install-rust.sh" || return
+    # install-rust.sh enables `set -eu`; restore the caller's shell options.
+    [[ "$_shopts" == *e* ]] || set +e
+    [[ "$_shopts" == *u* ]] || set +u
+  fi
   uv sync --project "$root" --group csfle --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return
