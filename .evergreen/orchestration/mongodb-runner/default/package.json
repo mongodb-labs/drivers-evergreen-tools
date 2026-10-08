@@ -2,6 +2,6 @@
   "name": "mongodb-runner-wrapper",
   "version": "1.0.0",
   "dependencies": {
-    "@mongodb-js/mongodb-runner": "7.0.1"
+    "@mongodb-js/mongodb-runner": "8.0.2"
   }
 }
