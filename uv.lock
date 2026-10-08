@@ -51,7 +51,7 @@ csfle = [
     { name = "boto3", specifier = ">=1.35.0" },
     { name = "cryptography", marker = "platform_machine != 's390x'", specifier = ">=45.0.0" },
     { name = "cryptography", marker = "platform_machine == 's390x'", specifier = "<3.4" },
-    { name = "pykmip", git = "https://github.com/mongodb-forks/PyKMIP.git" },
+    { name = "pykmip", specifier = "~=0.11.0" },
     { name = "sqlalchemy", marker = "platform_machine == 's390x'", specifier = "<2.0" },
 ]
 docker = [{ name = "boto3", specifier = ">=1.35.0" }]
@@ -1784,8 +1784,8 @@ crypto = [
 
 [[package]]
 name = "pykmip"
-version = "0.11.0.dev1"
-source = { git = "https://github.com/mongodb-forks/PyKMIP.git#c48cb01635819e478b573e3245ef840a11d78865" }
+version = "0.11.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography", version = "3.3.2", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 's390x'" },
     { name = "cryptography", version = "47.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version <= '3.9' and platform_machine != 's390x'" },
@@ -1795,6 +1795,10 @@ dependencies = [
     { name = "requests", version = "2.34.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "six" },
     { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/31/55/5eff82a4535a9def7d020fb65ca77dddd6830baa0c5ab2ee00196ec01503/pykmip-0.11.0.tar.gz", hash = "sha256:eb42e2d9674e470935d98474b8502e675894cc8489362d8419fdd957319f2b3e", size = 550951, upload-time = "2026-09-09T17:53:15.661Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/63/93eff4adb7730594ccb771b338c7e64d646d8f5d4e7f6cdd7a3a2574ca8d/pykmip-0.11.0-py3-none-any.whl", hash = "sha256:ad69c0773e1ebbd20aead1ceead47627d6121aa11263c80b7130d5671998a96d", size = 336347, upload-time = "2026-09-09T17:53:14.359Z" },
 ]
 
 [[package]]
