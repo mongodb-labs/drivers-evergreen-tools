@@ -31,9 +31,12 @@ if [ ! -x "${OPENSSL_PREFIX}/bin/openssl" ]; then
   fi
 
   build_dir=$(mktemp -d)
-  curl --retry 8 -sSf -o "${build_dir}/openssl.tar.gz" \
-    "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"
-  tar -xzf "${build_dir}/openssl.tar.gz" -C "${build_dir}" --strip-components=1
+  # Shallow clone of the release tag rather than a tarball download: the CI
+  # hosts' git transport to github.com is the same one used to fetch this
+  # repository, and a clone avoids depending on the release-asset endpoint.
+  git clone --depth 1 --branch "openssl-${OPENSSL_VERSION}" \
+    -c advice.detachedHead=false \
+    https://github.com/openssl/openssl.git "${build_dir}"
 
   pushd "${build_dir}"
   # libdir=lib (rather than the lib64 that ./config picks on 64-bit hosts)
