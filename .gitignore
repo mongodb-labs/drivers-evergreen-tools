@@ -125,7 +125,6 @@ mo-expansion.sh
 .kube
 .cargo
 .rustup
-.openssl3
 .local
 .evergreen/orchestration/config.json
 .evergreen/orchestration/drivers-orchestration

@@ -45,9 +45,9 @@ docker = [{include-group = "boto"}]
 # serving (ocsp_mock.py).
 #
 # On s390x (zSeries) cryptography publishes no wheels: the activate-*.sh
-# scripts install a Rust toolchain (via .evergreen/install-rust.sh) and build
-# OpenSSL 3 (via .evergreen/install-openssl3.sh) there, so uv builds the
-# sdist against OpenSSL 3 headers. uv locks all groups together, so every
+# scripts install a Rust toolchain there (via .evergreen/install-rust.sh) so
+# uv builds the sdist against the system OpenSSL (the zSeries hosts run
+# RHEL 9, which ships OpenSSL 3). uv locks all groups together, so every
 # group's cryptography requirement must agree per platform.
 ocsp = [
   "asn1crypto~=1.5.1",

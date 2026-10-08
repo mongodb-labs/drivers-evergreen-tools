@@ -1396,6 +1396,10 @@ axes:
         display_name: "RHEL 9 x64"
         run_on: rhel94-small
 
+      - id: rhel9-zseries
+        display_name: "RHEL 9 (zSeries)"
+        run_on: rhel9-zseries-small
+
   # OSes that support versions of MongoDB>=5.0 with SSL.
   - id: os-requires-50
     display_name: OS
@@ -1420,10 +1424,6 @@ axes:
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
         run_on: rhel8-power-large
-
-      - id: rhel8-zseries
-        display_name: "RHEL8 (zSeries)"
-        run_on: rhel8-zseries-small
 
   - id: topology
     display_name: Topology
@@ -1628,16 +1628,6 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
-    # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
-    # install a Rust toolchain (via install-rust.sh) so uv builds it from source.
-    - if:
-        auth: "auth"
-        ssl: "ssl"
-        os-requires-50: "rhel8-zseries"
-      then:
-        add_tasks:
-          - "test-ocsp"
-          - "test-csfle"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1662,6 +1652,17 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
+    # install a Rust toolchain (via install-rust.sh) so uv builds it from
+    # source. RHEL 9 ships OpenSSL 3, so no OpenSSL build is needed there.
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-70: "rhel9-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
     - if:
         auth: "auth"
         ssl: "nossl"

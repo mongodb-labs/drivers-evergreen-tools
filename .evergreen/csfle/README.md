@@ -11,13 +11,12 @@ The dependencies (boto3, pykmip, cryptography) are managed by the root uv worksp
 (see the `csfle` group in the top-level `pyproject.toml`).
 
 On s390x/zSeries, `cryptography` publishes no wheels, so uv builds it from
-source. Building it requires a Rust toolchain and OpenSSL 3 headers, and the
-RHEL 8 zSeries hosts only ship OpenSSL 1.1.1, so `activate-kmstlsvenv.sh`
-sources [.evergreen/install-rust.sh](../install-rust.sh) and
-[.evergreen/install-openssl3.sh](../install-openssl3.sh) when `uname -m` is
-`s390x`. The `ocsp` group's activate script (`activate-ocspvenv.sh`) does the
-same, since uv locks all groups together and their `cryptography` requirements
-must agree per platform.
+source, which requires a Rust toolchain. `activate-kmstlsvenv.sh` installs it
+by sourcing [.evergreen/install-rust.sh](../install-rust.sh) when `uname -m`
+is `s390x` (the hosts run RHEL 9, whose system OpenSSL 3 satisfies
+cryptography's build). The `ocsp` group's activate script
+(`activate-ocspvenv.sh`) does the same, since uv locks all groups together
+and their `cryptography` requirements must agree per platform.
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.

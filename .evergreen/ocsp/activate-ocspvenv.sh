@@ -38,16 +38,13 @@ activate_ocspvenv() {
   # ocsp dependencies.
   #
   # s390x (zSeries) hosts have no cryptography wheels: uv builds the sdist,
-  # which requires a Rust toolchain (install-rust.sh exports RUSTUP_HOME,
-  # CARGO_HOME, and PATH) and OpenSSL 3 headers (install-openssl3.sh builds
-  # OpenSSL 3 and exports OPENSSL_DIR and LD_LIBRARY_PATH, since the system
-  # OpenSSL 1.1.1 is too old for cryptography 47.0+).
+  # which requires a Rust toolchain. install-rust.sh exports RUSTUP_HOME,
+  # CARGO_HOME, and PATH for the uv sync below. (The hosts run RHEL 9, whose
+  # system OpenSSL 3 satisfies cryptography's build.)
   if [ "$(uname -m)" = "s390x" ]; then
     local _shopts="$-"
     # shellcheck source=../install-rust.sh
     . "$root/.evergreen/install-rust.sh" || return
-    # shellcheck source=../install-openssl3.sh
-    . "$root/.evergreen/install-openssl3.sh" || return
     # install-rust.sh enables `set -eu`; restore the caller's shell options.
     [[ "$_shopts" == *e* ]] || set +e
     [[ "$_shopts" == *u* ]] || set +u
