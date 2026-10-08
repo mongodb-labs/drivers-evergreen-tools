@@ -7,6 +7,17 @@ for more information on those specific scenarios.
 
 ## Prerequisites
 
+The dependencies (boto3, pykmip, cryptography) are managed by the root uv workspace
+(see the `csfle` group in the top-level `pyproject.toml`).
+
+On s390x/zSeries, `cryptography` publishes no wheels and a modern release would
+require building from source with a Rust toolchain. The `csfle` group therefore
+forks on `platform_machine == 's390x'` to the last Rust-free releases
+(`cryptography<3.4`, `sqlalchemy<2.0`), preserving the fallback the deleted
+`requirements-legacy.txt` provided to the legacy venv workflow. The `ocsp` and
+`auth_oidc` groups are forked the same way (uv locks all groups together, so their
+`cryptography` requirements must agree per platform).
+
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.
 

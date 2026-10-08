@@ -5,43 +5,13 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/../csfle
 
-# Test with default python
-ensure_uv || exit 1
-PYTHON_BINARY=$(uv python find)
-export PYTHON_BINARY
-
-function run_test() {
-  echo "Running csfle test with $PYTHON_BINARY..."
-  bash ./setup.sh
-  bash ./teardown.sh
-  # Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
-  if [[ "$(uname -s)" == CYGWIN* ]]; then
-    return 0
-  fi
-  rm -rf kmstlsvenv
-  echo "Running csfle test with $PYTHON_BINARY... done."
-}
-run_test
-
-# Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
-if [[ "$(uname -s)" == CYGWIN* ]]; then
-  exit 0
-fi
-
-# Test with supported pythons
-pythons="3.9 3.10 3.11 3.12 3.13 3.14"
-for python in $pythons; do
-  if [ "$(uname -s)" = "Darwin" ]; then
-    PYTHON_BINARY="/Library/Frameworks/Python.Framework/Versions/$python/bin/python3"
-  else
-    PYTHON_BINARY="/opt/python/$python/bin/python3"
-  fi
-  export PYTHON_BINARY
-  run_test
-done
+# The interpreter is uv-managed (the lock resolves for all of Python 3.9-3.14
+# via resolution markers), so unlike the legacy venv flow there is no
+# per-Python loop to run.
+bash ./setup.sh
+bash ./teardown.sh
 
 popd

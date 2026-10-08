@@ -3,6 +3,7 @@ members = [
     ".evergreen",
     ".evergreen/auth_aws",
     ".evergreen/auth_oidc",
+    ".evergreen/csfle",
     ".evergreen/docker",
     ".evergreen/ocsp",
     ".evergreen/orchestration",
@@ -16,8 +17,8 @@ members = [
 drivers-evergreen-tools = { workspace = true }
 
 [dependency-groups]
-# Shared boto3 constraint; csfle (follow-up DRIVERS-3564 migrations) will add
-# per-folder groups extending this one with {include-group = "boto"}.
+# Shared boto3 constraint, extended by per-folder groups with
+# {include-group = "boto"}.
 boto = ["boto3>=1.35.0"]
 # boto3 for the AWS credential flows (assume-role, instance-profile assignment,
 # container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
@@ -29,10 +30,14 @@ auth_aws = [
 ]
 # boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
 # the legacy requirements, and azure-* for the Key Vault secrets.
+#
+# pyopenssl is scoped away on s390x (see the csfle group below): no script
+# imports it, and every pyopenssl release requires a modern cryptography that
+# cannot build there without a Rust toolchain.
 auth_oidc = [
   {include-group = "boto"},
   "pyop~=3.4.0",
-  "pyopenssl>=23.2.0",
+  "pyopenssl>=23.2.0; platform_machine != 's390x'",
   "azure-identity",
   "azure-keyvault-secrets",
 ]
@@ -42,11 +47,32 @@ docker = [{include-group = "boto"}]
 # (mock_ocsp_responder.py), cryptography for private key loading and OCSP
 # response signing, flask for its HTTP interface, and waitress for WSGI
 # serving (ocsp_mock.py).
+#
+# cryptography is forked on s390x to the Rust-free releases (see the csfle
+# group below): uv locks all groups together, so every group's cryptography
+# requirement must agree per platform.
 ocsp = [
   "asn1crypto~=1.5.1",
-  "cryptography>=42",
+  "cryptography>=42; platform_machine != 's390x'",
+  "cryptography<3.4; platform_machine == 's390x'",
   "flask~=2.2.5",
   "waitress~=3.0.2",
+]
+# boto3 for the secrets handling (setup_secrets.py), pykmip (the MongoDB fork)
+# for the mock KMIP server and client, and cryptography for the KMS HTTP
+# servers' TLS and key handling. bottle is vendored as .evergreen/csfle/bottle.py.
+#
+# On s390x (zSeries) cryptography publishes no wheels, and building a modern
+# release requires a Rust toolchain. The s390x fork pins the last Rust-free
+# releases (cryptography<3.4, sqlalchemy<2.0 per pykmip's unique_identifier
+# mapper error), preserving the fallback the deleted requirements-legacy.txt
+# provided to the legacy venv workflow.
+csfle = [
+  {include-group = "boto"},
+  "pykmip @ git+https://github.com/mongodb-forks/PyKMIP.git",
+  "cryptography>=45.0.0; platform_machine != 's390x'",
+  "cryptography<3.4; platform_machine == 's390x'",
+  "sqlalchemy<2.0; platform_machine == 's390x'",
 ]
 
 [tool.uv]

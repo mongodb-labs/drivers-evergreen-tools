@@ -32,16 +32,12 @@ EOF
 # Ensure uv is available for the CLI install step below.
 ensure_uv || exit 1
 
-# Set the python binary to use, for the per-folder virtualenv scripts (csfle)
-# that are still on the find-python3.sh mechanism, and for downstream repos
-# that read this from .env.
+# Set the python binary to use, for downstream repos that read this from .env.
 #
-# This must come from ensure_python3, not from uv. ensure_python3 selects in a
-# specific order (toolchain, then `python3`, then `python`) and the value is fed
-# to venvcreate, which passes --system-site-packages. Resolving it with uv
-# instead picks /usr/bin/python (3.10) in the Ubuntu test image where
-# find_python3 correctly picks python3 (3.11), and the 3.10 dist-packages then
-# leak a stale pyOpenSSL into the venv.
+# This must come from ensure_python3, not from uv: ensure_python3 selects in a
+# specific order (toolchain, then `python3`, then `python`). Resolving it with
+# uv instead picks /usr/bin/python (3.10) in the Ubuntu test image where
+# find_python3 correctly picks python3 (3.11).
 DRIVERS_TOOLS_PYTHON="$(ensure_python3 2>/dev/null)"
 echo "DRIVERS_TOOLS_PYTHON=$DRIVERS_TOOLS_PYTHON" >> $DRIVERS_TOOLS/.env
 

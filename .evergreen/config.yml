@@ -540,7 +540,7 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/csfle/teardown.sh]
-    # Test setup and teardown for each supported version of Python.
+    # Test csfle setup and teardown.
     - command: subprocess.exec
       type: test
       params:
