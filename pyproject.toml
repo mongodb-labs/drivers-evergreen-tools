@@ -28,16 +28,12 @@ auth_aws = [
   "pymongo[aws]~=4.0",
   "pyop~=3.4.0",
 ]
-# boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
-# the legacy requirements, and azure-* for the Key Vault secrets.
-#
-# pyopenssl is scoped away on s390x (see the csfle group below): no script
-# imports it, and every pyopenssl release requires a modern cryptography that
-# cannot build there without a Rust toolchain.
+# boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
+# (pulled in via auth_oidc/utils.py's import of that module), and azure-* for
+# the Key Vault secrets.
 auth_oidc = [
   {include-group = "boto"},
   "pyop~=3.4.0",
-  "pyopenssl>=23.2.0; platform_machine != 's390x'",
   "azure-identity",
   "azure-keyvault-secrets",
 ]

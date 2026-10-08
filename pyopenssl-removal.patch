@@ -1,0 +1,95 @@
+From c46a4dfc91ec868c415649af74966c8243338e31 Mon Sep 17 00:00:00 2001
+From: Steven Silvester <steve.silvester@mongodb.com>
+Date: Thu, 8 Oct 2026 10:26:59 +0000
+Subject: [PATCH] DRIVERS-3564: Drop unused pyopenssl from the auth_oidc group
+
+Nothing imports OpenSSL anywhere under .evergreen/, and the only trace of
+it being needed (the system dist-packages leak) was specific to the legacy
+venvcreate flow. Removing it also removes the s390x marker this group
+needed for it.
+
+pyop stays: auth_oidc/utils.py imports aws_handle_oidc_creds from the
+auth_aws lib, which imports pyop at module level.
+---
+ pyproject.toml | 10 +++-------
+ uv.lock        | 34 ----------------------------------
+ 2 files changed, 3 insertions(+), 41 deletions(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index c64efd3..fcaffa9 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -28,16 +28,12 @@ auth_aws = [
+   "pymongo[aws]~=4.0",
+   "pyop~=3.4.0",
+ ]
+-# boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
+-# the legacy requirements, and azure-* for the Key Vault secrets.
+-#
+-# pyopenssl is scoped away on s390x (see the csfle group below): no script
+-# imports it, and every pyopenssl release requires a modern cryptography that
+-# cannot build there without a Rust toolchain.
++# boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
++# (pulled in via auth_oidc/utils.py's import of that module), and azure-* for
++# the Key Vault secrets.
+ auth_oidc = [
+   {include-group = "boto"},
+   "pyop~=3.4.0",
+-  "pyopenssl>=23.2.0; platform_machine != 's390x'",
+   "azure-identity",
+   "azure-keyvault-secrets",
+ ]
+diff --git a/uv.lock b/uv.lock
+index 08ed1e7..81ecac9 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -45,7 +45,6 @@ auth-oidc = [
+     { name = "azure-keyvault-secrets" },
+     { name = "boto3", specifier = ">=1.35.0" },
+     { name = "pyop", specifier = "~=3.4.0" },
+-    { name = "pyopenssl", marker = "platform_machine != 's390x'", specifier = ">=23.2.0" },
+ ]
+ boto = [{ name = "boto3", specifier = ">=1.35.0" }]
+ csfle = [
+@@ -1914,39 +1913,6 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/af/19/ea0a67776193699c47d378b00beacbdc639f8c79d0954b89c1d7e28386c9/pyop-3.4.2-py3-none-any.whl", hash = "sha256:b938373287d329bbeca27b58806655e4af54fa5eb5a4e9dea87a5c95b75482db", size = 27437, upload-time = "2025-09-03T08:06:15.745Z" },
+ ]
+
+-[[package]]
+-name = "pyopenssl"
+-version = "26.2.0"
+-source = { registry = "https://pypi.org/simple" }
+-resolution-markers = [
+-    "python_full_version <= '3.9' and platform_machine != 's390x'",
+-]
+-dependencies = [
+-    { name = "cryptography", version = "47.0.0", source = { registry = "https://pypi.org/simple" } },
+-    { name = "typing-extensions" },
+-]
+-sdist = { url = "https://files.pythonhosted.org/packages/1a/51/27a5ad5f939d08f690a326ef9582cda7140555180db71695f6fb747d6a36/pyopenssl-26.2.0.tar.gz", hash = "sha256:8c6fcecd1183a7fc897548dfe388b0cdb7f37e018200d8409cf33959dbe35387", size = 182195, upload-time = "2026-05-04T23:06:09.72Z" }
+-wheels = [
+-    { url = "https://files.pythonhosted.org/packages/73/b8/a0e2790ae249d6f38c9f66de7a211621a7ab2650217bcd04e1262f578a56/pyopenssl-26.2.0-py3-none-any.whl", hash = "sha256:4f9d971bc5298b8bc1fab282803da04bf000c755d4ad9d99b52de2569ca19a70", size = 55823, upload-time = "2026-05-04T23:06:08.395Z" },
+-]
+-
+-[[package]]
+-name = "pyopenssl"
+-version = "26.4.0"
+-source = { registry = "https://pypi.org/simple" }
+-resolution-markers = [
+-    "python_full_version >= '3.10' and platform_machine != 's390x'",
+-    "python_full_version > '3.9' and python_full_version < '3.10' and platform_machine != 's390x'",
+-]
+-dependencies = [
+-    { name = "cryptography", version = "50.0.1", source = { registry = "https://pypi.org/simple" } },
+-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+-]
+-sdist = { url = "https://files.pythonhosted.org/packages/3f/e8/7325d258199b159eb2c03fe32107533e2832e70e63f4fb88a6aa00023201/pyopenssl-26.4.0.tar.gz", hash = "sha256:28dfcce0162b9211413e26dfbfdf1d24317fbeba18fc93c12400a1856b2a0bc7", size = 182046, upload-time = "2026-08-01T19:50:50.512Z" }
+-wheels = [
+-    { url = "https://files.pythonhosted.org/packages/51/ad/2cf6d3fa2fae5c79e1ed9960c0d42badd0f94d81dd12b50604cdc839e648/pyopenssl-26.4.0-py3-none-any.whl", hash = "sha256:f0eb0cb2d581d3ad2b9c489468485e7f2ab6727d08401bcf9d824c3caddf3c1c", size = 56026, upload-time = "2026-08-01T19:50:48.94Z" },
+-]
+-
+ [[package]]
+ name = "python-dateutil"
+ version = "2.9.0.post0"
+--
+2.55.0
