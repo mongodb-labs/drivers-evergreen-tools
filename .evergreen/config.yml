@@ -1392,10 +1392,6 @@ axes:
         display_name: "RHEL 80"
         run_on: rhel80-small
 
-      - id: rhel8-zseries
-        display_name: "RHEL 8 (zSeries)"
-        run_on: rhel8-zseries-small
-
       - id: rhel9
         display_name: "RHEL 9 x64"
         run_on: rhel94-small
@@ -1428,6 +1424,10 @@ axes:
       - id: rhel8-power8
         display_name: "RHEL 8 (POWER8)"
         run_on: rhel8-power-large
+
+      - id: rhel8-zseries
+        display_name: "RHEL 8 (zSeries)"
+        run_on: rhel8-zseries-small
 
   - id: topology
     display_name: Topology
@@ -1632,6 +1632,17 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
+    # ensure the sdist's build toolchain via .evergreen/ensure-build-deps.sh
+    # (a Rust toolchain, and an OpenSSL 3 build — RHEL 8 ships only 1.1.1).
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-50: "rhel8-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1658,12 +1669,11 @@ buildvariants:
           - "test-mongodb-runner-partial"
     # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
     # ensure the sdist's build toolchain via .evergreen/ensure-build-deps.sh
-    # (a Rust toolchain, and an OpenSSL 3 build where the system library is
-    # older than 3.0, as on RHEL 8).
+    # (a Rust toolchain; RHEL 9's system OpenSSL 3 needs no local build).
     - if:
         auth: "auth"
         ssl: "ssl"
-        os-requires-70: ["rhel8-zseries", "rhel9-zseries"]
+        os-requires-70: "rhel9-zseries"
       then:
         add_tasks:
           - "test-ocsp"
