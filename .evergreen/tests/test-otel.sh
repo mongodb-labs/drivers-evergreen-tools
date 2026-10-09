@@ -5,14 +5,12 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# uv needs a native Windows path on Cygwin (it rejects /cygdrive/... paths).
+if [ "${OSTYPE:-}" = cygwin ]; then
+  ROOT_DIR="$(cygpath -m "$ROOT_DIR")"
+fi
 . $SCRIPT_DIR/../handle-paths.sh
 . $SCRIPT_DIR/../ensure-uv.sh
-
-# uv is a native binary on Windows and rejects /cygdrive/... paths (the same
-# conversion handle-paths.sh applies to SCRIPT_DIR and DRIVERS_TOOLS).
-case "$(uname -s)" in
-  CYGWIN*) ROOT_DIR=$(cygpath -m "$ROOT_DIR") ;;
-esac
 
 pushd $SCRIPT_DIR/.. > /dev/null
 

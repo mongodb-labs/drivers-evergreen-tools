@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eu
 
+# Preserve the caller's SCRIPT_DIR: this script is sourced.
+_saved_script_dir=${SCRIPT_DIR:-}
+
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 pushd $SCRIPT_DIR
@@ -36,4 +39,14 @@ export RUSTUP_HOME
 export CARGO_HOME
 export PATH
 
+# Restore the caller's SCRIPT_DIR (clobbered above and by handle-paths.sh).
+if [ -n "${_saved_script_dir:-}" ]; then
+  SCRIPT_DIR=$_saved_script_dir
+fi
+unset _saved_script_dir
+
 popd
+
+# Last command: a failed install must fail the script despite the sourcing's
+# suppressed errexit.
+cargo --version

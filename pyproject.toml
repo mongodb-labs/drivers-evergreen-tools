@@ -3,6 +3,7 @@ members = [
     ".evergreen",
     ".evergreen/auth_aws",
     ".evergreen/auth_oidc",
+    ".evergreen/csfle",
     ".evergreen/docker",
     ".evergreen/ocsp",
     ".evergreen/orchestration",
@@ -16,8 +17,8 @@ members = [
 drivers-evergreen-tools = { workspace = true }
 
 [dependency-groups]
-# Shared boto3 constraint; csfle (follow-up DRIVERS-3564 migrations) will add
-# per-folder groups extending this one with {include-group = "boto"}.
+# Shared boto3 constraint, extended by per-folder groups with
+# {include-group = "boto"}.
 boto = ["boto3>=1.35.0"]
 # boto3 for the AWS credential flows (assume-role, instance-profile assignment,
 # container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
@@ -27,12 +28,12 @@ auth_aws = [
   "pymongo[aws]~=4.0",
   "pyop~=3.4.0",
 ]
-# boto3 for the AWS credential flows, pyop for the OIDC proxy, pyopenssl per
-# the legacy requirements, and azure-* for the Key Vault secrets.
+# boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
+# (pulled in through auth_oidc/utils.py's import of that module), and azure-* for
+# the Key Vault secrets.
 auth_oidc = [
   {include-group = "boto"},
   "pyop~=3.4.0",
-  "pyopenssl>=23.2.0",
   "azure-identity",
   "azure-keyvault-secrets",
 ]
@@ -42,11 +43,22 @@ docker = [{include-group = "boto"}]
 # (mock_ocsp_responder.py), cryptography for private key loading and OCSP
 # response signing, flask for its HTTP interface, and waitress for WSGI
 # serving (ocsp_mock.py).
+#
+# On s390x (no published cryptography wheels) the activate scripts install
+# the sdist's build toolchain. uv locks all groups together: every group's
+# cryptography requirement must agree per platform.
 ocsp = [
   "asn1crypto~=1.5.1",
   "cryptography>=42",
   "flask~=3.1.3",
   "waitress~=3.0.2",
+]
+# boto3 for setup_secrets.py, pykmip for the mock KMIP server, cryptography
+# for the KMS servers' TLS. The mock servers use only the standard library.
+csfle = [
+  {include-group = "boto"},
+  "pykmip~=0.11.0",
+  "cryptography>=45.0.0",
 ]
 
 [tool.uv]

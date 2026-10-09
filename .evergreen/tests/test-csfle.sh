@@ -6,42 +6,32 @@ set -eu
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 . $SCRIPT_DIR/../ensure-uv.sh
+ensure_uv || exit 1
+
+root=$(cd "$SCRIPT_DIR/../.." && pwd)
+# uv needs a native Windows path on Cygwin (it rejects /cygdrive/... paths).
+if [ "${OSTYPE:-}" = cygwin ]; then
+  root="$(cygpath -m "$root")"
+fi
 
 pushd $SCRIPT_DIR/../csfle
 
-# Test with default python
-ensure_uv || exit 1
-PYTHON_BINARY=$(uv python find)
-export PYTHON_BINARY
+# The Python version is self-managed by uv.
+bash ./setup.sh
+bash ./teardown.sh
 
-function run_test() {
-  echo "Running csfle test with $PYTHON_BINARY..."
-  bash ./setup.sh
+# The kms servers must also work on the newer interpreters the hosts will
+# pick up. uv provisions 3.13/3.14 where it can; each check reuses the
+# secrets fetched by the first run.
+for PY in 3.13 3.14; do
+  if ! uv python find "$PY" > /dev/null 2>&1 && ! uv python install "$PY" > /dev/null 2>&1; then
+    echo "Python $PY unavailable; skipping its kms server check"
+    continue
+  fi
+  echo "Checking the kms servers on Python $PY"
+  uv sync --project "$root" --group csfle --python "$PY"
+  bash ./start-servers.sh
   bash ./teardown.sh
-  # Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
-  if [[ "$(uname -s)" == CYGWIN* ]]; then
-    return 0
-  fi
-  rm -rf kmstlsvenv
-  echo "Running csfle test with $PYTHON_BINARY... done."
-}
-run_test
-
-# Bail on Windows due to permission errors trying to remove the kmstlsvenv folder.
-if [[ "$(uname -s)" == CYGWIN* ]]; then
-  exit 0
-fi
-
-# Test with supported pythons
-pythons="3.9 3.10 3.11 3.12 3.13 3.14"
-for python in $pythons; do
-  if [ "$(uname -s)" = "Darwin" ]; then
-    PYTHON_BINARY="/Library/Frameworks/Python.Framework/Versions/$python/bin/python3"
-  else
-    PYTHON_BINARY="/opt/python/$python/bin/python3"
-  fi
-  export PYTHON_BINARY
-  run_test
 done
 
 popd
