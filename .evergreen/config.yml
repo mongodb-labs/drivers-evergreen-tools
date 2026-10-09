@@ -1392,6 +1392,10 @@ axes:
         display_name: "RHEL 80"
         run_on: rhel80-small
 
+      - id: rhel8-zseries
+        display_name: "RHEL 8 (zSeries)"
+        run_on: rhel8-zseries-small
+
       - id: rhel9
         display_name: "RHEL 9 x64"
         run_on: rhel94-small
@@ -1653,12 +1657,13 @@ buildvariants:
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
     # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
-    # install a Rust toolchain (via install-rust.sh) so uv builds it from
-    # source. RHEL 9 ships OpenSSL 3, so no OpenSSL build is needed there.
+    # ensure the sdist's build toolchain via .evergreen/ensure-build-deps.sh
+    # (a Rust toolchain, and an OpenSSL 3 build where the system library is
+    # older than 3.0, as on RHEL 8).
     - if:
         auth: "auth"
         ssl: "ssl"
-        os-requires-70: "rhel9-zseries"
+        os-requires-70: ["rhel8-zseries", "rhel9-zseries"]
       then:
         add_tasks:
           - "test-ocsp"

@@ -49,3 +49,7 @@ fi
 unset _saved_script_dir
 
 popd
+
+# Verify the toolchain. This is the script's last command so that a failed
+# install fails the script even when errexit is suppressed while sourcing it.
+cargo --version

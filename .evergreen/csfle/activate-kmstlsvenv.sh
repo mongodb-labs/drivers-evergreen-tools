@@ -37,18 +37,12 @@ activate_kmstlsvenv() {
   # sourcing another feature's activate script does not uninstall the
   # csfle dependencies.
   #
-  # s390x (zSeries) hosts have no cryptography wheels: uv builds the sdist,
-  # which requires a Rust toolchain. install-rust.sh exports RUSTUP_HOME,
-  # CARGO_HOME, and PATH for the uv sync below. (The hosts run RHEL 9, whose
-  # system OpenSSL 3 satisfies cryptography's build.)
-  if [ "$(uname -m)" = "s390x" ]; then
-    local _shopts="$-"
-    # shellcheck source=../install-rust.sh
-    . "$root/.evergreen/install-rust.sh" || return
-    # install-rust.sh enables `set -eu`; restore the caller's shell options.
-    [[ "$_shopts" == *e* ]] || set +e
-    [[ "$_shopts" == *u* ]] || set +u
-  fi
+  # Ensure the toolchain for building cryptography's sdist on arches without
+  # prebuilt wheels: a Rust toolchain, and a local OpenSSL 3 build where the
+  # system OpenSSL is older than 3.0. No-op where wheels exist; see
+  # ensure-build-deps.sh for the arch list.
+  # shellcheck source=../ensure-build-deps.sh
+  . "$root/.evergreen/ensure-build-deps.sh" || return
   uv sync --project "$root" --group csfle --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return
