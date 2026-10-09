@@ -72,6 +72,15 @@ def _gpg_agent_failure(detail: str) -> bool:
     return "gpg-agent" in detail or "connect to the agent" in detail
 
 
+def _gpg_environment_error(detail: str) -> GpgEnvironmentError:
+    """Build the error for a gpg that cannot reach its agent."""
+    return GpgEnvironmentError(
+        "gpg cannot verify signatures on this host; install the full gnupg2 "
+        "package (see DEVPROD-44314), or make sure the gpg home is short "
+        f"enough for gpg-agent's sockets (see DRIVERS-3663):\n{detail}"
+    )
+
+
 def _boto3_client(service: str, region: str, creds: "dict|None" = None):
     import boto3
 
@@ -251,6 +260,31 @@ def _gpg_path(path: Path) -> str:
     return str(path)
 
 
+def _gpg_home_parent() -> "str | None":
+    """
+    Pick a short parent directory for the temporary gpg home.
+
+    gpg-agent's sockets live in the gpg home, and a deep $TMPDIR would push
+    them past the AF_UNIX sun_path buffer (108 bytes on Linux and Cygwin, 104
+    on macOS, and gpg needs headroom within it). On the Windows hosts, the
+    Cygwin gpg's own /tmp is used; a native Windows gpg (no cygpath)
+    keeps the default.
+    """
+    if sys.platform != "win32":
+        return "/tmp"
+    try:
+        proc = subprocess.run(
+            ["cygpath", "-m", "/tmp"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    parent = proc.stdout.strip()
+    return parent if os.path.isdir(parent) else None
+
+
 def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
     """
     Import the pinned MongoDB release signing keys into the given gpg home.
@@ -266,11 +300,7 @@ def _import_gpg_keys(gpg_exe: str, home_arg: str) -> None:
         if proc.returncode != 0:
             stderr = proc.stderr.decode(errors="replace")
             if _gpg_agent_failure(stderr):
-                raise GpgEnvironmentError(
-                    "gpg cannot verify signatures on this host; "
-                    "install the full gnupg2 package (see DEVPROD-44314):\n"
-                    f"{stderr}"
-                )
+                raise _gpg_environment_error(stderr)
             raise RuntimeError(
                 f"Failed to import the MongoDB release signing key [{url}]:\n{stderr}"
             )
@@ -283,10 +313,9 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
     Returns the fingerprint of the signing key, or raises ValueError if the
     signature is bad or was not made by a pinned key.
     """
-    # gpg-agent's sockets live in the gpg home; a deep $TMPDIR would push them
-    # past the AF_UNIX path limit.
-    tmp_parent = None if sys.platform == "win32" else "/tmp"
-    with tempfile.TemporaryDirectory(prefix="mongodl-gpg", dir=tmp_parent) as tmp:
+    with tempfile.TemporaryDirectory(
+        prefix="mongodl-gpg", dir=_gpg_home_parent()
+    ) as tmp:
         home = Path(tmp)
         # gpg refuses to use a home directory with loose permissions.
         home.chmod(0o700)
@@ -333,11 +362,7 @@ def _verify_gpg_signature(gpg_exe: str, archive: Path, signature: bytes) -> str:
                 expired_or_revoked = True
         if proc.returncode != 0 or expired_or_revoked or not fingerprints:
             if proc.returncode != 0 and _gpg_agent_failure(proc.stderr):
-                raise GpgEnvironmentError(
-                    "gpg cannot verify signatures on this host; "
-                    "install the full gnupg2 package (see DEVPROD-44314):\n"
-                    f"{proc.stderr}"
-                )
+                raise _gpg_environment_error(proc.stderr)
             if expired_or_revoked:
                 detail = (
                     "the signature or the key that made it has expired, or "
