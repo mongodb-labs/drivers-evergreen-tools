@@ -29,7 +29,7 @@ auth_aws = [
   "pyop~=3.4.0",
 ]
 # boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
-# (pulled in via auth_oidc/utils.py's import of that module), and azure-* for
+# (pulled in through auth_oidc/utils.py's import of that module), and azure-* for
 # the Key Vault secrets.
 auth_oidc = [
   {include-group = "boto"},
@@ -44,10 +44,8 @@ docker = [{include-group = "boto"}]
 # response signing, flask for its HTTP interface, and waitress for WSGI
 # serving (ocsp_mock.py).
 #
-# On arches where cryptography publishes no wheels (see the arch list in
-# .evergreen/ensure-build-deps.sh), the activate-*.sh scripts ensure the
-# sdist's build toolchain: a Rust toolchain, and OpenSSL 3 where the system
-# OpenSSL is older. uv locks all groups together, so every group's
+# On s390x (no published cryptography wheels) the activate scripts install
+# the sdist's build toolchain. uv locks all groups together: every group's
 # cryptography requirement must agree per platform.
 ocsp = [
   "asn1crypto~=1.5.1",
@@ -55,10 +53,8 @@ ocsp = [
   "flask~=3.1.3",
   "waitress~=3.0.2",
 ]
-# boto3 for the secrets handling (setup_secrets.py), pykmip for the mock KMIP
-# server and client, and cryptography for the KMS HTTP servers' TLS and key
-# handling. The mock servers, including the Fake Azure IMDS (fake_azure.py),
-# use only the standard library's http.server.
+# boto3 for setup_secrets.py, pykmip for the mock KMIP server, cryptography
+# for the KMS servers' TLS. The mock servers use only the standard library.
 csfle = [
   {include-group = "boto"},
   "pykmip~=0.11.0",
