@@ -26,6 +26,9 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
 OPENSSL_VERSION="3.5.4"
+# The release tag's commit (the annotated tag's peeled head), pinned so that
+# a moved or compromised tag cannot change the code the CI build executes.
+OPENSSL_COMMIT="c1eeb9406b6142148f267594197d853403d10208"
 OPENSSL_PREFIX="${OPENSSL_PREFIX:-"${DRIVERS_TOOLS}/.openssl3"}"
 
 if [ ! -x "${OPENSSL_PREFIX}/bin/openssl" ]; then
@@ -83,6 +86,24 @@ EOF
   git clone --depth 1 --branch "openssl-${OPENSSL_VERSION}" \
     -c advice.detachedHead=false \
     https://github.com/openssl/openssl.git "${build_dir}"
+
+  # The shallow clone fetched the tag's head commit; verify it is the pinned
+  # one. Returning out of this sourced script skips the exports, so a
+  # mismatched tag cannot leave a broken (or unverified) prefix behind.
+  _pinned_head=$(git -C "${build_dir}" rev-parse HEAD)
+  if [ "${_pinned_head}" != "${OPENSSL_COMMIT}" ]; then
+    echo "ERROR: openssl-${OPENSSL_VERSION} resolved to ${_pinned_head}, expected ${OPENSSL_COMMIT}" >&2
+    rm -rf "${work_dir}"
+    # The restore at the script's end is skipped by this early return.
+    if [ -n "${_saved_script_dir:-}" ]; then
+      SCRIPT_DIR=$_saved_script_dir
+    else
+      unset SCRIPT_DIR
+    fi
+    unset _saved_script_dir
+    return 1
+  fi
+  unset _pinned_head
 
   pushd "${build_dir}"
   # libdir=lib (rather than the lib64 that ./config picks on 64-bit hosts)
