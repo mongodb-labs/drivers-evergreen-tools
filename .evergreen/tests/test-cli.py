@@ -2,7 +2,6 @@
 
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -73,10 +72,9 @@ class VerifySignatureRejectionTest(unittest.TestCase):
 
     def test_deep_tmpdir_signature_rejected(self):
         # A deep $TMPDIR must not push the gpg home's sockets past the
-        # AF_UNIX limit (108 bytes on Linux, 104 on macOS), or the key
-        # import fails with a RuntimeError (DRIVERS-3663).
-        if sys.platform == "win32":
-            self.skipTest("windows gpg does not use AF_UNIX sockets")
+        # AF_UNIX sun_path buffer (108 bytes on Linux and Cygwin, 104 on
+        # macOS), or the key import fails with a GpgEnvironmentError
+        # (DRIVERS-3663).
         with tempfile.TemporaryDirectory() as tmp:
             deep = Path(tmp) / ("d" * 100)
             deep.mkdir()
