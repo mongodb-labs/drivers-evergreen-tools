@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-# Preserve the caller's SCRIPT_DIR: this script is sourced (e.g. by the
-# activate-*.sh scripts), and callers may use SCRIPT_DIR afterwards to source
-# their own scripts (e.g. csfle/setup.sh sources start-servers.sh relative to
-# its own directory).
+# Preserve the caller's SCRIPT_DIR: this script is sourced, and callers use
+# SCRIPT_DIR afterwards to source their own scripts.
 _saved_script_dir=${SCRIPT_DIR:-}
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})

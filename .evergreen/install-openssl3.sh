@@ -39,12 +39,12 @@ if [ ! -x "${OPENSSL_PREFIX}/bin/openssl" ]; then
   build_dir="${work_dir}/openssl"
   shim_dir="${work_dir}/perl-shim"
 
-  # OpenSSL's Makefile template requires the perl core module Time::Piece
-  # (it parses the release tag's VERSION.dat RELEASE_DATE when generating the
-  # Makefile), and the minimal perl on these hosts does not ship it — nor can
-  # we install packages. Provide the small shim the template needs via
-  # PERL5LIB. Contract for the pinned version: strptime($date, "%d %b %Y")
-  # followed by strftime("%Y-%m-%d") on the result.
+  # OpenSSL's Makefile template requires the perl core module Time::Piece (it
+  # parses the release tag's VERSION.dat RELEASE_DATE when generating the
+  # Makefile), and the minimal perl on these hosts does not ship it, nor can
+  # we install packages. Provide the shim the template needs through PERL5LIB.
+  # Contract for the pinned version: strptime($date, "%d %b %Y") followed by
+  # strftime("%Y-%m-%d") on the result.
   mkdir -p "${shim_dir}/Time"
   cat > "${shim_dir}/Time/Piece.pm" <<'EOF'
 package Time::Piece;
@@ -80,16 +80,15 @@ EOF
   PERL5LIB="${shim_dir}${PERL5LIB:+:${PERL5LIB}}"
   export PERL5LIB
 
-  # Shallow clone of the release tag rather than a tarball download: the CI
-  # hosts' git transport to github.com is the same one used to fetch this
-  # repository, and a clone avoids depending on the release-asset endpoint.
+  # Shallow clone of the release tag: the CI hosts' git transport to
+  # github.com is the same one that fetches this repository, and a clone
+  # avoids the release-asset endpoint.
   git clone --depth 1 --branch "openssl-${OPENSSL_VERSION}" \
     -c advice.detachedHead=false \
     https://github.com/openssl/openssl.git "${build_dir}"
 
-  # The shallow clone fetched the tag's head commit; verify it is the pinned
-  # one. Returning out of this sourced script skips the exports, so a
-  # mismatched tag cannot leave a broken (or unverified) prefix behind.
+  # Verify the clone is the pinned commit. Returning out of this sourced
+  # script skips the exports, so a mismatch leaves no prefix behind.
   _pinned_head=$(git -C "${build_dir}" rev-parse HEAD)
   if [ "${_pinned_head}" != "${OPENSSL_COMMIT}" ]; then
     echo "ERROR: openssl-${OPENSSL_VERSION} resolved to ${_pinned_head}, expected ${OPENSSL_COMMIT}" >&2
@@ -109,10 +108,9 @@ EOF
   # libdir=lib (rather than the lib64 that ./config picks on 64-bit hosts)
   # keeps the libraries at the path openssl-sys expects below OPENSSL_DIR.
   #
-  # no-asm: OpenSSL's perlasm assembly generators need more core perl than
-  # the minimal hosts ship (s390x.pm alone requires bigint), and the driver
-  # tests don't need the assembly's performance. With no-asm the only perl
-  # the build runs is the Makefile generation, which the shim above covers.
+  # no-asm: the perlasm assembly generators need more core perl than the
+  # minimal hosts ship (s390x.pm requires bigint). With no-asm the only perl
+  # the build runs is the Makefile generation, which the shim covers.
   ./config no-asm --prefix="${OPENSSL_PREFIX}" --openssldir="${OPENSSL_PREFIX}/ssl" --libdir=lib
   make -j"$(nproc)" build_sw
   make install_sw

@@ -12,9 +12,9 @@
 #
 # Nothing is done on platforms with prebuilt wheels. For each arch in
 # KNOWN_NO_WHEEL_ARCHES it:
-#   - installs a Rust toolchain (via install-rust.sh) if cargo is missing or
+#   - installs a Rust toolchain (using install-rust.sh) if cargo is missing or
 #     older than cryptography's MSRV, and
-#   - builds OpenSSL 3 into a local prefix (via install-openssl3.sh,
+#   - builds OpenSSL 3 into a local prefix (using install-openssl3.sh,
 #     exporting OPENSSL_DIR and LD_LIBRARY_PATH for the build) if the system
 #     OpenSSL is older than 3.0.
 
@@ -40,10 +40,8 @@ version_at_least() {
     return 0
 }
 
-# The save variables use names unique to this script: its helpers
-# (install-rust.sh) save SCRIPT_DIR in `_saved_script_dir` and unset it
-# before returning, which would destroy this script's own saved value and
-# leak `.evergreen` as SCRIPT_DIR into the caller.
+# The save variable names are unique to this script: install-rust.sh saves
+# SCRIPT_DIR in `_saved_script_dir` and unsets it before it returns.
 _ebd_saved_script_dir=${SCRIPT_DIR:-}
 _ebd_saved_opts=$-
 set -eu
@@ -63,10 +61,9 @@ for _arch in $KNOWN_NO_WHEEL_ARCHES; do
        || ! version_at_least "$_rustc_version" "$MIN_RUST_VERSION"; then
         echo "Installing Rust toolchain for $_arch (no cargo >= $MIN_RUST_VERSION found)"
         . "$SCRIPT_DIR/install-rust.sh" || _status=1
-        # Re-validate whatever toolchain is first on PATH now: a failed
-        # install leaves an older system rustc resolvable (install-rust.sh's
-        # final cargo --version accepts any binary), and the cryptography
-        # build would only reject it much later, and cryptically.
+        # Re-validate the toolchain first on PATH: a failed install leaves an
+        # older system rustc resolvable, which the cryptography build would
+        # reject much later.
         _rustc_version=$(rustc --version 2>/dev/null | awk '{print $2}')
         if ! version_at_least "${_rustc_version:-}" "$MIN_RUST_VERSION"; then
             echo "ERROR: no rustc >= $MIN_RUST_VERSION available (found: ${_rustc_version:-none})" >&2
@@ -83,9 +80,8 @@ for _arch in $KNOWN_NO_WHEEL_ARCHES; do
 done
 
 # Restore what this script clobbered while sourcing its helpers. A caller
-# without SCRIPT_DIR gets it unset again (rather than left pointing here), so
-# later sourced scripts fail loudly on it under nounset instead of silently
-# resolving against this directory.
+# without SCRIPT_DIR gets it unset again, so later sourced scripts fail
+# loudly under nounset instead of resolving against this directory.
 if [ -n "${_ebd_saved_script_dir:-}" ]; then
     SCRIPT_DIR=$_ebd_saved_script_dir
 else

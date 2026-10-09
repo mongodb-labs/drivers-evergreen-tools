@@ -10,15 +10,15 @@ for more information on those specific scenarios.
 The dependencies (boto3, pykmip, cryptography) are managed by the root uv workspace
 (see the `csfle` group in the top-level `pyproject.toml`).
 
-On arches where `cryptography` publishes no wheels (currently s390x/zSeries —
+On arches where `cryptography` publishes no wheels (currently s390x/zSeries;
 see the arch list in [.evergreen/ensure-build-deps.sh](../ensure-build-deps.sh)),
 uv builds it from source. `activate-kmstlsvenv.sh` sources
 [.evergreen/ensure-build-deps.sh](../ensure-build-deps.sh), which ensures a
-Rust toolchain (via [.evergreen/install-rust.sh](../install-rust.sh)) and,
-where the system OpenSSL is older than 3.0, builds OpenSSL 3 into a local
-prefix. The `ocsp` group's activate script (`activate-ocspvenv.sh`) does the
-same, since uv locks all groups together and their `cryptography`
-requirements must agree per platform.
+Rust toolchain ([.evergreen/install-rust.sh](../install-rust.sh)) and, where
+the system OpenSSL is older than 3.0, builds OpenSSL 3 into a local prefix.
+The `ocsp` group's activate script (`activate-ocspvenv.sh`) does the same,
+since uv locks all groups together and their `cryptography` requirements must
+agree per platform.
 
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.

@@ -1633,8 +1633,8 @@ buildvariants:
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
     # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
-    # ensure the sdist's build toolchain via .evergreen/ensure-build-deps.sh
-    # (a Rust toolchain, and an OpenSSL 3 build — RHEL 8 ships only 1.1.1).
+    # ensure the sdist's build toolchain using .evergreen/ensure-build-deps.sh
+    # (a Rust toolchain, and an OpenSSL 3 build; RHEL 8 ships only 1.1.1).
     - if:
         auth: "auth"
         ssl: "ssl"
@@ -1668,7 +1668,7 @@ buildvariants:
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
     # zSeries has no cryptography wheels: the csfle and ocsp activate scripts
-    # ensure the sdist's build toolchain via .evergreen/ensure-build-deps.sh
+    # ensure the sdist's build toolchain using .evergreen/ensure-build-deps.sh
     # (a Rust toolchain; RHEL 9's system OpenSSL 3 needs no local build).
     - if:
         auth: "auth"

@@ -9,8 +9,7 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 pushd $SCRIPT_DIR/../csfle
 
 # The interpreter is uv-managed (the lock resolves for all of Python 3.9-3.14
-# via resolution markers), so unlike the legacy venv flow there is no
-# per-Python loop to run.
+# through resolution markers), so one setup run covers every supported version.
 bash ./setup.sh
 bash ./teardown.sh
 
