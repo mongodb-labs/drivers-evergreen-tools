@@ -9,6 +9,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 ensure_uv || exit 1
 
 root=$(cd "$SCRIPT_DIR/../.." && pwd)
+# uv needs a native Windows path on Cygwin (it rejects /cygdrive/... paths).
+if [ "${OSTYPE:-}" = cygwin ]; then
+  root="$(cygpath -m "$root")"
+fi
 
 pushd $SCRIPT_DIR/../csfle
 

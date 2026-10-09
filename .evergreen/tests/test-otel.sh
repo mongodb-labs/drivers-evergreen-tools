@@ -5,6 +5,10 @@ set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# uv needs a native Windows path on Cygwin (it rejects /cygdrive/... paths).
+if [ "${OSTYPE:-}" = cygwin ]; then
+  ROOT_DIR="$(cygpath -m "$ROOT_DIR")"
+fi
 . $SCRIPT_DIR/../handle-paths.sh
 . $SCRIPT_DIR/../ensure-uv.sh
 
