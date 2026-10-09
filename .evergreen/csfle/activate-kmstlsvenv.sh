@@ -37,12 +37,9 @@ activate_kmstlsvenv() {
   # sourcing another feature's activate script does not uninstall the
   # csfle dependencies.
   #
-  # Ensure the toolchain for building cryptography's sdist on arches without
-  # prebuilt wheels: a Rust toolchain, and a local OpenSSL 3 build where the
-  # system OpenSSL is older than 3.0. No-op where wheels exist; see
-  # ensure-build-deps.sh for the arch list.
-  # shellcheck source=../ensure-build-deps.sh
-  . "$root/.evergreen/ensure-build-deps.sh" || return
+  # s390x: cryptography publishes no wheels; ensure the sdist build toolchain.
+  # shellcheck source=../ensure-cryptography-build.sh
+  . "$root/.evergreen/ensure-cryptography-build.sh" || return
   uv sync --project "$root" --group csfle --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return

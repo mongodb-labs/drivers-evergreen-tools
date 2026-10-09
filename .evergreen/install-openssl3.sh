@@ -1,50 +1,33 @@
 #!/usr/bin/env bash
 set -eu
 
-# install-openssl3.sh
+# Builds OpenSSL 3 into a local prefix and exports OPENSSL_DIR and
+# LD_LIBRARY_PATH for building and running packages that link against it:
+# cryptography 47.0+ refuses OpenSSL 1.1.x, and RHEL 8 zSeries ships only
+# 1.1.1 with no 3.x package available.
 #
-# Builds OpenSSL 3 into a local prefix and exports the environment needed to
-# compile and run Python sdists that link against OpenSSL (e.g. cryptography).
-#
-# cryptography 47.0+ refuses to link against OpenSSL 1.1.x, and some hosts
-# (RHEL 8 zSeries) only ship OpenSSL 1.1.1 with no 3.x package available, so
-# this script compiles OpenSSL 3 from source.
-#
-# Must be sourced. Exports OPENSSL_DIR (used by openssl-sys to find the
-# headers and libraries during the build) and LD_LIBRARY_PATH (so the
-# compiled extension module can find libssl.so.3/libcrypto.so.3 at runtime).
-# Idempotent: the build is skipped if the prefix already has an openssl
-# binary. Invoked by ensure-build-deps.sh when the system OpenSSL is older
-# than 3.0.
+# Must be sourced; the build is skipped when the prefix already has an
+# openssl binary. Invoked by ensure-cryptography-build.sh.
 
-# Preserve the caller's SCRIPT_DIR: this script is sourced (by
-# ensure-build-deps.sh), whose own save/restore of SCRIPT_DIR runs after this
-# script returns.
+# Preserve the caller's SCRIPT_DIR: this script is sourced.
 _saved_script_dir=${SCRIPT_DIR:-}
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
 OPENSSL_VERSION="3.5.4"
-# The release tag's commit (the annotated tag's peeled head), pinned so that
-# a moved or compromised tag cannot change the code the CI build executes.
+# The annotated tag's peeled head, so a moved tag cannot change what CI builds.
 OPENSSL_COMMIT="c1eeb9406b6142148f267594197d853403d10208"
 OPENSSL_PREFIX="${OPENSSL_PREFIX:-"${DRIVERS_TOOLS}/.openssl3"}"
 
 if [ ! -x "${OPENSSL_PREFIX}/bin/openssl" ]; then
-  # One work directory for both the shim and the clone: git clone refuses a
-  # target that is not an empty directory, so the shim must live outside the
-  # clone target.
+  # git clone refuses a non-empty target, so the shim lives outside the clone.
   work_dir=$(mktemp -d)
   build_dir="${work_dir}/openssl"
   shim_dir="${work_dir}/perl-shim"
 
-  # OpenSSL's Makefile template requires the perl core module Time::Piece (it
-  # parses the release tag's VERSION.dat RELEASE_DATE when generating the
-  # Makefile), and the minimal perl on these hosts does not ship it, nor can
-  # we install packages. Provide the shim the template needs through PERL5LIB.
-  # Contract for the pinned version: strptime($date, "%d %b %Y") followed by
-  # strftime("%Y-%m-%d") on the result.
+  # The Makefile template needs Time::Piece (core perl, absent from the
+  # minimal hosts, not installable); shim its strptime/strftime usage.
   mkdir -p "${shim_dir}/Time"
   cat > "${shim_dir}/Time/Piece.pm" <<'EOF'
 package Time::Piece;
@@ -80,15 +63,12 @@ EOF
   PERL5LIB="${shim_dir}${PERL5LIB:+:${PERL5LIB}}"
   export PERL5LIB
 
-  # Shallow clone of the release tag: the CI hosts' git transport to
-  # github.com is the same one that fetches this repository, and a clone
-  # avoids the release-asset endpoint.
+  # Shallow clone: same git transport as this repository, no release assets.
   git clone --depth 1 --branch "openssl-${OPENSSL_VERSION}" \
     -c advice.detachedHead=false \
     https://github.com/openssl/openssl.git "${build_dir}"
 
-  # Verify the clone is the pinned commit. Returning out of this sourced
-  # script skips the exports, so a mismatch leaves no prefix behind.
+  # Enforce the pin; the return skips the exports, leaving no prefix behind.
   _pinned_head=$(git -C "${build_dir}" rev-parse HEAD)
   if [ "${_pinned_head}" != "${OPENSSL_COMMIT}" ]; then
     echo "ERROR: openssl-${OPENSSL_VERSION} resolved to ${_pinned_head}, expected ${OPENSSL_COMMIT}" >&2
@@ -105,12 +85,9 @@ EOF
   unset _pinned_head
 
   pushd "${build_dir}"
-  # libdir=lib (rather than the lib64 that ./config picks on 64-bit hosts)
-  # keeps the libraries at the path openssl-sys expects below OPENSSL_DIR.
-  #
-  # no-asm: the perlasm assembly generators need more core perl than the
-  # minimal hosts ship (s390x.pm requires bigint). With no-asm the only perl
-  # the build runs is the Makefile generation, which the shim covers.
+  # libdir=lib keeps the libraries where openssl-sys expects them.
+  # no-asm: the perlasm generators need more perl core than these hosts ship;
+  # this leaves the Makefile generation as the only perl the build runs.
   ./config no-asm --prefix="${OPENSSL_PREFIX}" --openssldir="${OPENSSL_PREFIX}/ssl" --libdir=lib
   make -j"$(nproc)" build_sw
   make install_sw
@@ -130,6 +107,6 @@ if [ -n "${_saved_script_dir:-}" ]; then
 fi
 unset _saved_script_dir
 
-# Verify the binary works. This is the script's last command so that a failed
-# build fails the script even when errexit is suppressed while sourcing it.
+# Last command: a failed build must fail the script despite the sourcing's
+# suppressed errexit.
 "${OPENSSL_PREFIX}/bin/openssl" version

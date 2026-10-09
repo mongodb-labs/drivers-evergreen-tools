@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-# Preserve the caller's SCRIPT_DIR: this script is sourced, and callers use
-# SCRIPT_DIR afterwards to source their own scripts.
+# Preserve the caller's SCRIPT_DIR: this script is sourced.
 _saved_script_dir=${SCRIPT_DIR:-}
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -48,6 +47,6 @@ unset _saved_script_dir
 
 popd
 
-# Verify the toolchain. This is the script's last command so that a failed
-# install fails the script even when errexit is suppressed while sourcing it.
+# Last command: a failed install must fail the script despite the sourcing's
+# suppressed errexit.
 cargo --version
