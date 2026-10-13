@@ -7,6 +7,19 @@ for more information on those specific scenarios.
 
 ## Prerequisites
 
+The dependencies (boto3, pykmip, cryptography) are managed by the root uv workspace
+(see the `csfle` group in the top-level `pyproject.toml`).
+
+On arches where `cryptography` publishes no wheels (currently s390x/zSeries),
+uv builds it from source. The build needs a Rust toolchain and, where the
+system OpenSSL is older than 3.0, an OpenSSL 3 install to link against.
+`setup.sh` provides both: it sources `setup-secrets.sh`, which sources
+`activate-kmstlsvenv.sh`; the activate script runs
+[.evergreen/ensure-cryptography-build.sh](../ensure-cryptography-build.sh)
+before `uv sync`. That script installs a Rust toolchain
+([.evergreen/install-rust.sh](../install-rust.sh)) and, when needed, builds
+OpenSSL 3 into a local prefix.
+
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.
 

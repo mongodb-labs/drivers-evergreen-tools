@@ -40,7 +40,9 @@ fi
 export PATH="${DOWNLOAD_DIR}/bin:$PATH"
 if [ "${OS:-}" != "Windows_NT" ]; then
   ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 5
-  ./mongodl_test/bin/mongosh --version
+  # mongosh 2.1.1's bundled OpenSSL rejects RHEL 9's crypto-policy option in
+  # /etc/pki/tls/openssl.cnf; an empty config keeps this download check running.
+  OPENSSL_CONF=/dev/null ./mongodl_test/bin/mongosh --version
 else
   ./mongosh-dl --version 2.1.1 --out ${DOWNLOAD_DIR} --strip-path-components 1 --retries 5
 fi

@@ -1,56 +1,36 @@
+import argparse
 import functools
 import json
-import sys
 import time
 import traceback
-from pathlib import Path
+import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Callable, Iterable
 
-import bottle
-from bottle import Bottle, HTTPResponse
 
-imds = Bottle(autojson=True)
-"""An Azure IMDS server"""
+class HTTPResponse:
+    "A non-200 response."
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable, cast, overload
+    def __init__(self, status: int, body: "str | bytes" = b""):
+        self.status = status
+        self.body = body
 
-if not TYPE_CHECKING:
-    from bottle import request
-else:
-    from typing import Protocol
 
-    class _RequestParams(Protocol):
-        def __getitem__(self, key: str) -> str: ...
+class _Request:
+    "The request state the route functions read."
 
-        @overload
-        def get(self, key: str) -> "str | None": ...
-
-        @overload
-        def get(self, key: str, default: str) -> str: ...
-
-    class _HeadersDict(dict[str, str]):
-        def raw(self, key: str) -> "bytes | None": ...
-
-    class _Request(Protocol):
-        @property
-        def query(self) -> _RequestParams: ...
-
-        @property
-        def params(self) -> _RequestParams: ...
-
-        @property
-        def headers(self) -> _HeadersDict: ...
-
-    request = cast("_Request", None)
+    def __init__(self, handler: BaseHTTPRequestHandler, query: "dict[str, str]"):
+        self.headers = handler.headers
+        self.query = query
 
 
 def parse_qs(qs: str) -> "dict[str, str]":
-    # Reuse the bottle.py query string parser. It's a private function, but
-    # we're using a fixed version of Bottle.
-    return dict(bottle._parse_qsl(qs))  # type: ignore
+    # parse_qsl keeps the last value per key.
+    return dict(urllib.parse.parse_qsl(qs))
 
 
 _HandlerFuncT = Callable[
-    [], "None|str|bytes|dict[str, Any]|bottle.BaseResponse|Iterable[bytes|str]"
+    [...], "None|str|bytes|dict[str, Any]|HTTPResponse|Iterable[bytes]"
 ]
 
 
@@ -58,30 +38,26 @@ def handle_asserts(fn: _HandlerFuncT) -> _HandlerFuncT:
     "Convert assertion failures into HTTP 400s"
 
     @functools.wraps(fn)
-    def wrapped():
+    def wrapped(*args, **kwargs):
         try:
-            return fn()
+            return fn(*args, **kwargs)
         except AssertionError as e:
             traceback.print_exc()
-            return bottle.HTTPResponse(
-                status=400, body=json.dumps({"error": list(e.args)})
-            )
+            return HTTPResponse(status=400, body=json.dumps({"error": list(e.args)}))
 
     return wrapped
 
 
-def test_params() -> "dict[str, str]":
+def test_params(request: _Request) -> "dict[str, str]":
     return parse_qs(request.headers.get("X-MongoDB-HTTP-TestParams", ""))
 
 
-@imds.route("/")
 def main():
     pass
 
 
-@imds.get("/metadata/identity/oauth2/token")
 @handle_asserts
-def get_oauth2_token():
+def get_oauth2_token(request: _Request):
     api_version = request.query["api-version"]
     assert api_version == "2018-02-01", "Only api-version=2018-02-01 is supported"
     resource = request.query["resource"]
@@ -89,7 +65,7 @@ def get_oauth2_token():
         resource == "https://vault.azure.net"
     ), "Only https://vault.azure.net is supported"
 
-    case = test_params().get("case")
+    case = test_params(request).get("case")
     print("Case is:", case)
     if case == "404":
         return HTTPResponse(status=404)
@@ -142,8 +118,56 @@ def _slow() -> Iterable[bytes]:
     yield b" null ] }"
 
 
+class ImdsHandler(BaseHTTPRequestHandler):
+    """Dispatches GETs to the route functions, rendering what they return."""
+
+    def do_GET(self) -> None:
+        parsed = urllib.parse.urlsplit(self.path)
+        request = _Request(self, dict(urllib.parse.parse_qsl(parsed.query)))
+        try:
+            if parsed.path == "/":
+                response = main()
+            elif parsed.path == "/metadata/identity/oauth2/token":
+                response = get_oauth2_token(request)
+            else:
+                response = HTTPResponse(status=404)
+        except KeyError:
+            # A missing query parameter.
+            response = HTTPResponse(status=500)
+        self._send(response)
+
+    def _send(self, response) -> None:
+        "Render a route function's return value."
+        if response is None:
+            status, body, content_type = 200, b"", None
+        elif isinstance(response, HTTPResponse):
+            status, body, content_type = response.status, response.body, None
+        elif isinstance(response, dict):
+            status, body, content_type = 200, json.dumps(response), "application/json"
+        elif isinstance(response, bytes):
+            status, body, content_type = 200, response, "text/html; charset=UTF-8"
+        else:  # a body iterable: stream it; the connection close delimits it
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=UTF-8")
+            self.end_headers()
+            for chunk in response:
+                self.wfile.write(chunk)
+                self.wfile.flush()
+            return
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        self.send_response(status)
+        if content_type:
+            self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
 if __name__ == "__main__":
-    print(
-        f"RECOMMENDED: Run this script using bottle.py (e.g. [{sys.executable} {Path(__file__).resolve().parent}/bottle.py fake_azure:imds])"
-    )
-    imds.run()
+    parser = argparse.ArgumentParser(description="Fake Azure IMDS server")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8080)
+    args = parser.parse_args()
+    print(f"Fake Azure IMDS listening on http://{args.host}:{args.port}/")
+    HTTPServer((args.host, args.port), ImdsHandler).serve_forever()

@@ -540,7 +540,7 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/csfle/teardown.sh]
-    # Test setup and teardown for each supported version of Python.
+    # Test csfle setup and teardown.
     - command: subprocess.exec
       type: test
       params:
@@ -1396,6 +1396,10 @@ axes:
         display_name: "RHEL 9 x64"
         run_on: rhel94-small
 
+      - id: rhel9-zseries
+        display_name: "RHEL 9 (zSeries)"
+        run_on: rhel9-zseries-small
+
   # OSes that support versions of MongoDB>=5.0 with SSL.
   - id: os-requires-50
     display_name: OS
@@ -1422,7 +1426,7 @@ axes:
         run_on: rhel8-power-large
 
       - id: rhel8-zseries
-        display_name: "RHEL8 (zSeries)"
+        display_name: "RHEL 8 (zSeries)"
         run_on: rhel8-zseries-small
 
   - id: topology
@@ -1628,6 +1632,16 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries hosts have no cryptography wheels: ensure-cryptography-build.sh
+    # provides the sdist's toolchain (Rust, and an OpenSSL 3 build on RHEL 8).
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-50: "rhel8-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1652,6 +1666,16 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries hosts have no cryptography wheels: ensure-cryptography-build.sh
+    # provides the sdist's toolchain (Rust; RHEL 9's system OpenSSL 3 suffices).
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-70: "rhel9-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
     - if:
         auth: "auth"
         ssl: "nossl"

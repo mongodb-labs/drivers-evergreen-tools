@@ -36,6 +36,10 @@ activate_ocspvenv() {
   # other groups' packages (and pip, which is not part of the group), so
   # sourcing another feature's activate script does not uninstall the
   # ocsp dependencies.
+  #
+  # s390x: cryptography publishes no wheels; ensure the sdist build toolchain.
+  # shellcheck source=../ensure-cryptography-build.sh
+  . "$root/.evergreen/ensure-cryptography-build.sh" || return
   uv sync --project "$root" --group ocsp --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return

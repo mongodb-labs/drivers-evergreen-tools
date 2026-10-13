@@ -88,7 +88,7 @@ cat http_proxy_tls.log
 echo "Starting HTTP Proxy (TLS)...done."
 
 echo "Starting Fake Azure IMDS..."
-$COMMAND bottle.py fake_azure:imds >fake_azure.log 2>&1 &
+$COMMAND fake_azure.py >fake_azure.log 2>&1 &
 echo "$!" >>kmip_pids.pid
 sleep 1
 cat fake_azure.log
