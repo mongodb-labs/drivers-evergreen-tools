@@ -18,9 +18,8 @@ for the CI that runs it.
 - Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
   `pyproject.toml` (uv workspace root + shared `[dependency-groups]`), and `uv.lock`
   (the single lockfile for the workspace members; Dependabot updates it via the `uv`
-  ecosystem — the one remaining per-feature `requirements.txt`
-  (`.evergreen/auth_oidc/azure_func/self-test/`) is deployed with the Azure
-  Functions app and is not covered).
+  ecosystem — the one remaining per-feature `requirements.txt` is deployed
+  with the Azure Functions app and is not covered).
 - `.evergreen/pyproject.toml` packages `mongodl`, `mongosh-dl`, and `socks5srv`.
 - `.evergreen/<feature>/`: one subfolder per feature (e.g. `csfle`, `atlas`, `auth_oidc`,
   `k8s`), each with its own README and scripts. New features follow this layout; see
