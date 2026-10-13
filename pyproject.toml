@@ -62,6 +62,14 @@ csfle = [
   "pykmip~=0.11.0",
   "cryptography>=45.0.0",
 ]
+# azure-identity and azure-mgmt-* for
+# .evergreen/csfle/azurekms/delete_old_azure_resources.py, the daily cron
+# task that deletes stale Azure VMs and orphaned NSG/IP resources.
+azurekms = [
+  "azure-identity",
+  "azure-mgmt-compute",
+  "azure-mgmt-network",
+]
 
 [tool.uv]
 exclude-newer = "1 week"

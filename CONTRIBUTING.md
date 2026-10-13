@@ -34,7 +34,9 @@ Dependencies are regularly updated via [Dependabot](https://github.com/mongodb-l
 The `.evergreen`, `.evergreen/auth_aws`, `.evergreen/auth_oidc`, `.evergreen/csfle`, `.evergreen/docker`,
 `.evergreen/ocsp`, and `.evergreen/orchestration` subdirectories are included as workspaces.
 PyMongo is only required by mongo-orchestration scripts for backward compatibility (removed by [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335)).
-Individual `requirements.txt` files under `.evergreen` subdirectories are not yet supported (see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
+The only remaining individual `requirements.txt` (`.evergreen/auth_oidc/azure_func/self-test/requirements.txt`)
+is deployed with the Azure Functions app, which requires the file; it is not managed by
+the workspace (see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to
