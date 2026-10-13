@@ -29,7 +29,7 @@ for PY in 3.13 3.14; do
     continue
   fi
   echo "Checking the kms servers on Python $PY"
-  uv sync --project "$root" --group csfle --python "$PY"
+  uv sync --project "$root" --group csfle --python "$PY" --inexact
   bash ./start-servers.sh
   bash ./teardown.sh
 done

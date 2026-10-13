@@ -53,7 +53,8 @@ if [ "$(uname -m)" = "s390x" ]; then
     fi
 
     # cryptography 47.0+ refuses to link against OpenSSL 1.1.x.
-    if [ "$(openssl version 2>/dev/null | awk 'END { print int($2) }')" -lt 3 ]; then
+    if ! command -v openssl >/dev/null 2>&1 \
+       || [ "$(openssl version 2>/dev/null | awk 'END { print int($2) }')" -lt 3 ]; then
         echo "No system OpenSSL >= 3.0: building OpenSSL into a local prefix"
         . "$SCRIPT_DIR/install-openssl3.sh" || _status=1
     fi

@@ -60,6 +60,9 @@ sub strftime {
 
 1;
 EOF
+  # PERL5LIB is exported only for the build: this script is sourced, so a
+  # leftover would point the caller's perl at the deleted shim directory.
+  _saved_perl5lib=${PERL5LIB:-}
   PERL5LIB="${shim_dir}${PERL5LIB:+:${PERL5LIB}}"
   export PERL5LIB
 
@@ -74,6 +77,12 @@ EOF
     echo "ERROR: openssl-${OPENSSL_VERSION} resolved to ${_pinned_head}, expected ${OPENSSL_COMMIT}" >&2
     rm -rf "${work_dir}"
     # The restore at the script's end is skipped by this early return.
+    if [ -n "${_saved_perl5lib:-}" ]; then
+      PERL5LIB=$_saved_perl5lib
+    else
+      unset PERL5LIB
+    fi
+    unset _saved_perl5lib
     if [ -n "${_saved_script_dir:-}" ]; then
       SCRIPT_DIR=$_saved_script_dir
     else
@@ -94,6 +103,14 @@ EOF
   popd
 
   rm -rf "${work_dir}"
+
+  # Restore the caller's PERL5LIB (clobbered above for the perl shim).
+  if [ -n "${_saved_perl5lib:-}" ]; then
+    PERL5LIB=$_saved_perl5lib
+  else
+    unset PERL5LIB
+  fi
+  unset _saved_perl5lib
 fi
 
 echo "openssl location: ${OPENSSL_PREFIX}/bin/openssl"

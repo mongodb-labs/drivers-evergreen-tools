@@ -26,14 +26,16 @@ boto = ["boto3>=1.35.0"]
 auth_aws = [
   {include-group = "boto"},
   "pymongo[aws]~=4.0",
-  "pyop~=3.4.0",
+  # >=3.5.0: 3.4.2 mishandles id_token claims in the auth-code flow's code
+  # exchange, breaking MONGODB-OIDC's authorizationClaim matching.
+  "pyop~=3.5.0",
 ]
 # boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
 # (pulled in through auth_oidc/utils.py's import of that module), and azure-* for
 # the Key Vault secrets.
 auth_oidc = [
   {include-group = "boto"},
-  "pyop~=3.4.0",
+  "pyop~=3.5.0",
   "azure-identity",
   "azure-keyvault-secrets",
 ]
