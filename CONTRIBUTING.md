@@ -101,6 +101,9 @@ since the previous tag.
 Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
 release. A real release only runs on the default branch, and the tag it creates is signed.
 
+After the release is created, announce it in the `#client-libraries` Slack channel: post the new
+version and a summary of what changed, so teams that consume these tools learn about the release.
+
 ## Helpful Links
 
 See the [Drivers Cloud Services](https://wiki.corp.mongodb.com/spaces/DRIVERS/pages/473895023/Drivers+Cloud+Services) wiki
