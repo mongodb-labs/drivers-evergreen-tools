@@ -49,14 +49,14 @@ jobs:
           fi
 
       - name: "Checkout"
-        uses: mongodb-labs/drivers-github-tools/secure-checkout@11cb3898ea71493d38e8cdea7cc17b44320899e5  # v3.0.7
+        uses: mongodb-labs/drivers-github-tools/secure-checkout@99b1cbd729bc83bf7fc74e1b2a97fffad3d65d7b  # v3.1.1
         with:
           app_id: ${{ vars.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
           fetch-depth: 0
 
       - name: "Set up the signing environment"
-        uses: mongodb-labs/drivers-github-tools/setup@11cb3898ea71493d38e8cdea7cc17b44320899e5  # v3.0.7
+        uses: mongodb-labs/drivers-github-tools/setup@99b1cbd729bc83bf7fc74e1b2a97fffad3d65d7b  # v3.1.1
         with:
           aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
           aws_region_name: ${{ vars.AWS_REGION_NAME }}
@@ -86,7 +86,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: "Create the signed tag"
-        uses: mongodb-labs/drivers-github-tools/tag-version@11cb3898ea71493d38e8cdea7cc17b44320899e5  # v3.0.7
+        uses: mongodb-labs/drivers-github-tools/tag-version@99b1cbd729bc83bf7fc74e1b2a97fffad3d65d7b  # v3.1.1
         with:
           version: ${{ steps.bump.outputs.next-version }}
           push_tag: ${{ !inputs.dry_run }}
