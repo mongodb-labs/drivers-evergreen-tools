@@ -11,19 +11,11 @@ set -o nounset
     . "$SCRIPT_DIR/../../handle-paths.sh"
 }
 
-# Create virtualenv with Azure dependencies installed:
+# Ensure uv is available. The deletion script's dependencies come from the
+# azurekms dependency group in the root pyproject.toml:
 {
-    . "$DRIVERS_TOOLS/.evergreen/venv-utils.sh"
-    if [[ -d azure_deletion_venv ]]; then
-        venvactivate azure_deletion_venv
-    else
-        . "$DRIVERS_TOOLS/.evergreen/find-python3.sh"
-        PYTHON=$(ensure_python3)
-        echo "Creating virtual environment 'azure_deletion_venv'..."
-        venvcreate "${PYTHON:?}" azure_deletion_venv
-        python -m pip install -r "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/requirements.txt"
-        echo "Creating virtual environment 'azure_deletion_venv'... done."
-    fi
+    . "$DRIVERS_TOOLS/.evergreen/ensure-uv.sh"
+    ensure_uv || exit 1
 }
 
 # Delete resources for Azure KMS testing (DRIVERS-2411):
@@ -36,7 +28,7 @@ set -o nounset
     export AZURE_CLIENT_SECRET="$AZUREKMS_SECRET"
     export AZURE_CLIENT_ID="$AZUREKMS_CLIENTID"
     export AZURE_TENANT_ID="$AZUREKMS_TENANTID"
-    python "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/delete_old_azure_resources.py"
+    uv run --project "$DRIVERS_TOOLS" --group azurekms python "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/delete_old_azure_resources.py"
     rm secrets-export.sh
 }
 
@@ -50,6 +42,6 @@ set -o nounset
     export AZURE_CLIENT_SECRET="$AZUREOIDC_SECRET"
     export AZURE_CLIENT_ID="$AZUREOIDC_CLIENTID"
     export AZURE_TENANT_ID="$AZUREOIDC_TENANTID"
-    python "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/delete_old_azure_resources.py"
+    uv run --project "$DRIVERS_TOOLS" --group azurekms python "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/delete_old_azure_resources.py"
     rm secrets-export.sh
 }
