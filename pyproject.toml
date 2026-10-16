@@ -25,7 +25,7 @@ boto = ["boto3>=1.35.0"]
 # pyop for the OIDC proxy (lib/aws_handle_oidc_creds.py, also imported by auth_oidc).
 auth_aws = [
   {include-group = "boto"},
-  "pymongo[aws]~=4.0",
+  "pymongo[aws]~=4.18",
   # >=3.5.0: 3.4.2 mishandles id_token claims in the auth-code flow's code
   # exchange, breaking MONGODB-OIDC's authorizationClaim matching.
   "pyop~=3.5.0",
