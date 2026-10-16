@@ -30,13 +30,24 @@ We use isolated virtual environments to run all of the python scripts.
 ### Updating Dependencies
 
 All Python dependencies are described by the top-level `pyproject.toml` and pinned by the top-level `uv.lock`.
-Dependencies are regularly updated via [Dependabot](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
 The `.evergreen`, `.evergreen/auth_aws`, `.evergreen/auth_oidc`, `.evergreen/csfle`, `.evergreen/docker`,
 `.evergreen/ocsp`, and `.evergreen/orchestration` subdirectories are included as workspaces.
 PyMongo is only required by mongo-orchestration scripts for backward compatibility (removed by [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335)).
 The only remaining individual `requirements.txt` is deployed with the Azure
 Functions app, which requires the file; it is not managed by the workspace
 (see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
+
+The weekly "uv Lock Update" workflow runs `uv lock --upgrade` and opens a single
+pull request that updates `uv.lock`. Dependabot handles Python security updates,
+plus version updates for everything else: GitHub Actions, the Go modules
+(`mongoproxy`, `perfcomp`), and the `github_app` and `mongodb-runner` npm
+projects. Each Dependabot ecosystem opens one grouped pull request; see
+[`.github/dependabot.yml`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
+The Azure Functions `requirements.txt` is the one manifest not covered: the
+function has expired and its test is disabled (see
+[`.evergreen/auth_oidc/azure_func/README.md`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/auth_oidc/azure_func/README.md)).
+If the app becomes active again, add a `pip` ecosystem entry for
+`.evergreen/auth_oidc/azure_func/self-test` to Dependabot.
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to

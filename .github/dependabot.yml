@@ -9,13 +9,31 @@ updates:
       actions:
         patterns:
           - "*"
-  # Python (uv workspace root: pyproject.toml + uv.lock)
+  # Python (uv workspace root). Routine version updates come from the
+  # uv-lock-update workflow; security updates are exempt from the 0 limit.
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
+  # Go modules (mongoproxy and perfcomp), updated together in one PR.
+  - package-ecosystem: "gomod"
+    directories:
+      - "/.evergreen/mongoproxy"
+      - "/.evergreen/perfcomp"
+    schedule:
+      interval: "weekly"
     groups:
-      python:
+      gomod:
+        patterns:
+          - "*"
+  # github_app (Node).
+  - package-ecosystem: "npm"
+    directory: "/.evergreen/github_app"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-app:
         patterns:
           - "*"
   # mongodb-runner pins. See .evergreen/orchestration/mongodb-runner/README.md.
@@ -29,3 +47,5 @@ updates:
       mongodb-runner:
         patterns:
           - "*"
+  # Azure Functions app is inactive (DRIVERS-2883). Add a "pip" entry for
+  # .evergreen/auth_oidc/azure_func/self-test if it becomes active.

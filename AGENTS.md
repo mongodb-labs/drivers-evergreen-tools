@@ -17,9 +17,10 @@ for the CI that runs it.
 
 - Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
   `pyproject.toml` (uv workspace root + shared `[dependency-groups]`), and `uv.lock`
-  (the single lockfile for the workspace members; Dependabot updates it via the `uv`
-  ecosystem — the one remaining per-feature `requirements.txt` is deployed
-  with the Azure Functions app and is not covered).
+  (the single lockfile for the workspace members; the weekly "uv Lock Update" workflow
+  updates it and Dependabot covers Python security updates. The one remaining
+  per-feature `requirements.txt` is deployed with the Azure Functions app, which is
+  inactive and so not covered by Dependabot).
 - `.evergreen/pyproject.toml` packages `mongodl`, `mongosh-dl`, and `socks5srv`.
 - `.evergreen/<feature>/`: one subfolder per feature (e.g. `csfle`, `atlas`, `auth_oidc`,
   `k8s`), each with its own README and scripts. New features follow this layout; see
@@ -65,10 +66,12 @@ Two independently packaged CLI projects, both installed with
 - `.evergreen/orchestration/pyproject.toml` packages `drivers-orchestration`.
 
 Everything else under `.evergreen/` is an unpackaged script. Check the script and its
-feature directory for a setup wrapper (e.g. `auth_oidc/activate-authoidcvenv.sh`) before
-running it: some import dependencies (`pymongo`) that only exist in a feature-specific
-virtual environment (or a uv dependency group), so a direct `python3 <path>.py --help`
-fails on import first.
+feature directory for a setup wrapper before running it: some import dependencies
+(`pymongo`) that only exist in a feature-specific virtual environment (or a uv dependency
+group), so a direct `python3 <path>.py --help` fails on import first. The setup wrappers
+are the `activate-<feature>venv.sh` scripts, thin wrappers around the shared helper
+`.evergreen/activate-uv-venv.sh`, which syncs and activates a named dependency group of
+the root workspace `.venv`.
 
 Not everything under `.evergreen/` is Python: `.evergreen/github_app/` is an npm project
 (its own `package.json`, linted separately), and `.evergreen/mongoproxy/` and
