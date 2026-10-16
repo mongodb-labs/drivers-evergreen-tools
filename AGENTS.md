@@ -18,8 +18,8 @@ for the CI that runs it.
 - Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
   `pyproject.toml` (uv workspace root + shared `[dependency-groups]`), and `uv.lock`
   (the single lockfile for the workspace members; Dependabot updates it via the `uv`
-  ecosystem — the per-feature `requirements.txt` files are not covered until their
-  DRIVERS-3564 migrations land).
+  ecosystem — the one remaining per-feature `requirements.txt` is deployed
+  with the Azure Functions app and is not covered).
 - `.evergreen/pyproject.toml` packages `mongodl`, `mongosh-dl`, and `socks5srv`.
 - `.evergreen/<feature>/`: one subfolder per feature (e.g. `csfle`, `atlas`, `auth_oidc`,
   `k8s`), each with its own README and scripts. New features follow this layout; see
@@ -33,8 +33,8 @@ for the CI that runs it.
 ## Prerequisites
 
 - `DRIVERS_TOOLS`: expected to point at the repo root. Several scripts read it.
-- `.evergreen/find-python3.sh`: sourced by scripts that need a Python interpreter. A
-  handful of older scripts still use its `find_python3`/`venvcreate` path instead of `uv`.
+- `.evergreen/find-python3.sh`: sourced by scripts that need a Python interpreter.
+  `.evergreen/setup.sh` is its last remaining consumer; new scripts use `uv`.
 - `.evergreen/ensure-uv.sh` (`ensure_uv`): installs or locates `uv`. In CI it scopes uv's
   cache, tool, and Python install dirs under the task's temp directory; outside CI it
   only redirects the tool dir, so a local `uv tool install --force` can't overwrite
