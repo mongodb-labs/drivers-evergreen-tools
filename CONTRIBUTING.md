@@ -41,7 +41,8 @@ The weekly "uv Lock Update" workflow runs `uv lock --upgrade` and opens a single
 pull request that updates `uv.lock`. Dependabot handles Python security updates,
 plus version updates for everything else: GitHub Actions, the Go modules
 (`mongoproxy`, `perfcomp`), and the `github_app` and `mongodb-runner` npm
-projects. Each Dependabot ecosystem opens one grouped pull request; see
+projects, each as one grouped pull request. Dependabot does not group
+security updates, so each uv security update opens its own pull request; see
 [`.github/dependabot.yml`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
 The Azure Functions `requirements.txt` is the one manifest not covered: the
 function has expired and its test is disabled (see
