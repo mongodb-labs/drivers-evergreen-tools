@@ -6,11 +6,9 @@
 #   . /path/to/activate-uv-venv.sh
 #   activate_uv_venv group [--cryptography-build]
 #
-# Defines activate_uv_venv, which creates and/or activates the root uv
-# workspace's .venv from the named dependency group in the root
-# pyproject.toml, leaving `python` pointing at that environment. May be
-# invoked from any working directory. On error, nothing is left activated
-# and activate_uv_venv returns non-zero.
+# Creates and/or activates the root uv workspace's .venv from the named
+# dependency group. May be invoked from any working directory; on error,
+# nothing is left activated.
 #
 # Pass --cryptography-build for groups that need cryptography. On s390x,
 # cryptography publishes no wheels, so the sdist build toolchain must be
@@ -19,8 +17,7 @@
 # pip is installed for backwards compatibility with the legacy virtualenv
 # workflow; `uv pip` works as well.
 #
-# The activate-<feature>venv.sh scripts in the feature directories are thin
-# wrappers around this helper.
+# The activate-<feature>venv.sh scripts are thin wrappers around this helper.
 
 if [ -z "$BASH" ]; then
   echo "activate-uv-venv.sh must be run in a Bash shell!" 1>&2
@@ -51,7 +48,6 @@ activate_uv_venv() {
     root="$(cygpath -m "$root")"
   fi
 
-  # Ensure uv is available.
   # shellcheck source=.evergreen/ensure-uv.sh
   . "$root/.evergreen/ensure-uv.sh" || return
   ensure_uv || return
@@ -61,9 +57,9 @@ activate_uv_venv() {
     . "$root/.evergreen/ensure-cryptography-build.sh" || return
   fi
 
-  # Sync the group into the root .venv (idempotent). --inexact keeps other
-  # groups' packages (and pip, which is not part of any group), so sourcing
-  # another feature's activate script does not uninstall these dependencies.
+  # Sync the group into the root .venv. --inexact keeps other groups'
+  # packages, so sourcing another feature's activate script does not
+  # uninstall these dependencies.
   uv sync --project "$root" --group "$group" --inexact || return
   # Restore pip, which uv does not seed into managed venvs.
   uv pip install --python "$root/.venv" --quiet pip || return

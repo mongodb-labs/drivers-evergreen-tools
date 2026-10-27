@@ -9,7 +9,7 @@ updates:
       actions:
         patterns:
           - "*"
-  # Python (uv workspace root). Routine version updates come from the
+  # Python (uv workspace root). Version updates come from the
   # uv-lock-update workflow; security updates are exempt from the 0 limit.
   - package-ecosystem: "uv"
     directory: "/"

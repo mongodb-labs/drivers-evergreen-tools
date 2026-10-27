@@ -5,13 +5,9 @@
 # Usage:
 #   . ./activate-kmstlsvenv.sh
 #
-# Creates and/or activates the root workspace .venv with the csfle group
-# from the root pyproject.toml. May be invoked from any working directory; on
-# error, nothing is left activated and the script returns non-zero.
-#
-# Ensures the sdist build toolchain for cryptography, which uv needs on s390x.
-#
-# Delegates to the shared helper, ../activate-uv-venv.sh.
+# Creates and/or activates the root workspace .venv with the csfle group and
+# ensures the sdist build toolchain for cryptography, which uv needs on
+# s390x. Delegates to the shared helper, ../activate-uv-venv.sh.
 
 if [ -z "$BASH" ]; then
   echo "activate-kmstlsvenv.sh must be run in a Bash shell!" 1>&2
