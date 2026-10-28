@@ -1503,6 +1503,15 @@ buildvariants:
     - ".local-atlas"
     - ".github-app"
 
+# 22.04 hosts still allow IMDSv1, so also run the AWS auth tests on 24.04 to
+# cover IMDSv2.
+- name: tests-ubuntu2404
+  display_name: Ubuntu 24.04 tests
+  run_on:
+    - ubuntu2404-small
+  tasks:
+    - ".aws"
+
 # RHEL 8.2 arm64's system python3 is 3.6 and the image ships no uv, so
 # ensure_uv must use the toolchain interpreter; reversing the precedence fails.
 - name: tests-rhel82-arm64
