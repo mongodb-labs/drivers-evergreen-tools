@@ -8,29 +8,23 @@ import logging
 import sys
 import time
 import urllib.error
-import urllib.request
 
 import boto3
 import botocore
+from util import imds_get
 
 LOGGER = logging.getLogger(__name__)
 
 
 def _get_local_instance_id():
-    return (
-        urllib.request.urlopen(
-            "http://169.254.169.254/latest/meta-data/instance-id", timeout=5
-        )
-        .read()
-        .decode()
-    )
+    return imds_get("/latest/meta-data/instance-id", timeout=5)
 
 
 def _has_instance_profile():
-    base_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+    base_path = "/latest/meta-data/iam/security-credentials/"
     try:
-        print("Reading: " + base_url)
-        iam_role = urllib.request.urlopen(base_url).read().decode()
+        print("Reading: " + base_path)
+        iam_role = imds_get(base_path)
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
@@ -38,9 +32,9 @@ def _has_instance_profile():
         raise e
 
     try:
-        url = base_url + iam_role
-        print("Reading: " + url)
-        _ = urllib.request.urlopen(url)
+        path = base_path + iam_role
+        print("Reading: " + path)
+        imds_get(path)
     except urllib.error.HTTPError as e:
         print(e)
         if e.code == 404:
@@ -63,7 +57,7 @@ def _wait_no_instance_profile():
 def _unassign_instance_policy():
     try:
         instance_id = _get_local_instance_id()
-    except urllib.error.URLError as e:
+    except (urllib.error.URLError, RuntimeError) as e:
         print(e)
         sys.exit(0)
 

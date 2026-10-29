@@ -9,12 +9,13 @@ import logging
 import os
 import sys
 import time
-import urllib.request
+import urllib.error
 from functools import partial
 
 import boto3
 import botocore
 from util import get_key as _get_key
+from util import imds_get
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
@@ -23,18 +24,14 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def _get_local_instance_id():
-    return (
-        urllib.request.urlopen("http://169.254.169.254/latest/meta-data/instance-id")
-        .read()
-        .decode()
-    )
+    return imds_get("/latest/meta-data/instance-id")
 
 
 def _has_instance_profile():
-    base_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+    base_path = "/latest/meta-data/iam/security-credentials/"
     try:
-        LOGGER.info("Reading: " + base_url)
-        iam_role = urllib.request.urlopen(base_url).read().decode()
+        LOGGER.info("Reading: " + base_path)
+        iam_role = imds_get(base_path)
     except urllib.error.HTTPError as e:
         if e.code == 404:
             return False
@@ -42,9 +39,9 @@ def _has_instance_profile():
         raise e
 
     try:
-        url = base_url + iam_role
-        LOGGER.info("Reading: " + url)
-        _ = urllib.request.urlopen(url)
+        path = base_path + iam_role
+        LOGGER.info("Reading: " + path)
+        imds_get(path)
         LOGGER.info("Assigned " + iam_role)
     except urllib.error.HTTPError as e:
         if e.code == 404:

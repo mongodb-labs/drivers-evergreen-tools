@@ -20,7 +20,7 @@ export AZUREKMS_PRIVATEKEYPATH="$SCRIPT_DIR/keyfile"
 export AZUREKMS_CERTFILE="$SCRIPT_DIR/cert.pem"
 export AZUREKMS_VMNAME_PREFIX=$AZUREOIDC_VMNAME_PREFIX
 export AZUREOIDC_ENVPATH="$SCRIPT_DIR/env.sh"
-export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-11:11:0.20221020.1174"}
+export AZUREKMS_IMAGE=${AZUREOIDC_IMAGE:-"Debian:debian-12:12:0.20260821.2577"}
 
 # Handle secrets from AWS vault.
 if [ ! -f ./secrets-export.sh ]; then
@@ -40,10 +40,10 @@ export AZUREKMS_CLIENTID=$AZUREOIDC_APPID
 . "$DRIVERS_TOOLS"/.evergreen/csfle/azurekms/login.sh
 
 # Get the rest of the secrets from the Azure vault.
-pushd ..
-. ./activate-authoidcvenv.sh
-popd
-python ./handle_secrets.py
+# The auth_oidc group lives in the root pyproject.toml.
+. "$DRIVERS_TOOLS"/.evergreen/ensure-uv.sh
+ensure_uv || exit 1
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python ./handle_secrets.py
 # shellcheck source=env.sh
 source $AZUREOIDC_ENVPATH
 
@@ -70,14 +70,16 @@ AZUREKMS_DST="./" \
 # Push Drivers Evergreen Tools onto the VM
 TARFILE=/tmp/drivers-evergreen-tools.tgz
 pushd $DRIVERS_TOOLS
-git archive --format=tar.gz -o $TARFILE --prefix=drivers-evergreen-tools/ HEAD
+bash "$DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh" "$TARFILE"
 TARFILE_BASE=$(basename ${TARFILE})
 AZUREKMS_SRC=${TARFILE} \
     AZUREKMS_DST="./" \
     $DRIVERS_TOOLS/.evergreen/csfle/azurekms/copy-file.sh
 echo "Copying files ... end"
 echo "Untarring file ... begin"
-AZUREKMS_CMD="tar xf ${TARFILE_BASE}" \
+# The archive is flat, so name the destination here rather than baking it in as
+# a tar --prefix.
+AZUREKMS_CMD="mkdir -p drivers-evergreen-tools && tar xf ${TARFILE_BASE} -C drivers-evergreen-tools" \
   $DRIVERS_TOOLS/.evergreen/csfle/azurekms/run-command.sh
 echo "Untarring file ... end"
 popd

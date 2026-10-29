@@ -1,0 +1,91 @@
+[tool.uv.workspace]
+members = [
+    ".evergreen",
+    ".evergreen/auth_aws",
+    ".evergreen/auth_oidc",
+    ".evergreen/csfle",
+    ".evergreen/docker",
+    ".evergreen/ocsp",
+    ".evergreen/orchestration",
+]
+
+[tool.uv.sources]
+# .evergreen/orchestration depends on the .evergreen package. Declared here
+# rather than in the member's own pyproject because uv cannot resolve a
+# workspace source from a member for another member that is its own ancestor
+# directory.
+drivers-evergreen-tools = { workspace = true }
+
+[dependency-groups]
+# Shared boto3 constraint, extended by per-folder groups with
+# {include-group = "boto"}.
+boto = ["boto3>=1.35.0"]
+# boto3 for the AWS credential flows (assume-role, instance-profile assignment,
+# container testing), pymongo[aws] for aws_tester.py and the EKS pod self-test, and
+# pyop for the OIDC proxy (lib/aws_handle_oidc_creds.py, also imported by auth_oidc).
+auth_aws = [
+  {include-group = "boto"},
+  "pymongo[aws]~=4.0",
+  # >=3.5.0: 3.4.2 mishandles id_token claims in the auth-code flow's code
+  # exchange, breaking MONGODB-OIDC's authorizationClaim matching.
+  "pyop~=3.5.0",
+]
+# boto3 for the AWS credential flows, pyop for aws_handle_oidc_creds.py
+# (pulled in through auth_oidc/utils.py's import of that module), and azure-* for
+# the Key Vault secrets.
+auth_oidc = [
+  {include-group = "boto"},
+  "pyop~=3.5.0",
+  "azure-identity",
+  "azure-keyvault-secrets",
+]
+# boto3 for .evergreen/docker/login.py's ECR token flow.
+docker = [{include-group = "boto"}]
+# asn1crypto for the mock OCSP responder's ASN.1 certificate handling
+# (mock_ocsp_responder.py), cryptography for private key loading and OCSP
+# response signing, flask for its HTTP interface, and waitress for WSGI
+# serving (ocsp_mock.py).
+#
+# On s390x (no published cryptography wheels) the activate scripts install
+# the sdist's build toolchain. uv locks all groups together: every group's
+# cryptography requirement must agree per platform.
+ocsp = [
+  "asn1crypto~=1.5.1",
+  "cryptography>=42",
+  "flask~=3.1.3",
+  "waitress~=3.0.2",
+]
+# boto3 for setup_secrets.py, pykmip for the mock KMIP server, cryptography
+# for the KMS servers' TLS. The mock servers use only the standard library.
+csfle = [
+  {include-group = "boto"},
+  "pykmip~=0.11.0",
+  "cryptography>=45.0.0",
+]
+# azure-identity and azure-mgmt-* for
+# .evergreen/csfle/azurekms/delete_old_azure_resources.py, the daily cron
+# task that deletes stale Azure VMs and orphaned NSG/IP resources.
+azurekms = [
+  "azure-identity",
+  "azure-mgmt-compute",
+  "azure-mgmt-network",
+]
+
+[tool.uv]
+exclude-newer = "1 week"
+
+# Fail fast rather than building pydantic-core from source when no wheel
+# exists for the interpreter (DRIVERS-3649).
+no-build-package = ["pydantic-core"]
+
+required-environments = [
+    "platform_system == 'Linux' and platform_machine == 'x86_64'",
+    "platform_system == 'Linux' and platform_machine == 'aarch64'",
+    "platform_system == 'Linux' and platform_machine == 'ppc64le'",
+    "platform_system == 'Linux' and platform_machine == 's390x'",
+
+    "platform_system == 'Darwin' and platform_machine == 'x86_64'",
+    "platform_system == 'Darwin' and platform_machine == 'arm64'",
+
+    "platform_system == 'Windows' and platform_machine == 'AMD64'",
+]

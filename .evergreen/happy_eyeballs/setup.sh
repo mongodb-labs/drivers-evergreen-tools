@@ -7,21 +7,13 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 pushd $SCRIPT_DIR
 
-# Ensure python3 here
-. ../find-python3.sh
-
-echo "Ensuring python binary..."
-PYTHON="$(ensure_python3 2>/dev/null)"
-if [ -z "${PYTHON}" ]; then
-  # For debug purposes
-  find_python3
-  exit 1
-fi
-echo "Ensuring python binary... done."
+# Ensure uv is available here.
+. ../ensure-uv.sh
+ensure_uv || exit 1
 
 echo "Starting Happy Eyeballs server..."
 
-COMMAND="$PYTHON -u"
+COMMAND="uv run python -u"
 if [ "$(uname -s)" != "Darwin" ]; then
   # On windows host, we need to use nohup to daemonize the process
   # and prevent the task from hanging.
@@ -31,7 +23,7 @@ fi
 
 $COMMAND server.py "$@" > server.log 2>&1 &
 sleep 1
-$PYTHON -u server.py "$@" --wait
+uv run python -u server.py "$@" --wait
 cat server.log
 
 echo "Starting Happy Eyeballs server... done."

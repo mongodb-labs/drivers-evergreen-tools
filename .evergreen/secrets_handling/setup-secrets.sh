@@ -14,13 +14,15 @@ ORIG_SCRIPT_DIR=${SCRIPT_DIR:-}
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
 
-pushd $SCRIPT_DIR/../auth_aws > /dev/null
-. ./activate-authawsvenv.sh
-popd > /dev/null
+# setup_secrets.py only needs boto3, which the shared boto group provides.
+# The boto group is defined in the root pyproject.toml, so run from the root
+# project context. DRIVERS_TOOLS is set absolutely by handle-paths.sh.
+. $SCRIPT_DIR/../ensure-uv.sh
+ensure_uv || exit 1
 
 ALL_ARGS="$*"
 echo "Getting secrets: ${ALL_ARGS}..."
-python $SCRIPT_DIR/setup_secrets.py $ALL_ARGS
+uv run --project "$DRIVERS_TOOLS" --group boto python $SCRIPT_DIR/setup_secrets.py $ALL_ARGS
 source "$(pwd)/secrets-export.sh"
 echo "Getting secrets: $ALL_ARGS... done."
 

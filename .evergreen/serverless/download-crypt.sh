@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MONGODB_VERSION=${MONGODB_VERSION:-latest}
+MONGODB_VERSION=${MONGODB_VERSION:-latest-stable}
 
 echo "Download crypt_shared for MongoDB ${MONGODB_VERSION}"
 
@@ -19,7 +19,7 @@ download_and_extract_package "$MONGODB_DOWNLOAD_URL" "$EXTRACT"
 if [ -z $MONGO_CRYPT_SHARED_DOWNLOAD_URL ]; then
   echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
 else
-  echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+  echo "Downloading crypt_shared package from $(redact_url "$MONGO_CRYPT_SHARED_DOWNLOAD_URL")"
   download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
   echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
   if [ -z $CRYPT_SHARED_LIB_PATH ]; then

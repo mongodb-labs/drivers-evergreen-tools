@@ -13,9 +13,6 @@ from functools import partial
 from pathlib import Path
 from urllib.parse import quote_plus
 
-from pymongo import MongoClient
-from pymongo.errors import OperationFailure
-
 HERE = Path(__file__).absolute().parent
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)-8s %(message)s")
@@ -52,6 +49,10 @@ def run(args, env):
 
 def create_user(user, kwargs):
     """Create a user and verify access."""
+
+    from pymongo import MongoClient
+    from pymongo.errors import OperationFailure
+
     LOGGER.info("Creating user %s", user)
     client = MongoClient(username="bob", password="pwd123")
     db = client["$external"]
@@ -111,6 +112,28 @@ def setup_ec2():
     return dict()
 
 
+def resolve_server_binary(path: str) -> str:
+    """Obtain the real mongodb binary for the given path. (DRIVERS-3673)
+
+    See `_tee_wrap_server_binaries()` in mongodb_runner.py for more details.
+    """
+    real = Path(f"{path}-real")
+    if real.is_file():
+        return str(real)
+    return path
+
+
+def ecs_test_files(mongo_binaries: str, project_dir: str) -> str:
+    """Construct the list of `--files` to be copied into the ECS container."""
+    mongod = resolve_server_binary(f"{mongo_binaries}/mongod")
+    mongosh = resolve_server_binary(f"{mongo_binaries}/mongosh")
+    return (
+        f"{mongod}:/root/mongod {mongosh}:/root/mongosh"
+        " lib/ecs_hosted_test.js:/root/ecs_hosted_test.js"
+        f" {project_dir}:/root"
+    )
+
+
 def setup_ecs():
     # Set up commands.
     mongo_binaries = os.environ["MONGODB_BINARIES"]
@@ -136,7 +159,17 @@ def setup_ecs():
             raise ValueError('Please set "iam_auth_ecs_task_definition_noble" variable')
     else:
         raise ValueError("Unsupported ubuntu release")
-    run_test_command = f"{base_command} -d -v run_e2e_test --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]} --task_definition {task_definition} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]} --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]} --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]} --files {mongo_binaries}/mongod:/root/mongod {mongo_binaries}/mongosh:/root/mongosh lib/ecs_hosted_test.js:/root/ecs_hosted_test.js {project_dir}:/root --script lib/ecs_hosted_test.sh"
+
+    run_test_command = (
+        f"{base_command} -d -v run_e2e_test"
+        f" --cluster {CONFIG[get_key('iam_auth_ecs_cluster')]}"
+        f" --task_definition {task_definition}"
+        f" --subnets {CONFIG[get_key('iam_auth_ecs_subnet_a')]}"
+        f" --subnets {CONFIG[get_key('iam_auth_ecs_subnet_b')]}"
+        f" --security_group {CONFIG[get_key('iam_auth_ecs_security_group')]}"
+        f" --files {ecs_test_files(mongo_binaries, project_dir)}"
+        " --script lib/ecs_hosted_test.sh"
+    )
 
     # Pass in the AWS credentials as environment variables
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown

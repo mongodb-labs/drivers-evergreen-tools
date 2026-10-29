@@ -15,6 +15,7 @@ printf "" >|"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}"
 case "${MONGODB_VERSION:-"latest"}" in
 3.6) echo "pymongo<4.11" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
 4.0) echo "pymongo<4.14" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
+4.2) echo "pymongo<4.18" >>"${DRIVERS_TOOLS_INSTALL_CLI_OVERRIDES:?}" ;;
 esac
 
 # Install CLIs into this directory (default path for $PROJECT_ORCHESTRATION_HOME
@@ -23,11 +24,11 @@ bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}/.."
 bash "${SCRIPT_DIR:?}/../install-cli.sh" "${SCRIPT_DIR:?}"
 
 # Install the in-progress branch of mongodb-runner if USE_DEV_MONGODB_RUNNER is set.
+# Otherwise mongodb_runner.py installs Node when it first needs it.
 if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
-  if [ ! -d "$HERE/../node-artifacts" ]; then
-    # The dev version requires Node 22+.
-    NODE_LTS_VERSION=22 bash $_HERE/../install-node.sh
-  fi
+  # The dev version requires Node 22+, and install-node.sh exits early only when
+  # that exact version is cached, so ask for it unconditionally.
+  NODE_LTS_VERSION=22 bash "$_HERE/../install-node.sh"
 
   if [ ! -d $_HERE/devtools-shared ]; then
     source $_HERE/../init-node-and-npm-env.sh
@@ -37,6 +38,4 @@ if [ -n "${USE_DEV_MONGODB_RUNNER:-}" ]; then
     npx -y lerna run --scope=mongodb-runner --include-dependencies compile
     popd
   fi
-else
-  bash $_HERE/../install-node.sh
 fi

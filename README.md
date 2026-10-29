@@ -41,6 +41,58 @@ The `** Release Archive Creator` buildvariant is special, and does not run the "
 See also:
 https://evergreen.mongodb.com/waterfall/drivers-tools
 
+### Downloading "latest" MongoDB Binaries
+
+Requesting `MONGODB_VERSION=latest` or `latest-build` downloads an unpublished
+nightly build from a private S3 bucket, rather than the old public
+`downloads.mongodb.com`/`downloads.10gen.com` HTTP hosts. `mongodl.py` handles
+authentication itself, using whatever AWS identity is already active. No
+separate setup script or manually-exported secrets are required. In Evergreen,
+this just needs an `ec2.assume_role` step for `drivers_test_secrets_role`
+before the download step (wired into the global
+[`pre` block](.evergreen/config.yml), which assumes the role for every task).
+Locally, it needs a working AWS identity: one with direct access to the
+`origin-mongodb-server-latest` bucket, or a profile that can reach the
+`drivers/devprod-release-infrastructure` AWS Secrets Vault and assume the roles
+it names (the same setup documented in
+[Secrets Handling](.evergreen/secrets_handling/README.md)). Any version other
+than `latest`/`latest-build` (e.g. `latest-stable`, or a pinned version like
+`8.0`) is unaffected and needs no AWS access.
+
+As a migration fallback, if AWS credentials for the private server artifacts
+cannot be resolved — either none are available, or the ambient identity is not
+authorized to reach the bucket or the vault — `mongodl` falls back to the old
+public `downloads.10gen.com` download link and emits a prominent `FALLBACK:`
+warning in the logs. The legacy link is deprecated and will be removed in a
+future release, so treat that warning as a signal to configure AWS credentials
+as described above (see the DRIVERS-3628 migration guide).
+
+`latest`/`latest-build` archives are also signature-verified: `mongodl`
+downloads the detached GPG signature published next to the artifact and
+verifies it against the MongoDB release signing keys, pinned by fingerprint
+and fetched at verification time from
+[pgp.mongodb.com](https://pgp.mongodb.com/) (the master-nightly builds are
+signed by the MongoDB 9 release key and the legacy-host builds by the 8.0
+release key). When verification runs, a bad signature — or a signature
+made by any other key — fails the download. If a signature was not
+published for the artifact
+(stable-branch staging builds may not be signed yet), or the host has no `gpg`
+binary, `mongodl` only logs a warning and the download continues. Until
+[DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,
+amazon2023 hosts (whose `gnupg2-minimal` gpg cannot verify) tolerate that
+environment failure with a DEVPROD-44314 warning; a broken gpg environment
+elsewhere fails fast. Published
+builds and other version selectors are unaffected and keep using the SHA-256
+checksums from `full.json`. Verification can also be skipped manually by
+setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` (any non-empty value).
+
+`run-mongodb.sh` (the `mongodb-runner` entry point for local dev and the
+GitHub Actions composite action) defaults to `latest-stable`. The GitHub
+Action also maps `latest` to `latest-stable` since runners typically lack AWS
+credentials; elsewhere an explicit `MONGODB_VERSION=latest` downloads the
+nightly build. Under `--local-atlas` the default stays `latest`, which is the
+`mongodb-atlas-local` Docker image tag.
+
 ## Using With GitHub Actions
 
 This repository includes a metadata file for GitHub Actions to allow downloading
@@ -61,7 +113,7 @@ The following inputs exist:
 
 | Name | Description |
 | --- | --- |
-| `version` | MongoDB version to install |
+| `version` | MongoDB version to install. Defaults to `latest-stable` (or `latest` under `local-atlas`, the Docker image tag); `latest` is otherwise mapped to `latest-stable`. `latest-build` downloads the newest nightly build, which needs AWS credentials that GitHub Actions runners typically lack (see [Downloading "latest" MongoDB Binaries](#downloading-latest-mongodb-binaries) for that path). |
 | `topology` | Topology of the deployment (server, replica_set, sharded_cluster) |
 | `auth` | Whether to enable auth |
 | `ssl` | Whether to enable SSL |
@@ -69,6 +121,10 @@ The following inputs exist:
 | `require-api-version` | Whether to start the server with requireApiVersion enabled (defaults to false) |
 
 These correspond to the respective environment variables that are passed to `run-orchestration.sh`.
+
+The example above tracks `master`. To pin a published version instead, use a release tag such as
+`mongodb-labs/drivers-evergreen-tools@v1.0.0`. See [Releasing](CONTRIBUTING.md#releasing) for how
+those versions are cut.
 
 After the cluster is started, its URI is exposed via the `cluster-uri` output. In addition, the action also exposes the
 path to `crypt_shared` via the `crypt-shared-lib-path` output, unless the installation was not requested or failed.
@@ -111,6 +167,14 @@ export TLS_PEM_KEY_FILE=<path-to>/server.pem
 export TLS_CA_FILE=<path-to>/ca.pem
 ```
 
+### OpenTelemetry trace export (MongoDB 9.0+)
+
+Orchestration can start clusters with the server's OpenTelemetry file
+exporter enabled (opt-in via `OTEL=1`), for the trace-context propagation
+prose tests ([DRIVERS-3454](https://jira.mongodb.org/browse/DRIVERS-3454)).
+See [.evergreen/orchestration/README.md](.evergreen/orchestration/README.md)
+for usage, requirements, and driver integration guidance.
+
 ### Manual use of start-orchestration
 
 The [start-orchestration.sh](./.evergreen/start-orchestration.sh) script can be used directly as a way to
@@ -128,7 +192,7 @@ As part of [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335) we are m
 using `mongo-orchestration` and its associated scripts (`run-orchestration.sh`, `stop-orchestration.sh`,
 and `start-orchestration.sh`).
 
-We are instead using [mongodb-runner](https://www.npmjs.com/package/mongodb-runner) using the new script
+We are instead using [@mongodb-js/mongodb-runner](https://www.npmjs.com/package/@mongodb-js/mongodb-runner) using the new script
 `run-mongodb.sh` script with either `start` or `stop` as the argument, e.g.:
 
 ```bash

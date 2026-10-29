@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Test usage of start-server.sh
-set -eu
+set -eu -o pipefail
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/../handle-paths.sh
-. $SCRIPT_DIR/../find-python3.sh
+. $SCRIPT_DIR/../ensure-uv.sh
 
 pushd $SCRIPT_DIR/.. > /dev/null
 
@@ -52,9 +52,65 @@ function connect_mongodb() {
   return $result
 }
 
+# Hosts too old to run mongodb-runner at all exist only in the os-requires-50
+# matrix, which runs this script in partial mode; the full run is os-fully-featured
+# (rhel8, macos, windows), where nothing legitimately falls back. So tolerate a
+# fallback only in partial mode. Tolerating it everywhere would let a pin whose
+# engines floor outruns install-node.sh degrade silently on every variant, with
+# mongodb-runner never exercised and the run still green.
+if [ "${1:-}" == "partial" ]; then
+  fallback_is_expected=true
+else
+  fallback_is_expected=false
+fi
+
+# Start a deployment and fail unless mongodb-runner started it, or a fallback is
+# expected on this host class per DRIVERS-3558. A silent fallback on a host that
+# could have used mongodb-runner would hide a broken pin set.
+function start_with_runner() {
+  local log
+  log=$(mktemp)
+  # Clean up the temp log on function return without leaving a RETURN trap installed.
+  trap 'rm -f "$log"; trap - RETURN' RETURN
+
+  if ! bash ./run-mongodb.sh start "$@" 2>&1 | tee "$log"; then
+    echo "ERROR: 'run-mongodb.sh start $*' failed"
+    return 1
+  fi
+
+  if grep -q "Running mongodb-runner using" "$log"; then
+    return 0
+  fi
+  if grep -q "mongodb-runner is not supported on this platform" "$log"; then
+    if [ "$fallback_is_expected" == "true" ]; then
+      echo "NOTE: mongodb-runner is unsupported here; started through mongo-orchestration instead"
+      return 0
+    fi
+    echo "ERROR: mongodb-runner fell back to mongo-orchestration on a host that" \
+      "should support it; the pin's engines floor may outrun install-node.sh"
+    return 1
+  fi
+  echo "ERROR: 'run-mongodb.sh start $*' did not start through mongodb-runner"
+  return 1
+}
+
 # Test for default, then test cli options.
-bash ./run-mongodb.sh start
+start_with_runner
 connect_mongodb
+
+# TODO(DRIVERS-3673): assert the logDir capture instead once the upstream
+# runner honors logDir itself.
+if [ -f "${MONGODB_BINARIES}/mongod-real" ]; then
+  log_file=$(ls -t "${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log | head -n1)
+  size1=$(wc -c < "$log_file")
+  connect_mongodb
+  sleep 1
+  size2=$(wc -c < "$log_file")
+  if [ "$size2" -le "$size1" ]; then
+    echo "ERROR: mongod's log file is not being updated: $log_file"
+    exit 1
+  fi
+fi
 
 bash ./run-mongodb.sh start --topology standalone --auth
 connect_mongodb --auth
@@ -62,7 +118,9 @@ connect_mongodb --auth
 bash ./run-mongodb.sh start --version 7.0 --topology replica_set --ssl
 connect_mongodb --ssl
 
-bash ./run-mongodb.sh start --version latest --topology sharded_cluster --auth --ssl
+# The version honors a MONGODB_VERSION pin (e.g. the 7.0 pin on
+# tests-windows-vsCurrent, where 8.3+ cannot run); latest-stable otherwise.
+bash ./run-mongodb.sh start --version "${MONGODB_VERSION:-latest-stable}" --topology sharded_cluster --auth --ssl
 connect_mongodb --ssl --auth
 
 # Verify that auth is enforced when starting with AUTH=auth SSL=yes.
@@ -78,8 +136,8 @@ connect_mongodb --ssl --auth
 DOWNLOAD_DIR=mongodl_test
 rm -rf ${DOWNLOAD_DIR}
 bash install-cli.sh "$(pwd)/orchestration"
-PYTHON="$(ensure_python3 2>/dev/null)"
-$PYTHON mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
+ensure_uv || exit 1
+uv run python mongodl.py --edition enterprise --version 7.0 --component archive --out ${DOWNLOAD_DIR} --strip-path-components 2 --retries 5
 bash ./run-mongodb.sh start --existing-binaries-dir=${DOWNLOAD_DIR}
 ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 
@@ -89,11 +147,16 @@ if [ "${1:-}" == "partial" ]; then
   exit 0
 fi
 
-for version in rapid 8.0 6.0 5.0 4.4 4.2
+for version in rapid 8.0 6.0 5.0 4.4
 do
   bash ./run-mongodb.sh start --version "$version"
   connect_mongodb
 done
+
+# 4.2 predates the wire version the current Node driver requires, so it only starts
+# if the per-version pin held.
+start_with_runner --version 4.2
+connect_mongodb
 
 popd > /dev/null
 make -C ${DRIVERS_TOOLS} test

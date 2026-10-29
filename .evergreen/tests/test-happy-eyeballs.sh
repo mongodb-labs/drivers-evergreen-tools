@@ -19,9 +19,9 @@ fi
 bash ./setup.sh
 
 # Run the client.
-. ../find-python3.sh
-PYTHON=$(ensure_python3 2>/dev/null)
-$PYTHON client.py
+. ../ensure-uv.sh
+ensure_uv || exit 1
+uv run python client.py
 
 # Tear down the server
 bash ./teardown.sh
@@ -30,9 +30,9 @@ bash ./teardown.sh
 bash ./setup.sh -c 10037
 
 # Run the client.
-. ../find-python3.sh
-PYTHON=$(ensure_python3 2>/dev/null)
-$PYTHON client.py -c 10037
+. ../ensure-uv.sh
+ensure_uv || exit 1
+uv run python client.py -c 10037
 
 # Tear down the server.
 bash ./teardown.sh -c 10037

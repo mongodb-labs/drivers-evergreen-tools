@@ -1,5 +1,9 @@
 [build-system]
-requires = ["hatchling>=1.26"]
+requires = [
+    # Prevent https://github.com/mongodb-labs/drivers-evergreen-tools/pull/893: hatchling 1.28 requires Python 3.10+.
+    "hatchling==1.27.0; python_version < '3.10'",
+    "hatchling==1.32.4; python_version >= '3.10'",
+]
 build-backend = "hatchling.build"
 
 [project]
@@ -18,8 +22,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "drivers-evergreen-tools @ {root:parent:uri}",
-  "mongo-orchestration @ https://github.com/mongodb/mongo-orchestration/archive/master.tar.gz",
+  "drivers-evergreen-tools",
+  "mongo-orchestration>=0.11.2",
   "psutil>=7.1"
 ]
 
@@ -27,7 +31,4 @@ dependencies = [
 drivers-orchestration = "drivers_orchestration:main"
 
 [tool.hatch.build]
-include = ["drivers_orchestration.py"]
-
-[tool.hatch.metadata]
-allow-direct-references=true
+include = ["drivers_orchestration.py", "mongodb_runner.py", "otel.py"]

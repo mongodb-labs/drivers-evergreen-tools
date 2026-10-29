@@ -25,6 +25,13 @@ cache that DevProd maintains.  This script can be run after assuming the Drivers
     args: ["${DRIVERS_TOOLS}/.evergreen/docker/setup.sh"]
 ```
 
+`login.py` runs via `uv`, with its boto3 dependency coming from the `docker` group in the root
+`pyproject.toml` (the root is passed explicitly because the group is defined there):
+
+```bash
+uv run --project "$DRIVERS_TOOLS" --group docker python login.py
+```
+
 ## Run Local Server
 
 To run a local server, change to this directory and run:
@@ -56,6 +63,12 @@ MONGODB_VERSION
 MONGODB_DOWNLOAD_URL
 ORCHESTRATION_FILE
 ```
+
+The container does not receive AWS credentials by default. Requesting the
+private nightly build with `MONGODB_VERSION=latest` or `latest-build`
+forwards the host's AWS identity automatically. For an unpublished version
+that maps to a nightly build, set `MONGODL_PRIVATE_ARTIFACTS=1` to forward
+those credentials too.
 
 Note that the default `TOPOLOGY` is [`servers`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration/configs/servers) and the default `ORCHESTRATION_FILE` is `basic.json`. For example, to run a replica using the [auth](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/orchestration/configs/replica_sets/auth.json) orchestration:
 

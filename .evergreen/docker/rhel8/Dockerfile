@@ -22,6 +22,7 @@ RUN dnf update -y && \
     make \
     gnupg \
     $PYTHON \
+    $PYTHON-pip \
     mongodb-enterprise \
     lsof < /dev/null > /dev/null
 

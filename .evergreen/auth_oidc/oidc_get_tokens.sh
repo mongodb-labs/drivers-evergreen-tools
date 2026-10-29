@@ -22,8 +22,10 @@ else
     source ./secrets-export.sh
 fi
 
-. ./activate-authoidcvenv.sh
-python ./oidc_get_tokens.py
+# The auth_oidc group lives in the root pyproject.toml.
+. $SCRIPT_DIR/../ensure-uv.sh
+ensure_uv || exit 1
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python ./oidc_get_tokens.py
 
 cat <<EOF >> "secrets-export.sh"
 export OIDC_TOKEN_DIR=$OIDC_TOKEN_DIR

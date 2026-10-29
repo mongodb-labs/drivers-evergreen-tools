@@ -7,6 +7,7 @@ Use '--help' for more information.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import logging
 import os
@@ -26,6 +27,12 @@ import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mongodb_runner import _mongodb_runner_supported, start_mongodb_runner
+from otel import (
+    OTEL_DIR_NAME,
+    check_mongod_version,
+    handle_otel_config,
+    validate_otel_opts,
+)
 
 # Get global values.
 HERE = Path(__file__).absolute().parent
@@ -66,9 +73,11 @@ def get_options():
     if command == "run":
         parser.add_argument(
             "--version",
-            default="latest",
-            help='The version to download. Use "latest" to download '
-            "the newest available version (including release candidates).",
+            help='The version to download. "latest" downloads the newest nightly '
+            'build and "latest-stable" the newest stable release; the GitHub '
+            'Action maps "latest" to "latest-stable". For an authorized user, '
+            '"latest-build" passes through and reaches the private bucket. '
+            "Under --local-atlas this is the Docker image tag.",
         )
         parser.add_argument(
             "--topology",
@@ -151,12 +160,18 @@ def get_options():
             "--arch",
             help="the architecture.  if unspecified, the arch will be inferred.",
         )
+        other_group.add_argument(
+            "--otel",
+            action="store_true",
+            help="Whether to configure the OpenTelemetry file exporter on every "
+            "mongod/mongos (requires MongoDB 9.0+; exports OTEL_TRACE_DIR)",
+        )
 
     other_group.add_argument(
         "--mongo-orchestration-home", help="The path to mongo-orchestration home"
     )
 
-    if command in ["start", "run"]:
+    if command in ["start", "run", "clean"]:
         other_group.add_argument(
             "--mongodb-binaries", help="The path to store the MongoDB binaries"
         )
@@ -185,7 +200,7 @@ def get_options():
 
     if opts.mongo_orchestration_home is None:
         opts.mongo_orchestration_home = DRIVERS_TOOLS / ".evergreen/orchestration"
-    if command in ["start", "run"]:
+    if command in ["start", "run", "clean"]:
         if opts.mongodb_binaries is None:
             opts.mongodb_binaries = DRIVERS_TOOLS / "mongodb/bin"
     if command == "run":
@@ -196,8 +211,10 @@ def get_options():
             opts.orchestration_file = "auth-aws.json"
         if opts.topology == "standalone" or not opts.topology:
             opts.topology = "server"
+        # Under --local-atlas the version is a Docker tag, which only publishes
+        # "latest"; otherwise default to the newest stable release.
         if not opts.version:
-            opts.version = "latest"
+            opts.version = "latest" if opts.local_atlas else "latest-stable"
 
     if opts.verbose:
         LOGGER.setLevel(logging.DEBUG)
@@ -206,15 +223,31 @@ def get_options():
     return opts, command
 
 
+@functools.lru_cache(maxsize=1)
 def get_docker_cmd():
-    """Get the appropriate docker command."""
-    docker = shutil.which("podman") or shutil.which("docker")
-    if not docker:
-        return None
-    docker = PureWindowsPath(docker).as_posix()
-    if "podman" in docker:
-        docker = f"sudo {docker}"
-    return docker
+    """Get the appropriate docker command, or None if neither daemon is available."""
+    if "GITHUB_ACTION" in os.environ:
+        binaries = (shutil.which("docker"), shutil.which("podman"))
+    else:
+        binaries = (shutil.which("podman"), shutil.which("docker"))
+    for raw_binary in binaries:
+        if not raw_binary:
+            continue
+        binary = PureWindowsPath(raw_binary).as_posix()
+        docker = f"sudo {binary}" if "podman" in binary else binary
+        try:
+            subprocess.run(
+                shlex.split(f"{docker} info"),
+                check=True,
+                timeout=10,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
+            LOGGER.debug("%s daemon is not available: %s", docker, e)
+            continue
+        return docker
+    return None
 
 
 def handle_docker_config(data):
@@ -284,6 +317,12 @@ def start_atlas(opts):
     mo_home = Path(opts.mongo_orchestration_home)
     image = f"mongodb/mongodb-atlas-local:{opts.version}"
     docker = get_docker_cmd()
+    if docker is None:
+        msg = "Docker/Podman is required for --local-atlas but was not found or its daemon is not running."
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            msg += " Run with -v for more details."
+        LOGGER.error(msg)
+        sys.exit(1)
     stop(opts)
     # If we're on evergreen, we need to log into docker and use the pull-through cache.
     if "CI" in os.environ and "GITHUB_ACTION" not in os.environ:
@@ -291,16 +330,41 @@ def start_atlas(opts):
         run_command("bash setup.sh", cwd=EVG_PATH / "docker")
         LOGGER.info("Logging in to ECR... done.")
         image = f"901841024863.dkr.ecr.us-east-1.amazonaws.com/dockerhub/{image}"
-    cmd = f"{docker} run --rm -d --name mongodb_atlas_local -p 27017:27017"
+    cmd = [
+        *shlex.split(docker),
+        "run",
+        "--rm",
+        "-d",
+        "--name",
+        "mongodb_atlas_local",
+        "-p",
+        "27017:27017",
+    ]
     if opts.auth:
-        cmd += " -e MONGODB_INITDB_ROOT_USERNAME=bob"
-        cmd += " -e MONGODB_INITDB_ROOT_PASSWORD=pwd123"
+        cmd += [
+            "-e",
+            "MONGODB_INITDB_ROOT_USERNAME=bob",
+            "-e",
+            "MONGODB_INITDB_ROOT_PASSWORD=pwd123",
+        ]
     if "podman" in docker:
-        cmd += " --health-cmd '/usr/local/bin/runner healthcheck'"
-    cmd += f" -P {image}"
+        cmd += ["--health-cmd", "/usr/local/bin/runner healthcheck"]
+    cmd += ["-P", image]
     LOGGER.info("Starting local atlas...")
-    LOGGER.debug("Using command: '%s'", cmd)
-    container_id = subprocess.check_output(cmd, shell=True, encoding="utf-8").strip()
+    LOGGER.debug("Using command: '%s'", shlex.join(cmd))
+    try:
+        proc = subprocess.run(
+            cmd,
+            check=True,
+            encoding="utf-8",
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("Failed to start local atlas container:\n%s", e.stdout + e.stderr)
+        sys.exit(e.returncode)
+    # Only stdout contains the container id; stderr may contain unrelated
+    # image-pull progress output that must not be mixed in.
+    container_id = proc.stdout.strip()
     (mo_home / "container_id.txt").write_text(container_id)
     # Wait for container to become healthy.
     LOGGER.info("Waiting for container to be healthy...")
@@ -309,7 +373,13 @@ def start_atlas(opts):
     cmd = f"{docker} inspect -f '{{{{.State.Health.Status}}}}' {container_id}"
     tries = 0
     while 1:
-        resp = subprocess.check_output(shlex.split(cmd), encoding="utf-8").strip()
+        try:
+            resp = subprocess.check_output(
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.STDOUT
+            ).strip()
+        except subprocess.CalledProcessError as e:
+            LOGGER.error("Failed to check local atlas container health:\n%s", e.output)
+            sys.exit(e.returncode)
         if resp == "healthy":
             break
         if tries >= 60:
@@ -400,6 +470,9 @@ def clean_run(opts):
     crypt_path = DRIVERS_TOOLS / CRYPT_NAME_MAP[PLATFORM]
     crypt_path.unlink(missing_ok=True)
 
+    otel_dir = DRIVERS_TOOLS / OTEL_DIR_NAME
+    shutil.rmtree(normalize_path(otel_dir), ignore_errors=True)
+
 
 def run(opts):
     # Deferred import so we can run as a script without the cli installed.
@@ -407,8 +480,27 @@ def run(opts):
     from mongosh_dl import main as mongosh_dl
 
     LOGGER.info("Running orchestration...")
+    try:
+        validate_otel_opts(opts)
+    except ValueError as e:
+        LOGGER.error(str(e))
+        sys.exit(1)
     stop(opts)
     clean_run(opts)
+
+    # Load (and, for --otel, mutate) the orchestration config before the
+    # downloads: it only reads local files, and its failure modes -- a bad
+    # config file, or an OTel conflict -- should not cost a ~200MB download.
+    data = get_orchestration_data(opts)
+
+    otel_root = DRIVERS_TOOLS / OTEL_DIR_NAME
+    if opts.otel:
+        LOGGER.info("Configuring OTel trace export to %s...", otel_root)
+        try:
+            handle_otel_config(data, otel_root)
+        except ValueError as e:
+            LOGGER.error(str(e))
+            sys.exit(1)
 
     # NOTE: in general, we need to normalize paths to account for cygwin/Windows.
     mdb_binaries = Path(opts.mongodb_binaries)
@@ -420,6 +512,20 @@ def run(opts):
     dl_start = datetime.now()
 
     version = opts.version
+    # GitHub Actions runners and local-atlas users have no AWS credentials for
+    # the private "latest" nightly, so map it to the newest stable release for
+    # the mongodl download. opts.version is untouched (it is the Docker image
+    # tag under --local-atlas).
+    mongodl_version = version
+    if (
+        "GITHUB_ACTION" in os.environ or opts.local_atlas
+    ) and mongodl_version == "latest":
+        LOGGER.warning(
+            'Using "latest-stable" in place of the requested "latest" to avoid '
+            'needing AWS credentials; use "latest-build" to request the nightly '
+            "build explicitly."
+        )
+        mongodl_version = "latest-stable"
     cache_dir = DRIVERS_TOOLS / ".local/cache"
     cache_dir_str = normalize_path(cache_dir)
     default_args = f"--out {mdb_binaries_str} --cache-dir {cache_dir_str} --retries 5"
@@ -433,12 +539,14 @@ def run(opts):
 
     if not opts.local_atlas:
         # Download the archive.
-        args = f"{default_args} --version {version}"
+        args = f"{default_args} --version {mongodl_version}"
         args += " --strip-path-components 2 --component archive"
         if not opts.existing_binaries_dir:
-            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}...")
+            LOGGER.info(f"Downloading mongodb {mongodl_version} to {mdb_binaries}...")
             mongodl(shlex.split(args))
-            LOGGER.info(f"Downloading mongodb {version} to {mdb_binaries}... done.")
+            LOGGER.info(
+                f"Downloading mongodb {mongodl_version} to {mdb_binaries}... done."
+            )
         else:
             LOGGER.info(
                 f"Using existing mongod binaries dir: {opts.existing_binaries_dir}"
@@ -446,6 +554,16 @@ def run(opts):
             shutil.copytree(opts.existing_binaries_dir, mdb_binaries)
 
         run_command(f"{mdb_binaries_str}/mongod --version")
+
+        # The authoritative --otel version gate: probe the binary that will
+        # actually run (covers aliases, nightlies, and existing binaries),
+        # before the remaining downloads and the deployment.
+        if opts.otel:
+            try:
+                check_mongod_version(mdb_binaries)
+            except ValueError as e:
+                LOGGER.error(str(e))
+                sys.exit(1)
 
     # Download legacy shell.
     if opts.install_legacy_shell:
@@ -462,7 +580,7 @@ def run(opts):
         # path location than the other binaries, which is required for
         # https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/tests/README.md#via-bypassautoencryption
         args = default_args + (
-            f" --version {version} --strip-path-components 1 --component crypt_shared"
+            f" --version {mongodl_version} --strip-path-components 1 --component crypt_shared"
         )
         LOGGER.info("Downloading crypt_shared...")
         mongodl(shlex.split(args))
@@ -476,8 +594,12 @@ def run(opts):
                 f"Could not find expected crypt_shared_path: {crypt_shared_path}"
             )
         crypt_text = f'CRYPT_SHARED_LIB_PATH: "{normalize_path(crypt_shared_path)}"'
-        MO_EXPANSION_YML.write_text(crypt_text)
-        MO_EXPANSION_SH.write_text(crypt_text.replace(": ", "="))
+        # Explicit LF: these files are sourced by sh, and Windows text-mode
+        # writes would give interior lines a trailing \r.
+        with MO_EXPANSION_YML.open("w", newline="\n") as fid:
+            fid.write(crypt_text)
+        with MO_EXPANSION_SH.open("w", newline="\n") as fid:
+            fid.write(crypt_text.replace(": ", "="))
 
     # Download mongosh
     args = f"--out {mdb_binaries_str} --strip-path-components 2 --retries 5"
@@ -492,15 +614,21 @@ def run(opts):
     dl_end = datetime.now()
     mo_start = datetime.now()
 
-    data = get_orchestration_data(opts)
+    # run-mongodb.sh passes --mongodb-runner even for --local-atlas, where
+    # probing for runner support would install a Node we never use.
+    if opts.local_atlas:
+        opts.mongodb_runner = False
 
-    if opts.mongodb_runner and version in ("3.6", "4.0"):
+    # A bare match on version misses "4.0.28" or "v4.0", which are exactly as
+    # unreachable as "4.0" itself, so compare the X.Y prefix instead.
+    major_minor = re.match(r"v?(\d+\.\d+)", version or "")
+    if opts.mongodb_runner and major_minor and major_minor.group(1) in ("3.6", "4.0"):
         LOGGER.warning(
             "mongodb-runner does not support MongoDB < 4.2, using mongo-orchestration"
         )
         opts.mongodb_runner = False
 
-    if opts.mongodb_runner and not _mongodb_runner_supported():
+    if opts.mongodb_runner and not _mongodb_runner_supported(opts.version):
         LOGGER.warning(
             "mongodb-runner is not supported on this platform; "
             "falling back to mongo-orchestration"
@@ -540,12 +668,25 @@ def run(opts):
         uri = resp.get("mongodb_auth_uri", resp["mongodb_uri"])
 
     # Handle the cluster uri.
+    expansions = {"MONGODB_URI": uri}
+    # Always emit OTEL_TRACE_DIR: an empty value on non-OTel runs overwrites
+    # any stale value left in the environment or Evergreen expansions by an
+    # earlier --otel run (whose directory clean_run has since deleted), so
+    # driver tests gating on "unset or empty" reliably skip.
+    expansions["OTEL_TRACE_DIR"] = normalize_path(otel_root) if opts.otel else ""
     MO_EXPANSION_YML.touch()
-    MO_EXPANSION_YML.write_text(
-        MO_EXPANSION_YML.read_text() + f'\nMONGODB_URI: "{uri}"'
-    )
     MO_EXPANSION_SH.touch()
-    MO_EXPANSION_SH.write_text(MO_EXPANSION_SH.read_text() + f'\nMONGODB_URI="{uri}"')
+    yml_text = MO_EXPANSION_YML.read_text()
+    sh_text = MO_EXPANSION_SH.read_text()
+    for key, value in expansions.items():
+        yml_text += f'\n{key}: "{value}"'
+        sh_text += f'\n{key}="{value}"'
+    # Explicit LF: these files are sourced by sh, and Windows text-mode
+    # writes would give interior lines a trailing \r.
+    with MO_EXPANSION_YML.open("w", newline="\n") as fid:
+        fid.write(yml_text)
+    with MO_EXPANSION_SH.open("w", newline="\n") as fid:
+        fid.write(sh_text)
     URI_TXT.write_text(uri)
     LOGGER.info(f"Cluster URI: {uri}")
 
@@ -661,7 +802,6 @@ def start(opts):
         LOGGER.info(f"out.log:\n{output_file.read_text().strip()}")
 
     # Wait for the server to be available.
-    attempt = 0
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -673,8 +813,7 @@ def start(opts):
                     LOGGER.error("Orchestration failed!")
                     LOGGER.error(f"server.log: {server_file.read_text()}")
                     raise TimeoutError("Server failed to start") from None
-        attempt += 1
-        time.sleep(attempt * 1000)
+        time.sleep(1)
 
     LOGGER.info("Starting mongo-orchestration... done.")
 
@@ -765,25 +904,42 @@ def stop(opts):
         cmd = f"{docker} ps --format '{{{{.Image}}}}\t{{{{.ID}}}}'"
         try:
             response = subprocess.check_output(
-                shlex.split(cmd), encoding="utf-8"
+                shlex.split(cmd), encoding="utf-8", stderr=subprocess.DEVNULL
             ).strip()
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            LOGGER.exception(e)
+            LOGGER.debug("Failed to list docker containers: %s", e)
             response = ""
         for line in response.splitlines():
             image, container_id = line.split("\t")
-            if image in ["mongodb/mongodb-atlas-local", "mongo"]:
+            # In CI the image is pulled through an ECR mirror, so it's prefixed with a
+            # registry host (e.g. ".../dockerhub/mongodb/mongodb-atlas-local:latest")
+            # instead of the plain "mongodb/mongodb-atlas-local". Drop the tag so the
+            # suffix match below recognizes both forms.
+            repo, sep, tag = image.rpartition(":")
+            if not sep or "/" in tag:
+                repo = image
+            if repo in ("mongodb/mongodb-atlas-local", "mongo") or repo.endswith(
+                ("/mongodb/mongodb-atlas-local", "/mongo")
+            ):
                 LOGGER.info(f"Stopping {image} by image name...")
                 shutdown_docker(docker, container_id)
                 LOGGER.info(f"Stopping {image} by image name... done.")
 
     # Finally, look for any processes that are named mongod or mongos.
+    # TODO(DRIVERS-3673): drop the -real names when the tee wrappers go away.
     for proc in all_procs:
         try:
             name = proc.name()
         except psutil.NoSuchProcess:
             continue
-        if name in ["mongod", "mongos", "mongod.exe", "mongos.exe"]:
+        if name in [
+            "mongod",
+            "mongos",
+            "mongod.exe",
+            "mongos.exe",
+            "mongod-real",
+            "mongos-real",
+        ]:
             LOGGER.info(f"Stopping {name} by process name...")
             shutdown_proc(proc)
             LOGGER.info(f"Stopping {name} by process name... done.")

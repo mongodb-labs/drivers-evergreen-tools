@@ -12,8 +12,16 @@ the relevant DRIVERS ticket.
 
 ## Python Considerations
 
-This repository supports CPython 3.9+, and will use either the Python toolchain or the system
-python on Evergreen hosts.  See `find_python3.sh` for details on Python binary selection.
+This repository supports CPython 3.9+. `uv` reuses whichever interpreter the host already provides
+that satisfies `requires-python` rather than downloading a specific version, so raising the floor is
+not merely a metadata change: it forces an interpreter upgrade on hosts sitting at the old floor.
+Most scripts source `ensure-uv.sh` and run Python using `uv run`, which resolves and manages the
+interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
+`ensure_uv` also keeps uv's shared state out of its default home-directory locations: in CI it goes
+under the task's temp directory, and outside CI only tool installs are redirected, so a local run
+cannot overwrite globally installed tools.
+A handful of scripts under per-folder virtual environments still rely on the older
+`find_python3.sh`/`venvcreate` mechanism until they are migrated.
 The minimum supported version must also be reflected in the `project.requires-python` metadata
 in any `pyproject.toml` files in this repository.
 
@@ -21,11 +29,46 @@ We use isolated virtual environments to run all of the python scripts.
 
 ### Updating Dependencies
 
-The MongoDB server management scripts under [`.evergreen/orchestration`](https://github.com/mongodb-labs/drivers-evergreen-tools/tree/master/.evergreen/orchestration)
-depend on [PyMongo](https://pymongo.readthedocs.io/en/stable/). Package dependencies are pinned by the
-[`.evergreen/orchestration/uv.lock`](https://github.com/eramongodb/drivers-evergreen-tools/blob/master/.evergreen/orchestration/uv.lock)
-lockfile. When the lockfile is updated, ensure the updated PyMongo version still supports old server versions which are
-still in use by downstream projects.
+All Python dependencies are described by the top-level `pyproject.toml` and pinned by the top-level `uv.lock`.
+The `.evergreen`, `.evergreen/auth_aws`, `.evergreen/auth_oidc`, `.evergreen/csfle`, `.evergreen/docker`,
+`.evergreen/ocsp`, and `.evergreen/orchestration` subdirectories are included as workspaces.
+PyMongo is only required by mongo-orchestration scripts for backward compatibility (removed by [DRIVERS-3335](https://jira.mongodb.org/browse/DRIVERS-3335)).
+The only remaining individual `requirements.txt` is deployed with the Azure
+Functions app, which requires the file; it is not managed by the workspace
+(see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
+
+The weekly "uv Lock Update" workflow runs `uv lock --upgrade` and opens a single
+pull request that updates `uv.lock`. Dependabot handles Python security updates,
+plus version updates for everything else: GitHub Actions, the Go modules
+(`mongoproxy`, `perfcomp`), and the `github_app` and `mongodb-runner` npm
+projects, each as one grouped pull request. Dependabot does not group
+security updates, so each uv security update opens its own pull request; see
+[`.github/dependabot.yml`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
+The Azure Functions `requirements.txt` is the one manifest not covered: the
+function has expired and its test is disabled (see
+[`.evergreen/auth_oidc/azure_func/README.md`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/auth_oidc/azure_func/README.md)).
+If the app becomes active again, add a `pip` ecosystem entry for
+`.evergreen/auth_oidc/azure_func/self-test` to Dependabot.
+Both Dependabot's security updates and the weekly lock update ignore releases
+younger than one week (`exclude-newer = "1 week"` in `pyproject.toml`), so an
+urgent vulnerability patch can take up to a week to land. For an urgent update,
+exempt the package until its release is at least a week old:
+
+```toml
+[tool.uv.exclude-newer-package]
+# `false` lifts the cutoff; an RFC 3339 timestamp also works.
+idna = false
+```
+
+The exemption lives in `pyproject.toml`, which both Dependabot and the weekly
+workflow read, so the next weekly run cannot downgrade the pin. A one-off
+`uv lock --upgrade --exclude-newer-package 'idna=false'` works too, but the
+next weekly run drops it while the release is still young
+([example](https://github.com/mongodb/mongo-cxx-driver/pull/1723)). Dependabot
+has no equivalent option and cannot resolve versions beyond the cutoff
+([dependabot-core#14156](https://github.com/dependabot/dependabot-core/issues/14156));
+[DRIVERS-3711](https://jira.mongodb.org/browse/DRIVERS-3711) tracks the fix in
+the lock update action.
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to
@@ -56,21 +99,23 @@ style.  The python formatting rules are governed by the `ruff.toml` file.
 To set up `pre-commit` locally, run:
 
 ```bash
-brew install pre-commit
-pre-commit install
+make install
 ```
 
 To run pre-commit manually, run:
 
 ```bash
-pre-commit run --all-files
+make lint
 ```
 
 To run an individual hook like `shellcheck` manually, run:
 
 ```bash
-pre-commit run --all-files shellcheck
+make lint HOOK=shellcheck
 ```
+
+`make install` keeps `pre-commit` inside the repo rather than installing it globally, so reach for
+`make lint` instead of a bare `pre-commit` command.
 
 ## New Features
 
@@ -79,6 +124,19 @@ contain a README.md with usage instructions, including example Evergreen config 
 
 It should also have a test file in `.evergreen/tests` and be run as a dedicated task in this repository.
 If it does not use assets like Atlas or a VM, then it should have a "pr" tag so that it runs on PRs.
+
+## Releasing
+
+Releases are cut by hand from the "Release" workflow in GitHub Actions. Pick a bump level of
+`patch`, `minor`, or `major`. The workflow reads the highest `vX.Y.Z` tag, computes the next
+version, then creates that tag and a GitHub release whose notes are generated from the commits
+since the previous tag.
+
+Select `dry_run` to print the next version and a preview of the notes without creating a tag or a
+release. A real release only runs on the default branch, and the tag it creates is signed.
+
+After the release is created, announce it in the `#client-libraries` Slack channel: post the new
+version and a summary of what changed, so teams that consume these tools learn about the release.
 
 ## Helpful Links
 

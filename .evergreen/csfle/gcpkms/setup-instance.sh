@@ -30,6 +30,21 @@ $GCPKMS_GCLOUD compute ssh "$GCPKMS_INSTANCENAME" \
 echo "Exit code of test-script is: $?"
 echo "Running setup-gce-instance.sh on GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
+echo "Copying drivers-evergreen-tools to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
+# Ship this checkout so the instance runs the same revision that provisioned it.
+# On failure start-mongodb.sh falls back to cloning the default branch, so this
+# must not abort the task.
+GCPKMS_ARCHIVE_DIR=$(mktemp -d)
+if bash "$DRIVERS_TOOLS/.evergreen/make-drivers-tools-archive.sh" "$GCPKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz"; then
+    $GCPKMS_GCLOUD compute scp "$GCPKMS_ARCHIVE_DIR/drivers-evergreen-tools.tgz" "$GCPKMS_INSTANCENAME":~ \
+        --zone $GCPKMS_ZONE \
+        --project $GCPKMS_PROJECT
+else
+    echo "WARNING: could not archive $DRIVERS_TOOLS; the instance will clone the default branch, which may not match this checkout."
+fi
+rm -rf "$GCPKMS_ARCHIVE_DIR"
+echo "Copying drivers-evergreen-tools to GCE instance ($GCPKMS_INSTANCENAME) ... end"
+
 echo "Copying start-mongodb.sh to GCE instance ($GCPKMS_INSTANCENAME) ... begin"
 # Copy files to test. Use "-p" to preserve execute mode.
 $GCPKMS_GCLOUD compute scp $DRIVERS_TOOLS/.evergreen/csfle/gcpkms/remote-scripts/start-mongodb.sh "$GCPKMS_INSTANCENAME":~ \

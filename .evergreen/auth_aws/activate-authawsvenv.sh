@@ -5,44 +5,16 @@
 # Usage:
 #   . ./activate-authawsvenv.sh
 #
-# This file creates and/or activates the authawsvenv virtual environment in the
-# current working directory. This file must be invoked from within the
-# .evergreen/auth_aws directory in the Drivers Evergreen Tools repository.
-#
-# If a authawsvenv virtual environment already exists, it will be activated and
-# no further action will be taken. If a authawsvenv virtual environment must be
-# created, required packages will also be installed.
-
-# If an error occurs during creation, activation, or installation of packages,
-# the authawsvenv virtual environment will be deactivated and activate_authawsvenv
-# will return a non-zero value.
+# Creates and/or activates the Python environment for the auth_aws test
+# scripts: the root workspace .venv with the auth_aws group (pymongo[aws],
+# boto3, pyop). Delegates to the shared helper, ../activate-uv-venv.sh.
 
 if [ -z "$BASH" ]; then
   echo "activate-authawsvenv.sh must be run in a Bash shell!" 1>&2
   return 1
 fi
 
-# Automatically invoked by activate-authawsvenv.sh.
-activate_authawsvenv() {
-  # shellcheck source=.evergreen/venv-utils.sh
-  . ../venv-utils.sh || return
+# shellcheck source=.evergreen/activate-uv-venv.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../activate-uv-venv.sh" || return 1
 
-  if [[ -d authawsvenv ]]; then
-    venvactivate authawsvenv || return
-  else
-    # shellcheck source=.evergreen/find-python3.sh
-    . ../find-python3.sh || return
-    PYTHON=$(ensure_python3) || return
-
-    venvcreate "${PYTHON:?}" authawsvenv || return
-
-    python -m pip install -q -r requirements.txt || {
-      local -r ret="$?"
-      deactivate || return 1 # Deactivation should never fail!
-      return "$ret"
-    }
-    echo "Creating virtual environment 'authawsvenv'... done."
-  fi
-}
-
-activate_authawsvenv
+activate_uv_venv auth_aws

@@ -7,6 +7,19 @@ for more information on those specific scenarios.
 
 ## Prerequisites
 
+The dependencies (boto3, pykmip, cryptography) are managed by the root uv workspace
+(see the `csfle` group in the top-level `pyproject.toml`).
+
+On arches where `cryptography` publishes no wheels (currently s390x/zSeries),
+uv builds it from source. The build needs a Rust toolchain and, where the
+system OpenSSL is older than 3.0, an OpenSSL 3 install to link against.
+`setup.sh` provides both: it sources `setup-secrets.sh`, which sources
+`activate-kmstlsvenv.sh`; the activate script runs
+[.evergreen/ensure-cryptography-build.sh](../ensure-cryptography-build.sh)
+before `uv sync`. That script installs a Rust toolchain
+([.evergreen/install-rust.sh](../install-rust.sh)) and, when needed, builds
+OpenSSL 3 into a local prefix.
+
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/csfle` vault.
 
@@ -35,6 +48,19 @@ The following servers will be started:
 - KMS HTTP server with a correct cert on port 9002
 - KMS Failpoint Server on port 9003
 - Mock Azure IMDS server on port 8080
+
+### Overriding certs
+
+The following env vars override the certs used by the servers above. They default to certs
+generated in [x509gen](../x509gen):
+
+- `CSFLE_TLS_CA_FILE`
+- `CSFLE_TLS_CERT_FILE`
+- `CSFLE_TLS_CLIENT_CERT_FILE`
+- `CSFLE_TLS_EXPIRED_FILE`
+- `CSFLE_TLS_WRONG_HOST_FILE`
+- `CSFLE_TLS_FAILPOINT_CA_FILE`
+- `CSFLE_TLS_FAILPOINT_CERT_FILE`
 
 When finished, stop the servers by running:
 

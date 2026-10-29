@@ -1,0 +1,9 @@
+[project]
+name = "drivers-csfle"
+version = "0.1.0"
+description = 'Scripts for the drivers csfle feature'
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+  { name = "Steven Silvester", email = "steve.silvester@mongodb.com" },
+]

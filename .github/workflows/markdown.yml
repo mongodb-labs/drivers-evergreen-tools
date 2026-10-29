@@ -31,10 +31,12 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: "Check Markdown"
-        uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"
+        uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"  # v1.3.1
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           command: check_broken_paths

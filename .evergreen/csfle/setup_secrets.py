@@ -146,6 +146,8 @@ with open("secrets-export.sh", "ab") as fid:
         "CSFLE_TLS_CLIENT_CERT_FILE",
         "CSFLE_TLS_EXPIRED_FILE",
         "CSFLE_TLS_WRONG_HOST_FILE",
+        "CSFLE_TLS_FAILPOINT_CA_FILE",
+        "CSFLE_TLS_FAILPOINT_CERT_FILE",
     ]:
         fid.write(f'\nexport {key}="{os.environ[key]}"'.encode())
     fid.write(b"\n")

@@ -13,6 +13,12 @@ get_distro ()
    . ${_script_dir}/get-distro.sh
 }
 
+# Strip query parameters (e.g. presigned S3 credentials) before printing a URL.
+redact_url ()
+{
+   printf '%s' "${1%%\?*}"
+}
+
 # get_mongodb_download_url_for "linux-distro-version-architecture" "latest|44|42|40|36|34|32|30|28|26|24" "true|false"
 # Sets EXTRACT to appropriate extract command
 # Sets MONGODB_DOWNLOAD_URL to the appropriate download url
@@ -57,20 +63,21 @@ get_mongodb_download_url_for ()
    # Get the download url for the latest MongoSH.
    # shellcheck disable=SC3028
    _script_dir="$(dirname ${BASH_SOURCE:-$0})"
-   _python3=$(bash -c ". $_script_dir/find-python3.sh && ensure_python3 2>/dev/null")
-   MONGOSH_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
+   . "$_script_dir/ensure-uv.sh"
+   ensure_uv || exit 1
+   MONGOSH_DOWNLOAD_URL=$(uv run --project "$_script_dir" python "${_script_dir}/mongosh_dl.py" --no-download | tr -d '\r')
 
    # Get the download url for MongoDB for the given version.
-   MONGODB_DOWNLOAD_URL="$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
+   MONGODB_DOWNLOAD_URL="$(uv run --project "$_script_dir" python "${_script_dir}/mongodl.py" --version $_VERSION --component $_component --no-download | tr -d '\r')"
 
    if [ -z "$MONGODB_DOWNLOAD_URL" ]; then
      echo "Unknown version: $_VERSION for $_DISTRO"
      exit 1
    fi
 
-   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$($_python3 "${_script_dir}/mongodl.py" --version $_VERSION --component crypt_shared --no-download | tr -d '\r')
+   MONGO_CRYPT_SHARED_DOWNLOAD_URL=$(uv run --project "$_script_dir" python "${_script_dir}/mongodl.py" --version $_VERSION --component crypt_shared --no-download | tr -d '\r')
 
-   echo "$MONGODB_DOWNLOAD_URL"
+   echo "$(redact_url "$MONGODB_DOWNLOAD_URL")"
 }
 
 # curl_retry emulates running curl with `--retry 5` and `--retry-all-errors`.
@@ -116,7 +123,7 @@ download_and_extract_mongosh ()
    EXTRACT_MONGOSH=${2:-"tar zxf"}
 
    if [ -z "$MONGOSH_DOWNLOAD_URL" ]; then
-      get_mongodb_download_url_for "$(get_distro)" latest false
+      get_mongodb_download_url_for "$(get_distro)" latest-stable false
    fi
 
    if [ -n "${MONGODB_BINARIES:-}" ]; then
@@ -187,7 +194,7 @@ download_and_extract ()
       if [ -z "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" ]; then
          echo "There is no crypt_shared library for distro='$DISTRO' and version='$MONGODB_VERSION'".
       else
-         echo "Downloading crypt_shared package from $MONGO_CRYPT_SHARED_DOWNLOAD_URL"
+         echo "Downloading crypt_shared package from $(redact_url "$MONGO_CRYPT_SHARED_DOWNLOAD_URL")"
          download_and_extract_crypt_shared "$MONGO_CRYPT_SHARED_DOWNLOAD_URL" "$EXTRACT" CRYPT_SHARED_LIB_PATH
          echo "CRYPT_SHARED_LIB_PATH:" $CRYPT_SHARED_LIB_PATH
          if [ -z $CRYPT_SHARED_LIB_PATH ]; then

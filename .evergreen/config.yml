@@ -302,7 +302,8 @@ functions:
           - AUTH
           - LOAD_BALANCER
           - LOCAL_ATLAS
-          - REQUIRE_API_VERSION,
+          - OTEL
+          - REQUIRE_API_VERSION
           - SSL
           - STORAGE_ENGINE
           - TOPOLOGY
@@ -342,6 +343,7 @@ functions:
           SSL: ${SSL}
           MONGODB_URI: ${MONGODB_URI}
           CRYPT_SHARED_LIB_PATH: ${CRYPT_SHARED_LIB_PATH}
+          OTEL_TRACE_DIR: ${OTEL_TRACE_DIR}
         args:
           - ${PROJECT_DIRECTORY}/.evergreen/run-tests.sh
 
@@ -352,7 +354,7 @@ functions:
         binary: bash
         env:
           ENTRYPOINT: /root/test-entrypoint.sh
-        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, TARGET_IMAGE, ARCH]
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, TARGET_IMAGE, ARCH, MONGODB_VERSION]
         args:
           - ${DRIVERS_TOOLS}/.evergreen/docker/run-server.sh
     - command: subprocess.exec
@@ -413,7 +415,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export AZUREOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $AZUREOIDC_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$AZUREOIDC_DRIVERS_TAR_FILE"
           export AZUREOIDC_TEST_CMD="source ./env.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/azure/run-driver-test.sh
           # Generate a test results file
@@ -448,7 +450,7 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export GCPOIDC_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $GCPOIDC_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$GCPOIDC_DRIVERS_TAR_FILE"
           export GCPOIDC_TEST_CMD="source ./secrets-export.sh && echo 'hello'"
           bash ./.evergreen/auth_oidc/gcp/run-driver-test.sh
           # Generate a test results file
@@ -468,7 +470,7 @@ functions:
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          git archive -o $K8S_DRIVERS_TAR_FILE HEAD
+          bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
           bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
@@ -509,14 +511,6 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-aws.sh]
 
-  "run data lake test":
-    - command: subprocess.exec
-      type: test
-      params:
-        binary: bash
-        include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
-        args: [src/.evergreen/tests/test-data-lake.sh]
-
   "run github app test":
     - command: subprocess.exec
       type: test
@@ -546,7 +540,7 @@ functions:
         binary: bash
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/csfle/teardown.sh]
-    # Test setup and teardown for each supported version of Python.
+    # Test csfle setup and teardown.
     - command: subprocess.exec
       type: test
       params:
@@ -554,11 +548,33 @@ functions:
         include_expansions_in_env: [AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-csfle.sh]
 
+  "run remote kms provisioning test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-remote-kms-provisioning.sh]
+
+  "run drivers tools archive test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-drivers-tools-archive.sh]
+
+  "run ensure uv test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-ensure-uv.sh]
+
   "run mongodb runner test partial":
     - command: subprocess.exec
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, MONGODB_VERSION]
         args: [src/.evergreen/tests/test-mongodb-runner.sh, partial]
 
   "run mongodb runner test full":
@@ -566,6 +582,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-mongodb-runner.sh]
 
   "run cli test partial":
@@ -573,6 +590,7 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-cli.sh, partial]
 
   "run cli test full":
@@ -580,7 +598,16 @@ functions:
       type: test
       params:
         binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
         args: [src/.evergreen/tests/test-cli.sh]
+
+  "run otel test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+        args: [src/.evergreen/tests/test-otel.sh]
 
   "run ocsp test":
     - command: subprocess.exec
@@ -610,6 +637,16 @@ functions:
           rm -rf ${DRIVERS_TOOLS} || true
 
 pre:
+  # Inline rather than a script because this runs before git.get_project, so the
+  # checkout that would hold the script does not exist yet.
+  - command: shell.exec
+    params:
+      shell: bash
+      script: |
+        if [ "${clear_persisted_uv|}" = "true" ]; then
+          echo "Removing any uv an earlier task left behind, so ensure_uv has to pick an interpreter."
+          rm -f "$HOME/.local/bin/uv"
+        fi
   - func: "fetch and prepare resources"
   - func: "assume role"
 
@@ -958,6 +995,8 @@ tasks:
       tags: ["latest", "docker", "pr"]
       commands:
         - func: "run docker test"
+          vars:
+            MONGODB_VERSION: latest
 
     - name: "test-docker-4.2"
       tags: ["latest", "docker", "pr"]
@@ -1029,6 +1068,21 @@ tasks:
       commands:
         - func: "run csfle test"
 
+    - name: "test-remote-kms-provisioning"
+      tags: ["docker", "pr"]
+      commands:
+        - func: "run remote kms provisioning test"
+
+    - name: "test-drivers-tools-archive"
+      tags: ["pr"]
+      commands:
+        - func: "run drivers tools archive test"
+
+    - name: "test-ensure-uv"
+      tags: ["pr"]
+      commands:
+        - func: "run ensure uv test"
+
     - name: "test-legacy-versions"
       commands:
         - func: "run legacy versions test"
@@ -1043,15 +1097,15 @@ tasks:
       commands:
         - func: "run github app test"
 
-    - name: "test-atlas-data-lake"
-      tags: ["pr", "data_lake"]
-      commands:
-        - func: "run data lake test"
-
     - name: "test-cli-full"
       tags: ["pr"]
       commands:
         - func: "run cli test full"
+
+    - name: "test-otel"
+      tags: ["latest", "pr"]
+      commands:
+        - func: "run otel test"
 
     - name: "test-mongodb-runner-full"
       tags: ["pr"]
@@ -1326,6 +1380,10 @@ axes:
         display_name: "Amazon Linux 2023 x64"
         run_on: amazon2023.3-small
 
+      - id: amazon-2023-arm64
+        display_name: "Amazon Linux 2023 arm64"
+        run_on: amazon2023.3-arm64-small
+
       - id: macos-14-arm64
         display_name: "macOS 14 arm64"
         run_on: macos-14-arm64
@@ -1337,6 +1395,10 @@ axes:
       - id: rhel9
         display_name: "RHEL 9 x64"
         run_on: rhel94-small
+
+      - id: rhel9-zseries
+        display_name: "RHEL 9 (zSeries)"
+        run_on: rhel9-zseries-small
 
   # OSes that support versions of MongoDB>=5.0 with SSL.
   - id: os-requires-50
@@ -1364,7 +1426,7 @@ axes:
         run_on: rhel8-power-large
 
       - id: rhel8-zseries
-        display_name: "RHEL8 (zSeries)"
+        display_name: "RHEL 8 (zSeries)"
         run_on: rhel8-zseries-small
 
   - id: topology
@@ -1436,18 +1498,34 @@ buildvariants:
     - ubuntu2204-small
   tasks:
     - ".aws"
-    - ".data_lake"
     - ".ocsp"
     - ".docker"
     - ".local-atlas"
     - ".github-app"
+
+- name: tests-ubuntu2404
+  display_name: Ubuntu 24.04 tests
+  run_on:
+    - ubuntu2404-small
+  tasks:
+    - ".aws"
+
+# RHEL 8.2 arm64's system python3 is 3.6 and the image ships no uv, so
+# ensure_uv must use the toolchain interpreter; reversing the precedence fails.
+- name: tests-rhel82-arm64
+  display_name: "RHEL 8.2 ARM64"
+  run_on:
+    - rhel82-arm64-small
+  expansions:
+    clear_persisted_uv: "true"
+  tasks:
+    - name: "test-latest-standalone"
 
 - name: tests-rhel
   display_name: RHEL Tests
   run_on:
     - rhel94-small
   tasks:
-    - ".data_lake"
     - ".docker"
     - ".local-atlas"
     - ".github-app"
@@ -1463,6 +1541,32 @@ buildvariants:
     # - "test_oidc_azure_func_task_group"
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
+
+# An alternate Windows host that runs a subset of the test suites.
+- name: tests-windows-2022-latest
+  display_name: "Windows 2022 partial tests"
+  run_on:
+    - windows-2022-latest-small
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
+
+# Both Windows hosts have a python toolchain; the suites run on each variant
+# to make sure they pass on both. MongoDB 8.3+ does not run on the vsCurrent
+# image (Windows Server 2019), so that variant is pinned to 7.0 (DRIVERS-3658).
+- name: tests-windows-vsCurrent
+  display_name: "Windows vsCurrent partial tests"
+  run_on:
+    - windows-vsCurrent-small
+  expansions:
+    MONGODB_VERSION: "7.0"
+  tasks:
+    - "test-ensure-uv"
+    - "test-cli-partial"
+    - "test-mongodb-runner-partial"
+    - "test-csfle"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
@@ -1499,7 +1603,10 @@ buildvariants:
         add_tasks:
           - "test-install-binaries"
           - "test-csfle"
+          - "test-drivers-tools-archive"
+          - "test-ensure-uv"
           - "test-cli-full"
+          - "test-otel"
           - "test-mongodb-runner-full"
           - "test-happy-eyeballs"
           - "test-ocsp"
@@ -1532,6 +1639,16 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries hosts have no cryptography wheels: ensure-cryptography-build.sh
+    # provides the sdist's toolchain (Rust, and an OpenSSL 3 build on RHEL 8).
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-50: "rhel8-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1556,6 +1673,23 @@ buildvariants:
           - "test-install-binaries"
           - "test-cli-partial"
           - "test-mongodb-runner-partial"
+    # zSeries hosts have no cryptography wheels: ensure-cryptography-build.sh
+    # provides the sdist's toolchain (Rust; RHEL 9's system OpenSSL 3 suffices).
+    - if:
+        auth: "auth"
+        ssl: "ssl"
+        os-requires-70: "rhel9-zseries"
+      then:
+        add_tasks:
+          - "test-ocsp"
+          - "test-csfle"
+    - if:
+        auth: "auth"
+        ssl: "nossl"
+        os-requires-70: ["amazon-2023-x64", "amazon-2023-arm64"]
+      then:
+        add_tasks:
+          - "test-cli-full"
 
 # Storage Engine Tests on Ubuntu 20.04
 - matrix_name: "tests-storage-engines"

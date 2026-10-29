@@ -13,7 +13,7 @@ fi
 
 source ./secrets-export.sh
 
-if [ -z "${CSFLE_TLS_CA_FILE-}" ]; then
+if [ -z "${CSFLE_TLS_CA_FILE-}" ] || [ -z "${CSFLE_TLS_FAILPOINT_CA_FILE-}" ] || [ -z "${CSFLE_TLS_FAILPOINT_CERT_FILE-}" ]; then
   echo "Please run the setup-secrets.sh script"
   exit 1
 fi
@@ -68,7 +68,7 @@ cat http3.log
 echo "Starting HTTP Server 3...done."
 
 echo "Starting Failpoint Server..."
-env -u CSFLE_TLS_CERT_FILE -u CSFLE_TLS_CA_FILE $COMMAND kms_failpoint_server.py --port 9003 >failpoint.log 2>&1 &
+$COMMAND kms_failpoint_server.py --port 9003 --cert-file "$CSFLE_TLS_FAILPOINT_CERT_FILE" --ca-file "$CSFLE_TLS_FAILPOINT_CA_FILE" >failpoint.log 2>&1 &
 echo "$!" >>kmip_pids.pid
 echo "Starting Failpoint Server...done."
 sleep 1
@@ -88,7 +88,7 @@ cat http_proxy_tls.log
 echo "Starting HTTP Proxy (TLS)...done."
 
 echo "Starting Fake Azure IMDS..."
-$COMMAND bottle.py fake_azure:imds >fake_azure.log 2>&1 &
+$COMMAND fake_azure.py >fake_azure.log 2>&1 &
 echo "$!" >>kmip_pids.pid
 sleep 1
 cat fake_azure.log

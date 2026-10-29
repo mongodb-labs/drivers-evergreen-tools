@@ -43,7 +43,9 @@ chmod 600 $GCPKMS_KEYFILE
 export GCPKMS_PROJECT=${GCPKMS_PROJECT:-"devprod-drivers"}
 export GCPKMS_ZONE=${GCPKMS_ZONE:-"us-east1-b"}
 export GCPKMS_IMAGEPROJECT=${GCPKMS_IMAGEPROJECT:-"debian-cloud"}
-export GCPKMS_IMAGEFAMILY=${GCPKMS_IMAGEFAMILY:-"debian-11"}
+# If this default changes, update the gcpkms base_image in
+# .evergreen/tests/test-remote-kms-provisioning.sh to match.
+export GCPKMS_IMAGEFAMILY=${GCPKMS_IMAGEFAMILY:-"debian-12"}
 export GCPKMS_MACHINETYPE=${GCPKMS_MACHINETYPE:-"e2-micro"}
 export GCPKMS_DISKSIZE=${GCPKMS_DISKSIZE:-"20gb"}
 

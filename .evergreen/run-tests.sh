@@ -6,6 +6,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #       SSL                     Set to enable SSL. Defaults to "nossl"
 #       MONGODB_URI             Set the suggested connection MONGODB_URI (including credentials and topology info)
 #       MARCH                   Machine Architecture. Defaults to lowercase uname -m
+#       OTEL_TRACE_DIR          Set when the cluster was started with OTEL=1 (directory of server OTel span files; unset or empty means OTel prose tests should be skipped)
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE:-$0})
 . $SCRIPT_DIR/handle-paths.sh

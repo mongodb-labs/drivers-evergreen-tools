@@ -14,7 +14,6 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 
 | Vault                     | Usage |
 | -----                     | ------|
-| drivers/adl               | Used in [`atlas_data_lake`](../atlas_data_lake/README.md) for Atlas Data Lake testing. |
 | drivers/atlas             | Can be manually used in conjunction with [`atlas`](../atlas/README.md) to launch an atlas cluster in the prod environment. |
 | drivers/atlas-dev         | Used in [`atlas`](../atlas/README.md) to launch an atlas cluster in the dev environment. |
 | drivers/atlas-qa         | Used in [`atlas`](../atlas/README.md) to launch an atlas cluster in the qa environment. |
@@ -24,6 +23,7 @@ The `setup-secrets.sh` script in this folder can be used for other vaults such a
 | drivers/azure_oidc        | Used in [`auth_oidc/azure`](../auth_oidc/azure/README.md) for OIDC Testing on Azure. |
 | drivers/comment-bot       | Used in [`github_app`](../github_app/README.md) for the DBX Comment bot. |
 | drivers/csfle             | Used in [`cslfe`](../csfle/README.md) for encryption related tests. |
+| drivers/devprod-release-infrastructure | Used by `mongodl` (`.evergreen/server_artifacts.py`) to resolve credentials for the private "latest"/"latest-build" server artifacts; override with `SERVER_ARTIFACTS_SECRET_VAULT`. |
 | drivers/enterprise_auth   | Has the creds needed for Enterprise Auth testing. |
 | drivers/gcpkms            | Used in [`cslfe/gcpkms`](../csfle/gcpkms/README.md) for GCP KMS testing. |
 | drivers/gcpoidc           | Used in [`auth_oidc/gcp`](../auth_oidc/gcp/README.md) for OIDC Testing on GCP. |

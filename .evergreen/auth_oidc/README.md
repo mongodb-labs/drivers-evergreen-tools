@@ -52,6 +52,26 @@ OIDC_ADMIN_USER     # The username and password for use with an admin connection
 OIDC_ADMIN_PWD
 ```
 
+The setup scripts run Python via `uv`, with dependencies coming from the `auth_oidc` group in
+the root `pyproject.toml` (the root is passed explicitly because the group is defined there):
+
+```bash
+uv run --project "$DRIVERS_TOOLS" --group auth_oidc python oidc_get_tokens.py
+```
+
+Downstream repositories can also source `activate-authoidcvenv.sh` to create and activate a
+Python environment with the `auth_oidc` dependencies installed. It syncs the `auth_oidc`
+dependency group into the root `.venv` with uv and activates it — the same environment the
+`uv run` command above uses:
+
+```bash
+cd $DRIVERS_TOOLS/.evergreen/auth_oidc
+. ./activate-authoidcvenv.sh
+```
+
+The activated environment has `pip` for backwards compatibility with the legacy
+virtualenv workflow; `uv pip` works as well.
+
 ## Local Server Testing
 
 `MONGODB-OIDC` is only supported on Linux, but we support running locally in
