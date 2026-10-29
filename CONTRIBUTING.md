@@ -49,6 +49,26 @@ function has expired and its test is disabled (see
 [`.evergreen/auth_oidc/azure_func/README.md`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/auth_oidc/azure_func/README.md)).
 If the app becomes active again, add a `pip` ecosystem entry for
 `.evergreen/auth_oidc/azure_func/self-test` to Dependabot.
+Both Dependabot's security updates and the weekly lock update ignore releases
+younger than one week (`exclude-newer = "1 week"` in `pyproject.toml`), so an
+urgent vulnerability patch can take up to a week to land. For an urgent update,
+exempt the package until its release is at least a week old:
+
+```toml
+[tool.uv.exclude-newer-package]
+# `false` lifts the cutoff; an RFC 3339 timestamp also works.
+idna = false
+```
+
+The exemption lives in `pyproject.toml`, which both Dependabot and the weekly
+workflow read, so the next weekly run cannot downgrade the pin. A one-off
+`uv lock --upgrade --exclude-newer-package 'idna=false'` works too, but the
+next weekly run drops it while the release is still young
+([example](https://github.com/mongodb/mongo-cxx-driver/pull/1723)). Dependabot
+has no equivalent option and cannot resolve versions beyond the cutoff
+([dependabot-core#14156](https://github.com/dependabot/dependabot-core/issues/14156));
+[DRIVERS-3711](https://jira.mongodb.org/browse/DRIVERS-3711) tracks the fix in
+the lock update action.
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to
