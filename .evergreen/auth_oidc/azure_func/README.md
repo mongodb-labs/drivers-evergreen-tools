@@ -11,6 +11,10 @@ The instructions for creating a new Azure function have changed slightly.
 We will need to follow the instructions at the link above and update the Overall
 prerequisites below in order to revive DRIVERS-2883.
 
+The `self-test/requirements.txt` here is the one manifest not covered by
+Dependabot; add a `pip` entry for `self-test/` in `.github/dependabot.yml`
+when reviving the function (DRIVERS-2883).
+
 ## Prerequisites
 
 ### Overall
