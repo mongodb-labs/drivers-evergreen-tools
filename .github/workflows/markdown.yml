@@ -4,9 +4,17 @@ on:
   pull_request:
     branches:
       - "master"
+    paths:
+      - '**.md'
+      - '**.ipynb'
+      - '.github/workflows/markdown.yml'
   push:
     branches:
       - "master"
+    paths:
+      - '**.md'
+      - '**.ipynb'
+      - '.github/workflows/markdown.yml'
 
 concurrency:
   group: markdown-${{ github.ref }}
@@ -23,12 +31,12 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v7"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"  # v7.0.1
         with:
           persist-credentials: false
 
       - name: "Check Markdown"
-        uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"
+        uses: "john0isaac/action-check-markdown@c255625e4ae89924a5f39a440a22e51fcc9f5893"  # v1.3.1
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           command: check_broken_paths
