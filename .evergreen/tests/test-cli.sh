@@ -59,7 +59,7 @@ ${DOWNLOAD_DIR}/mongod --version | grep v7.0
 ./orchestration/drivers-orchestration start --mongodb-binaries=${DOWNLOAD_DIR}
 ./orchestration/drivers-orchestration stop
 
-if [ ${1:-} == "partial" ]; then
+if [ "${1:-}" == "partial" ]; then
   popd
   make -C ${DRIVERS_TOOLS} test
   exit 0
@@ -69,8 +69,10 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
-# TODO (DRIVERS-3666): remove the IS_AMAZON2023 detection and its guards
-# once DEVPROD-44314 ships full gnupg2.
+# amazon2023 is detected only to skip the legacy-series URL checks below:
+# MongoDB has never published enterprise builds of the legacy series
+# (3.6-5.0) for amazon2023, so their URL resolution can only be exercised
+# on other distros.
 IS_AMAZON2023=0
 if [ -r /etc/os-release ]; then
   . /etc/os-release
@@ -96,24 +98,16 @@ fi
 # The master-nightly artifact is always published with a signature; a
 # missing signature would be a publication regression.
 if command -v gpg >/dev/null 2>&1; then
-  if [ ${IS_AMAZON2023} = 1 ]; then
-    grep -q "DEVPROD-44314" latest-build.log
-    # Broken gpg is a host property: --target must not re-enable verification.
-    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
-    grep -q "DEVPROD-44314" latest-build-target.log
-  else
-    grep -q "Verified GPG signature" latest-build.log
-    # A capable host must verify amazon2023 artifacts: tolerance is host-keyed.
-    ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
-    grep -q "Verified GPG signature" latest-build-target.log
-  fi
+  grep -q "Verified GPG signature" latest-build.log
+  ./mongodl --edition enterprise --version latest-build --component archive --target amazon2023 --test --retries 5 >latest-build-target.log 2>&1
+  grep -q "Verified GPG signature" latest-build-target.log
 else
   grep -q "gpg is not installed" latest-build.log
 fi
 SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION=1 ./mongodl --edition enterprise --version latest-build --component archive --test --retries 5 >latest-build-skip.log 2>&1
 grep -q "SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION is set" latest-build-skip.log
-# Signature-verification and retry-loop tests; each test skips itself where
-# it cannot apply. Relative to cwd: SCRIPT_DIR is invalid after the pushd.
+# Signature-verification and retry-loop tests. Relative to cwd: SCRIPT_DIR
+# is invalid after the pushd.
 PYTHONPATH=. uv run --no-project python tests/test-cli.py -v
 ./mongodl --edition enterprise --version latest-release --component archive --test --retries 5
 ./mongodl --edition enterprise --version latest-stable --component archive --test --retries 5
