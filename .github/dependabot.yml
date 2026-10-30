@@ -5,6 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns:
@@ -15,6 +17,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 0
   # Go modules (mongoproxy and perfcomp), updated together in one PR.
   - package-ecosystem: "gomod"
@@ -23,6 +27,8 @@ updates:
       - "/.evergreen/perfcomp"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       gomod:
         patterns:
@@ -32,6 +38,8 @@ updates:
     directory: "/.evergreen/github_app"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       github-app:
         patterns:
@@ -41,6 +49,8 @@ updates:
     directory: "/.evergreen/orchestration/mongodb-runner/default"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     allow:
       - dependency-type: "all"
     groups:

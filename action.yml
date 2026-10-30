@@ -53,11 +53,16 @@ runs:
         python-version: '3.13'
     - id: "add-pip-path"
       name: "Add PIP install folder to path"
-      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      # zizmor's github-env audit flags GITHUB_PATH writes in composite
+      # actions because consumers can't be constrained. Both writes below are
+      # this action's contract: fixed, literal paths that consuming workflows
+      # rely on to invoke the installed tools. There is no non-breaking
+      # alternative (an output would require every driver to change).
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH # zizmor: ignore[github-env]
       shell: bash
     - id: "add-mongodb-binary-path"
-      name: "Add PIP install folder to path"
-      run: echo ${GITHUB_ACTION_PATH}/mongodb/bin >> $GITHUB_PATH
+      name: "Add MongoDB binaries to path"
+      run: echo ${GITHUB_ACTION_PATH}/mongodb/bin >> $GITHUB_PATH # zizmor: ignore[github-env]
       shell: bash
     - id: "run-orchestration"
       name: "Download MongoDB"

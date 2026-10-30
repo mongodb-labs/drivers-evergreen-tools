@@ -12,6 +12,11 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+# All jobs are read-only: checkout, run tests, and lint. The GITHUB_TOKEN
+# passed to the setup action is only used for release downloads.
+permissions:
+  contents: read
+
 defaults:
   run:
     shell: bash -eux {0}
@@ -61,7 +66,7 @@ jobs:
 
       - id: setup-mongodb
         name: "Run GitHub Action"
-        uses: ./
+        uses: $/
         with:
           version: ${{ matrix.mongodb-version }}
           topology: ${{ matrix.topology }}
