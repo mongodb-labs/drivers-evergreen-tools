@@ -25,8 +25,3 @@ jobs:
           persist-credentials: false
       - name: Run zizmor 🌈
         uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
-        with:
-          # Fork pull requests run with a read-only token and cannot upload
-          # SARIF; scan without the upload there rather than failing the
-          # check for external contributors.
-          advanced-security: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
