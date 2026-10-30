@@ -85,21 +85,15 @@ jobs:
           export MONGOSH_EXTRA_ARGS
           make test-connect
 
-  pre-commit:
+  static:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        persist-credentials: false
-    - uses: actions/setup-python@v7
-    - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-
-  eslint:
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - uses: actions/setup-python@v7
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
       - uses: actions/setup-node@v7
       - id: cache-restore
         uses: actions/cache@v6
@@ -109,19 +103,9 @@ jobs:
       - name: Install dependencies
         if: steps.cache-restore.outputs.cache-hit != 'true'
         working-directory: .evergreen/github_app
-        run: npm ci - ignore-scripts
+        run: npm ci --ignore-scripts
       - name: Lint
         working-directory: .evergreen/github_app
         run: npm run lint
-
-  bump-version:
-    name: "Bump Version Script"
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v7
       - name: "Run unit tests"
         run: python3 -m unittest discover -s .github/scripts -p "test_*.py" -v

@@ -81,7 +81,7 @@ for (let line of reviewersSource.split('\n')) {
 const reviewer = reviewers[number % reviewers.length];
 
 console.log("Assigning reviewer to PR...");
-resp = await octokit.request("POST /repos/{owner}/{repo}/pulls/{number}/requested_reviewers", {
+await octokit.request("POST /repos/{owner}/{repo}/pulls/{number}/requested_reviewers", {
     owner,
     repo,
     number,

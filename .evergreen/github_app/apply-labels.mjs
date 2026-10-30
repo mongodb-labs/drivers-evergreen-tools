@@ -96,7 +96,7 @@ if (labelSet.size === 0) {
 }
 
 const labels = Array.from(labelSet)
-resp = await octokit.request("POST /repos/{owner}/{repo}/issues/{number}/labels", {
+await octokit.request("POST /repos/{owner}/{repo}/issues/{number}/labels", {
     owner,
     repo,
     number,
