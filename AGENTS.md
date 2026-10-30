@@ -84,6 +84,7 @@ There is no pytest suite. Validation is:
 - `.evergreen/tests/test-*.sh`: one script per feature area, run as Evergreen tasks.
 - `.github/workflows/tests.yml`: GitHub Actions test workflow.
 - `.github/workflows/markdown.yml`: checks for broken relative links in Markdown files.
+- `.github/workflows/zizmor.yml`: runs GitHub Actions security analysis (zizmor) on the workflows.
 
 Outside that, `.evergreen/mongoproxy/` and `.evergreen/perfcomp/` have their own Go tests
 (`go test ./...`, per each folder's README), and `.github/scripts/test_*.py` has its own

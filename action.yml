@@ -53,11 +53,12 @@ runs:
         python-version: '3.13'
     - id: "add-pip-path"
       name: "Add PIP install folder to path"
-      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      # Consuming workflows rely on these PATH entries. There is no non-breaking alternative.
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH # zizmor: ignore[github-env]
       shell: bash
     - id: "add-mongodb-binary-path"
-      name: "Add PIP install folder to path"
-      run: echo ${GITHUB_ACTION_PATH}/mongodb/bin >> $GITHUB_PATH
+      name: "Add MongoDB binaries to path"
+      run: echo ${GITHUB_ACTION_PATH}/mongodb/bin >> $GITHUB_PATH # zizmor: ignore[github-env]
       shell: bash
     - id: "run-orchestration"
       name: "Download MongoDB"
