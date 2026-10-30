@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   zizmor:
-    name: zizmor latest via Cargo
+    name: zizmor latest
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
