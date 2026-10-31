@@ -69,10 +69,13 @@ fi
 export VALIDATE_DISTROS=1
 ./mongodl --list
 ./mongodl --edition enterprise --version 7.0.6 --component archive --no-download
-# amazon2023 is detected only to skip the legacy-series URL checks below:
-# MongoDB has never published enterprise builds of the legacy series
-# (3.6-5.0) for amazon2023, so their URL resolution can only be exercised
-# on other distros.
+# amazon2023 is detected to skip two groups of checks below:
+# - the legacy-series URL checks: MongoDB has never published enterprise
+#   builds of the legacy series (3.6-5.0) for amazon2023, so their URL
+#   resolution can only be exercised on other distros.
+# - the perf-tag cryptd checks: the perf tags' cryptd builds may not exist
+#   for every target (the 6.0 pin predates amazon2023); the fully-featured
+#   distros cover them.
 IS_AMAZON2023=0
 if [ -r /etc/os-release ]; then
   . /etc/os-release
