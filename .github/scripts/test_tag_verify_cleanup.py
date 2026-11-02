@@ -286,6 +286,65 @@ class EksSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
 
 
+class EksPodSetupTest(unittest.TestCase):
+    """Tests for the cluster-tag gate in k8s/eks/setup.sh.
+
+    The auth_oidc eks task runs on a pre-provisioned cluster, so the pod
+    setup verifies the tags of the cluster the tests will run on before
+    creating a pod. The real CLI applies --query client-side; the mock
+    returns post-query shapes.
+    """
+
+    SCRIPT = REPO / ".evergreen/k8s/eks/setup.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("aws", AWS_MOCK)
+        self.write_executable("kubectl", KUBECTL_MOCK)
+        self.write_executable("eksctl", EKSCTL_MOCK)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_pod_setup(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["VERIFY_MONGODB_TAGS"] = "1"
+        env["DRIVERS_TOOLS"] = str(REPO)
+        env["EKS_CLUSTER_NAME"] = "cluster"
+        env["EKS_REGION"] = "us-west-2"
+        env["EKS_SERVICE_ACCOUNT_NAME"] = "sa"
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            cwd=self.state_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+    def test_pod_setup_fails_when_cluster_untagged(self):
+        """An untagged cluster must fail the pod setup."""
+        proc = self.run_pod_setup({"DROP_EKS_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_pod_setup_passes_when_cluster_tagged(self):
+        proc = self.run_pod_setup({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+
 class AwsParseTest(unittest.TestCase):
     """This PR's shell files must parse and gate on VERIFY_MONGODB_TAGS."""
 
