@@ -204,17 +204,18 @@ def remote_create_container(
     ecs_client = boto3.client("ecs", region_name=_get_region(cluster))
 
     # Tag the service per the MongoDB Cloud Tag Policy (DRIVERS-3712).
-    # ECS tag dicts use lowercase key/value names.
+    # ECS tag dicts use lowercase key/value names. An exported-but-empty
+    # override falls back to the default, matching the shell setup paths'
+    # ${VAR:-default} behavior.
     tags = [
         {
             "key": "mongodb-owner",
-            "value": os.environ.get(
-                "MONGODB_OWNER_TAG", "client-libraries-managers@mongodb.com"
-            ),
+            "value": os.environ.get("MONGODB_OWNER_TAG")
+            or "client-libraries-managers@mongodb.com",
         },
         {
             "key": "mongodb-env",
-            "value": os.environ.get("MONGODB_ENV_TAG", "dev"),
+            "value": os.environ.get("MONGODB_ENV_TAG") or "dev",
         },
     ]
 

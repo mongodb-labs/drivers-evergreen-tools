@@ -112,6 +112,31 @@ class TestRemoteCreateContainer(unittest.TestCase):
                 self.create(ecs)
         stop.assert_called_once_with(CLUSTER, SERVICE)
 
+    def test_empty_tag_overrides_fall_back_to_defaults(self):
+        """Exported-but-empty overrides must not produce empty policy tags.
+
+        The shell setup paths use ${VAR:-default}, which falls back on empty;
+        ECS must match that behavior.
+        """
+        ecs = _ecs_client(TAGS)
+        with mock.patch.dict(
+            os.environ, {"MONGODB_OWNER_TAG": "", "MONGODB_ENV_TAG": ""}
+        ):
+            with mock.patch.object(container_tester, "boto3") as boto3_mock:
+                boto3_mock.client.return_value = ecs
+                container_tester.remote_create_container(
+                    CLUSTER, "task-def", SERVICE, ["subnet"], "sg"
+                )
+        __, kwargs = ecs.create_service.call_args
+        values = {t["key"]: t["value"] for t in kwargs["tags"]}
+        self.assertEqual(
+            values,
+            {
+                "mongodb-owner": "client-libraries-managers@mongodb.com",
+                "mongodb-env": "dev",
+            },
+        )
+
     def test_verify_success_does_not_stop_service(self):
         """Tagged services are neither raised on nor stopped."""
         ecs = _ecs_client(TAGS)

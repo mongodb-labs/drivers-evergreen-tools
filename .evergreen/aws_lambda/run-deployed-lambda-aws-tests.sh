@@ -59,15 +59,35 @@ ensure_artifact_bucket ()
     --query Account --output text)-${AWS_REGION}}"
   echo "Ensuring artifact bucket ${ARTIFACT_BUCKET}..."
   if ! aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null; then
+    # The default bucket name is shared by all Lambda tasks in an account and
+    # region, so a concurrent first-time deployment can create the bucket
+    # between our check and our create; the create then fails with
+    # BucketAlreadyOwnedByYou while the bucket is perfectly usable.
     if [ "${AWS_REGION}" = "us-east-1" ]; then
-      aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}"
+      aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
+        || aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
+        || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
     else
       aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" \
-        --create-bucket-configuration LocationConstraint="${AWS_REGION}"
+        --create-bucket-configuration LocationConstraint="${AWS_REGION}" 2>/dev/null \
+        || aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
+        || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
     fi
   fi
+  # put-bucket-tagging replaces the bucket's entire tag set, so read and
+  # merge the existing tags first (e.g. cost-allocation tags on a
+  # pre-provided bucket); NoSuchTagSet just means there are none yet.
+  EXISTING_TAGS=$(aws s3api get-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
+    --query "TagSet" --output json 2>/dev/null || echo "[]")
+  TAGGING=$(jq -n \
+    --argjson existing "${EXISTING_TAGS}" \
+    --arg owner "${MONGODB_OWNER_TAG}" \
+    --arg env "${MONGODB_ENV_TAG}" \
+    '{TagSet: (($existing
+        | map(select(.Key != "mongodb-owner" and .Key != "mongodb-env")))
+      + [{Key: "mongodb-owner", Value: $owner}, {Key: "mongodb-env", Value: $env}])}')
   aws s3api put-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
-    --tagging "TagSet=[{Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}},{Key=mongodb-env,Value=${MONGODB_ENV_TAG}}]"
+    --tagging "${TAGGING}"
 }
 
 # Restarts the cluster's primary node.

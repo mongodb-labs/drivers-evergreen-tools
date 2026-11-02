@@ -56,6 +56,21 @@ persist_tags () {
   fi
 }
 
+# Record tags for a resource id in $STATE_DIR/resource_tags.txt, one
+# "id|json" line per resource, replacing any line for the same id.
+store_resource_tags () {
+  local rid=$1 json=$2
+  touch "$STATE_DIR/resource_tags.txt"
+  grep -v "^${rid}|" "$STATE_DIR/resource_tags.txt" > "$STATE_DIR/resource_tags.tmp" || true
+  mv "$STATE_DIR/resource_tags.tmp" "$STATE_DIR/resource_tags.txt"
+  echo "${rid}|${json}" >> "$STATE_DIR/resource_tags.txt"
+}
+
+show_resource_tags () {
+  local rid=$1
+  grep "^${rid}|" "$STATE_DIR/resource_tags.txt" | cut -d'|' -f2-
+}
+
 cmd=$1; shift
 case "$cmd" in
   vm)
@@ -68,6 +83,8 @@ case "$cmd" in
       show)
         if [[ "$*" == *storageProfile* ]]; then
           echo "/subscriptions/sub/disks/osdisk"
+        elif [[ "$*" == *networkProfile* ]]; then
+          echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic"
         else
           cat "$STATE_DIR/vm_tags.json"
         fi
@@ -79,16 +96,39 @@ case "$cmd" in
     esac
     ;;
   tag)
-    if [ -n "${FAIL_DISK_TAG:-}" ]; then
-      echo "az tag create: simulated failure" >> "$STATE_DIR/calls.log"
+    # az tag create --resource-id X --tags "k=v" "k=v"
+    local_rid=""
+    prev=""
+    for a in "$@"; do
+      if [ "$prev" = "--resource-id" ]; then local_rid=$a; fi
+      prev=$a
+    done
+    if [ -n "${FAIL_DISK_TAG:-}" ] && [[ "$local_rid" == *disks* ]]; then
+      echo "az tag create: simulated failure" 1>&2
+      exit 1
+    fi
+    if [ -n "${FAIL_TAG_TARGET:-}" ] && [[ "$local_rid" == *"${FAIL_TAG_TARGET}"* ]]; then
+      echo "az tag create: simulated failure for ${local_rid}" 1>&2
       exit 1
     fi
     persist_tags "$STATE_DIR/disk_tags.json" "$@"
+    store_resource_tags "$local_rid" "$(tags_json "$(flag_values --tags "$@")")"
     echo '{}'
     ;;
   disk)
     if [ "${1:-}" = "show" ]; then
       cat "$STATE_DIR/disk_tags.json"
+    fi
+    ;;
+  resource)
+    # az resource show --ids X --query tags
+    if [ "${1:-}" = "show" ]; then
+      rid=""; prev=""
+      for a in "$@"; do
+        if [ "$prev" = "--ids" ]; then rid=$a; fi
+        prev=$a
+      done
+      show_resource_tags "$rid"
     fi
     ;;
   public-ip)
@@ -98,13 +138,26 @@ case "$cmd" in
     exit 1
     ;;
   network)
-    if [ "${1:-}" = "nsg" ] && [ "${2:-}" = "rule" ] && [ "${3:-}" = "create" ]; then
-      echo '{}'
-    elif [ "${1:-}" = "nsg" ] && [ "${2:-}" = "delete" ]; then
-      echo "nsg-delete" >> "$STATE_DIR/cleanup.log"
-    elif [ "${1:-}" = "public-ip" ] && [ "${2:-}" = "delete" ]; then
-      echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"
-    fi
+    sub=$1; shift
+    case "$sub" in
+      nsg)
+        if [ "${1:-}" = "rule" ] && [ "${2:-}" = "create" ]; then
+          echo '{}'
+        elif [ "${1:-}" = "delete" ]; then
+          echo "nsg-delete" >> "$STATE_DIR/cleanup.log"
+        elif [ "${1:-}" = "show" ]; then
+          echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/nsg"
+        fi
+        ;;
+      public-ip)
+        if [ "${1:-}" = "delete" ]; then
+          echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"
+        elif [ "${1:-}" = "show" ]; then
+          echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/publicIPAddresses/ip"
+        fi
+        ;;
+      *) echo '{}' ;;
+    esac
     ;;
   *) echo '{}' ;;
 esac
@@ -174,6 +227,48 @@ esac
 """
 
 CURL_MOCK = "#!/usr/bin/env bash\necho 1.2.3.4\n"
+
+# Mock `aws`: models the subset of the CLI that ensure_artifact_bucket in
+# run-deployed-lambda-aws-tests.sh uses. CREATE_CONFLICT=1 simulates a
+# concurrent deployment winning the bucket-creation race (the bucket exists
+# afterwards, but our create-bucket fails with BucketAlreadyOwnedByYou).
+AWS_MOCK = r"""#!/usr/bin/env bash
+set -u
+STATE_DIR=${STATE_DIR:?}
+# jq output spans lines; collapse them so each call is one log line.
+echo "aws $*" | tr '\n' ' ' >> "$STATE_DIR/calls.log"
+echo >> "$STATE_DIR/calls.log"
+
+case "$1 $2" in
+  "sts get-caller-identity") echo "123456789012" ;;
+  "s3api head-bucket")
+    if [ -f "$STATE_DIR/bucket_created" ]; then
+      exit 0
+    fi
+    exit 1
+    ;;
+  "s3api create-bucket")
+    if [ -n "${CREATE_CONFLICT:-}" ] && [ ! -f "$STATE_DIR/bucket_created" ]; then
+      # A concurrent deployment won the race: the bucket now exists, but this
+      # create fails outside us-east-1.
+      touch "$STATE_DIR/bucket_created"
+      echo "An error occurred (BucketAlreadyOwnedByYou) when calling the CreateBucket operation: The bucket already exists" 1>&2
+      exit 254
+    fi
+    touch "$STATE_DIR/bucket_created"
+    ;;
+  "s3api get-bucket-tagging")
+    if [ -f "$STATE_DIR/existing_tags.json" ]; then
+      cat "$STATE_DIR/existing_tags.json"
+    else
+      echo "An error occurred (NoSuchTagSet) when calling the GetBucketTagging operation: The TagSet does not exist" 1>&2
+      exit 254
+    fi
+    ;;
+  "s3api put-bucket-tagging") : ;;
+  *) echo '{}' ;;
+esac
+"""
 
 CREATE_VM_ENV = {
     "AZUREKMS_VMNAME_PREFIX": "PREFIX",
@@ -253,6 +348,37 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertEqual([], self.cleanup_calls())
 
+    def test_azure_supporting_resources_tagged_when_tagged(self):
+        """The NIC, public IP, and NSG created alongside the VM carry the policy tags.
+
+        az vm create --tags reaches none of them, so the script must tag and
+        verify each explicitly (M4).
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh", CREATE_VM_ENV
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        resource_tags = (self.state_path / "resource_tags.txt").read_text()
+        for resource in (
+            "networkInterfaces",
+            "publicIPAddresses",
+            "networkSecurityGroups",
+        ):
+            line = next((ln for ln in resource_tags.splitlines() if resource in ln), "")
+            self.assertIn("mongodb-owner", line, resource)
+            self.assertIn("mongodb-env", line, resource)
+
+    def test_azure_vm_deleted_when_supporting_resource_tagging_fails(self):
+        """A failed supporting-resource tag write must clean up the VM (M4)."""
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "FAIL_TAG_TARGET": "networkInterfaces"},
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("public-ip-delete", self.cleanup_calls())
+        self.assertIn("nsg-delete", self.cleanup_calls())
+
     def test_azure_vm_deleted_when_os_disk_tagging_fails(self):
         """A failed OS-disk tag write must delete the VM, public IP, and NSG.
 
@@ -322,6 +448,101 @@ class TagVerifyCleanupTest(unittest.TestCase):
         disk_tags = (self.state_path / "disk_labels.json").read_text()
         self.assertIn("mongodb-owner", disk_tags)
         self.assertIn("mongodb-env", disk_tags)
+
+
+class ArtifactBucketTest(unittest.TestCase):
+    """Tests for ensure_artifact_bucket in run-deployed-lambda-aws-tests.sh (M2/M3).
+
+    The script's function definitions are extracted (everything before its
+    trap/main section) and sourced with a mocked `aws`, so the real bucket
+    logic runs without touching S3.
+    """
+
+    SCRIPT = REPO / ".evergreen/aws_lambda/run-deployed-lambda-aws-tests.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("aws", AWS_MOCK)
+        # Everything before the trap line: function definitions only.
+        extraction = subprocess.run(
+            ["awk", "/^trap cleanup EXIT/{exit} {print}", str(self.SCRIPT)],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+        # The extracted file lives outside the repo, so handle-paths.sh's
+        # relative source cannot resolve; DRIVERS_TOOLS is already set.
+        functions_text = extraction.stdout.replace(
+            ". $SCRIPT_DIR/../handle-paths.sh",
+            ": # handle-paths.sh skipped by the test harness; DRIVERS_TOOLS is set",
+        )
+        self.functions = self.state_path / "functions.sh"
+        self.functions.write_text(functions_text)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_ensure_artifact_bucket(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["DRIVERS_TOOLS"] = str(REPO)
+        env["TEST_LAMBDA_DIRECTORY"] = str(self.state_path)
+        env["DRIVERS_ATLAS_PUBLIC_API_KEY"] = "k"
+        env["DRIVERS_ATLAS_PRIVATE_API_KEY"] = "s"
+        env["DRIVERS_ATLAS_LAMBDA_USER"] = "u"
+        env["DRIVERS_ATLAS_LAMBDA_PASSWORD"] = "p"
+        env["DRIVERS_ATLAS_GROUP_ID"] = "g"
+        env["LAMBDA_STACK_NAME"] = "stack"
+        env["AWS_REGION"] = "us-west-2"
+        env["FUNCTIONS"] = str(self.functions)
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", "-c", "set -o errexit; source $FUNCTIONS; ensure_artifact_bucket"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+    def calls(self):
+        log = self.state_path / "calls.log"
+        return log.read_text() if log.exists() else ""
+
+    def test_concurrent_bucket_creation_is_tolerated(self):
+        """A BucketAlreadyOwnedByYou from a concurrent deploy must not abort.
+
+        The shared default bucket name lets concurrent first-time deployments
+        race; the loser's create fails after the winner created the bucket,
+        which is then perfectly usable.
+        """
+        proc = self.run_ensure_artifact_bucket({"CREATE_CONFLICT": "1"})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("put-bucket-tagging", self.calls())
+
+    def test_existing_bucket_tags_are_merged(self):
+        """put-bucket-tagging must not wipe tags unrelated to the policy."""
+        (self.state_path / "bucket_created").touch()
+        (self.state_path / "existing_tags.json").write_text(
+            '[{"Key": "CostCenter", "Value": "42"}]'
+        )
+        proc = self.run_ensure_artifact_bucket({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        tagging_line = next(
+            (ln for ln in self.calls().splitlines() if "put-bucket-tagging" in ln), ""
+        )
+        for expected in ("CostCenter", "mongodb-owner", "mongodb-env"):
+            self.assertIn(expected, tagging_line)
 
 
 class AtlasGatePresenceTest(unittest.TestCase):
