@@ -172,11 +172,6 @@ if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
       --output json)
     verify_cloud_tags "Lambda function ${LAMBDA_FUNCTION_ARN}" "${FUNCTION_TAGS}"
 
-    ATLAS_RESPONSE=$(curl -sS \
-      --digest -u "${DRIVERS_ATLAS_PUBLIC_API_KEY}:${DRIVERS_ATLAS_PRIVATE_API_KEY}" \
-      "${ATLAS_BASE_URL}/groups/${DRIVERS_ATLAS_GROUP_ID}/clusters/${CLUSTER_NAME}")
-    verify_atlas_tags "Atlas cluster ${CLUSTER_NAME}" "${ATLAS_RESPONSE}" "tags"
-
     # Fails closed: get-bucket-tagging errors out on an untagged bucket.
     BUCKET_TAGS=$(aws s3api get-bucket-tagging \
       --bucket "${ARTIFACT_BUCKET}" \

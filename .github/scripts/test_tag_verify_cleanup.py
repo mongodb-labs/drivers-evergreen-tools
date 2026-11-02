@@ -1,9 +1,8 @@
 """Regression tests for the DRIVERS-3712 tag-verification gates (AWS assets).
 
-verify-tags.sh exits the sourcing shell on failure, and the task role's
-identity is fixed, so the AWS create paths must tolerate the S3 races and
-keep the verify gates armed. These tests drive the real scripts through
-mocked `aws`/`eksctl`/`kubectl` binaries.
+verify-tags.sh exits the sourcing shell on failure, so the create paths must
+tolerate the S3 races and keep the verify gates armed. These tests drive the
+real scripts through mocked `aws`/`eksctl`/`kubectl` binaries.
 """
 
 import os

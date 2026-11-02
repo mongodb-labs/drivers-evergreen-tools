@@ -44,12 +44,14 @@ if not isinstance(data, dict) or not data.get("mongodb-owner") or not data.get("
 
 # Checks a tags array from the Atlas API; a key argument (e.g. "tags") reads
 # the array from that key of the passed object, so callers pass the raw response.
+# The raw response can be large and carries connection strings, so only the
+# description is echoed, never the response body.
 verify_atlas_tags ()
 {
   local description=$1
   local tags=$2
   local key=${3:-}
-  echo "verify-tags: ${description} tags: ${tags}"
+  echo "verify-tags: ${description}"
   if ! "${VERIFY_TAGS_PYTHON}" -c '
 import json, sys
 try:

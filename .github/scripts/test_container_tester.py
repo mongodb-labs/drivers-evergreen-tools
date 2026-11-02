@@ -1,6 +1,6 @@
 """Regression tests for the DRIVERS-3712 ECS tag work in container_tester.py.
 
-Runs under the bump-version unittest discovery (tests.yml); boto3 is stubbed
+Runs in the static job of tests.yml (unittest discovery); boto3 is stubbed
 so no dependency is needed.
 """
 
