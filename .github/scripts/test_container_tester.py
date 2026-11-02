@@ -59,7 +59,7 @@ class TestRemoteCreateContainer(unittest.TestCase):
         return ecs
 
     def test_create_service_propagates_tags_to_tasks(self):
-        """The service must pass its tags down to the Fargate tasks (DRIVERS-3712)."""
+        """The service must pass its tags down to the Fargate tasks."""
         ecs = self.create(_ecs_client(TAGS))
         __, kwargs = ecs.create_service.call_args
         self.assertEqual(kwargs["propagateTags"], "SERVICE")

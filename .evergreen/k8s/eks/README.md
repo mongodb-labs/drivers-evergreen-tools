@@ -7,10 +7,10 @@ Scripts to manage a drivers test cluster on AWS.
 These steps must be done by an account with admin access (one time):
 
 1. Run `setup-cluster.sh`
-   - The cluster is tagged with `mongodb-owner=client-libraries-managers@mongodb.com` and
-     `mongodb-env=dev` per MongoDB's cloud resource tag policy. Override the tag values
-     with `MONGODB_OWNER_TAG` and `MONGODB_ENV_TAG`. Set `VERIFY_MONGODB_TAGS=1` to have
-     the script verify the tags after creation and fail if they are missing.
+   - The cluster, the iamserviceaccount, and the IAM role are tagged
+     `mongodb-owner=client-libraries-managers@mongodb.com`, `mongodb-env=dev`.
+     Override with `MONGODB_OWNER_TAG`/`MONGODB_ENV_TAG`. Set `VERIFY_MONGODB_TAGS=1`
+     to verify after creation.
 2. Set up an Access entry for the drivers test secrets role.
    - Go to the cluster on the AWS Console.
    - Click "Access".

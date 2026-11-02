@@ -203,9 +203,8 @@ def remote_create_container(
     """
     ecs_client = boto3.client("ecs", region_name=_get_region(cluster))
 
-    # Tag the service per the MongoDB Cloud Tag Policy (DRIVERS-3712). ECS
-    # tag dicts use lowercase key/value names; empty overrides fall back to
-    # the defaults, matching the shell paths' ${VAR:-default} behavior.
+    # ECS tag dicts use lowercase key/value names; empty overrides fall back
+    # to the defaults.
     tags = [
         {
             "key": "mongodb-owner",
@@ -225,8 +224,8 @@ def remote_create_container(
         desiredCount=1,
         launchType="FARGATE",
         tags=tags,
-        # Tasks do not inherit service tags by default (propagateTags
-        # defaults to NONE).
+        # Tasks do not inherit service tags by default (propagateTags defaults
+        # to NONE).
         propagateTags="SERVICE",
         networkConfiguration={
             "awsvpcConfiguration": {
@@ -248,9 +247,8 @@ def remote_create_container(
 
     waiter.wait(cluster=cluster, services=[service_arn])
 
-    # Verify the service's tags when requested (DRIVERS-3712). Any failure
-    # stops the service first: _run_e2e_test's cleanup try/finally only
-    # starts after remote_create_container returns.
+    # Verify the service's tags when requested. Any failure stops the service
+    # first: _run_e2e_test's cleanup try/finally only starts after this returns.
     if os.environ.get("VERIFY_MONGODB_TAGS"):
         try:
             service = ecs_client.describe_services(
@@ -279,8 +277,7 @@ def remote_stop_after_failed_verification(cluster, service_name):
 
     _run_e2e_test's cleanup try/finally only starts after
     remote_create_container returns, so a raise here would orphan the
-    service. Cleanup errors are logged, not raised, so they cannot mask the
-    verification failure.
+    service; cleanup errors are logged, not raised.
     """
     try:
         remote_stop_container(cluster, service_name)

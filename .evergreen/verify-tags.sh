@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# DRIVERS-3712 verification helpers for the MongoDB Cloud Tag Policy.
+# DRIVERS-3712 tag-verification helpers.
 #
-# Source this file, then pass each function a description and the JSON
-# returned by the API/CLI call; it exits non-zero if mongodb-owner or
-# mongodb-env is missing. Callers gate on VERIFY_MONGODB_TAGS. Uses python3
-# (resolved via find-python3.sh, honoring DRIVERS_TOOLS_PYTHON) rather than
-# jq, which not every distro has.
+# Source this file, pass each function a description and the JSON from the
+# API/CLI call; it exits non-zero if mongodb-owner or mongodb-env is missing.
+# Callers gate on VERIFY_MONGODB_TAGS. Uses python3 (via find-python3.sh)
+# rather than jq, which not every distro has.
 
 # Resolve the python binary once, at source time.
 if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then
@@ -18,10 +17,8 @@ if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then
   fi
 fi
 
-# Checks a tags map as returned by the aws/az CLIs, e.g.
-#   {"mongodb-owner": "...", "mongodb-env": "dev"}
-# With a key argument (e.g. "labels"), the map is read from that key of the
-# passed object instead (gcloud's `--format json(labels)` output).
+# Checks a tags map from the aws/az CLIs; a key argument (e.g. "labels")
+# reads the map from that key of the passed object.
 verify_cloud_tags ()
 {
   local description=$1
@@ -45,10 +42,8 @@ if not isinstance(data, dict) or not data.get("mongodb-owner") or not data.get("
   echo "verify-tags OK: ${description} carries mongodb-owner/mongodb-env"
 }
 
-# Checks a tags array as returned by the Atlas API, e.g.
-#   [{"key": "mongodb-owner", "value": "..."}, {"key": "mongodb-env", ...}]
-# With a key argument (e.g. "tags"), the array is read from that key of the
-# passed object, so callers can pass the raw API response.
+# Checks a tags array from the Atlas API; a key argument (e.g. "tags") reads
+# the array from that key of the passed object, so callers pass the raw response.
 verify_atlas_tags ()
 {
   local description=$1

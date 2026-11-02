@@ -16,7 +16,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 #
 # SAM_BUILD_ARGS: Additional arguments to pass to the "sam build" command.
 # ARTIFACT_BUCKET: S3 bucket for the Lambda deployment artifacts. Defaults
-#   to "dbx-lambda-artifacts-<account>-<region>" (DRIVERS-3712).
+#   to "dbx-lambda-artifacts-<account>-<region>".
 
 VARLIST=(
 TEST_LAMBDA_DIRECTORY
@@ -46,13 +46,12 @@ for VARNAME in "${VARLIST[@]}"; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Tag the stack and function per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+# Tag the stack and function.
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
-# Ensure a dedicated, tagged artifact bucket exists (DRIVERS-3712):
-# "sam deploy --resolve-s3" would create an untagged managed bucket. S3 has
-# no tags-on-create API, so create, then tag.
+# Ensure a tagged artifact bucket exists: --resolve-s3 would create an
+# untagged managed bucket. S3 has no tags-on-create, so create, then tag.
 ensure_artifact_bucket ()
 {
   ARTIFACT_BUCKET="${ARTIFACT_BUCKET:-dbx-lambda-artifacts-$(aws sts get-caller-identity \
@@ -72,9 +71,9 @@ ensure_artifact_bucket ()
         || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
     fi
   fi
-  # put-bucket-tagging replaces the whole tag set, so read the existing tags
-  # and merge. NoSuchTagSet just means there are none yet; any other read
-  # error must abort, or the write would wipe tags the read never saw.
+  # put-bucket-tagging replaces the whole tag set, so read and merge the
+  # existing tags first; any read error other than NoSuchTagSet must abort,
+  # or the write would wipe tags the read never saw.
   if ! EXISTING_TAGS=$(aws s3api get-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
       --query "TagSet" --output json 2>&1); then
     if [[ "$EXISTING_TAGS" == *NoSuchTagSet* ]]; then
@@ -154,7 +153,7 @@ deploy_lambda_function
 
 get_lambda_function_arn
 
-# Verify the created resources' tags when requested (DRIVERS-3712).
+# Verify the created resources' tags when requested.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
 

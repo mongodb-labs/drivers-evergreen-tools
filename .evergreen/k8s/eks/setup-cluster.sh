@@ -13,7 +13,7 @@ if [ -z "${EKS_CLUSTER_NAME:-}" ]; then
     . ./../../secrets_handling/setup-secrets.sh drivers/eks
 fi
 
-# Tag the cluster per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+# Tag the cluster and the iamserviceaccount's role.
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
@@ -30,13 +30,12 @@ eksctl create iamserviceaccount \
     --approve \
     --override-existing-serviceaccounts
 
-# eksctl's --tags reaches the CloudFormation stack, not the role; tag the
-# role too (DRIVERS-3712).
+# eksctl's --tags reaches the stack, not the role.
 aws iam tag-role --role-name "$EKS_IAM_ROLE_NAME" --tags \
   "Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}" \
   "Key=mongodb-env,Value=${MONGODB_ENV_TAG}"
 
-# Verify the cluster's and role's tags when requested (DRIVERS-3712).
+# Verify the cluster's and role's tags when requested.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
   verify_cloud_tags "EKS cluster ${EKS_CLUSTER_NAME}" \
