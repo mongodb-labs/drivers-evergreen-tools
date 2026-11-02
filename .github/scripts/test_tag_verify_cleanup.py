@@ -172,13 +172,18 @@ case "$cmd" in
           echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/nsg"
         fi
         ;;
-      public-ip)
-        if [ "${1:-}" = "delete" ]; then
-          echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"
-        elif [ "${1:-}" = "show" ]; then
-          echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/publicIPAddresses/ip"
-        fi
-        ;;
+  public-ip)
+    if [ "${1:-}" = "delete" ]; then
+      echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"
+    elif [ "${1:-}" = "show" ]; then
+      echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/publicIPAddresses/ip"
+    fi
+    ;;
+  nic)
+    if [ "${1:-}" = "delete" ]; then
+      echo "nic-delete" >> "$STATE_DIR/cleanup.log"
+    fi
+    ;;
       *) echo '{}' ;;
     esac
     ;;
@@ -428,13 +433,20 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("mongodb-owner", self.resource_tags("virtualNetworks"))
 
     def test_azure_vnet_deleted_when_vm_create_fails(self):
-        """A failed az vm create must delete the already-created vnet."""
+        """A failed az vm create must delete the already-created vnet and NIC."""
         proc = self.run_create_script(
             ".evergreen/csfle/azurekms/create-vm.sh",
             {**CREATE_VM_ENV, "FAIL_VM_CREATE": "1"},
         )
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
-        self.assertIn("vnet-delete", self.cleanup_calls())
+        calls = self.cleanup_calls()
+        self.assertIn("vm-delete", calls)
+        self.assertIn("nic-delete", calls)
+        # The NIC must go before the public IP, NSG, and vnet: while it is
+        # attached, those deletes fail.
+        self.assertLess(calls.index("nic-delete"), calls.index("public-ip-delete"))
+        self.assertLess(calls.index("nic-delete"), calls.index("nsg-delete"))
+        self.assertLess(calls.index("nic-delete"), calls.index("vnet-delete"))
 
     def test_azure_teardown_deletes_vnet(self):
         """Normal teardown must delete the VM's vnet.
@@ -772,8 +784,22 @@ class JanitorTest(unittest.TestCase):
         self.nm.network_security_groups.list.return_value = []
         self.nm.public_ip_addresses.list.return_value = []
         self.nm.virtual_networks.list.return_value = [
-            types.SimpleNamespace(name="vmname-old-123-VNET"),
-            types.SimpleNamespace(name="vmname-gone-456-VNET"),
+            types.SimpleNamespace(
+                name="vmname-old-123-VNET",
+                tags={
+                    "created-at": str(
+                        int((self.now - datetime.timedelta(hours=3)).timestamp())
+                    )
+                },
+            ),
+            types.SimpleNamespace(
+                name="vmname-gone-456-VNET",
+                tags={
+                    "created-at": str(
+                        int((self.now - datetime.timedelta(hours=3)).timestamp())
+                    )
+                },
+            ),
         ]
 
     def run_main(self, dry_run=False):
@@ -804,6 +830,43 @@ class JanitorTest(unittest.TestCase):
 
     def test_dry_run_keeps_orphaned_vnets(self):
         self.run_main(dry_run=True)
+        self.nm.virtual_networks.begin_delete.assert_not_called()
+
+    def test_fresh_vnets_are_skipped(self):
+        """A vnet younger than the grace period is never deleted.
+
+        The vnet is created before its VM, so a just-created vnet looks
+        orphaned mid-provisioning.
+        """
+        self.nm.virtual_networks.list.return_value = [
+            types.SimpleNamespace(
+                name="vmname-gone-456-VNET",
+                tags={"created-at": str(int(self.now.timestamp()))},
+            ),
+        ]
+        self.run_main()
+        self.nm.virtual_networks.begin_delete.assert_not_called()
+
+    def test_vnet_reclaims_its_vm_before_delete(self):
+        """A fresh VM listing runs before deletion: a vnet whose VM appeared
+        since the snapshot is skipped."""
+        self.nm.virtual_networks.list.return_value = [
+            types.SimpleNamespace(
+                name="vmname-new-789-VNET",
+                tags={
+                    "created-at": str(
+                        int((self.now - datetime.timedelta(hours=3)).timestamp())
+                    )
+                },
+            ),
+        ]
+        # list() call order: old-VM scan, VM-name snapshot, fresh re-check.
+        self.cm.virtual_machines.list.side_effect = [
+            [self.old_vm],
+            [self.old_vm],
+            [self.old_vm, types.SimpleNamespace(name="vmname-new-789")],
+        ]
+        self.run_main()
         self.nm.virtual_networks.begin_delete.assert_not_called()
 
 

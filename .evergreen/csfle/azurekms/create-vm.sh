@@ -27,11 +27,13 @@ AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
 # Delete the VM and the resources created alongside it. Callers persist
 # teardown metadata only after this script returns, so every failure after
 # creation must clean up here. Defined before provisioning so a VM-create
-# failure can call it.
+# failure can call it. The NIC goes first: if the VM was never created, its
+# delete option never fires and the attached NIC blocks the other deletes.
 azurekms_cleanup_vm ()
 {
     echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
     az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
+    az network nic delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NIC" || true
     az network public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
     az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
     az network vnet delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-VNET" || true
@@ -52,12 +54,13 @@ azurekms_tag_resource ()
 
 # az vm create with no existing network implicitly creates an untagged one;
 # create the network explicitly and tag it (DRIVERS-3712). Azure subnets
-# cannot carry tags, so the vnet carries them.
+# cannot carry tags, so the vnet carries them. The created-at tag gives the
+# janitor its grace period: the vnet exists before its VM does.
 if ! az network vnet create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME-VNET" \
     --subnet-name "$AZUREKMS_VMNAME-SUBNET" \
-    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" "created-at=$(date +%s)" \
     >/dev/null; then
     echo "Creating the virtual network failed." 1>&2
     exit 1
