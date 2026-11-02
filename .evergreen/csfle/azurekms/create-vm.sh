@@ -47,9 +47,8 @@ az vm create \
     --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
     >/dev/null
 
-# az vm create --tags only reaches the VM itself. Tag the implicitly created
-# OS managed disk too; managed disks are in scope for the MongoDB Cloud Tag
-# Policy (DRIVERS-3712).
+# az vm create --tags only reaches the VM itself; tag the implicitly created
+# OS managed disk too (DRIVERS-3712).
 OS_DISK_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \

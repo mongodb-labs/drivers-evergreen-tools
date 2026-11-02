@@ -15,9 +15,8 @@ set -o errexit  # Exit the script with error if any of the commands fail
 # Explanation of optional environment variables:
 #
 # SAM_BUILD_ARGS: Additional arguments to pass to the "sam build" command.
-# ARTIFACT_BUCKET: Overrides the name of the S3 bucket that receives the
-#   Lambda deployment artifacts. Defaults to a dedicated, tagged bucket
-#   named "dbx-lambda-artifacts-<account>-<region>" (DRIVERS-3712).
+# ARTIFACT_BUCKET: S3 bucket for the Lambda deployment artifacts. Defaults
+#   to "dbx-lambda-artifacts-<account>-<region>" (DRIVERS-3712).
 
 VARLIST=(
 TEST_LAMBDA_DIRECTORY
@@ -47,16 +46,13 @@ for VARNAME in "${VARLIST[@]}"; do
 [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-# Tag the deployed stack and function per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+# Tag the stack and function per the MongoDB Cloud Tag Policy (DRIVERS-3712).
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
-# Ensure the dedicated artifact bucket exists and is tagged (DRIVERS-3712).
+# Ensure the dedicated artifact bucket exists and is tagged (DRIVERS-3712);
 # "sam deploy --resolve-s3" would create SAM's untagged managed bucket, which
-# is out of policy. S3 has no tags-on-create API; create then immediately
-# apply bucket tags, mirroring the azurekms OS-disk approach. The bucket
-# persists across runs; put-bucket-tagging is idempotent and the bucket is
-# dedicated, so replacing the tag set is safe.
+# is out of policy. S3 has no tags-on-create API, so create, then tag.
 ensure_artifact_bucket ()
 {
   ARTIFACT_BUCKET="${ARTIFACT_BUCKET:-dbx-lambda-artifacts-$(aws sts get-caller-identity \
@@ -133,12 +129,12 @@ deploy_lambda_function
 
 get_lambda_function_arn
 
-# Verify the created resources' tags when requested (DRIVERS-3712 verification).
+# Verify the created resources' tags when requested (DRIVERS-3712).
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
 
-    # CloudFormation returns an array of {"Key", "Value"} objects; convert it
-    # to a tags map for the helper. jq is already required by get_lambda_function_arn.
+    # CloudFormation returns {"Key", "Value"} objects; convert to a map for
+    # the helper.
     STACK_TAGS=$(aws cloudformation describe-stacks \
       --stack-name "${CLUSTER_NAME}" \
       --region "${AWS_REGION}" \

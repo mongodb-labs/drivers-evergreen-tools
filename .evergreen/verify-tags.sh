@@ -1,18 +1,11 @@
 #!/usr/bin/env bash
 # DRIVERS-3712 verification helpers for the MongoDB Cloud Tag Policy.
 #
-# Source this file and call the functions with a description and the JSON
-# returned by the corresponding API/CLI call. Each function echoes the JSON
-# for evidence, then exits non-zero if the mongodb-owner or mongodb-env value
-# is missing or empty. The checks use python3 (stdlib json) rather than jq,
-# which is not installed on every drivers distro (e.g. debian11).
-#
-# The python3 binary is resolved through find-python3.sh (honoring
-# DRIVERS_TOOLS_PYTHON), so the helpers work on every distro, including
-# cygwin hosts where "python3" may not resolve.
-#
-# Gate the calls on VERIFY_MONGODB_TAGS, mirroring
-# .evergreen/aws_lambda/run-deployed-lambda-aws-tests.sh.
+# Source this file and pass each function a description and the JSON returned
+# by the corresponding API/CLI call; it echoes the JSON for evidence and exits
+# non-zero if mongodb-owner or mongodb-env is missing or empty. Callers gate
+# on VERIFY_MONGODB_TAGS. Uses python3 (resolved via find-python3.sh,
+# honoring DRIVERS_TOOLS_PYTHON) rather than jq, which not every distro has.
 
 # Resolve the python binary once, at source time.
 if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then
@@ -25,11 +18,10 @@ if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then
   fi
 fi
 
-# Checks a tags map, as returned by the aws/az CLIs, e.g.
+# Checks a tags map as returned by the aws/az CLIs, e.g.
 #   {"mongodb-owner": "...", "mongodb-env": "dev"}
-# If an object key is given (e.g. "labels" or "resourceLabels"), the map is
-# read from that key of the passed object instead - used for gcloud's
-# `--format json(labels)` output and the like.
+# With a key argument (e.g. "labels"), the map is read from that key of the
+# passed object instead (gcloud's `--format json(labels)` output).
 verify_cloud_tags ()
 {
   local description=$1
@@ -53,11 +45,10 @@ if not isinstance(data, dict) or not data.get("mongodb-owner") or not data.get("
   echo "verify-tags OK: ${description} carries mongodb-owner/mongodb-env"
 }
 
-# Checks a tags array, as returned by the Atlas API, e.g.
+# Checks a tags array as returned by the Atlas API, e.g.
 #   [{"key": "mongodb-owner", "value": "..."}, {"key": "mongodb-env", ...}]
-# If an object key is given (e.g. "tags"), the array is read from that key of
-# the passed object instead - so callers can pass the raw API response
-# without pre-filtering it through jq.
+# With a key argument (e.g. "tags"), the array is read from that key of the
+# passed object, so callers can pass the raw API response.
 verify_atlas_tags ()
 {
   local description=$1

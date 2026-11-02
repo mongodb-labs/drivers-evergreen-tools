@@ -203,7 +203,7 @@ def remote_create_container(
     """
     ecs_client = boto3.client("ecs", region_name=_get_region(cluster))
 
-    # Tag the created service per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+    # Tag the service per the MongoDB Cloud Tag Policy (DRIVERS-3712).
     # ECS tag dicts use lowercase key/value names.
     tags = [
         {
@@ -245,8 +245,7 @@ def remote_create_container(
 
     waiter.wait(cluster=cluster, services=[service_arn])
 
-    # Verify the service's tags when requested (DRIVERS-3712), mirroring the
-    # VERIFY_MONGODB_TAGS gates in the shell setup scripts.
+    # Verify the service's tags when requested (DRIVERS-3712).
     if os.environ.get("VERIFY_MONGODB_TAGS"):
         service = ecs_client.describe_services(
             cluster=cluster, services=[service_arn], include=["TAGS"]
