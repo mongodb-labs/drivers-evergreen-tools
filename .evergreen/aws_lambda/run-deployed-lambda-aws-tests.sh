@@ -60,15 +60,24 @@ ensure_artifact_bucket ()
   if ! aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null; then
     # The default bucket name is shared by all Lambda tasks, so a concurrent
     # first-time deployment can create it between our check and our create.
+    # A create failure is only tolerable if the re-check finds the bucket;
+    # otherwise report the create's error, not just the fact.
+    CREATE_ERR=""
     if [ "${AWS_REGION}" = "us-east-1" ]; then
-      aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
-        || aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
-        || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
+      if ! CREATE_ERR=$(aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" 2>&1) \
+        && ! aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null; then
+        echo "Could not create artifact bucket ${ARTIFACT_BUCKET}:" 1>&2
+        echo "${CREATE_ERR}" 1>&2
+        exit 1
+      fi
     else
-      aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" \
-        --create-bucket-configuration LocationConstraint="${AWS_REGION}" 2>/dev/null \
-        || aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
-        || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
+      if ! CREATE_ERR=$(aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" \
+          --create-bucket-configuration LocationConstraint="${AWS_REGION}" 2>&1) \
+        && ! aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null; then
+        echo "Could not create artifact bucket ${ARTIFACT_BUCKET}:" 1>&2
+        echo "${CREATE_ERR}" 1>&2
+        exit 1
+      fi
     fi
   fi
   # put-bucket-tagging replaces the whole tag set, so read and merge the
@@ -157,12 +166,15 @@ get_lambda_function_arn
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
 
-    # CloudFormation returns {Key, Value} objects; convert to a map for the helper.
-    STACK_TAGS=$(aws cloudformation describe-stacks \
+    # Read first, reshape second: in a pipeline the aws error would be masked
+    # by jq's exit status and surface as "lacks tags".
+    STACK_TAGS_RAW=$(aws cloudformation describe-stacks \
       --stack-name "${CLUSTER_NAME}" \
       --region "${AWS_REGION}" \
       --query "Stacks[0].Tags" \
-      --output json | jq 'map({(.Key): .Value}) | add')
+      --output json)
+    # CloudFormation returns {Key, Value} objects; convert to a map for the helper.
+    STACK_TAGS=$(echo "${STACK_TAGS_RAW}" | jq 'map({(.Key): .Value}) | add')
     verify_cloud_tags "CloudFormation stack ${CLUSTER_NAME}" "${STACK_TAGS}"
 
     FUNCTION_TAGS=$(aws lambda get-function \
@@ -172,11 +184,13 @@ if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
       --output json)
     verify_cloud_tags "Lambda function ${LAMBDA_FUNCTION_ARN}" "${FUNCTION_TAGS}"
 
-    # Fails closed: get-bucket-tagging errors out on an untagged bucket.
-    BUCKET_TAGS=$(aws s3api get-bucket-tagging \
+    # Read first, reshape second (as above). Fails closed: an untagged bucket
+    # errors the read and stops the task.
+    BUCKET_TAGS_RAW=$(aws s3api get-bucket-tagging \
       --bucket "${ARTIFACT_BUCKET}" \
       --query "TagSet" \
-      --output json | jq 'map({(.Key): .Value}) | add')
+      --output json)
+    BUCKET_TAGS=$(echo "${BUCKET_TAGS_RAW}" | jq 'map({(.Key): .Value}) | add')
     verify_cloud_tags "SAM artifact bucket ${ARTIFACT_BUCKET}" "${BUCKET_TAGS}"
 fi
 

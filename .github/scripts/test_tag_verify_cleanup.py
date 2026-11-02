@@ -34,6 +34,10 @@ case "$1 $2" in
     exit 1
     ;;
   "s3api create-bucket")
+    if [ -n "${FAIL_CREATE:-}" ]; then
+      echo "An error occurred (AccessDenied) when calling the CreateBucket operation: Access Denied" 1>&2
+      exit 254
+    fi
     if [ -n "${CREATE_CONFLICT:-}" ] && [ ! -f "$STATE_DIR/bucket_created" ]; then
       # A concurrent deployment won the race: the bucket now exists, but this
       # create fails outside us-east-1.
@@ -193,6 +197,16 @@ class ArtifactBucketTest(unittest.TestCase):
         proc = self.run_ensure_artifact_bucket({"READ_ERROR": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertNotIn("put-bucket-tagging", self.calls())
+
+    def test_bucket_create_error_is_reported(self):
+        """A create failure that head-bucket cannot rescue must report the AWS error.
+
+        Swallowing the create's stderr leaves only 'Could not create artifact
+        bucket', hiding the real cause.
+        """
+        proc = self.run_ensure_artifact_bucket({"FAIL_CREATE": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("AccessDenied", proc.stderr)
 
 
 class EksSetupTest(unittest.TestCase):

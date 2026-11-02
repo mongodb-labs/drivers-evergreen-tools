@@ -3,8 +3,9 @@
 #
 # Source this file, pass each function a description and the JSON from the
 # API/CLI call; it exits non-zero if mongodb-owner or mongodb-env is missing.
-# Callers gate on VERIFY_MONGODB_TAGS. Uses python3 (via find-python3.sh)
-# rather than jq, which not every distro has.
+# Callers gate on VERIFY_MONGODB_TAGS. These checks use python3 (via
+# find-python3.sh) rather than jq, so they also run on the minimal KMS VM
+# images, which have no jq; the calling task scripts manage their own jq.
 
 # Resolve the python binary once, at source time.
 if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then
