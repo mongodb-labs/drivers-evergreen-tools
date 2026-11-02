@@ -4,7 +4,8 @@ These scripts were originally taken from [mongo-enterprise-modules](https://gith
 and intended to simplify creating users, attaching roles to existing EC2 instances, launching an Amazon ECS container instance, etc.
 
 Per MongoDB's cloud resource tag policy, the ECS service created for the ECS test variant is tagged with
-`mongodb-owner=client-libraries-managers@mongodb.com` and `mongodb-env=dev`. Override the tag values
+`mongodb-owner=client-libraries-managers@mongodb.com` and `mongodb-env=dev`; the service propagates
+these tags to its Fargate tasks (`propagateTags=SERVICE`). Override the tag values
 with `MONGODB_OWNER_TAG` and `MONGODB_ENV_TAG`.
 
 ## Test Process

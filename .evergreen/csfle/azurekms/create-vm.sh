@@ -84,11 +84,22 @@ az network nsg rule create \
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
 
-# Verify the VM's tags when requested (DRIVERS-3712).
+# Verify the VM's tags when requested (DRIVERS-3712). Callers persist teardown
+# metadata only after this script returns, and verify_cloud_tags exits the
+# sourcing shell, so on failure delete the VM and the resources created
+# alongside it before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
-  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
-  verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME}" \
-    "$(az vm show --resource-group "${AZUREKMS_RESOURCEGROUP}" --name "${AZUREKMS_VMNAME}" --query tags --output json)"
-  verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} OS disk" \
-    "$(az disk show --ids "${OS_DISK_ID}" --query tags --output json)"
+  if ! (
+    . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME}" \
+      "$(az vm show --resource-group "${AZUREKMS_RESOURCEGROUP}" --name "${AZUREKMS_VMNAME}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} OS disk" \
+      "$(az disk show --ids "${OS_DISK_ID}" --query tags --output json)"
+  ); then
+    echo "Tag verification failed; deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
+    az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
+    az public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
+    az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
+    exit 1
+  fi
 fi

@@ -49,11 +49,32 @@ $GCPKMS_GCLOUD compute instances create $GCPKMS_INSTANCENAME \
     --boot-disk-size $GCPKMS_DISKSIZE
 echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
-# Verify the instance's labels when requested (DRIVERS-3712).
+# Label the boot disk too (DRIVERS-3712): --labels above only reaches the VM,
+# not the persistent disk created by --boot-disk-size. The disk is named
+# after the instance.
+$GCPKMS_GCLOUD compute disks update "$GCPKMS_INSTANCENAME" \
+    --zone "$GCPKMS_ZONE" --project "$GCPKMS_PROJECT" \
+    --update-labels "mongodb-owner=$MONGODB_OWNER_TAG,mongodb-env=$MONGODB_ENV_TAG"
+
+# Verify the instance's and boot disk's labels when requested (DRIVERS-3712).
+# Callers persist teardown metadata only after this script returns, and
+# verify_cloud_tags exits the sourcing shell, so on failure delete the
+# instance (and with it the boot disk) before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
-  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
-  verify_cloud_tags "GCE instance ${GCPKMS_INSTANCENAME}" \
-    "$($GCPKMS_GCLOUD compute instances describe "${GCPKMS_INSTANCENAME}" \
-      --zone "${GCPKMS_ZONE}" --project "${GCPKMS_PROJECT}" \
-      --format "json(labels)")" "labels"
+  if ! (
+    . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+    verify_cloud_tags "GCE instance ${GCPKMS_INSTANCENAME}" \
+      "$($GCPKMS_GCLOUD compute instances describe "${GCPKMS_INSTANCENAME}" \
+        --zone "${GCPKMS_ZONE}" --project "${GCPKMS_PROJECT}" \
+        --format "json(labels)")" "labels"
+    verify_cloud_tags "GCE boot disk ${GCPKMS_INSTANCENAME}" \
+      "$($GCPKMS_GCLOUD compute disks describe "${GCPKMS_INSTANCENAME}" \
+        --zone "${GCPKMS_ZONE}" --project "${GCPKMS_PROJECT}" \
+        --format "json(labels)")" "labels"
+  ); then
+    echo "Label verification failed; deleting instance ${GCPKMS_INSTANCENAME}" 1>&2
+    $GCPKMS_GCLOUD compute instances delete "$GCPKMS_INSTANCENAME" \
+        --zone "$GCPKMS_ZONE" --project "$GCPKMS_PROJECT" --quiet || true
+    exit 1
+  fi
 fi

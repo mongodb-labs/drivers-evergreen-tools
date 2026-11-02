@@ -107,4 +107,14 @@ MONGODB_URI=$(check_deployment)
 export MONGODB_URI
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
 
+# Verify the deployment's tags when requested (DRIVERS-3712). CLUSTER_NAME is
+# already persisted in secrets-export.sh above, so a failed check can be torn down.
+if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+  verify_atlas_tags "Atlas deployment ${DEPLOYMENT_NAME}" \
+    "$(curl -sS \
+      --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE:-clusters}/${DEPLOYMENT_NAME}")" "tags"
+fi
+
 popd

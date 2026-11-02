@@ -134,6 +134,16 @@ RAW_URI=$(check_deployment)
 URI=$(echo $RAW_URI | grep -Eo "[^(\/\/)]*$" | cat)
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
+# Verify the cluster's tags when requested (DRIVERS-3712). CLUSTER_NAME is
+# already persisted in secrets-export.sh above, so a failed check can be torn down.
+if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+  verify_atlas_tags "Atlas cluster ${DEPLOYMENT_NAME}" \
+    "$(curl -sS \
+      --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+      "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE:-clusters}/${DEPLOYMENT_NAME}")" "tags"
+fi
+
 # Put the MONGODB_URI in an expansions yml and secrets file.
 echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh

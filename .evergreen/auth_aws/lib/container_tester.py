@@ -225,6 +225,9 @@ def remote_create_container(
         desiredCount=1,
         launchType="FARGATE",
         tags=tags,
+        # Tasks launched by the service do not inherit its tags by default
+        # (propagateTags defaults to NONE), so make them explicit.
+        propagateTags="SERVICE",
         networkConfiguration={
             "awsvpcConfiguration": {
                 "subnets": subnets,
@@ -253,6 +256,17 @@ def remote_create_container(
         actual = {t["key"]: t.get("value") for t in service.get("tags", [])}
         print(f"verify-tags: ECS service {service_name} tags: {actual}")
         if not actual.get("mongodb-owner") or not actual.get("mongodb-env"):
+            # Stop the service before exiting: _run_e2e_test's cleanup
+            # try/finally only starts after remote_create_container returns,
+            # so a raise here would leave the service (and its Fargate task)
+            # running.
+            try:
+                remote_stop_container(cluster, service_name)
+            except Exception:
+                LOGGER.exception(
+                    "verify-tags: failed to stop ECS service %s after failed tag verification",
+                    service_name,
+                )
             raise SystemExit(
                 f"verify-tags FAILED: ECS service {service_name} lacks "
                 "mongodb-owner/mongodb-env tags"
