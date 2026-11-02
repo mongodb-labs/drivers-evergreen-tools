@@ -287,13 +287,8 @@ class EksSetupTest(unittest.TestCase):
 
 
 class EksPodSetupTest(unittest.TestCase):
-    """Tests for the cluster-tag gate in k8s/eks/setup.sh.
-
-    The auth_oidc eks task runs on a pre-provisioned cluster, so the pod
-    setup verifies the tags of the cluster the tests will run on before
-    creating a pod. The real CLI applies --query client-side; the mock
-    returns post-query shapes.
-    """
+    """Tests for the cluster-tag gate in k8s/eks/setup.sh, the pod flow the
+    eks task runs."""
 
     SCRIPT = REPO / ".evergreen/k8s/eks/setup.sh"
 

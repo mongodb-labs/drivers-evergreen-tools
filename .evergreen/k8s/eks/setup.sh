@@ -19,9 +19,8 @@ fi
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 
-# Verify the cluster's tags when requested (DRIVERS-3712): the policy covers
-# the pre-provisioned cluster the tests run on, not only resources this
-# script creates.
+# Verify the cluster's tags when requested: the policy covers the
+# pre-provisioned cluster the tests run on, not only what this script creates.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   CLUSTER_TAGS=$(aws eks describe-cluster --region "$EKS_REGION" --name "$EKS_CLUSTER_NAME" --query "cluster.tags" --output json)
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
