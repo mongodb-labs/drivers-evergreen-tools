@@ -1,12 +1,9 @@
-"""Regression tests for the DRIVERS-3712 tag-verification gates in the shell
-provisioning scripts.
+"""Regression tests for the DRIVERS-3712 tag-verification gates.
 
-The tagged resources are created before verification, and verify-tags.sh
-exits the sourcing shell on failure, so each create script must clean up what
-it created when verification fails (callers persist teardown metadata only
-after these scripts return). These tests drive the real scripts through
-mocked `az`/`gcloud`/`curl` binaries and assert the cleanup and the
-boot-disk labeling behavior.
+verify-tags.sh exits the sourcing shell on failure, and callers persist
+teardown metadata only after the create scripts return, so the create scripts
+must clean up what they created when verification or tagging fails. These
+tests drive the real scripts through mocked `az`/`gcloud`/`aws` binaries.
 """
 
 import os
@@ -19,8 +16,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 
 # Mock `az`: models the subset of the CLI that azurekms/create-vm.sh uses.
-# DROP_TAGS=1 simulates the CLI losing tags so verification fails. Every
-# invocation is logged; deletions are logged to cleanup.log.
+# DROP_TAGS=1 simulates lost tags; FAIL_TAG_TARGET=<substring> fails tag
+# writes for matching resource ids. Deletions are logged to cleanup.log.
 AZ_MOCK = r"""#!/usr/bin/env bash
 set -u
 STATE_DIR=${STATE_DIR:?}
@@ -230,8 +227,7 @@ CURL_MOCK = "#!/usr/bin/env bash\necho 1.2.3.4\n"
 
 # Mock `aws`: models the subset of the CLI that ensure_artifact_bucket in
 # run-deployed-lambda-aws-tests.sh uses. CREATE_CONFLICT=1 simulates a
-# concurrent deployment winning the bucket-creation race (the bucket exists
-# afterwards, but our create-bucket fails with BucketAlreadyOwnedByYou).
+# concurrent deployment winning the bucket-creation race.
 AWS_MOCK = r"""#!/usr/bin/env bash
 set -u
 STATE_DIR=${STATE_DIR:?}
@@ -330,7 +326,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         return self.cleanup_log.read_text().split()
 
     def test_azure_vm_deleted_when_verification_fails(self):
-        """A failed tag check must delete the VM, public IP, and NSG (F4)."""
+        """A failed tag check must delete the VM, public IP, and NSG."""
         proc = self.run_create_script(
             ".evergreen/csfle/azurekms/create-vm.sh",
             {**CREATE_VM_ENV, "DROP_TAGS": "1"},
@@ -349,10 +345,9 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertEqual([], self.cleanup_calls())
 
     def test_azure_supporting_resources_tagged_when_tagged(self):
-        """The NIC, public IP, and NSG created alongside the VM carry the policy tags.
+        """The NIC, public IP, and NSG created alongside the VM carry the tags.
 
-        az vm create --tags reaches none of them, so the script must tag and
-        verify each explicitly (M4).
+        az vm create --tags reaches none of them.
         """
         proc = self.run_create_script(
             ".evergreen/csfle/azurekms/create-vm.sh", CREATE_VM_ENV
@@ -369,7 +364,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
             self.assertIn("mongodb-env", line, resource)
 
     def test_azure_vm_deleted_when_supporting_resource_tagging_fails(self):
-        """A failed supporting-resource tag write must clean up the VM (M4)."""
+        """A failed supporting-resource tag write must clean up the VM."""
         proc = self.run_create_script(
             ".evergreen/csfle/azurekms/create-vm.sh",
             {**CREATE_VM_ENV, "FAIL_TAG_TARGET": "networkInterfaces"},
@@ -380,11 +375,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("nsg-delete", self.cleanup_calls())
 
     def test_azure_vm_deleted_when_os_disk_tagging_fails(self):
-        """A failed OS-disk tag write must delete the VM, public IP, and NSG.
-
-        The tagging runs before auto-shutdown is configured and before callers
-        persist teardown metadata, so it must clean up itself (N4).
-        """
+        """A failed OS-disk tag write must delete the VM, public IP, and NSG."""
         proc = self.run_create_script(
             ".evergreen/csfle/azurekms/create-vm.sh",
             {**CREATE_VM_ENV, "FAIL_DISK_TAG": "1"},
@@ -395,7 +386,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("nsg-delete", self.cleanup_calls())
 
     def test_gcp_instance_deleted_when_instance_labels_lost(self):
-        """A failed instance-label check must delete the instance (F5)."""
+        """A failed instance-label check must delete the instance."""
         proc = self.run_create_script(
             ".evergreen/csfle/gcpkms/create-instance.sh",
             {
@@ -408,7 +399,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("instance-delete", self.cleanup_calls())
 
     def test_gcp_instance_deleted_when_disk_labels_lost(self):
-        """An unlabelled boot disk must fail verification and delete the instance (F6)."""
+        """An unlabelled boot disk must fail verification and delete the instance."""
         proc = self.run_create_script(
             ".evergreen/csfle/gcpkms/create-instance.sh",
             {
@@ -421,11 +412,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("instance-delete", self.cleanup_calls())
 
     def test_gcp_instance_deleted_when_disk_labeling_fails(self):
-        """A failed boot-disk label update must delete the instance.
-
-        The update runs under errexit before callers persist teardown
-        metadata, so it must clean up itself (N2).
-        """
+        """A failed boot-disk label update must delete the instance."""
         proc = self.run_create_script(
             ".evergreen/csfle/gcpkms/create-instance.sh",
             {
@@ -438,7 +425,7 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("instance-delete", self.cleanup_calls())
 
     def test_gcp_boot_disk_labelled_when_tagged(self):
-        """The boot disk is labelled and verification passes end to end (F6)."""
+        """The boot disk is labelled and verification passes end to end."""
         proc = self.run_create_script(
             ".evergreen/csfle/gcpkms/create-instance.sh",
             {**CREATE_INSTANCE_ENV, "GCPKMS_GCLOUD": str(self.bin / "gcloud")},
@@ -451,11 +438,11 @@ class TagVerifyCleanupTest(unittest.TestCase):
 
 
 class ArtifactBucketTest(unittest.TestCase):
-    """Tests for ensure_artifact_bucket in run-deployed-lambda-aws-tests.sh (M2/M3).
+    """Tests for ensure_artifact_bucket in run-deployed-lambda-aws-tests.sh.
 
     The script's function definitions are extracted (everything before its
-    trap/main section) and sourced with a mocked `aws`, so the real bucket
-    logic runs without touching S3.
+    trap line) and sourced with a mocked `aws`, so the real bucket logic runs
+    without touching S3.
     """
 
     SCRIPT = REPO / ".evergreen/aws_lambda/run-deployed-lambda-aws-tests.sh"
@@ -522,9 +509,7 @@ class ArtifactBucketTest(unittest.TestCase):
     def test_concurrent_bucket_creation_is_tolerated(self):
         """A BucketAlreadyOwnedByYou from a concurrent deploy must not abort.
 
-        The shared default bucket name lets concurrent first-time deployments
-        race; the loser's create fails after the winner created the bucket,
-        which is then perfectly usable.
+        The winner created the bucket, which is then perfectly usable.
         """
         proc = self.run_ensure_artifact_bucket({"CREATE_CONFLICT": "1"})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
@@ -546,7 +531,7 @@ class ArtifactBucketTest(unittest.TestCase):
 
 
 class AtlasGatePresenceTest(unittest.TestCase):
-    """The Atlas-consuming scripts must gate on VERIFY_MONGODB_TAGS (F1)."""
+    """The Atlas-consuming scripts must gate on VERIFY_MONGODB_TAGS."""
 
     GATED_SCRIPTS = (
         ".evergreen/atlas/setup-atlas-cluster.sh",

@@ -49,8 +49,7 @@ az vm create \
 
 # Delete the VM and the resources created alongside it. Callers persist
 # teardown metadata only after this script returns, so every failure after
-# creation must clean up here. Uses the `az network public-ip` namespace,
-# which is where the public-ip command group lives.
+# creation must clean up here.
 azurekms_cleanup_vm ()
 {
     echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
@@ -73,8 +72,7 @@ azurekms_tag_resource ()
 }
 
 # az vm create --tags only reaches the VM itself; tag the implicitly created
-# OS managed disk too (DRIVERS-3712). Each step is guarded: a failure must
-# clean up instead of aborting with the VM running.
+# OS managed disk (DRIVERS-3712). Each lookup and tag is guarded.
 if ! OS_DISK_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -86,10 +84,8 @@ if ! OS_DISK_ID=$(az vm show \
 fi
 azurekms_tag_resource "OS disk" "$OS_DISK_ID"
 
-# az vm create --tags reaches neither the implicitly created NIC, public IP,
-# nor NSG either; tag those as well (DRIVERS-3712). Each lookup and tag is
-# guarded: a failure must clean up instead of aborting with the resources
-# running.
+# az vm create --tags reaches neither the NIC, public IP, nor NSG; tag those
+# too (DRIVERS-3712).
 if ! NIC_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -147,10 +143,8 @@ az network nsg rule create \
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
 
-# Verify the VM's and supporting resources' tags when requested
-# (DRIVERS-3712). Callers persist teardown metadata only after this script
-# returns, and verify_cloud_tags exits the sourcing shell, so on failure
-# delete the VM and the resources created alongside it before exiting.
+# Verify tags when requested (DRIVERS-3712). verify_cloud_tags exits the
+# sourcing shell, so on failure clean up here before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   if ! (
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh

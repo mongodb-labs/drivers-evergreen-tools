@@ -1,8 +1,7 @@
 """Regression tests for the DRIVERS-3712 ECS tag work in container_tester.py.
 
-These run under the bump-version unittest discovery (tests.yml), which has no
-boto3 dependency, so boto3 is stubbed before the module under test is imported
-by path. The mocked ECS client models the calls remote_create_container makes.
+Runs under the bump-version unittest discovery (tests.yml); boto3 is stubbed
+so no dependency is needed.
 """
 
 import importlib.util
@@ -66,12 +65,7 @@ class TestRemoteCreateContainer(unittest.TestCase):
         self.assertEqual(kwargs["propagateTags"], "SERVICE")
 
     def test_verify_failure_stops_service_and_raises(self):
-        """A failed tag check must stop the service before exiting.
-
-        _run_e2e_test's cleanup try/finally only starts after
-        remote_create_container returns, so remote_create_container itself has
-        to clean up.
-        """
+        """A failed tag check must stop the service before exiting."""
         ecs = _ecs_client([{"key": "unrelated", "value": "x"}])
         with mock.patch.object(container_tester, "remote_stop_container") as stop:
             with self.assertRaises(SystemExit):
@@ -90,12 +84,7 @@ class TestRemoteCreateContainer(unittest.TestCase):
                 self.create(ecs)
 
     def test_verify_read_failure_stops_service_and_reraises(self):
-        """A failed tag read must stop the service and re-raise the error.
-
-        The service and its Fargate task are already running when
-        describe_services fails, and _run_e2e_test's cleanup try/finally has
-        not been entered yet.
-        """
+        """A failed tag read must stop the service and re-raise the error."""
         ecs = _ecs_client(TAGS)
         ecs.describe_services.side_effect = RuntimeError("api down")
         with mock.patch.object(container_tester, "remote_stop_container") as stop:
@@ -113,11 +102,7 @@ class TestRemoteCreateContainer(unittest.TestCase):
         stop.assert_called_once_with(CLUSTER, SERVICE)
 
     def test_empty_tag_overrides_fall_back_to_defaults(self):
-        """Exported-but-empty overrides must not produce empty policy tags.
-
-        The shell setup paths use ${VAR:-default}, which falls back on empty;
-        ECS must match that behavior.
-        """
+        """Empty overrides must fall back to the defaults, like ${VAR:-default}."""
         ecs = _ecs_client(TAGS)
         with mock.patch.dict(
             os.environ, {"MONGODB_OWNER_TAG": "", "MONGODB_ENV_TAG": ""}

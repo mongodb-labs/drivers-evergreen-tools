@@ -50,19 +50,17 @@ done
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
-# Ensure the dedicated artifact bucket exists and is tagged (DRIVERS-3712);
-# "sam deploy --resolve-s3" would create SAM's untagged managed bucket, which
-# is out of policy. S3 has no tags-on-create API, so create, then tag.
+# Ensure a dedicated, tagged artifact bucket exists (DRIVERS-3712):
+# "sam deploy --resolve-s3" would create an untagged managed bucket. S3 has
+# no tags-on-create API, so create, then tag.
 ensure_artifact_bucket ()
 {
   ARTIFACT_BUCKET="${ARTIFACT_BUCKET:-dbx-lambda-artifacts-$(aws sts get-caller-identity \
     --query Account --output text)-${AWS_REGION}}"
   echo "Ensuring artifact bucket ${ARTIFACT_BUCKET}..."
   if ! aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null; then
-    # The default bucket name is shared by all Lambda tasks in an account and
-    # region, so a concurrent first-time deployment can create the bucket
-    # between our check and our create; the create then fails with
-    # BucketAlreadyOwnedByYou while the bucket is perfectly usable.
+    # The default bucket name is shared by all Lambda tasks, so a concurrent
+    # first-time deployment can create it between our check and our create.
     if [ "${AWS_REGION}" = "us-east-1" ]; then
       aws s3api create-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
         || aws s3api head-bucket --bucket "${ARTIFACT_BUCKET}" 2>/dev/null \
@@ -74,9 +72,8 @@ ensure_artifact_bucket ()
         || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
     fi
   fi
-  # put-bucket-tagging replaces the bucket's entire tag set, so read and
-  # merge the existing tags first (e.g. cost-allocation tags on a
-  # pre-provided bucket); NoSuchTagSet just means there are none yet.
+  # put-bucket-tagging replaces the whole tag set; merge the existing tags
+  # first (NoSuchTagSet just means there are none yet).
   EXISTING_TAGS=$(aws s3api get-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
     --query "TagSet" --output json 2>/dev/null || echo "[]")
   TAGGING=$(jq -n \
@@ -153,8 +150,7 @@ get_lambda_function_arn
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
 
-    # CloudFormation returns {"Key", "Value"} objects; convert to a map for
-    # the helper.
+    # CloudFormation returns {Key, Value} objects; convert to a map for the helper.
     STACK_TAGS=$(aws cloudformation describe-stacks \
       --stack-name "${CLUSTER_NAME}" \
       --region "${AWS_REGION}" \

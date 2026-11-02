@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # DRIVERS-3712 verification helpers for the MongoDB Cloud Tag Policy.
 #
-# Source this file and pass each function a description and the JSON returned
-# by the corresponding API/CLI call; it echoes the JSON for evidence and exits
-# non-zero if mongodb-owner or mongodb-env is missing or empty. Callers gate
-# on VERIFY_MONGODB_TAGS. Uses python3 (resolved via find-python3.sh,
-# honoring DRIVERS_TOOLS_PYTHON) rather than jq, which not every distro has.
+# Source this file, then pass each function a description and the JSON
+# returned by the API/CLI call; it exits non-zero if mongodb-owner or
+# mongodb-env is missing. Callers gate on VERIFY_MONGODB_TAGS. Uses python3
+# (resolved via find-python3.sh, honoring DRIVERS_TOOLS_PYTHON) rather than
+# jq, which not every distro has.
 
 # Resolve the python binary once, at source time.
 if [ -z "${VERIFY_TAGS_PYTHON:-}" ]; then

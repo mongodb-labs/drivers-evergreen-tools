@@ -134,8 +134,7 @@ RAW_URI=$(check_deployment)
 URI=$(echo $RAW_URI | grep -Eo "[^(\/\/)]*$" | cat)
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
-# Verify the cluster's tags when requested (DRIVERS-3712). CLUSTER_NAME is
-# already persisted in secrets-export.sh above, so a failed check can be torn down.
+# Verify the cluster's tags when requested (DRIVERS-3712).
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
   verify_atlas_tags "Atlas cluster ${DEPLOYMENT_NAME}" \

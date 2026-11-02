@@ -173,9 +173,9 @@ def setup_ecs():
 
     # Pass in the AWS credentials as environment variables.
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown
-    #  reason. Pass a minimal environment: the credentials plus the
-    #  DRIVERS-3712 tag-verification flags, keeping vault-loaded secrets out
-    #  of the subprocess tree.
+    # reason. Minimal environment: credentials plus the DRIVERS-3712
+    # tag-verification flags, keeping vault-loaded secrets out of the
+    # subprocess tree.
     env = {
         key: os.environ[key]
         for key in ("VERIFY_MONGODB_TAGS", "MONGODB_OWNER_TAG", "MONGODB_ENV_TAG")

@@ -203,10 +203,9 @@ def remote_create_container(
     """
     ecs_client = boto3.client("ecs", region_name=_get_region(cluster))
 
-    # Tag the service per the MongoDB Cloud Tag Policy (DRIVERS-3712).
-    # ECS tag dicts use lowercase key/value names. An exported-but-empty
-    # override falls back to the default, matching the shell setup paths'
-    # ${VAR:-default} behavior.
+    # Tag the service per the MongoDB Cloud Tag Policy (DRIVERS-3712). ECS
+    # tag dicts use lowercase key/value names; empty overrides fall back to
+    # the defaults, matching the shell paths' ${VAR:-default} behavior.
     tags = [
         {
             "key": "mongodb-owner",
@@ -226,8 +225,8 @@ def remote_create_container(
         desiredCount=1,
         launchType="FARGATE",
         tags=tags,
-        # Tasks launched by the service do not inherit its tags by default
-        # (propagateTags defaults to NONE), so make them explicit.
+        # Tasks do not inherit service tags by default (propagateTags
+        # defaults to NONE).
         propagateTags="SERVICE",
         networkConfiguration={
             "awsvpcConfiguration": {
@@ -249,11 +248,9 @@ def remote_create_container(
 
     waiter.wait(cluster=cluster, services=[service_arn])
 
-    # Verify the service's tags when requested (DRIVERS-3712). Any failure —
-    # a failed read as much as missing tags — stops the service before
-    # propagating: _run_e2e_test's cleanup try/finally only starts after
-    # remote_create_container returns, so a raise here would leave the
-    # service (and its Fargate task) running.
+    # Verify the service's tags when requested (DRIVERS-3712). Any failure
+    # stops the service first: _run_e2e_test's cleanup try/finally only
+    # starts after remote_create_container returns.
     if os.environ.get("VERIFY_MONGODB_TAGS"):
         try:
             service = ecs_client.describe_services(
@@ -281,9 +278,9 @@ def remote_stop_after_failed_verification(cluster, service_name):
     Stop the service after failed tag verification.
 
     _run_e2e_test's cleanup try/finally only starts after
-    remote_create_container returns, so a raise before that would leave the
-    service (and its Fargate task) running. Cleanup errors are logged, not
-    raised, so they never mask the original verification failure.
+    remote_create_container returns, so a raise here would orphan the
+    service. Cleanup errors are logged, not raised, so they cannot mask the
+    verification failure.
     """
     try:
         remote_stop_container(cluster, service_name)

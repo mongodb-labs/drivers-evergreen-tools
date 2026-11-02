@@ -49,10 +49,9 @@ $GCPKMS_GCLOUD compute instances create $GCPKMS_INSTANCENAME \
     --boot-disk-size $GCPKMS_DISKSIZE
 echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
-# Label the boot disk too (DRIVERS-3712): --labels above only reaches the VM,
-# not the persistent disk created by --boot-disk-size. The disk is named
-# after the instance. Guarded: callers persist teardown metadata only after
-# this script returns, so a failed update must delete the instance itself.
+# --labels above only reaches the VM; label the boot disk too (DRIVERS-3712).
+# A failed update deletes the instance: teardown metadata is persisted only
+# after this script returns.
 if ! $GCPKMS_GCLOUD compute disks update "$GCPKMS_INSTANCENAME" \
     --zone "$GCPKMS_ZONE" --project "$GCPKMS_PROJECT" \
     --update-labels "mongodb-owner=$MONGODB_OWNER_TAG,mongodb-env=$MONGODB_ENV_TAG"; then
@@ -62,10 +61,9 @@ if ! $GCPKMS_GCLOUD compute disks update "$GCPKMS_INSTANCENAME" \
   exit 1
 fi
 
-# Verify the instance's and boot disk's labels when requested (DRIVERS-3712).
-# Callers persist teardown metadata only after this script returns, and
-# verify_cloud_tags exits the sourcing shell, so on failure delete the
-# instance (and with it the boot disk) before exiting.
+# Verify labels when requested (DRIVERS-3712). verify_cloud_tags exits the
+# sourcing shell, so on failure delete the instance (and its boot disk)
+# before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   if ! (
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh

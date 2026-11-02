@@ -28,9 +28,9 @@ create_deployment ()
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
 
-  # Tag the deployment per the MongoDB Cloud Tag Policy (DRIVERS-3712). These
-  # must be local: handle-paths.sh leaves `allexport` on, so plain assignments
-  # would leak into child processes, breaking GCP label creation.
+  # Tag the deployment per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+  # Must be local: handle-paths.sh leaves allexport on, so plain assignments
+  # leak into child processes and break GCP label creation.
   local MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
   local MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
   ensure_uv || exit 1

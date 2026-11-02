@@ -101,8 +101,7 @@ if [ $SERVERLESS_URI = "null" ]; then
   exit 1
 fi
 
-# Verify the instance's tags when requested (DRIVERS-3712). The instance name
-# is persisted above, so a failed check can be torn down.
+# Verify the instance's tags when requested (DRIVERS-3712).
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
   verify_atlas_tags "Atlas serverless instance ${DEPLOYMENT_NAME}" \
