@@ -47,16 +47,37 @@ az vm create \
     --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
     >/dev/null
 
+# Delete the VM and the resources created alongside it. Callers persist
+# teardown metadata only after this script returns, so every failure after
+# creation must clean up here. Uses the `az network public-ip` namespace,
+# which is where the public-ip command group lives.
+azurekms_cleanup_vm ()
+{
+    echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
+    az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
+    az network public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
+    az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
+}
+
 # az vm create --tags only reaches the VM itself; tag the implicitly created
-# OS managed disk too (DRIVERS-3712).
-OS_DISK_ID=$(az vm show \
+# OS managed disk too (DRIVERS-3712). Each step is guarded: a failure must
+# clean up instead of aborting with the VM running.
+if ! OS_DISK_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
     --query "storageProfile.osDisk.managedDisk.id" \
-    --output tsv)
-az tag create --resource-id "$OS_DISK_ID" \
+    --output tsv); then
+    echo "Looking up the OS disk failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+if ! az tag create --resource-id "$OS_DISK_ID" \
     --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
-    >/dev/null
+    >/dev/null; then
+    echo "Tagging the OS disk failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
 
 # If applicable, set the machine size.
 if [ -n "${AZUREKMS_MACHINESIZE:-}" ]; then
@@ -96,10 +117,8 @@ if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
     verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} OS disk" \
       "$(az disk show --ids "${OS_DISK_ID}" --query tags --output json)"
   ); then
-    echo "Tag verification failed; deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
-    az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
-    az public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
-    az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
+    echo "Tag verification failed." 1>&2
+    azurekms_cleanup_vm
     exit 1
   fi
 fi

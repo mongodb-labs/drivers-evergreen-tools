@@ -79,6 +79,10 @@ case "$cmd" in
     esac
     ;;
   tag)
+    if [ -n "${FAIL_DISK_TAG:-}" ]; then
+      echo "az tag create: simulated failure" >> "$STATE_DIR/calls.log"
+      exit 1
+    fi
     persist_tags "$STATE_DIR/disk_tags.json" "$@"
     echo '{}'
     ;;
@@ -88,13 +92,18 @@ case "$cmd" in
     fi
     ;;
   public-ip)
-    if [ "${1:-}" = "delete" ]; then echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"; fi
+    # `public-ip` is not a top-level Azure CLI command group; model the real
+    # CLI by failing so the production script cannot rely on it.
+    echo "az: 'public-ip' is not a command group; use 'az network public-ip'" 1>&2
+    exit 1
     ;;
   network)
     if [ "${1:-}" = "nsg" ] && [ "${2:-}" = "rule" ] && [ "${3:-}" = "create" ]; then
       echo '{}'
     elif [ "${1:-}" = "nsg" ] && [ "${2:-}" = "delete" ]; then
       echo "nsg-delete" >> "$STATE_DIR/cleanup.log"
+    elif [ "${1:-}" = "public-ip" ] && [ "${2:-}" = "delete" ]; then
+      echo "public-ip-delete" >> "$STATE_DIR/cleanup.log"
     fi
     ;;
   *) echo '{}' ;;
@@ -146,6 +155,10 @@ case "$1 $2 $3" in
     echo "instance-delete" >> "$STATE_DIR/cleanup.log"
     ;;
   "compute disks update")
+    if [ -n "${FAIL_DISK_UPDATE:-}" ]; then
+      echo "gcloud compute disks update: simulated failure" >> "$STATE_DIR/calls.log"
+      exit 1
+    fi
     if [ -n "${DROP_DISK_LABELS:-}" ]; then
       echo '{}' > "$STATE_DIR/disk_labels.json"
     else
@@ -240,6 +253,21 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertEqual([], self.cleanup_calls())
 
+    def test_azure_vm_deleted_when_os_disk_tagging_fails(self):
+        """A failed OS-disk tag write must delete the VM, public IP, and NSG.
+
+        The tagging runs before auto-shutdown is configured and before callers
+        persist teardown metadata, so it must clean up itself (N4).
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "FAIL_DISK_TAG": "1"},
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("public-ip-delete", self.cleanup_calls())
+        self.assertIn("nsg-delete", self.cleanup_calls())
+
     def test_gcp_instance_deleted_when_instance_labels_lost(self):
         """A failed instance-label check must delete the instance (F5)."""
         proc = self.run_create_script(
@@ -261,6 +289,23 @@ class TagVerifyCleanupTest(unittest.TestCase):
                 **CREATE_INSTANCE_ENV,
                 "GCPKMS_GCLOUD": str(self.bin / "gcloud"),
                 "DROP_DISK_LABELS": "1",
+            },
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("instance-delete", self.cleanup_calls())
+
+    def test_gcp_instance_deleted_when_disk_labeling_fails(self):
+        """A failed boot-disk label update must delete the instance.
+
+        The update runs under errexit before callers persist teardown
+        metadata, so it must clean up itself (N2).
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/gcpkms/create-instance.sh",
+            {
+                **CREATE_INSTANCE_ENV,
+                "GCPKMS_GCLOUD": str(self.bin / "gcloud"),
+                "FAIL_DISK_UPDATE": "1",
             },
         )
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)

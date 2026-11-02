@@ -89,6 +89,29 @@ class TestRemoteCreateContainer(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 self.create(ecs)
 
+    def test_verify_read_failure_stops_service_and_reraises(self):
+        """A failed tag read must stop the service and re-raise the error.
+
+        The service and its Fargate task are already running when
+        describe_services fails, and _run_e2e_test's cleanup try/finally has
+        not been entered yet.
+        """
+        ecs = _ecs_client(TAGS)
+        ecs.describe_services.side_effect = RuntimeError("api down")
+        with mock.patch.object(container_tester, "remote_stop_container") as stop:
+            with self.assertRaises(RuntimeError):
+                self.create(ecs)
+        stop.assert_called_once_with(CLUSTER, SERVICE)
+
+    def test_verify_empty_services_stops_service(self):
+        """An empty describe response must stop the service and raise."""
+        ecs = _ecs_client(TAGS)
+        ecs.describe_services.return_value = {"services": []}
+        with mock.patch.object(container_tester, "remote_stop_container") as stop:
+            with self.assertRaises(IndexError):
+                self.create(ecs)
+        stop.assert_called_once_with(CLUSTER, SERVICE)
+
     def test_verify_success_does_not_stop_service(self):
         """Tagged services are neither raised on nor stopped."""
         ecs = _ecs_client(TAGS)

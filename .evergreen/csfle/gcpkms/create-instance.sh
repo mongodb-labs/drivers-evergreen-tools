@@ -51,10 +51,16 @@ echo "Creating GCE instance ($GCPKMS_INSTANCENAME) ... end"
 
 # Label the boot disk too (DRIVERS-3712): --labels above only reaches the VM,
 # not the persistent disk created by --boot-disk-size. The disk is named
-# after the instance.
-$GCPKMS_GCLOUD compute disks update "$GCPKMS_INSTANCENAME" \
+# after the instance. Guarded: callers persist teardown metadata only after
+# this script returns, so a failed update must delete the instance itself.
+if ! $GCPKMS_GCLOUD compute disks update "$GCPKMS_INSTANCENAME" \
     --zone "$GCPKMS_ZONE" --project "$GCPKMS_PROJECT" \
-    --update-labels "mongodb-owner=$MONGODB_OWNER_TAG,mongodb-env=$MONGODB_ENV_TAG"
+    --update-labels "mongodb-owner=$MONGODB_OWNER_TAG,mongodb-env=$MONGODB_ENV_TAG"; then
+  echo "Labeling the boot disk failed; deleting instance ${GCPKMS_INSTANCENAME}" 1>&2
+  $GCPKMS_GCLOUD compute instances delete "$GCPKMS_INSTANCENAME" \
+      --zone "$GCPKMS_ZONE" --project "$GCPKMS_PROJECT" --quiet || true
+  exit 1
+fi
 
 # Verify the instance's and boot disk's labels when requested (DRIVERS-3712).
 # Callers persist teardown metadata only after this script returns, and
