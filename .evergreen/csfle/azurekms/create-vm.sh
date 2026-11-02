@@ -23,6 +23,20 @@ MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
 AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
+
+# az vm create with no existing network implicitly creates an untagged one;
+# create the network explicitly and tag it (DRIVERS-3712). Azure subnets
+# cannot carry tags, so the vnet carries them.
+if ! az network vnet create \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME-VNET" \
+    --subnet-name "$AZUREKMS_VMNAME-SUBNET" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+    >/dev/null; then
+    echo "Creating the virtual network failed." 1>&2
+    exit 1
+fi
+
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # az vm create also creates a "nic" and "public IP" by default.
 # Use --nic-delete-option 'Delete' to delete the NIC.
@@ -44,6 +58,8 @@ az vm create \
     --nsg "$AZUREKMS_VMNAME-NSG" \
     --nsg-rule "NONE" \
     --assign-identity $AZUREKMS_IDENTITY \
+    --vnet-name "$AZUREKMS_VMNAME-VNET" \
+    --subnet "$AZUREKMS_VMNAME-SUBNET" \
     --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
     >/dev/null
 
@@ -56,6 +72,7 @@ azurekms_cleanup_vm ()
     az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
     az network public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
     az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
+    az network vnet delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-VNET" || true
 }
 
 # Tag one supporting resource; on failure, clean up and abort.
@@ -158,6 +175,8 @@ if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
       "$(az resource show --ids "${PUBLIC_IP_ID}" --query tags --output json)"
     verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} NSG" \
       "$(az resource show --ids "${NSG_ID}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} network" \
+      "$(az network vnet show --resource-group "${AZUREKMS_RESOURCEGROUP}" --name "${AZUREKMS_VMNAME}-VNET" --query tags --output json)"
   ); then
     echo "Tag verification failed." 1>&2
     azurekms_cleanup_vm

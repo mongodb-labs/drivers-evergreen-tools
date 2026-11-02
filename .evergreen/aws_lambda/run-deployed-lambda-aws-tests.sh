@@ -72,10 +72,18 @@ ensure_artifact_bucket ()
         || { echo "Could not create artifact bucket ${ARTIFACT_BUCKET}" 1>&2; exit 1; }
     fi
   fi
-  # put-bucket-tagging replaces the whole tag set; merge the existing tags
-  # first (NoSuchTagSet just means there are none yet).
-  EXISTING_TAGS=$(aws s3api get-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
-    --query "TagSet" --output json 2>/dev/null || echo "[]")
+  # put-bucket-tagging replaces the whole tag set, so read the existing tags
+  # and merge. NoSuchTagSet just means there are none yet; any other read
+  # error must abort, or the write would wipe tags the read never saw.
+  if ! EXISTING_TAGS=$(aws s3api get-bucket-tagging --bucket "${ARTIFACT_BUCKET}" \
+      --query "TagSet" --output json 2>&1); then
+    if [[ "$EXISTING_TAGS" == *NoSuchTagSet* ]]; then
+      EXISTING_TAGS="[]"
+    else
+      echo "$EXISTING_TAGS" 1>&2
+      exit 1
+    fi
+  fi
   TAGGING=$(jq -n \
     --argjson existing "${EXISTING_TAGS}" \
     --arg owner "${MONGODB_OWNER_TAG}" \

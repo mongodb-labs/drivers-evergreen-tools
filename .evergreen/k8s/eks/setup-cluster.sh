@@ -26,12 +26,23 @@ eksctl create iamserviceaccount \
     --cluster $EKS_CLUSTER_NAME \
     --role-name $EKS_IAM_ROLE_NAME \
     --attach-policy-arn $EKS_POLICY_ARN \
+    --tags "mongodb-owner=${MONGODB_OWNER_TAG},mongodb-env=${MONGODB_ENV_TAG}" \
     --approve \
     --override-existing-serviceaccounts
 
-# Verify the cluster's tags when requested (DRIVERS-3712).
+# eksctl's --tags reaches the CloudFormation stack, not the role; tag the
+# role too (DRIVERS-3712).
+aws iam tag-role --role-name "$EKS_IAM_ROLE_NAME" --tags \
+  "Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}" \
+  "Key=mongodb-env,Value=${MONGODB_ENV_TAG}"
+
+# Verify the cluster's and role's tags when requested (DRIVERS-3712).
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
   verify_cloud_tags "EKS cluster ${EKS_CLUSTER_NAME}" \
     "$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --region "${EKS_REGION}" --query "cluster.tags" --output json)"
+  # get-role returns {Key, Value} objects; convert to a map for the helper.
+  ROLE_TAGS=$(aws iam get-role --role-name "${EKS_IAM_ROLE_NAME}" \
+    --query "Role.Tags" --output json | jq 'map({(.Key): .Value}) | add')
+  verify_cloud_tags "EKS IAM role ${EKS_IAM_ROLE_NAME}" "${ROLE_TAGS}"
 fi
