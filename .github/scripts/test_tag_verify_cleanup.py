@@ -181,7 +181,19 @@ case "$cmd" in
     ;;
   nic)
     if [ "${1:-}" = "delete" ]; then
-      echo "nic-delete" >> "$STATE_DIR/cleanup.log"
+      # The CLI's default NIC name is <vmname>VMNic; model the 404 any other
+      # name gets (swallowed by || true) so the test catches a wrong name.
+      nic_name=""; prev=""
+      for a in "$@"; do
+        if [ "$prev" = "--name" ]; then nic_name=$a; fi
+        prev=$a
+      done
+      if [[ "$nic_name" == *VMNic ]]; then
+        echo "nic-delete" >> "$STATE_DIR/cleanup.log"
+      else
+        echo "az network nic delete: ResourceNotFound: ${nic_name}" 1>&2
+        exit 3
+      fi
     fi
     ;;
       *) echo '{}' ;;
