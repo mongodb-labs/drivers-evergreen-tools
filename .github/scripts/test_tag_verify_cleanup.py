@@ -6,12 +6,17 @@ must clean up what they created when verification or tagging fails. These
 tests drive the real scripts through mocked `az`/`gcloud`/`aws` binaries.
 """
 
+import datetime
+import importlib.util
 import os
 import stat
 import subprocess
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -76,6 +81,10 @@ case "$cmd" in
     sub=$1; shift
     case "$sub" in
       create)
+        if [ -n "${FAIL_VM_CREATE:-}" ]; then
+          echo "az vm create: simulated failure" 1>&2
+          exit 1
+        fi
         persist_tags "$STATE_DIR/vm_tags.json" "$@"
         echo '{"id": "vm-id"}'
         ;;
@@ -418,6 +427,31 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("--vnet-name", vm_lines[0])
         self.assertIn("mongodb-owner", self.resource_tags("virtualNetworks"))
 
+    def test_azure_vnet_deleted_when_vm_create_fails(self):
+        """A failed az vm create must delete the already-created vnet."""
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "FAIL_VM_CREATE": "1"},
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("vnet-delete", self.cleanup_calls())
+
+    def test_azure_teardown_deletes_vnet(self):
+        """Normal teardown must delete the VM's vnet.
+
+        The OIDC teardown path funnels through the same delete-vm.sh.
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/delete-vm.sh",
+            {
+                "AZUREKMS_VMNAME": "vmname-test-1",
+                "AZUREKMS_RESOURCEGROUP": "RG",
+            },
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("vnet-delete", self.cleanup_calls())
+
     def test_azure_vm_deleted_nothing_when_tagged(self):
         """A tagged VM and OS disk pass verification and are left running."""
         proc = self.run_create_script(
@@ -697,6 +731,80 @@ class EksSetupTest(unittest.TestCase):
         """An untagged IAM role must fail verification."""
         proc = self.run_setup_cluster({"DROP_IAM_TAGS": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+
+
+class JanitorTest(unittest.TestCase):
+    """Tests for the orphaned-vnet cleanup in delete_old_azure_resources.py.
+
+    The Azure SDK is stubbed and both clients mocked, so the janitor's
+    orphan-detection logic runs without touching Azure.
+    """
+
+    SCRIPT = REPO / ".evergreen/csfle/azurekms/delete_old_azure_resources.py"
+
+    def setUp(self):
+        for name, attrs in {
+            "azure": {},
+            "azure.identity": {"DefaultAzureCredential": mock.MagicMock()},
+            "azure.mgmt": {},
+            "azure.mgmt.compute": {"ComputeManagementClient": mock.MagicMock()},
+            "azure.mgmt.network": {"NetworkManagementClient": mock.MagicMock()},
+        }.items():
+            if name not in sys.modules:
+                module = types.ModuleType(name)
+                for attr, value in attrs.items():
+                    setattr(module, attr, value)
+                sys.modules[name] = module
+
+        spec = importlib.util.spec_from_file_location(
+            "delete_old_azure_resources_under_test", self.SCRIPT
+        )
+        self.janitor = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.janitor)
+
+        self.now = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.old_vm = types.SimpleNamespace(
+            name="vmname-old-123", time_created=self.now - datetime.timedelta(hours=3)
+        )
+        self.cm = mock.MagicMock(name="compute_client")
+        self.cm.virtual_machines.list.return_value = [self.old_vm]
+        self.nm = mock.MagicMock(name="network_client")
+        self.nm.network_security_groups.list.return_value = []
+        self.nm.public_ip_addresses.list.return_value = []
+        self.nm.virtual_networks.list.return_value = [
+            types.SimpleNamespace(name="vmname-old-123-VNET"),
+            types.SimpleNamespace(name="vmname-gone-456-VNET"),
+        ]
+
+    def run_main(self, dry_run=False):
+        argv = ["delete_old_azure_resources.py"] + (["--dry-run"] if dry_run else [])
+        with (
+            mock.patch("sys.argv", argv),
+            mock.patch.dict(
+                os.environ,
+                {"AZURE_RESOURCE_GROUP": "rg", "AZURE_SUBSCRIPTION_ID": "sub"},
+            ),
+            mock.patch.object(
+                self.janitor, "ComputeManagementClient", return_value=self.cm
+            ),
+            mock.patch.object(
+                self.janitor, "NetworkManagementClient", return_value=self.nm
+            ),
+        ):
+            self.janitor.main()
+
+    def test_orphaned_vnets_are_deleted(self):
+        """VNets whose VM is gone are deleted; live VMs' vnets are kept."""
+        self.run_main()
+        deleted = [
+            call.args for call in self.nm.virtual_networks.begin_delete.call_args_list
+        ]
+        self.assertIn(("rg", "vmname-gone-456-VNET"), deleted)
+        self.assertNotIn(("rg", "vmname-old-123-VNET"), deleted)
+
+    def test_dry_run_keeps_orphaned_vnets(self):
+        self.run_main(dry_run=True)
+        self.nm.virtual_networks.begin_delete.assert_not_called()
 
 
 class AtlasGatePresenceTest(unittest.TestCase):

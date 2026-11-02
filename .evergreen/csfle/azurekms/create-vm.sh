@@ -24,48 +24,10 @@ MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
 AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
 
-# az vm create with no existing network implicitly creates an untagged one;
-# create the network explicitly and tag it (DRIVERS-3712). Azure subnets
-# cannot carry tags, so the vnet carries them.
-if ! az network vnet create \
-    --resource-group "$AZUREKMS_RESOURCEGROUP" \
-    --name "$AZUREKMS_VMNAME-VNET" \
-    --subnet-name "$AZUREKMS_VMNAME-SUBNET" \
-    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
-    >/dev/null; then
-    echo "Creating the virtual network failed." 1>&2
-    exit 1
-fi
-
-echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
-# az vm create also creates a "nic" and "public IP" by default.
-# Use --nic-delete-option 'Delete' to delete the NIC.
-# Specify a name for the public IP to delete later.
-# Specify a name for the Network Security Group (NSG) to delete later.
-# Use --nsg-rule=NONE to remove default open SSH and RDP ports.
-# Pipe to /dev/null to hide the output. The output includes tenantId.
-az vm create \
-    --resource-group "$AZUREKMS_RESOURCEGROUP" \
-    --name "$AZUREKMS_VMNAME" \
-    --image "$AZUREKMS_IMAGE" \
-    --admin-username azureuser \
-    --ssh-key-values "$AZUREKMS_PUBLICKEYPATH" \
-    --public-ip-sku Standard \
-    --nic-delete-option "Delete" \
-    --data-disk-delete-option "Delete" \
-    --os-disk-delete-option "Delete" \
-    --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
-    --nsg "$AZUREKMS_VMNAME-NSG" \
-    --nsg-rule "NONE" \
-    --assign-identity $AZUREKMS_IDENTITY \
-    --vnet-name "$AZUREKMS_VMNAME-VNET" \
-    --subnet "$AZUREKMS_VMNAME-SUBNET" \
-    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
-    >/dev/null
-
 # Delete the VM and the resources created alongside it. Callers persist
 # teardown metadata only after this script returns, so every failure after
-# creation must clean up here.
+# creation must clean up here. Defined before provisioning so a VM-create
+# failure can call it.
 azurekms_cleanup_vm ()
 {
     echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
@@ -87,6 +49,49 @@ azurekms_tag_resource ()
         exit 1
     fi
 }
+
+# az vm create with no existing network implicitly creates an untagged one;
+# create the network explicitly and tag it (DRIVERS-3712). Azure subnets
+# cannot carry tags, so the vnet carries them.
+if ! az network vnet create \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME-VNET" \
+    --subnet-name "$AZUREKMS_VMNAME-SUBNET" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+    >/dev/null; then
+    echo "Creating the virtual network failed." 1>&2
+    exit 1
+fi
+
+echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
+# az vm create also creates a "nic" and "public IP" by default.
+# Use --nic-delete-option 'Delete' to delete the NIC.
+# Specify a name for the public IP to delete later.
+# Specify a name for the Network Security Group (NSG) to delete later.
+# Use --nsg-rule=NONE to remove default open SSH and RDP ports.
+# Pipe to /dev/null to hide the output. The output includes tenantId.
+if ! az vm create \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME" \
+    --image "$AZUREKMS_IMAGE" \
+    --admin-username azureuser \
+    --ssh-key-values "$AZUREKMS_PUBLICKEYPATH" \
+    --public-ip-sku Standard \
+    --nic-delete-option "Delete" \
+    --data-disk-delete-option "Delete" \
+    --os-disk-delete-option "Delete" \
+    --public-ip-address "$AZUREKMS_VMNAME-PUBLIC-IP" \
+    --nsg "$AZUREKMS_VMNAME-NSG" \
+    --nsg-rule "NONE" \
+    --assign-identity $AZUREKMS_IDENTITY \
+    --vnet-name "$AZUREKMS_VMNAME-VNET" \
+    --subnet "$AZUREKMS_VMNAME-SUBNET" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+    >/dev/null; then
+    echo "Creating the VM failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
 
 # az vm create --tags only reaches the VM itself; tag the implicitly created
 # OS managed disk (DRIVERS-3712). Each lookup and tag is guarded.

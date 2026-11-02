@@ -110,6 +110,30 @@ def main():
             except Exception as e:
                 print(f"Exception occurred: {e}")
 
+    # Delete orphaned VNets (DRIVERS-3712 creates one per VM):
+    orphan_vnet_names = []
+    for vnet in nmclient.virtual_networks.list(resource_group_name):
+        is_orphan = True
+        for vm_name in all_vm_names:
+            if vm_name + "-VNET" == vnet.name:
+                is_orphan = False
+                break
+        if is_orphan:
+            orphan_vnet_names.append(vnet.name)
+    print(f"Detected orphaned VNets: {orphan_vnet_names}")
+    if args.dry_run:
+        print("Dry run detected. Not deleting.")
+    else:
+        for vnet_name in orphan_vnet_names:
+            try:
+                print(f"Deleting orphaned VNet '{vnet_name}' ...")
+                nmclient.virtual_networks.begin_delete(
+                    resource_group_name, vnet_name
+                ).result()
+                print(f"Deleting orphaned VNet '{vnet_name}' ... done")
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
