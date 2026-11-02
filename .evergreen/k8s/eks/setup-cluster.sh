@@ -17,13 +17,17 @@ fi
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
-eksctl create cluster --name $EKS_CLUSTER_NAME --zones "${EKS_REGION}a,${EKS_REGION}b" \
+# --region must be explicit: eksctl otherwise falls back to the ambient
+# AWS region (profile/env default), which may differ from ${EKS_REGION}a/b
+# zone names — leaving the cluster in the wrong region.
+eksctl create cluster --name $EKS_CLUSTER_NAME --region "${EKS_REGION}" --zones "${EKS_REGION}a,${EKS_REGION}b" \
   --tags "mongodb-owner=${MONGODB_OWNER_TAG},mongodb-env=${MONGODB_ENV_TAG}"
 kubectl config set-context --current
-eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --approve
+eksctl utils associate-iam-oidc-provider --cluster $EKS_CLUSTER_NAME --region "${EKS_REGION}" --approve
 eksctl create iamserviceaccount \
     --name $EKS_SERVICE_ACCOUNT_NAME \
     --cluster $EKS_CLUSTER_NAME \
+    --region "${EKS_REGION}" \
     --role-name $EKS_IAM_ROLE_NAME \
     --attach-policy-arn $EKS_POLICY_ARN \
     --tags "mongodb-owner=${MONGODB_OWNER_TAG},mongodb-env=${MONGODB_ENV_TAG}" \
