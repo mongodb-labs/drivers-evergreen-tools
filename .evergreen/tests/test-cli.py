@@ -12,7 +12,7 @@ from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signatu
 # TODO (DRIVERS-3666): remove the amazon2023 skip markers and
 # Amazon2023HostTest once DEVPROD-44314 ships full gnupg2.
 IS_AMAZON2023 = mongodl._is_amazon2023_host()
-# Only amazon2023 images still on gnupg2-minimal (no gpg-agent) cannot verify.
+# amazon2023 images still on gnupg2-minimal (no gpg-agent) cannot verify.
 GPG_CANNOT_VERIFY = IS_AMAZON2023 and shutil.which("gpg-agent") is None
 
 
@@ -22,7 +22,7 @@ def _write_archive(directory):
     return archive
 
 
-@unittest.skipIf(GPG_CANNOT_VERIFY, "this amazon2023 host cannot verify signatures")
+@unittest.skipIf(GPG_CANNOT_VERIFY, "amazon2023 hosts cannot verify signatures")
 class VerifySignatureRejectionTest(unittest.TestCase):
     """A working gpg must reject signatures it cannot trust."""
 
@@ -91,7 +91,7 @@ class VerifySignatureRejectionTest(unittest.TestCase):
 
 
 class Amazon2023HostTest(unittest.TestCase):
-    """amazon2023 images on gnupg2-minimal (no gpg-agent) cannot verify."""
+    """amazon2023 images ship gnupg2-minimal, which cannot verify."""
 
     @unittest.skipUnless(GPG_CANNOT_VERIFY, "only meaningful on amazon2023 hosts without gpg-agent")
     def test_verification_raises_gpg_environment_error(self):

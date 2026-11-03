@@ -96,8 +96,8 @@ fi
 # The master-nightly artifact is always published with a signature; a
 # missing signature would be a publication regression.
 if command -v gpg >/dev/null 2>&1; then
-  # Only amazon2023 images still on gnupg2-minimal (no gpg-agent) cannot
-  # verify; amazon2023 images with full gnupg2 must verify like any host.
+  # amazon2023 images still on gnupg2-minimal (no gpg-agent) cannot verify.
+  # amazon2023 images with full gnupg2 must verify like any host.
   if [ ${IS_AMAZON2023} = 1 ] && ! command -v gpg-agent >/dev/null 2>&1; then
     grep -q "DEVPROD-44314" latest-build.log
     # Broken gpg is a host property: --target must not re-enable verification.
