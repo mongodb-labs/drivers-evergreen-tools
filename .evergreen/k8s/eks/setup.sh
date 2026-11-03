@@ -19,6 +19,14 @@ fi
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 aws eks update-kubeconfig --region $EKS_REGION --name $EKS_CLUSTER_NAME
 
+# Verify the cluster's tags when requested: the policy covers the
+# pre-provisioned cluster the tests run on, not only what this script creates.
+if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+  CLUSTER_TAGS=$(aws eks describe-cluster --region "$EKS_REGION" --name "$EKS_CLUSTER_NAME" --query "cluster.tags" --output json)
+  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+  verify_cloud_tags "EKS cluster ${EKS_CLUSTER_NAME}" "${CLUSTER_TAGS}"
+fi
+
 # Create the pod with a random name.
 POD_NAME="test-eks-$RANDOM"
 echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh

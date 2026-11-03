@@ -197,10 +197,16 @@ def setup_ecs():
         " --script lib/ecs_hosted_test.sh"
     )
 
-    # Pass in the AWS credentials as environment variables
+    # Pass in the AWS credentials as environment variables.
     # AWS_SHARED_CREDENTIALS_FILE does not work in evergreen for an unknown
-    #  reason
-    env = dict(
+    # reason. Minimal environment: credentials plus the tag-verification
+    # flags, keeping vault-loaded secrets out of the subprocess tree.
+    env = {
+        key: os.environ[key]
+        for key in ("VERIFY_MONGODB_TAGS", "MONGODB_OWNER_TAG", "MONGODB_ENV_TAG")
+        if key in os.environ
+    }
+    env.update(
         AWS_ACCESS_KEY_ID=CONFIG[get_key("iam_auth_ecs_account")],
         AWS_SECRET_ACCESS_KEY=CONFIG[get_key("iam_auth_ecs_secret_access_key")],
     )
