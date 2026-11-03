@@ -93,7 +93,9 @@ class VerifySignatureRejectionTest(unittest.TestCase):
 class Amazon2023HostTest(unittest.TestCase):
     """amazon2023 images ship gnupg2-minimal, which cannot verify."""
 
-    @unittest.skipUnless(GPG_CANNOT_VERIFY, "only meaningful on amazon2023 hosts without gpg-agent")
+    @unittest.skipUnless(
+        GPG_CANNOT_VERIFY, "only meaningful on amazon2023 hosts without gpg-agent"
+    )
     def test_verification_raises_gpg_environment_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             archive = _write_archive(tmp)
