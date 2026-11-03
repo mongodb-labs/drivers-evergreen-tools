@@ -24,12 +24,11 @@ def join(*parts):
 
 sys.path.insert(0, str(HERE / "lib"))
 from util import get_key as _get_key
+from util import imds_get
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
 ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
 
-# This varies based on hosting EC2 as the account id and role name can vary
-AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*"
 _USE_AWS_SECRETS = False
 
 try:
@@ -101,14 +100,41 @@ def setup_assume_role():
     )
 
 
+def assumed_role_pattern(caller_arn: str) -> str:
+    """Turn .../assumed-role/<role>/<session> into .../assumed-role/<role>/*."""
+    if ":assumed-role/" not in caller_arn:
+        raise ValueError(f"Expected an assumed-role ARN, got {caller_arn!r}")
+    return caller_arn.rsplit("/", 1)[0] + "/*"
+
+
+def get_host_account_arn():
+    """Get the MongoDB user name for the role of this host, which varies by host.
+
+    Uses the host role credentials explicitly, so env credentials are ignored.
+    """
+    import boto3
+
+    base_path = "/latest/meta-data/iam/security-credentials/"
+    role_name = imds_get(base_path).splitlines()[0]
+    creds = json.loads(imds_get(base_path + role_name))
+    sts_client = boto3.client(
+        "sts",
+        region_name="us-east-1",
+        aws_access_key_id=creds["AccessKeyId"],
+        aws_secret_access_key=creds["SecretAccessKey"],
+        aws_session_token=creds["Token"],
+    )
+    return assumed_role_pattern(sts_client.get_caller_identity()["Arn"])
+
+
 def setup_ec2():
     # Create the user.
     from aws_assign_instance_profile import _assign_instance_policy
 
     _assign_instance_policy()
-    os.environ.pop("AWS_ACCESS_KEY_ID", None)
-    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
-    create_user(AWS_ACCOUNT_ARN, dict())
+    for name in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"):
+        os.environ.pop(name, None)
+    create_user(get_host_account_arn(), dict())
     return dict()
 
 
