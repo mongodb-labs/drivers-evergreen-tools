@@ -25,6 +25,14 @@ command -v aws >/dev/null 2>&1 || fail "the 'aws' CLI is not installed on this h
 command -v python3 >/dev/null 2>&1 || fail "'python3' is not installed on this host"
 [[ -n "${AWS_ACCESS_KEY_ID:-}" ]] || fail "AWS_ACCESS_KEY_ID is not set (expected ec2.assume_role credentials)"
 
+# Ensure uv is available here.
+. "${SCRIPT_DIR}/../ensure-uv.sh"
+ensure_uv || exit 1
+
+uri_py() {
+  uv run --no-project --with "pymongo~=4.0" python "${SCRIPT_DIR}/uri.py" "${STATE_DIR}" "$@"
+}
+
 mkdir -p "${STATE_DIR}"
 
 declare tag="${DSC_SLS_TAG:-}"
@@ -57,11 +65,11 @@ run_slslocal --compose wait --timeout 10m || fail "cluster did not become health
 # The replica set members advertise names (shardN-nodeM-mongod) that only resolve inside the containers, but their
 # ports are published on the host. Map the names to loopback so that replica set discovery works from the host.
 declare -a member_names
-mapfile -t member_names < <(python3 "${SCRIPT_DIR}/uri.py" "${STATE_DIR}" --member-names)
+mapfile -t member_names < <(uri_py --member-names)
 [[ "${#member_names[@]}" -gt 0 ]] || fail "unable to determine replica set member names"
 echo "127.0.0.1 ${member_names[*]} ${HOSTS_MARKER}" | sudo tee -a /etc/hosts >/dev/null ||
   fail "unable to add replica set member names to /etc/hosts"
 
-# Build the connection string from ports.json, asking one node for the replica set name over the wire protocol.
-python3 "${SCRIPT_DIR}/uri.py" "${STATE_DIR}" >dsc-expansion.yml || fail "unable to determine MONGODB_URI"
+# Build the connection string from ports.json, asking one node for the replica set name.
+uri_py >dsc-expansion.yml || fail "unable to determine MONGODB_URI"
 cat dsc-expansion.yml
