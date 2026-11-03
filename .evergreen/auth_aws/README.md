@@ -3,6 +3,10 @@
 These scripts were originally taken from [mongo-enterprise-modules](https://github.com/10gen/mongo-enterprise-modules/tree/master/jstests/external_auth_aws)
 and intended to simplify creating users, attaching roles to existing EC2 instances, launching an Amazon ECS container instance, etc.
 
+The ECS service is tagged `mongodb-owner=client-libraries-managers@mongodb.com`,
+`mongodb-env=dev`, propagated to its Fargate tasks. Override with
+`MONGODB_OWNER_TAG`/`MONGODB_ENV_TAG`.
+
 ## Test Process
 
 For all testing variants except for ECS, the general test flow is:

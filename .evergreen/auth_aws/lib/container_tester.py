@@ -203,12 +203,30 @@ def remote_create_container(
     """
     ecs_client = boto3.client("ecs", region_name=_get_region(cluster))
 
+    # ECS tag dicts use lowercase key/value names; empty overrides fall back
+    # to the defaults.
+    tags = [
+        {
+            "key": "mongodb-owner",
+            "value": os.environ.get("MONGODB_OWNER_TAG")
+            or "client-libraries-managers@mongodb.com",
+        },
+        {
+            "key": "mongodb-env",
+            "value": os.environ.get("MONGODB_ENV_TAG") or "dev",
+        },
+    ]
+
     resp = ecs_client.create_service(
         cluster=cluster,
         serviceName=service_name,
         taskDefinition=task_definition,
         desiredCount=1,
         launchType="FARGATE",
+        tags=tags,
+        # Tasks do not inherit service tags by default (propagateTags defaults
+        # to NONE).
+        propagateTags="SERVICE",
         networkConfiguration={
             "awsvpcConfiguration": {
                 "subnets": subnets,
@@ -228,6 +246,46 @@ def remote_create_container(
     waiter = ecs_client.get_waiter("services_stable")
 
     waiter.wait(cluster=cluster, services=[service_arn])
+
+    # Verify the service's tags when requested. Any failure stops the service
+    # first: _run_e2e_test's cleanup try/finally only starts after this returns.
+    if os.environ.get("VERIFY_MONGODB_TAGS"):
+        try:
+            service = ecs_client.describe_services(
+                cluster=cluster, services=[service_arn], include=["TAGS"]
+            )["services"][0]
+            actual = {t["key"]: t.get("value") for t in service.get("tags", [])}
+        except Exception:
+            LOGGER.exception(
+                "verify-tags: failed to read ECS service %s tags", service_name
+            )
+            remote_stop_after_failed_verification(cluster, service_name)
+            raise
+        print(f"verify-tags: ECS service {service_name} tags: {actual}")
+        if not actual.get("mongodb-owner") or not actual.get("mongodb-env"):
+            remote_stop_after_failed_verification(cluster, service_name)
+            raise SystemExit(
+                f"verify-tags FAILED: ECS service {service_name} lacks "
+                "mongodb-owner/mongodb-env tags"
+            )
+        print("verify-tags OK: mongodb-owner/mongodb-env present on ECS service")
+
+
+def remote_stop_after_failed_verification(cluster, service_name):
+    """
+    Stop the service after failed tag verification.
+
+    _run_e2e_test's cleanup try/finally only starts after
+    remote_create_container returns, so a raise here would orphan the
+    service; cleanup errors are logged, not raised.
+    """
+    try:
+        remote_stop_container(cluster, service_name)
+    except Exception:
+        LOGGER.exception(
+            "verify-tags: failed to stop ECS service %s after failed tag verification",
+            service_name,
+        )
 
 
 def _remote_stop_container_args(args):

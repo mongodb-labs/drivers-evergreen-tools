@@ -35,7 +35,10 @@ for the CI that runs it.
 
 - `DRIVERS_TOOLS`: expected to point at the repo root. Several scripts read it.
 - `.evergreen/find-python3.sh`: sourced by scripts that need a Python interpreter.
-  `.evergreen/setup.sh` is its last remaining consumer; new scripts use `uv`.
+  `.evergreen/setup.sh` is its last remaining consumer; new scripts use `uv`
+  (exception: `.evergreen/verify-tags.sh` also sources it because it runs on
+  the minimal KMS VM images, where bootstrapping `uv` for a tag check is not
+  worth it).
 - `.evergreen/ensure-uv.sh` (`ensure_uv`): installs or locates `uv`. In CI it scopes uv's
   cache, tool, and Python install dirs under the task's temp directory; outside CI it
   only redirects the tool dir, so a local `uv tool install --force` can't overwrite
