@@ -197,12 +197,20 @@ case "$cmd" in
       *) echo '{}' ;;
     esac
     ;;
+  aks)
+    # az aks show -n NAME -g RG --query tags (the pod-flow cluster gate);
+    # the mock returns the post-query tags map.
+    if [ "${1:-}" = "show" ]; then
+      if [ -n "${DROP_AKS_TAGS:-}" ]; then
+        echo '{}'
+      else
+        echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
+      fi
+    fi
+    ;;
   *) echo '{}' ;;
 esac
 """
-
-# Mock `gcloud`: models the subset of the CLI that gcpkms/create-instance.sh
-# uses. DROP_INSTANCE_LABELS / DROP_DISK_LABELS simulate lost labels.
 
 CURL_MOCK = "#!/usr/bin/env bash\necho 1.2.3.4\n"
 
@@ -499,6 +507,72 @@ class JanitorTest(unittest.TestCase):
         ]
         self.run_main()
         self.nm.virtual_networks.begin_delete.assert_not_called()
+
+
+# Mock `kubectl`: no-op.
+KUBECTL_MOCK = """#!/usr/bin/env bash
+exit 0
+"""
+
+
+class AksPodSetupTest(unittest.TestCase):
+    """Tests for the cluster-tag gate in k8s/aks/setup.sh, the pod flow the
+    aks task runs."""
+
+    SCRIPT = REPO / ".evergreen/k8s/aks/setup.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("az", AZ_MOCK)
+        self.write_executable("kubectl", KUBECTL_MOCK)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_pod_setup(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["VERIFY_MONGODB_TAGS"] = "1"
+        env["DRIVERS_TOOLS"] = str(REPO)
+        # Exported so the script skips the vault-based setup-secrets.sh and
+        # azurekms/login.sh's service-principal login; the script pushd's
+        # into the repo, so a cwd stub file would be ignored.
+        env["AZUREKMS_TENANTID"] = "t"
+        env["AZUREKMS_CLIENTID"] = "c"
+        env["AZUREKMS_SECRET"] = "s"
+        env["AKS_CLUSTER_NAME"] = "cluster"
+        env["AKS_RESOURCE_GROUP"] = "rg"
+        env["AKS_SERVICE_ACCOUNT_NAME"] = "sa"
+        env["AKS_SERVICE_ACCOUNT_NAMESPACE"] = "default"
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            cwd=self.state_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+    def test_pod_setup_fails_when_cluster_untagged(self):
+        """An untagged cluster must fail the pod setup."""
+        proc = self.run_pod_setup({"DROP_AKS_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_pod_setup_passes_when_cluster_tagged(self):
+        proc = self.run_pod_setup({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
 
 class AzureParseTest(unittest.TestCase):

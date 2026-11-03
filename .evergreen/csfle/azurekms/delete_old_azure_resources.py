@@ -110,7 +110,7 @@ def main():
             except Exception as e:
                 print(f"Exception occurred: {e}")
 
-    # Delete orphaned VNets (DRIVERS-3712 creates one per VM). The vnet is
+    # Delete orphaned VNets (one per VM). The vnet is
     # created before its VM, so candidates get a 2-hour grace period from
     # their created-at tag, and a fresh VM-association check runs before
     # deletion.

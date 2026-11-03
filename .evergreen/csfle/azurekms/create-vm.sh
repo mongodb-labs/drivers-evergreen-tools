@@ -18,7 +18,7 @@ fi
 
 AZUREKMS_IDENTITY="${AZUREKMS_IDENTITY:-[system]}"
 
-# Tag the VM per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+# Tag the VM.
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
@@ -54,9 +54,9 @@ azurekms_tag_resource ()
 }
 
 # az vm create with no existing network implicitly creates an untagged one;
-# create the network explicitly and tag it (DRIVERS-3712). Azure subnets
-# cannot carry tags, so the vnet carries them. The created-at tag gives the
-# janitor its grace period: the vnet exists before its VM does.
+# create the network explicitly and tag it. Azure subnets cannot carry tags,
+# so the vnet carries them. The created-at tag gives the janitor its grace
+# period: the vnet exists before its VM does.
 if ! az network vnet create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME-VNET" \
@@ -98,7 +98,7 @@ if ! az vm create \
 fi
 
 # az vm create --tags only reaches the VM itself; tag the implicitly created
-# OS managed disk (DRIVERS-3712). Each lookup and tag is guarded.
+# OS managed disk too. Each lookup and tag is guarded.
 if ! OS_DISK_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -111,7 +111,7 @@ fi
 azurekms_tag_resource "OS disk" "$OS_DISK_ID"
 
 # az vm create --tags reaches neither the NIC, public IP, nor NSG; tag those
-# too (DRIVERS-3712).
+# too.
 if ! NIC_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -169,7 +169,7 @@ az network nsg rule create \
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
 
-# Verify tags when requested (DRIVERS-3712). verify_cloud_tags exits the
+# Verify tags when requested. verify_cloud_tags exits the
 # sourcing shell, so on failure clean up here before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   if ! (

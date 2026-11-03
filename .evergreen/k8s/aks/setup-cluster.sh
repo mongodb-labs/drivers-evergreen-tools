@@ -16,7 +16,7 @@ fi
 az logout || true
 az login
 
-# Tag all created resources per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+# Tag all created resources.
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
@@ -61,7 +61,7 @@ RESOURCE_SUBSCRIPTION=$(az group show --resource-group $AKS_RESOURCE_GROUP -o ts
 export RESOURCE_SUBSCRIPTION
 az role assignment create --role "Azure Kubernetes Service RBAC Admin" --assignee $AKS_APPLICATION_ID  --scope $RESOURCE_SUBSCRIPTION
 
-# Verify the created resources' tags when requested (DRIVERS-3712).
+# Verify the created resources' tags when requested.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
   verify_cloud_tags "AKS resource group ${AKS_RESOURCE_GROUP}" \
