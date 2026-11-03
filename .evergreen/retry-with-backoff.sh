@@ -18,7 +18,9 @@ retry_with_backoff() {
   command="$*"
   while [[ $attempt -lt $max_attempts ]]; do
     attempt_prompt=$(( attempt + 1 ))
-    echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..."
+    # Progress goes to stderr so the helper is safe inside command
+    # substitutions (the wrapped command owns stdout).
+    echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..." 1>&2
 
     exitCode=0
     "$@" || {

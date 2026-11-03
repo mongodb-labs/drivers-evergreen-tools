@@ -91,6 +91,8 @@ case "$cmd" in
           echo "/subscriptions/sub/disks/osdisk"
         elif [[ "$*" == *networkProfile* ]]; then
           echo "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic"
+        elif [[ "$*" == *publicIps* ]]; then
+          echo "20.51.134.22"
         else
           cat "$STATE_DIR/vm_tags.json"
         fi
@@ -212,7 +214,27 @@ case "$cmd" in
 esac
 """
 
-CURL_MOCK = "#!/usr/bin/env bash\necho 1.2.3.4\n"
+CURL_MOCK = r"""#!/usr/bin/env bash
+# Mock `curl` for whatismyip.akamai.com. CURL_FAIL_FIRST=1 fails the first
+# invocation (exit 56, curl's network-receive error); CURL_FAIL_ALWAYS=1
+# fails every invocation. Otherwise echoes an IP.
+set -u
+STATE_DIR=${STATE_DIR:-/tmp}
+if [ -n "${CURL_FAIL_ALWAYS:-}" ]; then
+  echo "curl: (56) Recv failure" 1>&2
+  exit 56
+fi
+if [ -n "${CURL_FAIL_FIRST:-}" ]; then
+  touch "$STATE_DIR/curl_calls"
+  calls=$(wc -l < "$STATE_DIR/curl_calls")
+  echo x >> "$STATE_DIR/curl_calls"
+  if [ "$calls" = 0 ]; then
+    echo "curl: (56) Recv failure" 1>&2
+    exit 56
+  fi
+fi
+echo 1.2.3.4
+"""
 
 CREATE_VM_ENV = {
     "AZUREKMS_VMNAME_PREFIX": "PREFIX",
@@ -573,6 +595,65 @@ class AksPodSetupTest(unittest.TestCase):
     def test_pod_setup_passes_when_cluster_tagged(self):
         proc = self.run_pod_setup({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+
+class SshIpTest(unittest.TestCase):
+    """Tests for set-ssh-ip.sh's external-IP lookup.
+
+    The whatismyip curl is an external dependency on the provisioning path;
+    it must survive a transient failure (retry) instead of aborting the task
+    with curl's exit 56.
+    """
+
+    SCRIPT = REPO / ".evergreen/csfle/azurekms/set-ssh-ip.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("az", AZ_MOCK)
+        self.write_executable("curl", CURL_MOCK)
+        self.write_executable("ssh", "#!/usr/bin/env bash\nexit 0\n")
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_set_ssh_ip(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["DRIVERS_TOOLS"] = str(REPO)
+        env["AZUREKMS_RESOURCEGROUP"] = "RG"
+        env["AZUREKMS_VMNAME"] = "vmname-test-1"
+        env["AZUREKMS_PRIVATEKEYPATH"] = "/dev/null"
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+    def test_transient_ip_lookup_failure_is_retried(self):
+        """A failed whatismyip call is retried; the IP stays clean."""
+        proc = self.run_set_ssh_ip({"CURL_FAIL_FIRST": "1"})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        # The retry progress goes to stderr; stdout must carry only the IP
+        # pipeline's own output.
+        self.assertIn("attempt n. 2", proc.stderr)
+        self.assertNotIn("retry_with_backoff:", proc.stdout)
+
+    def test_persistent_ip_lookup_failure_fails_the_script(self):
+        proc = self.run_set_ssh_ip({"CURL_FAIL_ALWAYS": "1"})
+        self.assertEqual(proc.returncode, 56, proc.stdout + proc.stderr)
 
 
 class AzureParseTest(unittest.TestCase):

@@ -155,7 +155,9 @@ else
 fi
 az vm auto-shutdown -g $AZUREKMS_RESOURCEGROUP -n $AZUREKMS_VMNAME --time $SHUTDOWN_TIME
 
-EXTERNAL_IP=$(curl -s http://whatismyip.akamai.com/)
+# The IP-echo service is external and flaky; retry instead of aborting the
+# provisioning chain with curl's exit 56.
+EXTERNAL_IP=$("$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl -s http://whatismyip.akamai.com/)
 
 # Add a network security group rule to permit SSH from current IP. This rule is updated with the current IP in "set-ssh-ip.sh" to permit SSH from different Evergreen hosts.
 az network nsg rule create \
