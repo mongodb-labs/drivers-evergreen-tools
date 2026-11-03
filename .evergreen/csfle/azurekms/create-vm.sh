@@ -17,7 +17,56 @@ if [ -z "${AZUREKMS_VMNAME_PREFIX:-}" ] || \
 fi
 
 AZUREKMS_IDENTITY="${AZUREKMS_IDENTITY:-[system]}"
+
+# Tag the VM per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
+MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
+
 AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
+
+# Delete the VM and the resources created alongside it. Callers persist
+# teardown metadata only after this script returns, so every failure after
+# creation must clean up here. Defined before provisioning so a VM-create
+# failure can call it. The NIC goes first: if the VM was never created, its
+# delete option never fires and the attached NIC blocks the other deletes.
+azurekms_cleanup_vm ()
+{
+    echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
+    az vm delete --yes --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME" || true
+    # The NIC is not named explicitly at create, so az names it <vmname>VMNic.
+    az network nic delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME"VMNic || true
+    az network public-ip delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-PUBLIC-IP" || true
+    az network nsg delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-NSG" || true
+    az network vnet delete --resource-group "$AZUREKMS_RESOURCEGROUP" --name "$AZUREKMS_VMNAME-VNET" || true
+}
+
+# Tag one supporting resource; on failure, clean up and abort.
+azurekms_tag_resource ()
+{
+    local description=$1 id=$2
+    if ! az tag create --resource-id "$id" \
+        --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+        >/dev/null; then
+        echo "Tagging the ${description} failed." 1>&2
+        azurekms_cleanup_vm
+        exit 1
+    fi
+}
+
+# az vm create with no existing network implicitly creates an untagged one;
+# create the network explicitly and tag it (DRIVERS-3712). Azure subnets
+# cannot carry tags, so the vnet carries them. The created-at tag gives the
+# janitor its grace period: the vnet exists before its VM does.
+if ! az network vnet create \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME-VNET" \
+    --subnet-name "$AZUREKMS_VMNAME-SUBNET" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" "created-at=$(date +%s)" \
+    >/dev/null; then
+    echo "Creating the virtual network failed." 1>&2
+    exit 1
+fi
+
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # az vm create also creates a "nic" and "public IP" by default.
 # Use --nic-delete-option 'Delete' to delete the NIC.
@@ -25,7 +74,7 @@ echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... begin"
 # Specify a name for the Network Security Group (NSG) to delete later.
 # Use --nsg-rule=NONE to remove default open SSH and RDP ports.
 # Pipe to /dev/null to hide the output. The output includes tenantId.
-az vm create \
+if ! az vm create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
     --image "$AZUREKMS_IMAGE" \
@@ -39,7 +88,60 @@ az vm create \
     --nsg "$AZUREKMS_VMNAME-NSG" \
     --nsg-rule "NONE" \
     --assign-identity $AZUREKMS_IDENTITY \
-    >/dev/null
+    --vnet-name "$AZUREKMS_VMNAME-VNET" \
+    --subnet "$AZUREKMS_VMNAME-SUBNET" \
+    --tags "mongodb-owner=$MONGODB_OWNER_TAG" "mongodb-env=$MONGODB_ENV_TAG" \
+    >/dev/null; then
+    echo "Creating the VM failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+
+# az vm create --tags only reaches the VM itself; tag the implicitly created
+# OS managed disk (DRIVERS-3712). Each lookup and tag is guarded.
+if ! OS_DISK_ID=$(az vm show \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME" \
+    --query "storageProfile.osDisk.managedDisk.id" \
+    --output tsv); then
+    echo "Looking up the OS disk failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+azurekms_tag_resource "OS disk" "$OS_DISK_ID"
+
+# az vm create --tags reaches neither the NIC, public IP, nor NSG; tag those
+# too (DRIVERS-3712).
+if ! NIC_ID=$(az vm show \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME" \
+    --query "networkProfile.networkInterfaces[0].id" \
+    --output tsv); then
+    echo "Looking up the NIC failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+azurekms_tag_resource "NIC" "$NIC_ID"
+
+if ! PUBLIC_IP_ID=$(az network public-ip show \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME-PUBLIC-IP" \
+    --query id --output tsv); then
+    echo "Looking up the public IP failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+azurekms_tag_resource "public IP" "$PUBLIC_IP_ID"
+
+if ! NSG_ID=$(az network nsg show \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    --name "$AZUREKMS_VMNAME-NSG" \
+    --query id --output tsv); then
+    echo "Looking up the NSG failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+fi
+azurekms_tag_resource "NSG" "$NSG_ID"
 
 # If applicable, set the machine size.
 if [ -n "${AZUREKMS_MACHINESIZE:-}" ]; then
@@ -66,3 +168,27 @@ az network nsg rule create \
     --source-address-prefixes "$EXTERNAL_IP"
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
+
+# Verify tags when requested (DRIVERS-3712). verify_cloud_tags exits the
+# sourcing shell, so on failure clean up here before exiting.
+if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+  if ! (
+    . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME}" \
+      "$(az vm show --resource-group "${AZUREKMS_RESOURCEGROUP}" --name "${AZUREKMS_VMNAME}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} OS disk" \
+      "$(az disk show --ids "${OS_DISK_ID}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} NIC" \
+      "$(az resource show --ids "${NIC_ID}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} public IP" \
+      "$(az resource show --ids "${PUBLIC_IP_ID}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} NSG" \
+      "$(az resource show --ids "${NSG_ID}" --query tags --output json)"
+    verify_cloud_tags "Azure VM ${AZUREKMS_VMNAME} network" \
+      "$(az network vnet show --resource-group "${AZUREKMS_RESOURCEGROUP}" --name "${AZUREKMS_VMNAME}-VNET" --query tags --output json)"
+  ); then
+    echo "Tag verification failed." 1>&2
+    azurekms_cleanup_vm
+    exit 1
+  fi
+fi

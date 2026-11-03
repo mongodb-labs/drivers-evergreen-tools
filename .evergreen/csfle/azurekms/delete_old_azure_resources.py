@@ -110,6 +110,51 @@ def main():
             except Exception as e:
                 print(f"Exception occurred: {e}")
 
+    # Delete orphaned VNets (DRIVERS-3712 creates one per VM). The vnet is
+    # created before its VM, so candidates get a 2-hour grace period from
+    # their created-at tag, and a fresh VM-association check runs before
+    # deletion.
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    orphan_vnet_names = []
+    for vnet in nmclient.virtual_networks.list(resource_group_name):
+        is_orphan = True
+        for vm_name in all_vm_names:
+            if vm_name + "-VNET" == vnet.name:
+                is_orphan = False
+                break
+        if not is_orphan:
+            continue
+        created_at = (vnet.tags or {}).get("created-at")
+        if created_at and now - datetime.datetime.fromtimestamp(
+            int(created_at), tz=datetime.timezone.utc
+        ) < datetime.timedelta(hours=2):
+            print(f"{vnet.name} is less than 2 hours old ... skipping")
+            continue
+        orphan_vnet_names.append(vnet.name)
+    print(f"Detected orphaned VNets: {orphan_vnet_names}")
+    if args.dry_run:
+        print("Dry run detected. Not deleting.")
+    else:
+        for vnet_name in orphan_vnet_names:
+            try:
+                current_vm_names = [
+                    vm.name
+                    for vm in cmclient.virtual_machines.list(resource_group_name)
+                ]
+                if vnet_name[: -len("-VNET")] in current_vm_names:
+                    print(
+                        f"Virtual Machine '{vnet_name[: -len('-VNET')]}' now exists "
+                        f"for VNet '{vnet_name}' ... skipping"
+                    )
+                    continue
+                print(f"Deleting orphaned VNet '{vnet_name}' ...")
+                nmclient.virtual_networks.begin_delete(
+                    resource_group_name, vnet_name
+                ).result()
+                print(f"Deleting orphaned VNet '{vnet_name}' ... done")
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
