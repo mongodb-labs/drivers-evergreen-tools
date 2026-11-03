@@ -1510,6 +1510,14 @@ buildvariants:
   tasks:
     - ".aws"
 
+# macOS hosts carry a different AWS role than the Linux hosts.
+- name: tests-macos
+  display_name: macOS 14 tests
+  run_on:
+    - macos-14
+  tasks:
+    - ".aws"
+
 # RHEL 8.2 arm64's system python3 is 3.6 and the image ships no uv, so
 # ensure_uv must use the toolchain interpreter; reversing the precedence fails.
 - name: tests-rhel82-arm64
