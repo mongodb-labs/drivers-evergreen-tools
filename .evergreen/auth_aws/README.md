@@ -55,20 +55,8 @@ for setting up local secrets handling are in the wiki page.
 
 ### Host roles and the secrets role
 
-All of the variants are expected to work after the task has assumed the drivers test secrets role. Assuming it puts
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` in the environment. `aws_setup.sh` unsets
-them before running `aws_tester.py` (except for `eks`, which needs them to set up the cluster), so the `ec2` and
-`web-identity` variants see only the host's own role either way.
-
-- `ec2` creates the MongoDB user for the identity the host actually has. The role name is read from the instance
-  metadata service, not assumed, because it varies by host (for example the macOS hosts carry `ManagedInstance`).
-  Credentials in the environment do not change the answer.
-- `web-identity` detaches the instance profile from the host before the test. If AWS reports no instance profile
-  association for the host (seen on macOS, cause unknown), there is nothing to detach, so the script prints a warning
-  and leaves the host role in place. The test stays meaningful: the only MongoDB user it creates is for the web
-  identity role, so a driver that used the host role instead would fail to authenticate.
-
-`.evergreen/tests/test-aws.sh` runs these variants on both Linux and macOS hosts in this repo's CI.
+All variants are expected to work after the task has assumed the drivers test secrets role. The `ec2` variant
+creates the MongoDB user for the role the host actually has, which differs between hosts.
 
 ## ECS Test Process
 
