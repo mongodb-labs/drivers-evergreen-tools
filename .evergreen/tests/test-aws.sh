@@ -73,9 +73,8 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
-echo "ls" >> $PROJECT_DIRECTORY/.evergreen/run-mongodb-aws-eks-test.sh
-bash aws_setup.sh eks
-rm test-env.sh
+# TODO(DRIVERS-2945): re-enable once the drivers-2945-test EKS cluster is restored.
+echo "Skipping EKS pod identity test; the drivers-2945-test EKS cluster was removed (DRIVERS-2945)"
 
 bash ./teardown.sh
 
