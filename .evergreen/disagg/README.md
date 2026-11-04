@@ -12,8 +12,8 @@ registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `py
     Writes `dsc-expansion.yml` with `MONGODB_URI` to the working directory.
 - [`teardown.sh`](teardown.sh): writes the deployment's logs to `sls-logs.txt.gz` in the working directory and
     destroys it. Does nothing if no deployment was started.
-- [`download-crypt-shared.sh`](download-crypt-shared.sh): downloads `crypt_shared` and `mongocryptd` for client-side
-    encryption tests, without starting a server. Writes `crypt-shared-expansion.yml` with `CRYPT_SHARED_LIB_PATH`.
+- [`download-crypt.sh`](download-crypt.sh): downloads `crypt_shared` for client-side encryption tests,
+    without starting a server. Writes `crypt-shared-expansion.yml` with `CRYPT_SHARED_LIB_PATH`.
 
 `setup.sh` takes these environment variables:
 
@@ -68,4 +68,4 @@ functions:
 Include the `"stop dsc"` function in `post` or a `teardown_task` section so the deployment is destroyed and the
 `/etc/hosts` entry removed when the task ends. Upload `src/sls-logs.txt.gz` afterwards to keep the deployment's logs.
 
-Downloading `crypt_shared` and `mongocryptd` for the `latest` version requires AWS credentials (see DRIVERS-3628).
+Downloading `crypt_shared` for the `latest` version requires AWS credentials (see DRIVERS-3628).
