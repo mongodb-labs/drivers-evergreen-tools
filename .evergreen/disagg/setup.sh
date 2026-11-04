@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Start an SLS deployment + disaggregated storage (DSC) mongods with `slslocal --compose`.
+# Start an SLS deployment + disaggregated storage (DSC) mongods with `slslocal --compose`: one shard, a replica set of
+# three mongods, across three cells.
 #
 # Inputs (environment):
-#   DSC_NUM_CELLS          Number of cells (default: 1).
-#   DSC_MONGODS_PER_SHARD  Number of mongods per shard; must be <= DSC_NUM_CELLS (default: 1).
 #   DSC_SLS_TAG            SLS ECR image tag (default: newest mainline tag; see resolve_sls_tag).
 #   DSC_MONGOD_TAG         mock-data-plane image tag, i.e. server commit (default: slslocal's pinned default).
 #   AWS_*                  Credentials with ECR pull access (from ec2.assume_role).
@@ -51,8 +50,9 @@ declare -a launch_args=(
   --sls-ecr-tag "${tag}"
   --localstack
   --aws-profile-name default
-  --num-cells "${DSC_NUM_CELLS:-1}"
-  --mongods-per-shard "${DSC_MONGODS_PER_SHARD:-1}"
+  # slslocal requires mongods per shard <= cells.
+  --num-cells 3
+  --mongods-per-shard 3
 )
 if [[ -n "${DSC_MONGOD_TAG:-}" ]]; then
   launch_args+=(--mongod-tag "${DSC_MONGOD_TAG}")

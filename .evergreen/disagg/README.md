@@ -8,8 +8,9 @@ registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `py
 
 ## Scripts
 
-- [`setup.sh`](setup.sh): pulls the `slslocal` image, launches the deployment and waits for it to become healthy.
-    Writes `dsc-expansion.yml` with `MONGODB_URI` to the working directory.
+- [`setup.sh`](setup.sh): pulls the `slslocal` image, launches the deployment (a three-member replica set across
+    three cells) and waits for it to become healthy. Writes `dsc-expansion.yml` with `MONGODB_URI` to the working
+    directory.
 - [`teardown.sh`](teardown.sh): writes the deployment's logs to `sls-logs.txt.gz` in the working directory and
     destroys it. Does nothing if no deployment was started.
 - [`download-crypt.sh`](download-crypt.sh): downloads `crypt_shared` for client-side encryption tests,
@@ -17,13 +18,11 @@ registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `py
 
 `setup.sh` takes these environment variables:
 
-| Variable                | Description                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------- |
-| `DSC_NUM_CELLS`         | Number of cells. Default: 1.                                                            |
-| `DSC_MONGODS_PER_SHARD` | Number of mongods (replica set members) per shard. Must be at most `DSC_NUM_CELLS`.     |
-| `DSC_SLS_TAG`           | SLS image tag. Default: the newest mainline tag. Pinning a known-good tag is advised.   |
-| `DSC_MONGOD_TAG`        | mongod image tag. Default: the one pinned by `slslocal`.                                |
-| `AWS_*`                 | Credentials with pull access to the SLS ECR repositories (see below).                   |
+| Variable         | Description                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `DSC_SLS_TAG`    | SLS image tag. Default: the newest mainline tag. Pinning a known-good tag is advised. |
+| `DSC_MONGOD_TAG` | mongod image tag. Default: the one pinned by `slslocal`.                              |
+| `AWS_*`          | Credentials with pull access to the SLS ECR repositories (see below).                 |
 
 ## Networking
 
@@ -48,9 +47,6 @@ functions:
         working_dir: src
         binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-        env:
-          DSC_NUM_CELLS: "3"
-          DSC_MONGODS_PER_SHARD: "3"
         args:
           - ${DRIVERS_TOOLS}/.evergreen/disagg/setup.sh
     - command: expansions.update
