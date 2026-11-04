@@ -50,7 +50,6 @@ declare -a launch_args=(
   --sls-ecr-tag "${tag}"
   --localstack
   --aws-profile-name default
-  # slslocal requires mongods per shard <= cells.
   --num-cells 3
   --mongods-per-shard 3
 )
@@ -58,7 +57,6 @@ if [[ -n "${DSC_MONGOD_TAG:-}" ]]; then
   launch_args+=(--mongod-tag "${DSC_MONGOD_TAG}")
 fi
 
-# TODO: confirm enableTestCommands=1 is set on mongods by slslocal (required by fail point tests); add a flag if not.
 run_slslocal --compose launch "${launch_args[@]}" || fail "slslocal launch failed"
 run_slslocal --compose wait --timeout 10m || fail "cluster did not become healthy within 10 minutes"
 
