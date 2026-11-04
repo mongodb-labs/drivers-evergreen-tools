@@ -1568,6 +1568,19 @@ buildvariants:
     - "test-mongodb-runner-partial"
     - "test-csfle"
 
+# The rolling amazon2023-arm64-latest image is what driver repos' amazon2023
+# variants run on, and it can diverge from the pinned amazon2023.3 images
+# (e.g. it still ships gnupg2-minimal without gpg-agent — DEVPROD-44314).
+# Exercise the latest-download signature path here so pinned/rolling image
+# skew cannot pass DET CI while breaking drivers, as #910 did.
+- name: tests-amazon2023-rolling
+  display_name: "Amazon Linux 2023 arm64 (rolling image)"
+  run_on:
+    - amazon2023-arm64-latest-large-m8g
+  tasks:
+    - "test-cli-full"
+    - "test-latest-standalone"
+
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
   display_name: "${os-fully-featured} ${auth} ${ssl}"
