@@ -76,6 +76,7 @@ case "$1 $2" in
       echo '[{"Key": "mongodb-owner", "Value": "o"}, {"Key": "mongodb-env", "Value": "dev"}]'
     fi
     ;;
+  "eks list-nodegroups") echo '{"nodegroups": ["ng-1"]}' ;;
   "eks describe-cluster")
     if [ -n "${DROP_EKS_TAGS:-}" ]; then
       echo '{}'
@@ -90,8 +91,14 @@ case "$1 $2" in
     fi
     # Filter calls return the full response shape; the per-template call
     # returns the post-query tag array, policy-less under DROP_LT_TAGS.
+    # A wildcard name filter simulates the API's glob matching, which also
+    # returns starter templates of clusters sharing the name prefix.
     if [[ "$*" == *launch-template-name* ]]; then
-      echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}]}'
+      if [[ "$*" == *\** ]]; then
+        echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}, {"LaunchTemplateId": "lt-other-cluster"}]}'
+      else
+        echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}]}'
+      fi
     elif [[ "$*" == *eks:cluster-name* ]]; then
       echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-generated"}]}'
     elif [ -n "${DROP_LT_TAGS:-}" ]; then
@@ -311,13 +318,16 @@ class EksSetupTest(unittest.TestCase):
     def test_eks_launch_templates_are_tagged(self):
         """Both launch template families must get the policy tags: eksctl's
         starter is created untagged and EKS's generated copy carries service
-        tags only, so setup-cluster.sh must tag both itself."""
+        tags only, so setup-cluster.sh must tag both itself. Discovery must
+        also stay inside the cluster: a name-prefix match would reach
+        starters of other clusters sharing the prefix."""
         proc = self.run_setup_cluster({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         create_calls = [ln for ln in self.calls().splitlines() if "create-tags" in ln]
         self.assertEqual(1, len(create_calls), self.calls())
         for lt_id in ("lt-starter", "lt-generated"):
             self.assertIn(lt_id, create_calls[0])
+        self.assertNotIn("lt-other-cluster", create_calls[0])
         self.assertIn("mongodb-owner", create_calls[0])
         self.assertIn("mongodb-env", create_calls[0])
 
@@ -336,7 +346,7 @@ class EksSetupTest(unittest.TestCase):
         proc = self.run_setup_cluster({"FAIL_LT_DESCRIBE": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn(
-            "describe-launch-templates (starter) failed", proc.stdout + proc.stderr
+            "describe-launch-templates (ng-1) failed", proc.stdout + proc.stderr
         )
 
     def test_eks_fails_when_launch_template_parsing_fails(self):
@@ -349,8 +359,7 @@ class EksSetupTest(unittest.TestCase):
         proc = self.run_setup_cluster({"VERIFY_MONGODB_TAGS": ""})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn(
-            "parsing describe-launch-templates output failed",
-            proc.stdout + proc.stderr,
+            "parsing list-nodegroups output failed", proc.stdout + proc.stderr
         )
 
     def test_verify_eks_setup_standalone(self):

@@ -12,22 +12,35 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 
 launch_template_ids ()
 {
-  # eksctl's starter templates (eksctl-<cluster>-nodegroup-*) and EKS's
-  # generated copies (tagged eks:cluster-name): two describes, because EC2
-  # ANDs filters within a call. Each response is checked before parsing, so
-  # a failed describe aborts instead of yielding a partial list.
-  local ids="" resp
-  resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
-    --filters "Name=launch-template-name,Values=eksctl-${EKS_CLUSTER_NAME}-nodegroup-*" \
-    --output json) || {
-    echo "verify-eks-setup: describe-launch-templates (starter) failed" 1>&2
+  # Resolve starter templates through the cluster's node groups and match
+  # each by exact name: a name-prefix filter would also match starters of
+  # clusters whose names share the prefix, and tagging would overwrite their
+  # ownership tags. EKS's generated copies carry the eks:cluster-name tag.
+  # Every response is checked before parsing, so a failed call aborts.
+  local ids="" resp resp_ids ng
+  resp=$(aws eks list-nodegroups --cluster-name "${EKS_CLUSTER_NAME}" \
+    --region "${EKS_REGION}" --output json) || {
+    echo "verify-eks-setup: list-nodegroups failed" 1>&2
     return 1
   }
-  resp_ids=$(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId') || {
-    echo "verify-eks-setup: parsing describe-launch-templates output failed" 1>&2
+  resp_ids=$(echo "$resp" | jq -r '.nodegroups[]') || {
+    echo "verify-eks-setup: parsing list-nodegroups output failed" 1>&2
     return 1
   }
-  ids="$ids $resp_ids"
+  # shellcheck disable=SC2046,SC2086  # names are newline-separated; no spaces or globs
+  for ng in $resp_ids; do
+    resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
+      --filters "Name=launch-template-name,Values=eksctl-${EKS_CLUSTER_NAME}-nodegroup-${ng}" \
+      --output json) || {
+      echo "verify-eks-setup: describe-launch-templates (${ng}) failed" 1>&2
+      return 1
+    }
+    resp_ids=$(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId') || {
+      echo "verify-eks-setup: parsing describe-launch-templates output failed" 1>&2
+      return 1
+    }
+    ids="$ids $resp_ids"
+  done
   resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
     --filters "Name=tag:eks:cluster-name,Values=${EKS_CLUSTER_NAME}" \
     --output json) || {
