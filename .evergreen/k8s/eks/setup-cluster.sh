@@ -39,16 +39,21 @@ aws iam tag-role --role-name "$EKS_IAM_ROLE_NAME" --tags \
   "Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}" \
   "Key=mongodb-env,Value=${MONGODB_ENV_TAG}"
 
-# Verify the cluster's and role's tags when requested.
+# The cluster's --tags does not reach the node groups' launch templates:
+# eksctl creates its starter template untagged, and EKS creates its generated
+# copy — the one the instances actually run from — with only EKS's own
+# service tags. Tag both families; verify-eks-setup.sh (sourced for its
+# launch_template_ids helper) also carries the verification gate below.
+. "$SCRIPT_DIR"/verify-eks-setup.sh
+LT_IDS=$(launch_template_ids)
+if [ -n "${LT_IDS//[[:space:]]/}" ]; then
+  # shellcheck disable=SC2086  # ids are newline-separated; no spaces or globs
+  aws ec2 create-tags --region "${EKS_REGION}" --resources ${LT_IDS} \
+    --tags "Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}" \
+           "Key=mongodb-env,Value=${MONGODB_ENV_TAG}"
+fi
+
+# Verify the cluster's, role's, and launch templates' tags when requested.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
-  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
-  # Read first, reshape second: in a pipeline (or argument-position
-  # substitution) the aws error would be masked and surface as "lacks tags".
-  CLUSTER_TAGS=$(aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" --region "${EKS_REGION}" --query "cluster.tags" --output json)
-  verify_cloud_tags "EKS cluster ${EKS_CLUSTER_NAME}" "${CLUSTER_TAGS}"
-  ROLE_TAGS_RAW=$(aws iam get-role --role-name "${EKS_IAM_ROLE_NAME}" \
-    --query "Role.Tags" --output json)
-  # get-role returns {Key, Value} objects; convert to a map for the helper.
-  ROLE_TAGS=$(echo "${ROLE_TAGS_RAW}" | jq 'map({(.Key): .Value}) | add')
-  verify_cloud_tags "EKS IAM role ${EKS_IAM_ROLE_NAME}" "${ROLE_TAGS}"
+  verify_eks_tags
 fi
