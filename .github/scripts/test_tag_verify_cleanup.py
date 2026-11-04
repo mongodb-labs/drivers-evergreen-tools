@@ -84,6 +84,10 @@ case "$1 $2" in
     fi
     ;;
   "ec2 describe-launch-templates")
+    if [ -n "${FAIL_LT_DESCRIBE:-}" ]; then
+      echo "An error occurred when calling the DescribeLaunchTemplates operation: simulated failure" 1>&2
+      exit 254
+    fi
     # Filter calls return the full response shape; the per-template call
     # returns the post-query tag array, policy-less under DROP_LT_TAGS.
     if [[ "$*" == *launch-template-name* ]]; then
@@ -322,6 +326,18 @@ class EksSetupTest(unittest.TestCase):
         proc = self.run_setup_cluster({"DROP_LT_TAGS": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_eks_fails_when_launch_template_discovery_fails(self):
+        """A failed describe-launch-templates must abort, not skip tagging.
+
+        Masking the discovery failure would leave templates untagged and let
+        the gate pass without checking them.
+        """
+        proc = self.run_setup_cluster({"FAIL_LT_DESCRIBE": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "describe-launch-templates (starter) failed", proc.stdout + proc.stderr
+        )
 
     def test_verify_eks_setup_standalone(self):
         """verify-eks-setup.sh re-checks every tag on an existing cluster."""

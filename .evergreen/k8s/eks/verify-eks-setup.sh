@@ -14,15 +14,24 @@ launch_template_ids ()
 {
   # eksctl's starter templates (eksctl-<cluster>-nodegroup-*) and EKS's
   # generated copies (tagged eks:cluster-name): two describes, because EC2
-  # ANDs filters within a call.
-  {
-    aws ec2 describe-launch-templates --region "${EKS_REGION}" \
-      --filters "Name=launch-template-name,Values=eksctl-${EKS_CLUSTER_NAME}-nodegroup-*" \
-      --output json | jq -r '.LaunchTemplates[].LaunchTemplateId'
-    aws ec2 describe-launch-templates --region "${EKS_REGION}" \
-      --filters "Name=tag:eks:cluster-name,Values=${EKS_CLUSTER_NAME}" \
-      --output json | jq -r '.LaunchTemplates[].LaunchTemplateId'
-  } | sort -u
+  # ANDs filters within a call. Each response is checked before parsing, so
+  # a failed describe aborts instead of yielding a partial list.
+  local ids="" resp
+  resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
+    --filters "Name=launch-template-name,Values=eksctl-${EKS_CLUSTER_NAME}-nodegroup-*" \
+    --output json) || {
+    echo "verify-eks-setup: describe-launch-templates (starter) failed" 1>&2
+    return 1
+  }
+  ids="$ids $(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId')"
+  resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
+    --filters "Name=tag:eks:cluster-name,Values=${EKS_CLUSTER_NAME}" \
+    --output json) || {
+    echo "verify-eks-setup: describe-launch-templates (generated) failed" 1>&2
+    return 1
+  }
+  ids="$ids $(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId')"
+  echo "$ids" | tr ' \t' '\n\n' | sed '/^$/d' | sort -u
 }
 
 verify_eks_tags ()
@@ -42,8 +51,9 @@ verify_eks_tags ()
 
   # setup-cluster.sh tags both families right after cluster creation; this
   # re-checks they all still carry the policy.
+  LT_IDS=$(launch_template_ids)
   # shellcheck disable=SC2046,SC2086  # ids are newline-separated; no spaces or globs
-  for LT_ID in $(launch_template_ids); do
+  for LT_ID in ${LT_IDS}; do
     LT_TAGS_RAW=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
       --launch-template-ids "${LT_ID}" --query "LaunchTemplates[0].Tags" \
       --output json)
@@ -60,7 +70,7 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     source ./secrets-export.sh
   fi
   if [ -z "${EKS_CLUSTER_NAME:-}" ]; then
-    . ./../../secrets_handling/setup-secrets.sh drivers/eks
+    . "$SCRIPT_DIR"/../../secrets_handling/setup-secrets.sh drivers/eks
   fi
 
   verify_eks_tags

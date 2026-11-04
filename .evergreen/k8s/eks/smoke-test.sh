@@ -45,7 +45,9 @@ set +a
 rm -f "$SCRATCH/secrets-export.sh"
 
 SMOKE_CLUSTER=drivers-lt-smoke-$(date +%H%M%S)
-SMOKE_ROLE=drivers-lt-smoke-role
+# Account-wide resource: derive from the cluster name so concurrent runs and
+# a role left behind by failed cleanup cannot collide.
+SMOKE_ROLE="$SMOKE_CLUSTER-role"
 export EKS_CLUSTER_NAME="$SMOKE_CLUSTER"
 export EKS_IAM_ROLE_NAME="$SMOKE_ROLE"
 export VERIFY_MONGODB_TAGS=1
