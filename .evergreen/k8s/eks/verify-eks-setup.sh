@@ -23,14 +23,22 @@ launch_template_ids ()
     echo "verify-eks-setup: describe-launch-templates (starter) failed" 1>&2
     return 1
   }
-  ids="$ids $(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId')"
+  resp_ids=$(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId') || {
+    echo "verify-eks-setup: parsing describe-launch-templates output failed" 1>&2
+    return 1
+  }
+  ids="$ids $resp_ids"
   resp=$(aws ec2 describe-launch-templates --region "${EKS_REGION}" \
     --filters "Name=tag:eks:cluster-name,Values=${EKS_CLUSTER_NAME}" \
     --output json) || {
     echo "verify-eks-setup: describe-launch-templates (generated) failed" 1>&2
     return 1
   }
-  ids="$ids $(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId')"
+  resp_ids=$(echo "$resp" | jq -r '.LaunchTemplates[].LaunchTemplateId') || {
+    echo "verify-eks-setup: parsing describe-launch-templates output failed" 1>&2
+    return 1
+  }
+  ids="$ids $resp_ids"
   echo "$ids" | tr ' \t' '\n\n' | sed '/^$/d' | sort -u
 }
 

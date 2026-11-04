@@ -44,7 +44,14 @@ set +a
 : "${EKS_POLICY_ARN:?vault did not provide EKS_POLICY_ARN}"
 rm -f "$SCRATCH/secrets-export.sh"
 
-SMOKE_CLUSTER=drivers-lt-smoke-$(date +%H%M%S)
+SMOKE_NAME=drivers-lt-smoke-$(date +%m%d%H%M%S)-$RANDOM
+# The EXIT trap deletes $SMOKE_CLUSTER: refuse to run if the name is taken,
+# or the teardown would target another run's cluster.
+if aws eks describe-cluster --name "$SMOKE_NAME" --region "${EKS_REGION}" > /dev/null 2>&1; then
+  echo "smoke-test: cluster name $SMOKE_NAME is taken; rerun for a fresh name" 1>&2
+  exit 1
+fi
+SMOKE_CLUSTER="$SMOKE_NAME"
 # Account-wide resource: derive from the cluster name so concurrent runs and
 # a role left behind by failed cleanup cannot collide.
 SMOKE_ROLE="$SMOKE_CLUSTER-role"

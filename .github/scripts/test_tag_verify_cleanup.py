@@ -339,6 +339,20 @@ class EksSetupTest(unittest.TestCase):
             "describe-launch-templates (starter) failed", proc.stdout + proc.stderr
         )
 
+    def test_eks_fails_when_launch_template_parsing_fails(self):
+        """A failed launch-template parse must abort, not skip tagging.
+
+        With verification disabled nothing else would catch the skipped
+        tagging, so the parse failure has to propagate from discovery.
+        """
+        self.write_executable("jq", "#!/usr/bin/env bash\nexit 1\n")
+        proc = self.run_setup_cluster({"VERIFY_MONGODB_TAGS": ""})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "parsing describe-launch-templates output failed",
+            proc.stdout + proc.stderr,
+        )
+
     def test_verify_eks_setup_standalone(self):
         """verify-eks-setup.sh re-checks every tag on an existing cluster."""
         env = dict(os.environ)
