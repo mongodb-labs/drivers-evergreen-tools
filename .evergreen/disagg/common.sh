@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for setup.sh and teardown.sh. Sourced; not executable on its own.
-#
-# Adapted from the DRIVERS-3190 experiment: all cluster components run as containers pulled from the
-# SRE-owned ECR registry, so the host only needs docker, the aws CLI and python3.
+# Shared helpers for setup.sh and teardown.sh
 
 ECR_ROOT="664315256653.dkr.ecr.us-east-1.amazonaws.com"
 STATE_DIR="${HOME}/.slslocal"
@@ -17,8 +14,7 @@ fail() {
 
 # SLS images are tagged "linux-x86-64-<10gen/sls git sha>" for mainline builds; there is no "latest" tag.
 # The slslocal image and the SLS service images share a tag, so pick the most recently pushed mainline tag
-# present in both the slslocal and log repositories. Avoids `slslocal --sls-ecr-tag latest`, which reads
-# s3://sls-versions (not permitted for the read-only ECR role).
+# present in both the slslocal and log repositories.
 resolve_sls_tag() {
   local tmpdir
   tmpdir="$(mktemp -d)"
@@ -82,8 +78,7 @@ CREDS
   )
 }
 
-# Same mounts as the `just slslocal` recipe in 10gen/sls: the docker socket, and the state directory both as
-# the container home and at its host path (compose bind mounts are resolved by the host daemon).
+# Same mounts as the `just slslocal` recipe in 10gen/sls
 run_slslocal() {
   local tag
   tag="$(cat "${TAG_FILE}")"
