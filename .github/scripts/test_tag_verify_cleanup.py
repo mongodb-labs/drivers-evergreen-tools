@@ -14,12 +14,10 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 
-# Mock `aws`: models the subset of the CLI that ensure_artifact_bucket in
-# run-deployed-lambda-aws-tests.sh and the eks scripts use. CREATE_CONFLICT=1
-# simulates a concurrent deployment winning the bucket-creation race;
-# READ_ERROR=1 simulates a tag-read failure other than NoSuchTagSet;
-# DROP_LT_TAGS=1 makes describe-launch-templates return a template missing
-# the policy tags.
+# Mock `aws`: models the CLI subset the eks scripts and
+# run-deployed-lambda-aws-tests.sh use. Knobs: CREATE_CONFLICT=1 simulates a
+# concurrent deploy winning the bucket race, READ_ERROR=1 a tag-read failure
+# other than NoSuchTagSet, DROP_LT_TAGS=1 an untagged launch template.
 AWS_MOCK = r"""#!/usr/bin/env bash
 set -u
 STATE_DIR=${STATE_DIR:?}
@@ -86,10 +84,8 @@ case "$1 $2" in
     fi
     ;;
   "ec2 describe-launch-templates")
-    # The filter calls use no --query, so the mock returns the full response
-    # shape; the per-template call's --query is applied client-side by the
-    # real CLI, so its mock returns the post-query tag array, policy-less
-    # under DROP_LT_TAGS.
+    # Filter calls return the full response shape; the per-template call
+    # returns the post-query tag array, policy-less under DROP_LT_TAGS.
     if [[ "$*" == *launch-template-name* ]]; then
       echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}]}'
     elif [[ "$*" == *eks:cluster-name* ]]; then
@@ -309,12 +305,9 @@ class EksSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
 
     def test_eks_launch_templates_are_tagged(self):
-        """Both launch template families must get the policy tags.
-
-        eksctl's starter template is created untagged, and EKS's generated
-        copy — the one the instances run from — carries only EKS's own
-        service tags, so setup-cluster.sh must tag both itself.
-        """
+        """Both launch template families must get the policy tags: eksctl's
+        starter is created untagged and EKS's generated copy carries service
+        tags only, so setup-cluster.sh must tag both itself."""
         proc = self.run_setup_cluster({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         create_calls = [ln for ln in self.calls().splitlines() if "create-tags" in ln]

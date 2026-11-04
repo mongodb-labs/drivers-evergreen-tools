@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-# Smoke test for setup-cluster.sh's DRIVERS-3712 tagging flow. Creates a
-# throwaway EKS cluster (~20 min, 2 default nodes — teardown is automatic),
-# runs setup-cluster.sh against it with VERIFY_MONGODB_TAGS=1 so the tag
-# gate covers the cluster, the iamserviceaccount's role, and both launch
-# template families, then tears the cluster down. Exits non-zero on any
-# verification failure.
-#
-# Needs vault access to the drivers/eks secrets, plus aws, eksctl, jq, and
-# kubectl on PATH.
+# Smoke test for setup-cluster.sh's DRIVERS-3712 tagging flow: creates a
+# throwaway EKS cluster (~20 min, teardown automatic), runs setup-cluster.sh
+# with VERIFY_MONGODB_TAGS=1, then deletes the cluster. Exits non-zero on any
+# verification failure. Needs vault access to drivers/eks, plus aws, eksctl,
+# jq, and kubectl on PATH.
 
 set -eu
 
@@ -33,11 +29,9 @@ teardown ()
 }
 trap teardown EXIT
 
-# Harvest the vault values into the scratch dir: the policy ARN and service
-# account name carry over to the throwaway cluster; the vault's cluster name
-# and role must not. The helper writes secrets-export.sh into its cwd, which
-# setup-cluster.sh would otherwise source and let clobber the overrides — so
-# setup-cluster.sh runs from the scratch dir, where that file is removed.
+# Harvest vault values into the scratch dir. The helper writes
+# secrets-export.sh into its cwd, which setup-cluster.sh would source and
+# clobber the overrides with, so setup-cluster.sh also runs from here.
 (
   cd "$SCRATCH"
   set -a
@@ -62,8 +56,6 @@ echo "smoke-test: creating cluster $SMOKE_CLUSTER in ${EKS_REGION} (~15-25 min).
   bash "$SCRIPT_DIR/setup-cluster.sh"
 )
 
-# The gate inside setup-cluster.sh verified the cluster, the role, and both
-# launch template families; restate the fresh templates for the record.
 echo "smoke-test: launch templates created by this run:"
 aws ec2 describe-launch-templates --region "${EKS_REGION}" \
   --filters "Name=tag:eks:cluster-name,Values=$SMOKE_CLUSTER" \

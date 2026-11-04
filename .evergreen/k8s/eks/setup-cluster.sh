@@ -39,11 +39,8 @@ aws iam tag-role --role-name "$EKS_IAM_ROLE_NAME" --tags \
   "Key=mongodb-owner,Value=${MONGODB_OWNER_TAG}" \
   "Key=mongodb-env,Value=${MONGODB_ENV_TAG}"
 
-# The cluster's --tags does not reach the node groups' launch templates:
-# eksctl creates its starter template untagged, and EKS creates its generated
-# copy — the one the instances actually run from — with only EKS's own
-# service tags. Tag both families; verify-eks-setup.sh (sourced for its
-# launch_template_ids helper) also carries the verification gate below.
+# The cluster's --tags does not reach the launch templates: eksctl creates
+# its starter untagged, and EKS stamps its generated copy with service tags only.
 . "$SCRIPT_DIR"/verify-eks-setup.sh
 LT_IDS=$(launch_template_ids)
 if [ -n "${LT_IDS//[[:space:]]/}" ]; then
