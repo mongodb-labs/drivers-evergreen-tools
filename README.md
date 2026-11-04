@@ -77,11 +77,9 @@ release key). When verification runs, a bad signature — or a signature
 made by any other key — fails the download. If a signature was not
 published for the artifact
 (stable-branch staging builds may not be signed yet), or the host has no `gpg`
-binary, `mongodl` only logs a warning and the download continues. Until
-[DEVPROD-44314](https://jira.mongodb.org/browse/DEVPROD-44314) is fixed,
-amazon2023 hosts (whose `gnupg2-minimal` gpg cannot verify) tolerate that
-environment failure with a DEVPROD-44314 warning; a broken gpg environment
-elsewhere fails fast. Published
+binary, `mongodl` only logs a warning and the download continues. A broken
+gpg environment (a `gpg` binary that cannot verify signatures) fails fast on
+every host and is never retried. Published
 builds and other version selectors are unaffected and keep using the SHA-256
 checksums from `full.json`. Verification can also be skipped manually by
 setting `SERVER_ARTIFACTS_SKIP_SIGNATURE_VERIFICATION` (any non-empty value).
