@@ -294,6 +294,7 @@ def setup_web_identity():
     try:
         host_user = get_host_account_arn()
     except (urllib.error.URLError, RuntimeError):
+        LOGGER.info("No host role found, not dropping a host role user")
         host_user = None
     if host_user:
         drop_user(host_user)

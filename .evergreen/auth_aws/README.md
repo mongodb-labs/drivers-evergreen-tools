@@ -55,8 +55,10 @@ for setting up local secrets handling are in the wiki page.
 
 ### Host roles and the secrets role
 
-All variants are expected to work after the task has assumed the drivers test secrets role. The `ec2` variant
-creates the MongoDB user for the role the host actually has, which differs between hosts.
+The scripts can run after the task has assumed the drivers test secrets role; the `ec2` setup ignores those
+credentials and uses the host role. The `ec2` variant creates the MongoDB user for the role the host actually
+has, which differs between hosts. The `web-identity` variant detaches the host role; where it cannot be detached,
+it drops the host role user instead, so a driver that falls back to EC2 credentials cannot authenticate.
 
 ## ECS Test Process
 
