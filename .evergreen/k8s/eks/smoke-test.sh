@@ -52,8 +52,7 @@ if aws eks describe-cluster --name "$SMOKE_NAME" --region "${EKS_REGION}" > /dev
   exit 1
 fi
 SMOKE_CLUSTER="$SMOKE_NAME"
-# Account-wide resource: derive from the cluster name so concurrent runs and
-# a role left behind by failed cleanup cannot collide.
+# Account-wide: derive from the cluster name so runs cannot collide.
 SMOKE_ROLE="$SMOKE_CLUSTER-role"
 export EKS_CLUSTER_NAME="$SMOKE_CLUSTER"
 export EKS_IAM_ROLE_NAME="$SMOKE_ROLE"

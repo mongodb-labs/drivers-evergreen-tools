@@ -89,8 +89,6 @@ case "$1 $2" in
       echo "An error occurred when calling the DescribeLaunchTemplates operation: simulated failure" 1>&2
       exit 254
     fi
-    # Filter calls return the full response shape; the per-template call
-    # returns the post-query tag array, policy-less under DROP_LT_TAGS.
     # A wildcard name filter simulates the API's glob matching, which also
     # returns starter templates of clusters sharing the name prefix.
     if [[ "$*" == *launch-template-name* ]]; then
@@ -316,11 +314,9 @@ class EksSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
 
     def test_eks_launch_templates_are_tagged(self):
-        """Both launch template families must get the policy tags: eksctl's
-        starter is created untagged and EKS's generated copy carries service
-        tags only, so setup-cluster.sh must tag both itself. Discovery must
-        also stay inside the cluster: a name-prefix match would reach
-        starters of other clusters sharing the prefix."""
+        """Both launch template families must get the policy tags, and
+        discovery must stay inside the cluster: a name-prefix match would
+        reach starters of other clusters sharing the prefix."""
         proc = self.run_setup_cluster({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         create_calls = [ln for ln in self.calls().splitlines() if "create-tags" in ln]
@@ -338,11 +334,7 @@ class EksSetupTest(unittest.TestCase):
         self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
 
     def test_eks_fails_when_launch_template_discovery_fails(self):
-        """A failed describe-launch-templates must abort, not skip tagging.
-
-        Masking the discovery failure would leave templates untagged and let
-        the gate pass without checking them.
-        """
+        """A failed describe-launch-templates must abort, not skip tagging."""
         proc = self.run_setup_cluster({"FAIL_LT_DESCRIBE": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn(
@@ -350,11 +342,7 @@ class EksSetupTest(unittest.TestCase):
         )
 
     def test_eks_fails_when_launch_template_parsing_fails(self):
-        """A failed launch-template parse must abort, not skip tagging.
-
-        With verification disabled nothing else would catch the skipped
-        tagging, so the parse failure has to propagate from discovery.
-        """
+        """A failed launch-template parse must abort, not skip tagging."""
         self.write_executable("jq", "#!/usr/bin/env bash\nexit 1\n")
         proc = self.run_setup_cluster({"VERIFY_MONGODB_TAGS": ""})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)

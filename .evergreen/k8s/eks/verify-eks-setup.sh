@@ -13,10 +13,8 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 launch_template_ids ()
 {
   # Resolve starter templates through the cluster's node groups and match
-  # each by exact name: a name-prefix filter would also match starters of
-  # clusters whose names share the prefix, and tagging would overwrite their
-  # ownership tags. EKS's generated copies carry the eks:cluster-name tag.
-  # Every response is checked before parsing, so a failed call aborts.
+  # each by exact name: a name-prefix filter also matches sibling clusters
+  # sharing the prefix, and tagging would overwrite their ownership tags.
   local ids="" resp resp_ids ng
   resp=$(aws eks list-nodegroups --cluster-name "${EKS_CLUSTER_NAME}" \
     --region "${EKS_REGION}" --output json) || {
