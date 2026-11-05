@@ -7,10 +7,12 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mongodb_runner
 from otel import (
     OTEL_EXTERNAL_TRACING_JSON,
     OTEL_SAMPLING_JSON,
@@ -266,6 +268,58 @@ class TestVersionFromMongodOutput(unittest.TestCase):
         self.assertIsNone(
             _version_from_mongod_output("OpenSSL 1.1.1k\ndistmod: rhel88\n")
         )
+
+
+class TestMongodbRunnerHost(unittest.TestCase):
+    def test_runner_config_pins_host_to_ipv4_loopback(self):
+        """The config handed to mongodb-runner must pin the IPv4 loopback.
+
+        mongodb-runner 8.4.6 gives every server -- including config servers --
+        the configured host (the 8.4.3 releases ignored it for config
+        servers). A mongos builds --configdb from the config server's member
+        host and pins the first address that name resolves to; with
+        "localhost" that is ::1, which a config server without bind_ip does
+        not listen on, so the mongos never opens its own listener and
+        `mongodb-runner start` never returns (DRIVERS-3673 patch build
+        6aeba4170569900007601158).
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            captured = {}
+
+            class FakeProc:
+                stdout = iter(())
+                returncode = 0
+
+                def wait(self):
+                    return 0
+
+            def fake_popen(cmd, **kwargs):
+                # cmd is a list on posix and a string on win32; read the config
+                # from its known path instead of parsing cmd.
+                config = json.loads((Path(tmp) / "config.json").read_text())
+                captured["config"] = config
+                cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+                cluster_file.write_text(
+                    json.dumps({"connectionString": "mongodb://127.0.0.1:27017/"})
+                )
+                return FakeProc()
+
+            opts = SimpleNamespace(
+                mongo_orchestration_home=tmp,
+                mongodb_binaries=tmp,
+                version="8.0",
+                topology="standalone",
+                auth=False,
+            )
+            with unittest.mock.patch.object(
+                mongodb_runner, "_install_mongodb_runner", return_value="/fake/runner"
+            ), unittest.mock.patch.object(
+                mongodb_runner.subprocess, "Popen", side_effect=fake_popen
+            ), unittest.mock.patch.object(mongodb_runner, "TMPDIR", Path(tmp)):
+                uri = mongodb_runner.start_mongodb_runner(opts, {})
+
+            self.assertEqual(captured["config"]["host"], "127.0.0.1")
+            self.assertEqual(uri, "mongodb://127.0.0.1:27017/")
 
 
 if __name__ == "__main__":
