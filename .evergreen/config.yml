@@ -1510,7 +1510,6 @@ buildvariants:
   tasks:
     - ".aws"
 
-# macOS hosts carry a different AWS role than the Linux hosts.
 - name: tests-macos
   display_name: macOS 14 tests
   run_on:

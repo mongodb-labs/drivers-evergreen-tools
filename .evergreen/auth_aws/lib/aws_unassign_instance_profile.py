@@ -70,8 +70,6 @@ def _unassign_instance_policy():
         )
         associations = response["IamInstanceProfileAssociations"]
         if not associations:
-            # Seen on macOS: no association, but the host still has a role. Nothing to
-            # detach, and the test only creates a user for the web identity role.
             if _has_instance_profile():
                 print("WARNING: no instance profile association, leaving the host role")
             return
