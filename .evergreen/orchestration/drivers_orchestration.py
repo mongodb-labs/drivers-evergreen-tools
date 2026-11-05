@@ -926,7 +926,6 @@ def stop(opts):
                 LOGGER.info(f"Stopping {image} by image name... done.")
 
     # Finally, look for any processes that are named mongod or mongos.
-    # TODO(DRIVERS-3673): drop the -real names when the tee wrappers go away.
     for proc in all_procs:
         try:
             name = proc.name()
@@ -937,8 +936,6 @@ def stop(opts):
             "mongos",
             "mongod.exe",
             "mongos.exe",
-            "mongod-real",
-            "mongos-real",
         ]:
             LOGGER.info(f"Stopping {name} by process name...")
             shutdown_proc(proc)
