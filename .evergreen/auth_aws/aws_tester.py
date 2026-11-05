@@ -9,6 +9,7 @@ import os
 import random
 import subprocess
 import sys
+import urllib.error
 from functools import partial
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -65,6 +66,22 @@ def create_user(user, kwargs):
     # Verify access.
     client = MongoClient(authMechanism="MONGODB-AWS", **kwargs)
     client.aws.command("count", "test")
+    client.close()
+
+
+def drop_user(user):
+    """Drop a user, if it exists."""
+
+    from pymongo import MongoClient
+    from pymongo.errors import OperationFailure
+
+    LOGGER.info("Dropping user %s", user)
+    client = MongoClient(username="bob", password="pwd123")
+    try:
+        client["$external"].command(dict(dropUser=user))
+    except OperationFailure as e:
+        if e.code != 11:  # UserNotFound
+            raise
     client.close()
 
 
@@ -271,6 +288,15 @@ def setup_web_identity():
         raise RuntimeError(
             "Failed to unassign an instance profile from the current machine"
         )
+
+    # If the host role could not be detached (macOS), drop its user so that a
+    # driver falling back to the host role cannot authenticate.
+    try:
+        host_user = get_host_account_arn()
+    except (urllib.error.URLError, RuntimeError):
+        host_user = None
+    if host_user:
+        drop_user(host_user)
 
     token_file = os.environ.get(
         "AWS_WEB_IDENTITY_TOKEN_FILE", CONFIG[get_key("iam_web_identity_token_file")]
