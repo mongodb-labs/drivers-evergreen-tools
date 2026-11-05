@@ -112,15 +112,17 @@ function assert_runner_logs_grow() {
     echo "ERROR: no runner-written server logs in ${MONGO_ORCHESTRATION_HOME}/logs"
     exit 1
   fi
-  # Any single server may idle during the ping; the sum may not.
-  # shellcheck disable=SC2086
-  size1=$(cat ${MONGO_ORCHESTRATION_HOME}/logs/mongod-*.log \
-    ${MONGO_ORCHESTRATION_HOME}/logs/mongos-*.log 2>/dev/null | wc -c)
+  # Any single server may idle during the ping; the sum may not. nullglob keeps
+  # the unmatched mongos-* glob of a standalone start from failing cat under pipefail.
+  local logs=()
+  shopt -s nullglob
+  logs=("${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log
+    "${MONGO_ORCHESTRATION_HOME}"/logs/mongos-*.log)
+  shopt -u nullglob
+  size1=$(cat "${logs[@]}" | wc -c)
   connect_mongodb "$@"
   sleep 1
-  # shellcheck disable=SC2086
-  size2=$(cat ${MONGO_ORCHESTRATION_HOME}/logs/mongod-*.log \
-    ${MONGO_ORCHESTRATION_HOME}/logs/mongos-*.log 2>/dev/null | wc -c)
+  size2=$(cat "${logs[@]}" | wc -c)
   if [ "$size2" -le "$size1" ]; then
     echo "ERROR: the server logs are not being updated in" \
       "${MONGO_ORCHESTRATION_HOME}/logs"
