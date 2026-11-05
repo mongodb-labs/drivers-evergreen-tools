@@ -14,10 +14,10 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 
-# Mock `aws`: models the subset of the CLI that ensure_artifact_bucket in
-# run-deployed-lambda-aws-tests.sh uses. CREATE_CONFLICT=1 simulates a
-# concurrent deployment winning the bucket-creation race; READ_ERROR=1
-# simulates a tag-read failure other than NoSuchTagSet.
+# Mock `aws`: models the CLI subset the eks scripts and
+# run-deployed-lambda-aws-tests.sh use. Knobs: CREATE_CONFLICT=1 simulates a
+# concurrent deploy winning the bucket race, READ_ERROR=1 a tag-read failure
+# other than NoSuchTagSet, DROP_LT_TAGS=1 an untagged launch template.
 AWS_MOCK = r"""#!/usr/bin/env bash
 set -u
 STATE_DIR=${STATE_DIR:?}
@@ -69,8 +69,14 @@ case "$1 $2" in
     ;;
   "iam get-role")
     # Returns the post-query shape: the real CLI applies --query client-side.
-    cat "$STATE_DIR/role_tags.json"
+    # Without a prior tag-role (standalone verification), the role is tagged.
+    if [ -f "$STATE_DIR/role_tags.json" ]; then
+      cat "$STATE_DIR/role_tags.json"
+    else
+      echo '[{"Key": "mongodb-owner", "Value": "o"}, {"Key": "mongodb-env", "Value": "dev"}]'
+    fi
     ;;
+  "eks list-nodegroups") echo '{"nodegroups": ["ng-1"]}' ;;
   "eks describe-cluster")
     if [ -n "${DROP_EKS_TAGS:-}" ]; then
       echo '{}'
@@ -78,6 +84,28 @@ case "$1 $2" in
       echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
     fi
     ;;
+  "ec2 describe-launch-templates")
+    if [ -n "${FAIL_LT_DESCRIBE:-}" ]; then
+      echo "An error occurred when calling the DescribeLaunchTemplates operation: simulated failure" 1>&2
+      exit 254
+    fi
+    # A wildcard name filter simulates the API's glob matching, which also
+    # returns starter templates of clusters sharing the name prefix.
+    if [[ "$*" == *launch-template-name* ]]; then
+      if [[ "$*" == *\** ]]; then
+        echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}, {"LaunchTemplateId": "lt-other-cluster"}]}'
+      else
+        echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-starter"}]}'
+      fi
+    elif [[ "$*" == *eks:cluster-name* ]]; then
+      echo '{"LaunchTemplates": [{"LaunchTemplateId": "lt-generated"}]}'
+    elif [ -n "${DROP_LT_TAGS:-}" ]; then
+      echo '[{"Key": "eks:cluster-name", "Value": "cluster"}]'
+    else
+      echo '[{"Key": "eks:cluster-name", "Value": "cluster"}, {"Key": "mongodb-owner", "Value": "o"}, {"Key": "mongodb-env", "Value": "dev"}]'
+    fi
+    ;;
+  "ec2 create-tags") : ;;
   *) echo '{}' ;;
 esac
 """
@@ -285,6 +313,61 @@ class EksSetupTest(unittest.TestCase):
         proc = self.run_setup_cluster({"DROP_IAM_TAGS": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
 
+    def test_eks_launch_templates_are_tagged(self):
+        """Both launch template families must get the policy tags, and
+        discovery must stay inside the cluster: a name-prefix match would
+        reach starters of other clusters sharing the prefix."""
+        proc = self.run_setup_cluster({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        create_calls = [ln for ln in self.calls().splitlines() if "create-tags" in ln]
+        self.assertEqual(1, len(create_calls), self.calls())
+        for lt_id in ("lt-starter", "lt-generated"):
+            self.assertIn(lt_id, create_calls[0])
+        self.assertNotIn("lt-other-cluster", create_calls[0])
+        self.assertIn("mongodb-owner", create_calls[0])
+        self.assertIn("mongodb-env", create_calls[0])
+
+    def test_eks_fails_when_launch_template_untagged(self):
+        """An untagged launch template must fail verification."""
+        proc = self.run_setup_cluster({"DROP_LT_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_eks_fails_when_launch_template_discovery_fails(self):
+        """A failed describe-launch-templates must abort, not skip tagging."""
+        proc = self.run_setup_cluster({"FAIL_LT_DESCRIBE": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "describe-launch-templates (ng-1) failed", proc.stdout + proc.stderr
+        )
+
+    def test_eks_fails_when_launch_template_parsing_fails(self):
+        """A failed launch-template parse must abort, not skip tagging."""
+        self.write_executable("jq", "#!/usr/bin/env bash\nexit 1\n")
+        proc = self.run_setup_cluster({"VERIFY_MONGODB_TAGS": ""})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "parsing list-nodegroups output failed", proc.stdout + proc.stderr
+        )
+
+    def test_verify_eks_setup_standalone(self):
+        """verify-eks-setup.sh re-checks every tag on an existing cluster."""
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["DRIVERS_TOOLS"] = str(REPO)
+        proc = subprocess.run(
+            ["bash", str(REPO / ".evergreen/k8s/eks/verify-eks-setup.sh")],
+            cwd=self.state_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags OK", proc.stdout + proc.stderr)
+
 
 class EksPodSetupTest(unittest.TestCase):
     """Tests for the cluster-tag gate in k8s/eks/setup.sh, the pod flow the
@@ -347,6 +430,13 @@ class AwsParseTest(unittest.TestCase):
         ".evergreen/verify-tags.sh",
         ".evergreen/aws_lambda/run-deployed-lambda-aws-tests.sh",
         ".evergreen/k8s/eks/setup-cluster.sh",
+        ".evergreen/k8s/eks/verify-eks-setup.sh",
+    )
+
+    # verify-eks-setup.sh verifies unconditionally and carries no gate.
+    GATES = (
+        ".evergreen/aws_lambda/run-deployed-lambda-aws-tests.sh",
+        ".evergreen/k8s/eks/setup-cluster.sh",
     )
 
     def test_scripts_parse(self):
@@ -357,7 +447,7 @@ class AwsParseTest(unittest.TestCase):
                 )
 
     def test_gates_present(self):
-        for relpath in self.SCRIPTS[1:]:
+        for relpath in self.GATES:
             text = (REPO / relpath).read_text()
             with self.subTest(script=relpath):
                 self.assertIn("VERIFY_MONGODB_TAGS", text)
