@@ -22,4 +22,5 @@ sudo sed -i "/${HOSTS_MARKER}\$/d" /etc/hosts || true
 run_slslocal --compose logs --follow=false >"$(pwd)/sls-logs.txt" 2>&1 || true
 gzip -f "$(pwd)/sls-logs.txt" || true
 run_slslocal --compose destroy || true
-rm -f "${TAG_FILE}"
+# slslocal runs as root in its container, so some of the state it writes is owned by root.
+sudo rm -rf "${STATE_DIR}" || true

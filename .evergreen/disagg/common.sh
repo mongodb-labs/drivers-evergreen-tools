@@ -2,7 +2,7 @@
 # Shared helpers for setup.sh and teardown.sh
 
 ECR_ROOT="664315256653.dkr.ecr.us-east-1.amazonaws.com"
-STATE_DIR="${HOME}/.slslocal"
+STATE_DIR="${SCRIPT_DIR}/.slslocal"
 AWS_DIR="${STATE_DIR}/aws"
 TAG_FILE="${STATE_DIR}/dsc-image-tag"
 HOSTS_MARKER="# dsc-evergreen"
@@ -78,7 +78,7 @@ CREDS
   )
 }
 
-# Same mounts as the `just slslocal` recipe in 10gen/sls
+# Same mounts as the `just slslocal` recipe in 10gen/sls, with STATE_DIR in place of `$HOME/.slslocal`
 run_slslocal() {
   local tag
   tag="$(cat "${TAG_FILE}")"
@@ -89,7 +89,7 @@ run_slslocal() {
     -v "${STATE_DIR}:/root" \
     -v "${STATE_DIR}:${STATE_DIR}" \
     -v "${AWS_DIR}:/root/.aws" \
-    -e SLSLOCAL_HOST_HOME="${HOME}" \
+    -e SLSLOCAL_HOST_HOME="$(dirname "${STATE_DIR}")" \
     -e AWS_ACCESS_KEY_ID \
     -e AWS_SECRET_ACCESS_KEY \
     -e AWS_SESSION_TOKEN \
