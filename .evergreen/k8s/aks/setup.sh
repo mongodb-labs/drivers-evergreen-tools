@@ -19,12 +19,12 @@ fi
 . $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
 az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
 
-# Verify the cluster's tags when requested: the policy covers the
-# pre-provisioned cluster the tests run on, not only what this script creates.
+# Verify the cluster's, node resource group's, node pools', and identity's
+# tags when requested: the policy covers the pre-provisioned cluster the
+# tests run on, not only what this script creates.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
-  CLUSTER_TAGS=$(az aks show --name "${AKS_CLUSTER_NAME}" --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
-  . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
-  verify_cloud_tags "AKS cluster ${AKS_CLUSTER_NAME}" "${CLUSTER_TAGS}"
+  . "$SCRIPT_DIR"/verify-aks-setup.sh
+  verify_aks_tags
 fi
 
 # Create the pod with a random name.

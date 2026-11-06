@@ -143,6 +143,12 @@ if ! NSG_ID=$(az network nsg show \
 fi
 azurekms_tag_resource "NSG" "$NSG_ID"
 
+# The remaining provisioning steps (resize, auto-shutdown, the IP lookup, and
+# the SSH-rule creation) have no explicit guards; any failure here must still
+# clean up, since callers persist teardown metadata only after this script
+# returns. Disarmed once provisioning succeeds.
+trap azurekms_cleanup_vm ERR
+
 # If applicable, set the machine size.
 if [ -n "${AZUREKMS_MACHINESIZE:-}" ]; then
     az vm resize -g "$AZUREKMS_RESOURCEGROUP" -n "$AZUREKMS_VMNAME" --size "$AZUREKMS_MACHINESIZE"
@@ -168,6 +174,8 @@ az network nsg rule create \
     --destination-port-ranges 22 \
     --description "To allow SSH access" \
     --source-address-prefixes "$EXTERNAL_IP"
+
+trap - ERR
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
 

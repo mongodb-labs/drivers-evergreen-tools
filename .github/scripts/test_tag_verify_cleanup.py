@@ -114,7 +114,8 @@ flag_values () {
   local collecting=0 out=()
   for a in "$@"; do
     if [ "$a" = "$flag" ]; then collecting=1; continue; fi
-    if [[ "$a" == --* ]]; then collecting=0; fi
+    # A single-dash flag (-otsv) ends collection just like --output tsv.
+    if [[ "$a" == -* ]]; then collecting=0; fi
     if [ $collecting = 1 ]; then out+=("$a"); fi
   done
   echo "${out[*]}"
@@ -182,7 +183,12 @@ case "$cmd" in
         ;;
       delete) echo "vm-delete" >> "$STATE_DIR/cleanup.log" ;;
       auto-shutdown) : ;;
-      resize) : ;;
+      resize)
+        if [ -n "${FAIL_RESIZE:-}" ]; then
+          echo "az vm resize: simulated failure" 1>&2
+          exit 1
+        fi
+        ;;
       *) : ;;
     esac
     ;;
@@ -248,6 +254,10 @@ case "$cmd" in
         ;;
       nsg)
         if [ "${1:-}" = "rule" ] && [ "${2:-}" = "create" ]; then
+          if [ -n "${FAIL_NSG_RULE:-}" ]; then
+            echo "az network nsg rule create: simulated failure" 1>&2
+            exit 1
+          fi
           echo '{}'
         elif [ "${1:-}" = "delete" ]; then
           echo "nsg-delete" >> "$STATE_DIR/cleanup.log"
@@ -282,16 +292,155 @@ case "$cmd" in
       *) echo '{}' ;;
     esac
     ;;
+  group)
+    # az group list/create/show/delete. Tags are stored by resource id in
+    # resource_tags.txt, so tag-create-on-id (the MC_ node resource group)
+    # and create-time --tags land in the same store.
+    sub=$1; shift
+    group_id="/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}"
+    case "$sub" in
+      list)
+        # Empty: the simulated subscription has no pre-existing groups, so
+        # setup-cluster.sh's exists-check passes.
+        echo "[]"
+        ;;
+      create)
+        group_name=""; prev=""
+        for a in "$@"; do
+          if [ "$prev" = "--name" ] || [ "$prev" = "-n" ]; then group_name=$a; fi
+          prev=$a
+        done
+        store_resource_tags "/subscriptions/sub/resourceGroups/${group_name}" \
+          "$(tags_json "$(flag_values --tags "$@")")"
+        ;;
+      show)
+        group_name=""; query=""; prev=""
+        for a in "$@"; do
+          case "$prev" in
+            --name|-n|--resource-group) group_name=$a ;;
+            --query) query=$a ;;
+          esac
+          prev=$a
+        done
+        group_id="/subscriptions/sub/resourceGroups/${group_name}"
+        if [ "$query" = "id" ]; then
+          echo "${group_id}"
+        elif [ "$query" = "tags" ]; then
+          # Unstored groups model the migrated pre-provisioned cluster: the
+          # node resource group carries the tags unless DROP_MC_TAGS drops
+          # them.
+          stored=$(show_resource_tags "${group_id}")
+          if [ -n "${stored}" ]; then
+            echo "${stored}"
+          elif [ -n "${DROP_MC_TAGS:-}" ]; then
+            echo '{}'
+          else
+            echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
+          fi
+        fi
+        ;;
+      delete)
+        echo "group-delete" >> "$STATE_DIR/cleanup.log"
+        ;;
+    esac
+    ;;
+  identity)
+    sub=$1; shift
+    identity_name=""; query=""; prev=""
+    for a in "$@"; do
+      case "$prev" in
+        --name) identity_name=$a ;;
+        --query) query=$a ;;
+      esac
+      prev=$a
+    done
+    identity_id="/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${identity_name}"
+    case "$sub" in
+      create)
+        store_resource_tags "${identity_id}" "$(tags_json "$(flag_values --tags "$@")")"
+        ;;
+      show)
+        if [ "$query" = "clientId" ]; then
+          echo "client-id"
+        elif [ "$query" = "tags" ]; then
+          stored=$(show_resource_tags "${identity_id}")
+          if [ -n "${stored}" ]; then
+            echo "${stored}"
+          elif [ -n "${DROP_IDENTITY_TAGS:-}" ]; then
+            echo '{}'
+          else
+            echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
+          fi
+        fi
+        ;;
+    esac
+    ;;
   aks)
     # az aks show -n NAME -g RG --query tags (the pod-flow cluster gate);
     # the mock returns the post-query tags map.
-    if [ "${1:-}" = "show" ]; then
-      if [ -n "${DROP_AKS_TAGS:-}" ]; then
-        echo '{}'
-      else
-        echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
-      fi
-    fi
+    sub=${1:-}
+    shift || true
+    case "$sub" in
+      show)
+        query=$(flag_values --query "$@")
+        if [ "$query" = "nodeResourceGroup" ]; then
+          echo "MC-TEST-NODES"
+        elif [ "$query" = "oidcIssuerProfile.issuerUrl" ]; then
+          echo "https://oidc.example"
+        elif [ "$query" = "tags" ]; then
+          stored=$(show_resource_tags "/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}/providers/Microsoft.ContainerService/managedClusters/${AKS_CLUSTER_NAME:-cluster}")
+          if [ -n "${stored}" ]; then
+            echo "${stored}"
+          elif [ -n "${DROP_AKS_TAGS:-}" ]; then
+            echo '{}'
+          else
+            echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
+          fi
+        fi
+        ;;
+      create)
+        if [ -n "${FAIL_AKS_CREATE:-}" ]; then
+          echo "az aks create: simulated failure" 1>&2
+          exit 1
+        fi
+        store_resource_tags "/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}/providers/Microsoft.ContainerService/managedClusters/${AKS_CLUSTER_NAME:-cluster}" \
+          "$(tags_json "$(flag_values --tags "$@")")"
+        ;;
+      nodepool)
+        np_sub=${1:-}
+        case "$np_sub" in
+          list)
+            if [ -n "${FAIL_POOL_LIST:-}" ]; then
+              echo "az aks nodepool list: simulated failure" 1>&2
+              exit 1
+            fi
+            if [ -n "${DROP_POOL_TAGS:-}" ]; then
+              echo '[{"name": "nodepool1", "tags": {}}]'
+            else
+              echo '[{"name": "nodepool1", "tags": {"mongodb-owner": "o", "mongodb-env": "dev"}}]'
+            fi
+            ;;
+          update)
+            if [ -n "${FAIL_POOL_UPDATE:-}" ]; then
+              echo "az aks nodepool update: simulated failure" 1>&2
+              exit 1
+            fi
+            pool_name=""; prev=""
+            for a in "$@"; do
+              if [ "$prev" = "-n" ] || [ "$prev" = "--name" ]; then pool_name=$a; fi
+              prev=$a
+            done
+            if [ -n "${DROP_POOL_TAGS:-}" ]; then
+              store_resource_tags "/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}/providers/Microsoft.ContainerService/managedClusters/${AKS_CLUSTER_NAME:-cluster}/agentPools/${pool_name}" '{}'
+            else
+              store_resource_tags "/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}/providers/Microsoft.ContainerService/managedClusters/${AKS_CLUSTER_NAME:-cluster}/agentPools/${pool_name}" \
+                "$(tags_json "$(flag_values --tags "$@")")"
+            fi
+            ;;
+        esac
+        ;;
+      *) : ;;
+    esac
     ;;
   *) echo '{}' ;;
 esac
@@ -300,18 +449,25 @@ esac
 CURL_MOCK = r"""#!/usr/bin/env bash
 # Mock `curl` for whatismyip.akamai.com. CURL_FAIL_FIRST=1 fails the first
 # invocation (exit 56, curl's network-receive error); CURL_FAIL_ALWAYS=1
-# fails every invocation. Otherwise echoes an IP.
+# fails every invocation. CURL_PARTIAL_FIRST=1 writes a partial IP to stdout
+# before failing the first invocation, the way a connection cut mid-transfer
+# does. Otherwise echoes an IP.
 set -u
 STATE_DIR=${STATE_DIR:-/tmp}
 if [ -n "${CURL_FAIL_ALWAYS:-}" ]; then
   echo "curl: (56) Recv failure" 1>&2
   exit 56
 fi
-if [ -n "${CURL_FAIL_FIRST:-}" ]; then
-  touch "$STATE_DIR/curl_calls"
-  calls=$(wc -l < "$STATE_DIR/curl_calls")
-  echo x >> "$STATE_DIR/curl_calls"
-  if [ "$calls" = 0 ]; then
+touch "$STATE_DIR/curl_calls"
+calls=$(wc -l < "$STATE_DIR/curl_calls")
+echo x >> "$STATE_DIR/curl_calls"
+if [ "$calls" = 0 ]; then
+  if [ -n "${CURL_PARTIAL_FIRST:-}" ]; then
+    printf '1.2.3.'
+    echo "curl: (56) Recv failure" 1>&2
+    exit 56
+  fi
+  if [ -n "${CURL_FAIL_FIRST:-}" ]; then
     echo "curl: (56) Recv failure" 1>&2
     exit 56
   fi
@@ -732,6 +888,68 @@ class TagVerifyCleanupTest(unittest.TestCase):
         self.assertIn("public-ip-delete", self.cleanup_calls())
         self.assertIn("nsg-delete", self.cleanup_calls())
 
+    def test_azure_vm_deleted_when_resize_fails(self):
+        """A failed resize after tagging must still clean up the VM.
+
+        Resize has no explicit guard; callers persist teardown metadata only
+        after create-vm.sh returns.
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "AZUREKMS_MACHINESIZE": "SIZE", "FAIL_RESIZE": "1"},
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("nic-delete", self.cleanup_calls())
+        self.assertIn("public-ip-delete", self.cleanup_calls())
+        self.assertIn("nsg-delete", self.cleanup_calls())
+        self.assertIn("vnet-delete", self.cleanup_calls())
+
+    def test_azure_vm_deleted_when_nsg_rule_fails(self):
+        """A failed SSH-rule create must still clean up the VM."""
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "FAIL_NSG_RULE": "1"},
+        )
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("nic-delete", self.cleanup_calls())
+        self.assertIn("public-ip-delete", self.cleanup_calls())
+        self.assertIn("nsg-delete", self.cleanup_calls())
+        self.assertIn("vnet-delete", self.cleanup_calls())
+
+    def test_azure_vm_deleted_when_ip_lookup_fails(self):
+        """Exhausting the IP-lookup retries must still clean up the VM.
+
+        The lookup runs after the VM is up but before callers save teardown
+        metadata.
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "CURL_FAIL_ALWAYS": "1"},
+        )
+        self.assertEqual(proc.returncode, 56, proc.stdout + proc.stderr)
+        self.assertIn("vm-delete", self.cleanup_calls())
+        self.assertIn("nic-delete", self.cleanup_calls())
+        self.assertIn("public-ip-delete", self.cleanup_calls())
+        self.assertIn("nsg-delete", self.cleanup_calls())
+        self.assertIn("vnet-delete", self.cleanup_calls())
+
+    def test_azure_nsg_rule_gets_one_ip_after_partial_response(self):
+        """A partial response from a failed lookup must not reach the rule.
+
+        The retried curl concatenates a failed attempt's partial stdout with
+        the next attempt's response; the NSG rule would get an invalid IP.
+        """
+        proc = self.run_create_script(
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            {**CREATE_VM_ENV, "CURL_PARTIAL_FIRST": "1"},
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("attempt n. 2", proc.stderr)
+        self.assertIn("--source-address-prefixes 1.2.3.4", self.calls())
+        self.assertNotIn("1.2.3.1.2.3.4", self.calls())
+
 
 class JanitorTest(unittest.TestCase):
     """Tests for the orphaned-vnet cleanup in delete_old_azure_resources.py.
@@ -896,6 +1114,7 @@ class AksPodSetupTest(unittest.TestCase):
         env["AKS_RESOURCE_GROUP"] = "rg"
         env["AKS_SERVICE_ACCOUNT_NAME"] = "sa"
         env["AKS_SERVICE_ACCOUNT_NAMESPACE"] = "default"
+        env["AKS_USER_ASSIGNED_IDENTITY_NAME"] = "identity"
         env.update(extra_env)
         return subprocess.run(
             ["bash", str(self.SCRIPT)],
@@ -913,9 +1132,212 @@ class AksPodSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
 
+    def test_pod_setup_fails_when_node_resource_group_untagged(self):
+        """An untagged node resource group must fail the pod setup.
+
+        The pre-provisioned cluster's own tags pass, but until the README
+        migration snippet tags its AKS-created node resource group, the gate
+        must still reject it: that group holds the billable nodes.
+        """
+        proc = self.run_pod_setup({"DROP_MC_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags OK: AKS cluster", proc.stdout + proc.stderr)
+        self.assertIn(
+            "verify-tags FAILED: AKS node resource group MC-TEST-NODES lacks "
+            "mongodb-owner/mongodb-env tags",
+            proc.stdout + proc.stderr,
+        )
+
     def test_pod_setup_passes_when_cluster_tagged(self):
         proc = self.run_pod_setup({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+
+AKS_SETUP_ENV = {
+    "AKS_RESOURCE_GROUP": "RG",
+    "AKS_CLUSTER_NAME": "CLUSTER",
+    "AKS_LOCATION": "eastus",
+    "AKS_SERVICE_ACCOUNT_NAME": "sa",
+    "AKS_SERVICE_ACCOUNT_NAMESPACE": "default",
+    "AKS_FEDERATED_IDENTITY_CREDENTIAL_NAME": "fed",
+    "AKS_USER_ASSIGNED_IDENTITY_NAME": "identity",
+    "AKS_APPLICATION_ID": "app-id",
+    # Exported so the script skips the vault-based setup-secrets.sh.
+    "AZUREKMS_TENANTID": "t",
+}
+
+
+class AksClusterSetupTest(unittest.TestCase):
+    """Tests for the DRIVERS-3712 tagging flow in k8s/aks/setup-cluster.sh.
+
+    az aks create --tags reaches only the cluster resource: the AKS-created
+    node resource group (the billable nodes, load balancer IP, and networks)
+    and the node pools backing the VMSS need explicit tagging. A failure
+    before setup completes must delete the partially created resource group
+    (a leftover one blocks re-runs and leaks billable resources); a
+    verification failure must leave the long-lived cluster for manual repair.
+    """
+
+    SCRIPT = REPO / ".evergreen/k8s/aks/setup-cluster.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("az", AZ_MOCK)
+        self.write_executable("kubectl", KUBECTL_MOCK)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_setup_cluster(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["VERIFY_MONGODB_TAGS"] = "1"
+        env["DRIVERS_TOOLS"] = str(REPO)
+        env.update(AKS_SETUP_ENV)
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            cwd=self.state_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+
+    def cleanup_calls(self):
+        path = self.state_path / "cleanup.log"
+        if not path.exists():
+            return []
+        return path.read_text().split()
+
+    def resource_tags(self, resource):
+        """Return the stored tag line for a resource-id substring."""
+        path = self.state_path / "resource_tags.txt"
+        if not path.exists():
+            return ""
+        lines = path.read_text().splitlines()
+        return next((ln for ln in lines if resource in ln), "")
+
+    def test_node_resource_group_pools_and_identity_are_tagged(self):
+        """The AKS-created node resource group, node pools, and identity
+        carry the tags; az aks create --tags reaches none of them."""
+        proc = self.run_setup_cluster({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        for resource in (
+            "resourceGroups/MC-TEST-NODES",
+            "agentPools/nodepool1",
+            "userAssignedIdentities/identity",
+        ):
+            line = self.resource_tags(resource)
+            self.assertIn("mongodb-owner", line, resource)
+            self.assertIn("mongodb-env", line, resource)
+        self.assertEqual([], self.cleanup_calls())
+
+    def test_group_deleted_when_cluster_create_fails(self):
+        """A failed az aks create must delete the created resource group."""
+        proc = self.run_setup_cluster({"FAIL_AKS_CREATE": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("group-delete", self.cleanup_calls())
+
+    def test_group_deleted_when_nodepool_tagging_fails(self):
+        """A failed node pool tag write must delete the resource group."""
+        proc = self.run_setup_cluster({"FAIL_POOL_UPDATE": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("group-delete", self.cleanup_calls())
+
+    def test_group_kept_when_verification_fails(self):
+        """A tag verification failure leaves the cluster for manual repair.
+
+        Deleting it would be destructive; the trap must be disarmed before
+        verification runs.
+        """
+        proc = self.run_setup_cluster({"DROP_POOL_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+        self.assertNotIn("group-delete", self.cleanup_calls())
+
+
+class AksVerifyTest(unittest.TestCase):
+    """Tests for verify-aks-setup.sh run standalone against a live cluster.
+
+    The pod flow's gate and the one-time setup share the module: the cluster,
+    its node resource group, every node pool, and the identity must carry
+    mongodb-owner/mongodb-env.
+    """
+
+    SCRIPT = REPO / ".evergreen/k8s/aks/verify-aks-setup.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+        self.bin = self.state_path / "bin"
+        self.bin.mkdir()
+        self.write_executable("az", AZ_MOCK)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def write_executable(self, name, content):
+        path = self.bin / name
+        path.write_text(content)
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+    def run_verify(self, extra_env):
+        env = dict(os.environ)
+        env["PATH"] = f"{self.bin}:{env['PATH']}"
+        env["STATE_DIR"] = str(self.state_path)
+        env["DRIVERS_TOOLS"] = str(REPO)
+        # Exported so the script skips the vault-based setup-secrets.sh.
+        env["AZUREKMS_TENANTID"] = "t"
+        env["AKS_RESOURCE_GROUP"] = "RG"
+        env["AKS_CLUSTER_NAME"] = "CLUSTER"
+        env["AKS_USER_ASSIGNED_IDENTITY_NAME"] = "identity"
+        env.update(extra_env)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT)],
+            cwd=self.state_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+    def test_standalone_verification_passes_when_tagged(self):
+        proc = self.run_verify({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        output = proc.stdout + proc.stderr
+        for resource in (
+            "AKS cluster",
+            "AKS node resource group",
+            "AKS node pool",
+            "AKS identity",
+        ):
+            self.assertIn(f"verify-tags OK: {resource}", output, resource)
+
+    def test_fails_when_node_pool_untagged(self):
+        proc = self.run_verify({"DROP_POOL_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_fails_when_node_resource_group_untagged(self):
+        proc = self.run_verify({"DROP_MC_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("verify-tags FAILED", proc.stdout + proc.stderr)
+
+    def test_fails_when_node_pool_discovery_fails(self):
+        proc = self.run_verify({"FAIL_POOL_LIST": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
 
 
 class SshIpTest(unittest.TestCase):
@@ -963,6 +1385,10 @@ class SshIpTest(unittest.TestCase):
             check=False,
         )
 
+    def calls(self):
+        log = self.state_path / "calls.log"
+        return log.read_text() if log.exists() else ""
+
     def test_transient_ip_lookup_failure_is_retried(self):
         """A failed whatismyip call is retried; the IP stays clean."""
         proc = self.run_set_ssh_ip({"CURL_FAIL_FIRST": "1"})
@@ -972,9 +1398,68 @@ class SshIpTest(unittest.TestCase):
         self.assertIn("attempt n. 2", proc.stderr)
         self.assertNotIn("retry_with_backoff:", proc.stdout)
 
+    def test_partial_response_is_discarded(self):
+        """A partial response from a failed lookup must not reach the rule."""
+        proc = self.run_set_ssh_ip({"CURL_PARTIAL_FIRST": "1"})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("attempt n. 2", proc.stderr)
+        self.assertIn("--source-address-prefixes 1.2.3.4", self.calls())
+        self.assertNotIn("1.2.3.1.2.3.4", self.calls())
+
     def test_persistent_ip_lookup_failure_fails_the_script(self):
         proc = self.run_set_ssh_ip({"CURL_FAIL_ALWAYS": "1"})
         self.assertEqual(proc.returncode, 56, proc.stdout + proc.stderr)
+
+
+class RetryHelperTest(unittest.TestCase):
+    """The retry helper's stdout contract.
+
+    retry-with-backoff.sh runs inside command substitutions, where a failed
+    attempt's partial stdout would concatenate with the next attempt's
+    response: the whatismyip lookups would get an invalid IP.
+    """
+
+    SCRIPT = REPO / ".evergreen/retry-with-backoff.sh"
+
+    def setUp(self):
+        self.state = tempfile.TemporaryDirectory()
+        self.state_path = Path(self.state.name)
+
+    def tearDown(self):
+        self.state.cleanup()
+
+    def run_helper(self, command, extra_env=None):
+        env = dict(os.environ)
+        env["STATE_DIR"] = str(self.state_path)
+        env.update(extra_env or {})
+        return subprocess.run(
+            ["bash", str(self.SCRIPT), "bash", "-c", command],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+
+    def test_partial_stdout_of_failed_attempt_is_discarded(self):
+        """Only the successful attempt's output reaches stdout."""
+        proc = self.run_helper(
+            'if [ -f "$STATE_DIR/marker" ]; then echo "1.2.3.4"; '
+            'else touch "$STATE_DIR/marker"; printf "1.2.3."; exit 56; fi'
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("attempt n. 2", proc.stderr)
+        self.assertEqual(proc.stdout, "1.2.3.4")
+
+    def test_success_after_partial_failure_keeps_full_response(self):
+        """The successful attempt's output is emitted exactly once."""
+        proc = self.run_helper('touch "$STATE_DIR/marker"; echo "1.2.3.4"')
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual(proc.stdout, "1.2.3.4")
+
+    def test_exhaustion_returns_the_command_status(self):
+        proc = self.run_helper("exit 7", {"ATTEMPTS": "2"})
+        self.assertEqual(proc.returncode, 7)
 
 
 class AwsParseTest(unittest.TestCase):
@@ -1008,6 +1493,8 @@ class AzureParseTest(unittest.TestCase):
         ".evergreen/csfle/azurekms/create-vm.sh",
         ".evergreen/csfle/azurekms/delete-vm.sh",
         ".evergreen/k8s/aks/setup-cluster.sh",
+        ".evergreen/k8s/aks/verify-aks-setup.sh",
+        ".evergreen/k8s/aks/smoke-test.sh",
     )
 
     def test_scripts_parse(self):
