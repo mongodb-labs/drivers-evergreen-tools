@@ -74,6 +74,7 @@ cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
 # TODO(DRIVERS-2945): re-enable once the drivers-2945-test EKS cluster is restored.
+# The test must be skipped on Windows, which lacks kubectl.
 echo "Skipping EKS pod identity test; the drivers-2945-test EKS cluster was removed (DRIVERS-2945)"
 
 bash ./teardown.sh
