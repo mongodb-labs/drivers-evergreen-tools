@@ -138,6 +138,7 @@ mo-expansion.sh
 .evergreen/mongosh-dl.exe
 .evergreen/run-mongodb-aws-eks-test.sh
 .evergreen/mongoproxy/bin
+.evergreen/disagg/.slslocal
 .dockerignore
 .local
 container_id.txt

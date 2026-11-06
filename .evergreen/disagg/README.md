@@ -31,6 +31,22 @@ Their ports are published on the host. `setup.sh` maps the names to `127.0.0.1` 
 discovery works from the host, and the URI it writes is seeded with those names. The line is tagged with a
 `# dsc-evergreen` comment, and `teardown.sh` removes it.
 
+## Replica set configuration
+
+Only the first member (`shard1-node0`) is electable. `slslocal` gives it priority 1 and every other member priority 0.
+This is a choice of the `slslocal` template, not a requirement of disaggregated storage. The consequences are ordinary
+replica set behavior:
+
+- `replSetStepDown` without `force: true` fails with `NodeNotFound` ("No replica set member is eligible for primary
+    handoff").
+- `replSetStepDown` with `force: true` succeeds, but the same member is the only one that can be elected again. The set
+    has no primary for the step down period plus the election timeout (`electionTimeoutMillis` is 10 seconds): about 40
+    seconds after `replSetStepDown: 30`.
+- `replSetStepUp` on a secondary fails with `NodeNotElectable`.
+
+Tests that step down the primary, such as the SDAM test `rediscover-quickly-after-step-down`, therefore fail or leave the
+deployment without a primary for later tests.
+
 ## Integration with Evergreen
 
 The ECR images require assuming `arn:aws:iam::664315256653:role/disagg-storage-tf-project-ro`. The Evergreen project
