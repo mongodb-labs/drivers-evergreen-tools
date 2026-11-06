@@ -1552,6 +1552,7 @@ buildvariants:
     - "test-cli-partial"
     - "test-mongodb-runner-partial"
     - "test-csfle"
+    - "test-auth-aws"
 
 # Both Windows hosts have a python toolchain; the suites run on each variant
 # to make sure they pass on both. MongoDB 8.3+ does not run on the vsCurrent
@@ -1567,6 +1568,7 @@ buildvariants:
     - "test-cli-partial"
     - "test-mongodb-runner-partial"
     - "test-csfle"
+    - "test-auth-aws"
 
 # The rolling amazon2023-arm64-latest image is what driver repos' amazon2023
 # variants run on, and it can diverge from the pinned amazon2023.3 images
