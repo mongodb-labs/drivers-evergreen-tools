@@ -22,7 +22,9 @@ for VARNAME in "${VARLIST[@]}"; do
   [[ -z "${!VARNAME:-}" ]] && echo "ERROR: $VARNAME not set" && exit 1;
 done
 
-EXTERNAL_IP=$(curl -s http://whatismyip.akamai.com/)
+# The IP-echo service is external and flaky; retry instead of aborting the
+# provisioning chain with curl's exit 56.
+EXTERNAL_IP=$("$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl -s http://whatismyip.akamai.com/)
 
 echo "Adding current IP ($EXTERNAL_IP) to Azure Virtual Machine ... begin"
 az network nsg rule update \
