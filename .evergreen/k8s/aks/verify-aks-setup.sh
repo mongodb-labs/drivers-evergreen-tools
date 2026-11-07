@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# Tag verification for the drivers AKS setup: the cluster, the AKS-created
-# node resource group, every node pool, and the user-assigned identity.
-# Sourced by setup-cluster.sh and setup.sh, and runnable standalone against
-# an existing cluster; exits non-zero naming the first resource lacking
-# mongodb-owner/mongodb-env.
+# Tag verification for the drivers AKS setup: the resource group, the
+# cluster, the AKS-created node resource group, every node pool, and the
+# user-assigned identity. Sourced by setup-cluster.sh and setup.sh, and
+# runnable standalone against an existing cluster; exits non-zero naming the
+# first resource lacking mongodb-owner/mongodb-env.
 
 set -eu
 
@@ -14,6 +14,10 @@ SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 verify_aks_tags ()
 {
   . "$SCRIPT_DIR"/../../verify-tags.sh
+
+  # az group create tags the parent resource group in setup-cluster.sh.
+  GROUP_TAGS=$(az group show --name "${AKS_RESOURCE_GROUP}" --query tags --output json)
+  verify_cloud_tags "AKS resource group ${AKS_RESOURCE_GROUP}" "${GROUP_TAGS}"
 
   CLUSTER_TAGS=$(az aks show --name "${AKS_CLUSTER_NAME}" \
     --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
@@ -29,7 +33,9 @@ verify_aks_tags ()
 
   POOLS_JSON=$(az aks nodepool list --resource-group "${AKS_RESOURCE_GROUP}" \
     --cluster-name "${AKS_CLUSTER_NAME}" --output json)
-  for AKS_POOL in $(echo "${POOLS_JSON}" | jq -r '.[].name'); do
+  # Checked assignment: a for-word jq failure does not trip set -e.
+  AKS_POOL_NAMES=$(echo "${POOLS_JSON}" | jq -r '.[].name')
+  for AKS_POOL in ${AKS_POOL_NAMES}; do
     POOL_TAGS=$(echo "${POOLS_JSON}" | jq -r --arg pool "${AKS_POOL}" \
       '.[] | select(.name == $pool) | .tags')
     verify_cloud_tags "AKS node pool ${AKS_POOL}" "${POOL_TAGS}"
@@ -50,7 +56,8 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   if [ -f ./secrets-export.sh ]; then
     source ./secrets-export.sh
   fi
-  if [ -z "${AZUREKMS_TENANTID:-}" ]; then
+  # The vault is a fallback: loading it would overwrite exported targets.
+  if [ -z "${AKS_CLUSTER_NAME:-}" ] || [ -z "${AKS_RESOURCE_GROUP:-}" ]; then
     . "$SCRIPT_DIR"/../../secrets_handling/setup-secrets.sh drivers/aks
   fi
 

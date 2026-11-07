@@ -355,11 +355,13 @@ case "$cmd" in
         elif [ "$query" = "tags" ]; then
           # Unstored groups model the migrated pre-provisioned cluster: the
           # node resource group carries the tags unless DROP_MC_TAGS drops
-          # them.
+          # them, and the parent resource group unless DROP_GROUP_TAGS does.
           stored=$(show_resource_tags "${group_id}")
           if [ -n "${stored}" ]; then
             echo "${stored}"
-          elif [ -n "${DROP_MC_TAGS:-}" ]; then
+          elif [ -n "${DROP_GROUP_TAGS:-}" ]; then
+            echo '{}'
+          elif [ -n "${DROP_MC_TAGS:-}" ] && [[ "${group_name}" == MC-* ]]; then
             echo '{}'
           else
             echo '{"mongodb-owner": "o", "mongodb-env": "dev"}'
@@ -441,7 +443,10 @@ case "$cmd" in
               echo "az aks nodepool list: simulated failure" 1>&2
               exit 1
             fi
-            if [ -n "${DROP_POOL_TAGS:-}" ]; then
+            if [ -n "${CORRUPT_POOL_JSON:-}" ]; then
+              # Valid az exit, body jq cannot parse: the parse must fail, not skip.
+              echo 'not-json'
+            elif [ -n "${DROP_POOL_TAGS:-}" ]; then
               echo '[{"name": "nodepool1", "tags": {}}]'
             else
               echo '[{"name": "nodepool1", "tags": {"mongodb-owner": "o", "mongodb-env": "dev"}}]'
@@ -1234,6 +1239,20 @@ class AksPodSetupTest(unittest.TestCase):
         proc = self.run_pod_setup({})
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
+    def test_pod_setup_fails_when_resource_group_untagged(self):
+        """An untagged parent resource group must fail the pod setup.
+
+        The group name comes from the script's own secrets sourcing; assert
+        the failure without pinning it.
+        """
+        proc = self.run_pod_setup({"DROP_GROUP_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "verify-tags FAILED: AKS resource group",
+            proc.stdout + proc.stderr,
+        )
+        self.assertIn("lacks mongodb-owner/mongodb-env tags", proc.stdout + proc.stderr)
+
 
 AKS_SETUP_ENV = {
     "AKS_RESOURCE_GROUP": "RG",
@@ -1337,6 +1356,18 @@ class AksClusterSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn("group-delete", self.cleanup_calls())
 
+    def test_group_deleted_when_pool_discovery_json_is_invalid(self):
+        """A pool list jq cannot parse must abort with cleanup, not skip
+        tagging.
+
+        A jq failure in the for-word expansion iterates zero times without
+        tripping set -e: the pools would go untagged and the resource group
+        would leak.
+        """
+        proc = self.run_setup_cluster({"CORRUPT_POOL_JSON": "1"})
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("group-delete", self.cleanup_calls())
+
     def test_group_kept_when_verification_fails(self):
         """A tag verification failure leaves the cluster for manual repair.
 
@@ -1352,9 +1383,9 @@ class AksClusterSetupTest(unittest.TestCase):
 class AksVerifyTest(unittest.TestCase):
     """Tests for verify-aks-setup.sh run standalone against a live cluster.
 
-    The pod flow's gate and the one-time setup share the module: the cluster,
-    its node resource group, every node pool, and the identity must carry
-    mongodb-owner/mongodb-env.
+    The pod flow's gate and the one-time setup share the module: the resource
+    group, the cluster, its node resource group, every node pool, and the
+    identity must carry mongodb-owner/mongodb-env.
     """
 
     SCRIPT = REPO / ".evergreen/k8s/aks/verify-aks-setup.sh"
@@ -1420,6 +1451,37 @@ class AksVerifyTest(unittest.TestCase):
     def test_fails_when_node_pool_discovery_fails(self):
         proc = self.run_verify({"FAIL_POOL_LIST": "1"})
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+
+    def test_fails_when_resource_group_untagged(self):
+        proc = self.run_verify({"DROP_GROUP_TAGS": "1"})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn(
+            "verify-tags FAILED: AKS resource group RG lacks "
+            "mongodb-owner/mongodb-env tags",
+            proc.stdout + proc.stderr,
+        )
+
+    def test_fails_when_pool_discovery_json_is_invalid(self):
+        """A malformed pool list must fail the gate, not skip the checks.
+
+        A jq failure in the for-word expansion iterates zero times without
+        tripping set -e.
+        """
+        proc = self.run_verify({"CORRUPT_POOL_JSON": "1"})
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertNotIn("verify-tags OK: AKS node pool", proc.stdout + proc.stderr)
+
+    def test_explicit_targets_used_without_tenant_id(self):
+        """Exported AKS targets must survive a missing AZUREKMS_TENANTID.
+
+        The vault load is a fallback: with the cluster and resource group
+        already exported, loading the vault would overwrite them and verify
+        the wrong cluster.
+        """
+        proc = self.run_verify({"AZUREKMS_TENANTID": ""})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("AKS cluster CLUSTER", proc.stdout + proc.stderr)
+        self.assertIn("AKS resource group RG", proc.stdout + proc.stderr)
 
 
 class SshIpTest(unittest.TestCase):

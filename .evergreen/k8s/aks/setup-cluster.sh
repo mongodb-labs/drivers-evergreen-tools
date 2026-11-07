@@ -61,9 +61,11 @@ MC_RESOURCE_GROUP="$(az aks show -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GRO
   --query nodeResourceGroup -otsv)"
 az tag create --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
   --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}" >/dev/null
-AKS_POOLS=$(az aks nodepool list -g "${AKS_RESOURCE_GROUP}" \
+AKS_POOLS_JSON=$(az aks nodepool list -g "${AKS_RESOURCE_GROUP}" \
   --cluster-name "${AKS_CLUSTER_NAME}" --output json)
-for AKS_POOL in $(echo "${AKS_POOLS}" | jq -r '.[].name'); do
+# Checked assignment: a for-word jq failure does not trip set -e.
+AKS_POOLS=$(echo "${AKS_POOLS_JSON}" | jq -r '.[].name')
+for AKS_POOL in ${AKS_POOLS}; do
   az aks nodepool update -g "${AKS_RESOURCE_GROUP}" --cluster-name "${AKS_CLUSTER_NAME}" \
     -n "${AKS_POOL}" --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}" >/dev/null
 done

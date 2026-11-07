@@ -26,14 +26,15 @@ teardown ()
 }
 trap teardown EXIT
 
-# Harvest vault values into the scratch dir. The helper writes
-# secrets-export.sh into its cwd, which setup-cluster.sh would source and
-# clobber the overrides with, so setup-cluster.sh also runs from here.
+# Harvest vault values into the scratch dir; export -p keeps values quoted.
+# The helper writes secrets-export.sh into its cwd, which setup-cluster.sh
+# would source and clobber the overrides with, so setup-cluster.sh also runs
+# from here.
 (
   cd "$SCRATCH"
   set -a
   . "$SCRIPT_DIR/../../secrets_handling/setup-secrets.sh" drivers/aks
-  env | grep -E '^(AKS|AZUREKMS|MONGODB)_' > "$SCRATCH/vault.env"
+  export -p | grep -E '^declare -x (AKS|AZUREKMS|MONGODB)_' > "$SCRATCH/vault.env"
 )
 set -a
 . "$SCRATCH/vault.env"
