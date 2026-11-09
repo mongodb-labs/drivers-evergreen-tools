@@ -117,6 +117,10 @@ def main():
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     orphan_vnet_names = []
     for vnet in nmclient.virtual_networks.list(resource_group_name):
+        # create-vm.sh names every vnet <vmname>-VNET; anything else in the
+        # resource group (e.g. shared infrastructure) is out of scope.
+        if not vnet.name.endswith("-VNET"):
+            continue
         is_orphan = True
         for vm_name in all_vm_names:
             if vm_name + "-VNET" == vnet.name:

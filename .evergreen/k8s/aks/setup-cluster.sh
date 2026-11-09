@@ -38,8 +38,10 @@ aks_teardown_group ()
 }
 trap aks_teardown_group ERR
 
-EXISTING=$(az group list | grep "${AKS_RESOURCE_GROUP}" || true)
-if [ -n "${EXISTING}" ]; then
+# A failed az group list must not pass for a missing group: provisioning
+# over a pre-existing group's name would arm the teardown that deletes it.
+GROUP_LIST=$(az group list)
+if echo "${GROUP_LIST}" | grep -q "${AKS_RESOURCE_GROUP}"; then
   echo "${AKS_RESOURCE_GROUP} already exists!"
   exit 1
 fi

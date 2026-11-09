@@ -327,6 +327,10 @@ case "$cmd" in
     group_id="/subscriptions/sub/resourceGroups/${AKS_RESOURCE_GROUP:-RG}"
     case "$sub" in
       list)
+        if [ -n "${FAIL_GROUP_LIST:-}" ]; then
+          echo "az group list: simulated failure" 1>&2
+          exit 1
+        fi
         # Empty: the simulated subscription has no pre-existing groups, so
         # setup-cluster.sh's exists-check passes.
         echo "[]"
@@ -1162,6 +1166,19 @@ class JanitorTest(unittest.TestCase):
         self.run_main()
         self.nm.virtual_networks.begin_delete.assert_not_called()
 
+    def test_non_vm_vnets_are_never_deleted(self):
+        """Only per-VM vnets (<vmname>-VNET) are deletion candidates.
+
+        create-vm.sh owns that naming convention; any other vnet in the
+        resource group, such as shared infrastructure, must be ignored even
+        with no created-at tag.
+        """
+        self.nm.virtual_networks.list.return_value = [
+            types.SimpleNamespace(name="shared-infrastructure", tags=None),
+        ]
+        self.run_main()
+        self.nm.virtual_networks.begin_delete.assert_not_called()
+
 
 class AksPodSetupTest(unittest.TestCase):
     """Tests for the cluster-tag gate in k8s/aks/setup.sh, the pod flow the
@@ -1350,6 +1367,16 @@ class AksClusterSetupTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertIn("group-delete", self.cleanup_calls())
 
+    def test_group_list_failure_aborts_without_cleanup(self):
+        """A failed az group list must abort, not pass for a missing group.
+
+        Treating the failure as a missing group would provision over a
+        pre-existing group's name and arm the teardown that deletes it.
+        """
+        proc = self.run_setup_cluster({"FAIL_GROUP_LIST": "1"})
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertNotIn("group-delete", self.cleanup_calls())
+
     def test_group_deleted_when_nodepool_tagging_fails(self):
         """A failed node pool tag write must delete the resource group."""
         proc = self.run_setup_cluster({"FAIL_POOL_UPDATE": "1"})
@@ -1482,6 +1509,28 @@ class AksVerifyTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         self.assertIn("AKS cluster CLUSTER", proc.stdout + proc.stderr)
         self.assertIn("AKS resource group RG", proc.stdout + proc.stderr)
+
+    def test_fails_when_identity_name_missing(self):
+        proc = self.run_verify({"AKS_USER_ASSIGNED_IDENTITY_NAME": ""})
+        self.assertNotEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertNotIn("verify-tags OK: AKS identity", proc.stdout + proc.stderr)
+
+    def test_explicit_targets_survive_local_secrets_export(self):
+        """A leftover ./secrets-export.sh must not override explicit targets.
+
+        After a setup flow has written the file, running the standalone
+        verifier with another cluster exported must still verify the
+        exported one.
+        """
+        Path(self.state.name, "secrets-export.sh").write_text(
+            "export AKS_CLUSTER_NAME=other-cluster\n"
+            "export AKS_RESOURCE_GROUP=other-rg\n"
+        )
+        proc = self.run_verify({})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("AKS cluster CLUSTER", proc.stdout + proc.stderr)
+        self.assertIn("AKS resource group RG", proc.stdout + proc.stderr)
+        self.assertNotIn("other-cluster", proc.stdout + proc.stderr)
 
 
 class SshIpTest(unittest.TestCase):

@@ -41,24 +41,26 @@ verify_aks_tags ()
     verify_cloud_tags "AKS node pool ${AKS_POOL}" "${POOL_TAGS}"
   done
 
-  # The pod flow runs on the pre-provisioned cluster, whose identity the
-  # vault does not name for every caller.
-  if [ -n "${AKS_USER_ASSIGNED_IDENTITY_NAME:-}" ]; then
-    IDENTITY_TAGS=$(az identity show --name "${AKS_USER_ASSIGNED_IDENTITY_NAME}" \
-      --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
-    verify_cloud_tags "AKS identity ${AKS_USER_ASSIGNED_IDENTITY_NAME}" "${IDENTITY_TAGS}"
-  fi
+  # The identity check cannot be skipped: an untagged identity must fail
+  # the gate, so the caller must name the workload identity.
+  IDENTITY_TAGS=$(az identity show \
+    --name "${AKS_USER_ASSIGNED_IDENTITY_NAME:?must name the workload identity to verify}" \
+    --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
+  verify_cloud_tags "AKS identity ${AKS_USER_ASSIGNED_IDENTITY_NAME}" "${IDENTITY_TAGS}"
 }
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   . $SCRIPT_DIR/../../handle-paths.sh
 
-  if [ -f ./secrets-export.sh ]; then
-    source ./secrets-export.sh
-  fi
-  # The vault is a fallback: loading it would overwrite exported targets.
+  # ./secrets-export.sh and the vault are fallbacks for unset AKS targets:
+  # either would otherwise overwrite explicitly exported values.
   if [ -z "${AKS_CLUSTER_NAME:-}" ] || [ -z "${AKS_RESOURCE_GROUP:-}" ]; then
-    . "$SCRIPT_DIR"/../../secrets_handling/setup-secrets.sh drivers/aks
+    if [ -f ./secrets-export.sh ]; then
+      source ./secrets-export.sh
+    fi
+    if [ -z "${AKS_CLUSTER_NAME:-}" ] || [ -z "${AKS_RESOURCE_GROUP:-}" ]; then
+      . "$SCRIPT_DIR"/../../secrets_handling/setup-secrets.sh drivers/aks
+    fi
   fi
 
   verify_aks_tags
