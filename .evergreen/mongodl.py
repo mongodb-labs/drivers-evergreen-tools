@@ -110,6 +110,11 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     "ubuntu": {
+        # No Ubuntu 26.04 server builds are published yet (only master
+        # nightlies), so 26.04 hosts use the ubuntu2404 binaries, which
+        # run on 26.04. Switch to "ubuntu2604" once supported releases
+        # publish ubuntu2604 archives (DRIVERS-3728).
+        "26.*": "ubuntu2404",
         "24.*": "ubuntu2404",
         "22.*": "ubuntu2204",
         "20.*": "ubuntu2004",

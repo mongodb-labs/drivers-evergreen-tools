@@ -1,8 +1,9 @@
-"""Tests for mongodl signature verification, invoked by test-cli.sh."""
+"""Tests for mongodl, invoked by test-cli.sh."""
 
 import shutil
 import subprocess
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -20,6 +21,54 @@ def _write_archive(directory):
     archive = Path(directory) / "archive.tgz"
     archive.write_bytes(b"an archive body")
     return archive
+
+
+class InferTargetTest(unittest.TestCase):
+    """infer_target_from_os_release maps os-release content to download targets."""
+
+    def _os_release(self, version_id):
+        return textwrap.dedent(
+            f"""\
+            PRETTY_NAME="Ubuntu {version_id} LTS"
+            NAME="Ubuntu"
+            VERSION_ID="{version_id}"
+            VERSION="{version_id} LTS"
+            ID=ubuntu
+            ID_LIKE=debian
+            """
+        )
+
+    def _write_os_release(self, version_id):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        osr = Path(tmp.name) / "os-release"
+        osr.write_text(self._os_release(version_id))
+        return osr
+
+    def test_ubuntu_2604_maps_to_ubuntu2404(self):
+        # GitHub's ubuntu-latest runners are Ubuntu 26.04 (DRIVERS-3728).
+        # No ubuntu2604 server builds are published yet, so 26.04 hosts
+        # must use the ubuntu2404 target.
+        osr = self._write_os_release("26.04")
+        self.assertEqual(mongodl.infer_target_from_os_release(osr), "ubuntu2404")
+
+    def test_ubuntu_2404_maps_to_ubuntu2404(self):
+        # Guards against pattern-order or breadth accidents broadening the
+        # mapping table (e.g. a pattern swallowing an existing version).
+        osr = self._write_os_release("24.04")
+        self.assertEqual(mongodl.infer_target_from_os_release(osr), "ubuntu2404")
+
+    def test_ubuntu_2204_maps_to_ubuntu2204(self):
+        # The Tests workflow matrix dropped its ubuntu-22.04 runner in
+        # favor of 24.04/26.04, so the 22.* path is only covered here.
+        osr = self._write_os_release("22.04")
+        self.assertEqual(mongodl.infer_target_from_os_release(osr), "ubuntu2204")
+
+    def test_ubuntu_unknown_version_raises(self):
+        # Unknown versions must fail fast rather than guess a target.
+        osr = self._write_os_release("99.04")
+        with self.assertRaises(RuntimeError):
+            mongodl.infer_target_from_os_release(osr)
 
 
 @unittest.skipIf(GPG_CANNOT_VERIFY, "amazon2023 hosts cannot verify signatures")
