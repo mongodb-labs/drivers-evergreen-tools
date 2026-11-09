@@ -3,8 +3,7 @@
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-# ensure-binary.sh is sourced below and reassigns SCRIPT_DIR to its own
-# directory; keep this script's directory for the verify module.
+# ensure-binary.sh reassigns SCRIPT_DIR, so keep this directory for the verify module.
 AKS_SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . $SCRIPT_DIR/../../handle-paths.sh
 
@@ -23,11 +22,9 @@ az login
 MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
 MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
-# Delete the partially created resource group when a provisioning step after
-# the group create fails: a leftover partial group blocks re-runs
-# (setup-cluster.sh refuses an existing group) and leaks billable resources.
-# Disarmed once provisioning succeeds; a verification failure leaves the
-# long-lived cluster for manual repair, like the EKS flow.
+# Delete the partially created resource group on provisioning failure: a
+# leftover blocks re-runs and leaks billable resources. Disarmed once
+# provisioning succeeds; a verification failure keeps the cluster for repair.
 group_created=0
 aks_teardown_group ()
 {
@@ -38,8 +35,7 @@ aks_teardown_group ()
 }
 trap aks_teardown_group ERR
 
-# A failed az group list must not pass for a missing group: provisioning
-# over a pre-existing group's name would arm the teardown that deletes it.
+# A failed az group list must not pass for a missing group: the teardown would delete it.
 GROUP_LIST=$(az group list)
 if echo "${GROUP_LIST}" | grep -q "${AKS_RESOURCE_GROUP}"; then
   echo "${AKS_RESOURCE_GROUP} already exists!"
@@ -55,10 +51,8 @@ az aks create -g "${AKS_RESOURCE_GROUP}" -n "${AKS_CLUSTER_NAME}" \
   --generate-ssh-keys \
   --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}"
 
-# az aks create --tags reaches only the cluster resource: the AKS-created
-# node resource group (which holds the billable nodes, the load balancer IP,
-# and the networks) and the node pools backing the VMSS stay untagged; tag
-# both.
+# az aks create --tags reaches only the cluster resource: tag the AKS-created
+# node resource group and node pools too, the billable resources.
 MC_RESOURCE_GROUP="$(az aks show -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}" \
   --query nodeResourceGroup -otsv)"
 az tag create --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
@@ -100,12 +94,10 @@ RESOURCE_SUBSCRIPTION=$(az group show --resource-group $AKS_RESOURCE_GROUP -o ts
 export RESOURCE_SUBSCRIPTION
 az role assignment create --role "Azure Kubernetes Service RBAC Admin" --assignee $AKS_APPLICATION_ID  --scope $RESOURCE_SUBSCRIPTION
 
-# Provisioning is complete: a tag verification failure must not delete the
-# long-lived cluster.
+# Provisioning is complete; a verification failure must not delete the cluster.
 trap - ERR
 
-# Verify the created resources' tags when requested. verify_aks_tags exits
-# the sourcing shell on failure.
+# Verify the created resources' tags when requested.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   . "$AKS_SCRIPT_DIR"/verify-aks-setup.sh
   verify_aks_tags

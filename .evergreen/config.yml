@@ -467,9 +467,8 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
-          # Enforce the DRIVERS-3712 tag policy on the pod flow: aks checks
-          # the cluster, node resource group, node pools, and identity; eks
-          # checks the cluster. gke has no gate yet and ignores the flag.
+          # Tag-policy gate on the pod flow: aks checks cluster, node
+          # resources, and identity; eks the cluster. gke ignores the flag.
           export VERIFY_MONGODB_TAGS=1
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh

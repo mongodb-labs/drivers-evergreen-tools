@@ -110,15 +110,12 @@ def main():
             except Exception as e:
                 print(f"Exception occurred: {e}")
 
-    # Delete orphaned VNets (one per VM). The vnet is
-    # created before its VM, so candidates get a 2-hour grace period from
-    # their created-at tag, and a fresh VM-association check runs before
-    # deletion.
+    # Delete orphaned VNets (one per VM). The vnet is created before its VM,
+    # so candidates get a 2-hour grace and a fresh VM-association check first.
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     orphan_vnet_names = []
     for vnet in nmclient.virtual_networks.list(resource_group_name):
-        # create-vm.sh names every vnet <vmname>-VNET; anything else in the
-        # resource group (e.g. shared infrastructure) is out of scope.
+        # create-vm.sh owns the <vmname>-VNET convention; other vnets are out of scope.
         if not vnet.name.endswith("-VNET"):
             continue
         is_orphan = True

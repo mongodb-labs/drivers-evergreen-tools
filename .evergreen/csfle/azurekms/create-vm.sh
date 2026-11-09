@@ -24,11 +24,9 @@ MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
 
 AZUREKMS_VMNAME="vmname-$AZUREKMS_VMNAME_PREFIX-$RANDOM"
 
-# Delete the VM and the resources created alongside it. Callers persist
-# teardown metadata only after this script returns, so every failure after
-# creation must clean up here. Defined before provisioning so a VM-create
-# failure can call it. The NIC goes first: if the VM was never created, its
-# delete option never fires and the attached NIC blocks the other deletes.
+# Delete the VM and its supporting resources; callers persist teardown
+# metadata only after this script returns, so every failure cleans up here.
+# The NIC goes first: it blocks the other deletes when the VM never existed.
 azurekms_cleanup_vm ()
 {
     echo "Deleting VM ${AZUREKMS_VMNAME} and its supporting resources" 1>&2
@@ -54,9 +52,7 @@ azurekms_tag_resource ()
 }
 
 # az vm create with no existing network implicitly creates an untagged one;
-# create the network explicitly and tag it. Azure subnets cannot carry tags,
-# so the vnet carries them. The created-at tag gives the janitor its grace
-# period: the vnet exists before its VM does.
+# create the vnet explicitly (subnets cannot carry tags) and date it for the janitor.
 if ! az network vnet create \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME-VNET" \
@@ -97,8 +93,7 @@ if ! az vm create \
     exit 1
 fi
 
-# az vm create --tags only reaches the VM itself; tag the implicitly created
-# OS managed disk too. Each lookup and tag is guarded.
+# az vm create --tags only reaches the VM; tag the implicit OS disk too.
 if ! OS_DISK_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -110,8 +105,7 @@ if ! OS_DISK_ID=$(az vm show \
 fi
 azurekms_tag_resource "OS disk" "$OS_DISK_ID"
 
-# az vm create --tags reaches neither the NIC, public IP, nor NSG; tag those
-# too.
+# az vm create --tags reaches neither the NIC, public IP, nor NSG; tag those too.
 if ! NIC_ID=$(az vm show \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     --name "$AZUREKMS_VMNAME" \
@@ -143,10 +137,8 @@ if ! NSG_ID=$(az network nsg show \
 fi
 azurekms_tag_resource "NSG" "$NSG_ID"
 
-# The remaining provisioning steps (resize, auto-shutdown, the IP lookup, and
-# the SSH-rule creation) have no explicit guards; any failure here must still
-# clean up, since callers persist teardown metadata only after this script
-# returns. Disarmed once provisioning succeeds.
+# The unguarded steps below (resize, auto-shutdown, the IP lookup) must still
+# clean up on failure; disarmed once provisioning succeeds.
 trap azurekms_cleanup_vm ERR
 
 # If applicable, set the machine size.
@@ -161,8 +153,7 @@ else
 fi
 az vm auto-shutdown -g $AZUREKMS_RESOURCEGROUP -n $AZUREKMS_VMNAME --time $SHUTDOWN_TIME
 
-# The IP-echo service is external and flaky; retry instead of aborting the
-# provisioning chain with curl's exit 56.
+# The IP-echo service is flaky; retry instead of aborting provisioning.
 EXTERNAL_IP=$("$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl -s http://whatismyip.akamai.com/)
 
 # Add a network security group rule to permit SSH from current IP. This rule is updated with the current IP in "set-ssh-ip.sh" to permit SSH from different Evergreen hosts.
@@ -179,8 +170,7 @@ trap - ERR
 
 echo "Creating a Virtual Machine ($AZUREKMS_VMNAME) ... end"
 
-# Verify tags when requested. verify_cloud_tags exits the
-# sourcing shell, so on failure clean up here before exiting.
+# Verify tags when requested; on failure clean up before exiting.
 if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
   if ! (
     . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh

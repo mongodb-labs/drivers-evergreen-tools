@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 # Tag verification for the drivers AKS setup: the resource group, the
-# cluster, the AKS-created node resource group, every node pool, and the
-# user-assigned identity. Sourced by setup-cluster.sh and setup.sh, and
-# runnable standalone against an existing cluster; exits non-zero naming the
-# first resource lacking mongodb-owner/mongodb-env.
+# cluster, its node resource group, every node pool, and the identity.
+# Exits non-zero naming the first resource lacking mongodb-owner/mongodb-env.
 
 set -eu
 
@@ -23,9 +21,8 @@ verify_aks_tags ()
     --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
   verify_cloud_tags "AKS cluster ${AKS_CLUSTER_NAME}" "${CLUSTER_TAGS}"
 
-  # az aks create --tags reaches only the cluster resource. The node
-  # resource group is created by AKS and holds the billable nodes, the load
-  # balancer IP, and the networks; the node pools back the billable VMSS.
+  # az aks create --tags reaches only the cluster resource: the AKS-created
+  # node resource group and node pools hold the billable resources.
   MC_RESOURCE_GROUP=$(az aks show --name "${AKS_CLUSTER_NAME}" \
     --resource-group "${AKS_RESOURCE_GROUP}" --query nodeResourceGroup --output tsv)
   MC_TAGS=$(az group show --name "${MC_RESOURCE_GROUP}" --query tags --output json)
@@ -41,8 +38,7 @@ verify_aks_tags ()
     verify_cloud_tags "AKS node pool ${AKS_POOL}" "${POOL_TAGS}"
   done
 
-  # The identity check cannot be skipped: an untagged identity must fail
-  # the gate, so the caller must name the workload identity.
+  # The identity check cannot be skipped: the caller must name the identity.
   IDENTITY_TAGS=$(az identity show \
     --name "${AKS_USER_ASSIGNED_IDENTITY_NAME:?must name the workload identity to verify}" \
     --resource-group "${AKS_RESOURCE_GROUP}" --query tags --output json)
@@ -52,8 +48,7 @@ verify_aks_tags ()
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   . $SCRIPT_DIR/../../handle-paths.sh
 
-  # ./secrets-export.sh and the vault are fallbacks for unset AKS targets:
-  # either would otherwise overwrite explicitly exported values.
+  # ./secrets-export.sh and the vault are fallbacks, not overrides.
   if [ -z "${AKS_CLUSTER_NAME:-}" ] || [ -z "${AKS_RESOURCE_GROUP:-}" ]; then
     if [ -f ./secrets-export.sh ]; then
       source ./secrets-export.sh

@@ -19,15 +19,11 @@ retry_with_backoff() {
   command="$*"
   while [[ $attempt -lt $max_attempts ]]; do
     attempt_prompt=$(( attempt + 1 ))
-    # Progress goes to stderr so the helper is safe inside command
-    # substitutions (the wrapped command owns stdout).
+        # Progress goes to stderr; the wrapped command owns stdout.
     echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..." 1>&2
 
-    # Buffer this attempt's stdout and emit it only on success: a failed
-    # attempt may have written a partial response (e.g. curl cut off
-    # mid-transfer), and emitting it would concatenate with the next
-    # attempt's output inside a command substitution. Trailing newlines are
-    # stripped by the capture.
+    # Buffer this attempt's stdout and emit it only on success: a failed attempt's
+    # partial output would concatenate with the next attempt inside a substitution.
     exitCode=0
     attempt_stdout=$("$@") || exitCode=$?
     if [[ $exitCode == 0 ]]; then
