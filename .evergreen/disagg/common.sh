@@ -6,6 +6,9 @@ STATE_DIR="${SCRIPT_DIR}/.slslocal"
 AWS_DIR="${STATE_DIR}/aws"
 TAG_FILE="${STATE_DIR}/dsc-image-tag"
 HOSTS_MARKER="# dsc-evergreen"
+# setup.sh and teardown.sh must run in the same working directory.
+LOGS_FILE="$(pwd)/sls-logs.txt"
+LOGS_PID_FILE="${STATE_DIR}/logs.pid"
 
 fail() {
   echo "ERROR: $*" 1>&2

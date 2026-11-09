@@ -7,7 +7,9 @@
 #   DSC_MONGOD_TAG         mock-data-plane image tag, i.e. server commit (default: slslocal's pinned default).
 #   AWS_*                  Credentials with ECR pull access (from ec2.assume_role).
 #
-# Output: dsc-expansion.yml (in the working directory) containing MONGODB_URI.
+# Output (in the working directory):
+#   dsc-expansion.yml  MONGODB_URI.
+#   sls-logs.txt       The deployment's container logs, streamed until the containers are removed.
 
 set -o errexit
 set -o pipefail
@@ -57,7 +59,18 @@ if [[ -n "${DSC_MONGOD_TAG:-}" ]]; then
   launch_args+=(--mongod-tag "${DSC_MONGOD_TAG}")
 fi
 
-run_slslocal --compose launch "${launch_args[@]}" || fail "slslocal launch failed"
+if ! run_slslocal --compose launch "${launch_args[@]}"; then
+  run_slslocal --compose logs --no-follow --since 1h </dev/null >"${LOGS_FILE}" 2>&1 || true
+  fail "slslocal launch failed"
+fi
+
+# Container logs are removed with the containers, and Evergreen removes containers before running `post`, so teardown.sh
+# cannot collect them. Instead, stream them to the working directory from now until the containers are removed.
+# Following starts with everything since launch. stdin and stdout are redirected so that this command does not wait for
+# the stream to end.
+run_slslocal --compose logs --since 1h </dev/null >"${LOGS_FILE}" 2>&1 &
+echo "$!" >"${LOGS_PID_FILE}"
+
 run_slslocal --compose wait --timeout 10m || fail "cluster did not become healthy within 10 minutes"
 
 # The replica set members advertise names (shardN-nodeM-mongod) that only resolve inside the containers, but their

@@ -10,9 +10,10 @@ registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `py
 
 - [`setup.sh`](setup.sh): pulls the `slslocal` image, launches the deployment (a three-member replica set across
     three cells) and waits for it to become healthy. Writes `dsc-expansion.yml` with `MONGODB_URI` to the working
-    directory.
-- [`teardown.sh`](teardown.sh): writes the deployment's logs to `sls-logs.txt.gz` in the working directory and
-    destroys it. Does nothing if no deployment was started.
+    directory, and streams the deployment's container logs to `sls-logs.txt` there in the background.
+- [`teardown.sh`](teardown.sh): removes the `/etc/hosts` entry, stops the log stream and compresses it to
+    `sls-logs.txt.gz`, and destroys the deployment if it still exists. Run it in the same working directory as
+    `setup.sh`. Does nothing if no deployment was started.
 - [`download-crypt.sh`](download-crypt.sh): downloads `crypt_shared` for client-side encryption tests,
     without starting a server. Writes `crypt-shared-expansion.yml` with `CRYPT_SHARED_LIB_PATH`.
 
@@ -77,7 +78,12 @@ functions:
           - ${DRIVERS_TOOLS}/.evergreen/disagg/teardown.sh
 ```
 
-Include the `"stop dsc"` function in `post` or a `teardown_task` section so the deployment is destroyed and the
-`/etc/hosts` entry removed when the task ends. Upload `src/sls-logs.txt.gz` afterwards to keep the deployment's logs.
+Include the `"stop dsc"` function in `post` or a `teardown_task` section so that the `/etc/hosts` entry is removed
+when the task ends. Upload `src/sls-logs.txt.gz` afterwards to keep the deployment's logs.
+
+Evergreen's process cleanup removes Docker containers, images and networks between the main task commands and `post`
+(or `teardown_task`, unless the task group sets `share_processes: true`). The containers are therefore gone when
+`teardown.sh` runs, and their logs with them. This is why `setup.sh` streams the logs to the working directory while the
+deployment is running, rather than `teardown.sh` collecting them.
 
 Downloading `crypt_shared` for the `latest` version requires AWS credentials (see DRIVERS-3628).
