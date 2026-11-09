@@ -3,7 +3,8 @@
 The live red/green Evergreen runs and the smoke test prove the gates'
 behavior; the live runs cannot catch a missing or disarmed gate, so these
 tests pin gate completeness and wiring structurally, plus the janitor's
-orphan-vnet logic (no CI run exercises it, and it deletes real resources).
+orphan-vnet logic (no CI run exercises it, and it deletes real resources)
+and the IP-echo retry flags against a local HTTP server.
 """
 
 import datetime
@@ -11,8 +12,11 @@ import importlib.util
 import os
 import subprocess
 import sys
+import threading
+import time
 import types
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
@@ -206,7 +210,7 @@ class AzureParseTest(unittest.TestCase):
         and the end-of-setup gate."""
         text = (REPO / ".evergreen/k8s/aks/setup-cluster.sh").read_text()
         self.assertEqual(text.count('--tags "mongodb-owner='), 5)
-        self.assertIn("az tag create", text)
+        self.assertIn("az tag update", text)
         self.assertIn("verify_aks_tags", text)
         self.assertIn("az group list", text)
 
@@ -218,6 +222,120 @@ class AzureParseTest(unittest.TestCase):
         self.assertIn("verify_aks_tags", setup)
         config = (REPO / ".evergreen/config.yml").read_text()
         self.assertIn("export VERIFY_MONGODB_TAGS=1", config)
+
+    def test_ip_echo_curl_fails_fast(self):
+        """The IP-echo curl calls must fail on HTTP errors and hung
+        connections, so retry_with_backoff retries them: bare `curl -s`
+        exits 0 on an HTTP error page and hangs forever without a time
+        limit, feeding garbage into the NSG source prefix."""
+        for relpath in (
+            ".evergreen/csfle/azurekms/create-vm.sh",
+            ".evergreen/csfle/azurekms/set-ssh-ip.sh",
+        ):
+            text = (REPO / relpath).read_text()
+            with self.subTest(script=relpath):
+                lines = [
+                    line
+                    for line in text.splitlines()
+                    if "whatismyip.akamai.com" in line
+                ]
+                self.assertEqual(len(lines), 1, text)
+                for flag in ("--fail", "--max-time"):
+                    self.assertIn(flag, lines[0])
+
+    def test_mc_group_tagging_merges(self):
+        """The AKS-managed MC_ group is tagged with a merge, not a replace:
+        `az tag create` rewrites the resource's whole tag set and would drop
+        any tags AKS puts on the group itself."""
+        readme = (REPO / ".evergreen/k8s/aks/README.md").read_text()
+        setup = (REPO / ".evergreen/k8s/aks/setup-cluster.sh").read_text()
+        for text in (readme, setup):
+            self.assertIn("az tag update", text)
+            self.assertIn("--operation Merge", text)
+        self.assertNotIn("az tag create --resource-id", setup)
+
+
+class RetryCurlTest(unittest.TestCase):
+    """The retry helper's curl flags behave as the IP-echo callers need.
+
+    Runs curl against a local HTTP server, so it needs no network access.
+    """
+
+    SCRIPT = REPO / ".evergreen/retry-with-backoff.sh"
+
+    def setUp(self):
+        server = self
+        self.hits = 0
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                server.hits += 1
+                if server.hang:
+                    time.sleep(server.hang)
+                if server.hits <= server.fail_times:
+                    self.send_response(500)
+                    self.end_headers()
+                    self.wfile.write(b"Service Unavailable")
+                    return
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"192.0.2.1")
+
+            def log_message(self, *args):  # keep the test output clean
+                pass
+
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.fail_times = 0
+        self.hang = 0
+
+    def tearDown(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+    def run_retry(self, attempts, max_time):
+        return subprocess.run(
+            [
+                "bash",
+                str(self.SCRIPT),
+                "curl",
+                "-sS",
+                "--fail",
+                "--max-time",
+                str(max_time),
+                f"http://127.0.0.1:{self.httpd.server_address[1]}/",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env={**os.environ, "ATTEMPTS": str(attempts), "TIMEOUT": "0"},
+            check=False,
+        )
+
+    def test_http_error_is_retried_and_body_returned(self):
+        """A 500 fails the attempt; a later 200 returns the IP body."""
+        self.fail_times = 2
+        result = self.run_retry(attempts=3, max_time=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "192.0.2.1")
+        self.assertEqual(self.hits, 3)
+
+    def test_persistent_http_error_fails(self):
+        """A server that only 500s fails the whole command instead of
+        returning the error page as a successful IP."""
+        self.fail_times = 999
+        result = self.run_retry(attempts=3, max_time=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(self.hits, 3)
+
+    def test_hung_connection_times_out_and_retries(self):
+        """A connection that never responds is cut off by --max-time and
+        retried, rather than hanging the task until Evergreen kills it."""
+        self.hang = 30  # each curl attempt is cut off at max_time
+        result = self.run_retry(attempts=2, max_time=1)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.hits, 2)
 
 
 if __name__ == "__main__":

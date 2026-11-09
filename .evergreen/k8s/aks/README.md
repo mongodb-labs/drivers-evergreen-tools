@@ -37,14 +37,18 @@ tagged, run this once:
 
 ```bash
 MC_RESOURCE_GROUP="$(az aks show -g "${AKS_RESOURCE_GROUP}" -n "${AKS_CLUSTER_NAME}" --query nodeResourceGroup -otsv)"
-az tag create --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
-  --tags "mongodb-owner=client-libraries-managers@mongodb.com" "mongodb-env=dev"
+az tag update --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
+  --operation Merge --tags "mongodb-owner=client-libraries-managers@mongodb.com" "mongodb-env=dev"
 az aks nodepool list -g "${AKS_RESOURCE_GROUP}" --cluster-name "${AKS_CLUSTER_NAME}" --query '[].name' -otsv |
   while read -r pool; do
     az aks nodepool update -g "${AKS_RESOURCE_GROUP}" --cluster-name "${AKS_CLUSTER_NAME}" \
       -n "$pool" --tags "mongodb-owner=client-libraries-managers@mongodb.com" "mongodb-env=dev"
   done
 ```
+
+`az tag update --operation Merge` is used rather than `az tag create`:
+the latter replaces the resource's whole tag set, which would drop any
+tags AKS put on the group.
 
 ## Smoke Test
 

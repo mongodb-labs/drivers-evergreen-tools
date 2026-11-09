@@ -23,7 +23,9 @@ for VARNAME in "${VARLIST[@]}"; do
 done
 
 # The IP-echo service is flaky; retry instead of aborting provisioning.
-EXTERNAL_IP=$("$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl -s http://whatismyip.akamai.com/)
+# --fail and --max-time turn HTTP errors and hung connections into failures
+# the retry helper retries; otherwise a 500 page would become EXTERNAL_IP.
+EXTERNAL_IP=$("$DRIVERS_TOOLS/.evergreen/retry-with-backoff.sh" curl -sS --fail --max-time 30 http://whatismyip.akamai.com/)
 
 echo "Adding current IP ($EXTERNAL_IP) to Azure Virtual Machine ... begin"
 az network nsg rule update \

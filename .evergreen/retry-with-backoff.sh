@@ -23,7 +23,7 @@ retry_with_backoff() {
     echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..." 1>&2
 
     # Buffer this attempt's stdout and emit it only on success: a failed attempt's
-    # partial output would concatenate with the next attempt inside a substitution.
+    # partial output would concatenate with the next attempt's output inside a substitution.
     exitCode=0
     attempt_stdout=$("$@") || exitCode=$?
     if [[ $exitCode == 0 ]]; then

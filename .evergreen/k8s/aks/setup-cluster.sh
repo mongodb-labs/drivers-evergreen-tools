@@ -52,11 +52,12 @@ az aks create -g "${AKS_RESOURCE_GROUP}" -n "${AKS_CLUSTER_NAME}" \
   --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}"
 
 # az aks create --tags reaches only the cluster resource: tag the AKS-created
-# node resource group and node pools too, the billable resources.
+# node resource group and node pools too, the billable resources. Merge the
+# group's tags: az tag create would replace them, dropping any tags AKS set.
 MC_RESOURCE_GROUP="$(az aks show -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}" \
   --query nodeResourceGroup -otsv)"
-az tag create --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
-  --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}" >/dev/null
+az tag update --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
+  --operation Merge --tags "mongodb-owner=${MONGODB_OWNER_TAG}" "mongodb-env=${MONGODB_ENV_TAG}" >/dev/null
 AKS_POOLS_JSON=$(az aks nodepool list -g "${AKS_RESOURCE_GROUP}" \
   --cluster-name "${AKS_CLUSTER_NAME}" --output json)
 # Checked assignment: a for-word jq failure does not trip set -e.
