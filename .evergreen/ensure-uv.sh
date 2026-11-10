@@ -15,6 +15,11 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
+# Absolute workspace root, resolved once at source time: BASH_SOURCE is
+# relative to the sourcing shell's working directory, and ensure_uv may later
+# run from any directory.
+_ensure_uv_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 # _ensure_uv_scope_paths (internal)
 #
 # Keeps uv's shared state out of its default home-directory locations
@@ -63,8 +68,8 @@ _ensure_uv_scope_paths() {
 # requires-python in the root pyproject.toml. Prints nothing and fails if it
 # cannot be determined, so callers fall back to uv's interpreter handling.
 _ensure_uv_min_python() {
-  declare root
-  root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || return 1
+  declare root="${_ensure_uv_root:-}"
+  [ -n "$root" ] || return 1
   # awk-scoped so another table's requires-python key cannot match (the same
   # pattern install-cli.sh uses to read the [project] name).
   awk '
@@ -335,10 +340,14 @@ ensure_uv() {
     if [ -n "$py" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
       floor_py="$py"
     else
-      for candidate in "$current_py" \
-        "$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" \
-        "$(command -v python3 2>/dev/null || true)" \
-        "$(command -v python 2>/dev/null || true)"; do
+      # Newest first, so a prerelease newest does not hide an older toolchain
+      # that is a final release meeting the floor.
+      declare -a candidates=("$current_py")
+      while IFS= read -r candidate; do
+        candidates+=("$candidate")
+      done < <(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr)
+      candidates+=("$(command -v python3 2>/dev/null || true)" "$(command -v python 2>/dev/null || true)")
+      for candidate in "${candidates[@]}"; do
         if [ -n "$candidate" ] && [ -x "$candidate" ] &&
           _ensure_uv_meets_floor "$candidate" "$floor_major" "$floor_minor"; then
           floor_py="$candidate"
