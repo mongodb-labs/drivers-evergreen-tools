@@ -16,7 +16,7 @@ for the CI that runs it.
 ## Repo layout
 
 - Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
-  `pyproject.toml` (uv workspace root + shared `[dependency-groups]`), and `uv.lock`
+  `pyproject.toml` (uv workspace root + shared `[dependency-groups]` + the `requires-python` floor), and `uv.lock`
   (the single lockfile for the workspace members, fully managed by Dependabot. The
   one remaining per-feature `requirements.txt` is deployed with the inactive Azure
   Functions app, so not covered by Dependabot).
@@ -41,7 +41,9 @@ for the CI that runs it.
 - `.evergreen/ensure-uv.sh` (`ensure_uv`): installs or locates `uv`. In CI it scopes uv's
   cache, tool, and Python install dirs under the task's temp directory; outside CI it
   only redirects the tool dir, so a local `uv tool install --force` can't overwrite
-  globally installed tools, and the cache stays shared to avoid re-downloading.
+  globally installed tools, and the cache stays shared to avoid re-downloading. It also
+  steers uv to reuse a floor-qualifying host interpreter (the toolchain ones included),
+  bootstrapping a uv-managed interpreter only when none qualifies.
 - `uv` runs most Python scripts (`uv run`) and manages CLI installs, but not all:
   some scripts (`.evergreen/clean.sh`) call `python3` directly. Check
   the script before assuming uv isolation.
