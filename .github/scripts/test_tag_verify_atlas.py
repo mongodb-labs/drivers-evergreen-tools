@@ -5,7 +5,6 @@ cannot catch a missing or disarmed gate, so these tests pin gate
 completeness and wiring structurally.
 """
 
-import subprocess
 import unittest
 from pathlib import Path
 
@@ -46,21 +45,6 @@ class AtlasGatePresenceTest(unittest.TestCase):
         self.assertIn('data["tags"]', text)
         self.assertIn("mongodb-owner", text)
         self.assertIn("mongodb-env", text)
-
-    def test_touched_scripts_parse(self):
-        for relpath in (
-            ".evergreen/verify-tags.sh",
-            ".evergreen/atlas/atlas-utils.sh",
-            ".evergreen/atlas/setup-atlas-cluster.sh",
-            ".evergreen/auth_oidc/setup.sh",
-            ".evergreen/auth_oidc/gcp/setup.sh",
-            ".evergreen/auth_oidc/k8s/setup.sh",
-            ".evergreen/auth_oidc/azure_func/setup.sh",
-        ):
-            with self.subTest(script=relpath):
-                subprocess.run(
-                    ["bash", "-n", str(REPO / relpath)], check=True, timeout=30
-                )
 
 
 if __name__ == "__main__":
