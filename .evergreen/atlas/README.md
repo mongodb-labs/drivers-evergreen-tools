@@ -7,6 +7,10 @@ The scripts in this folder are used to setup and teardown Atlas clusters.
 See [Secrets Handling](../secrets_handling/README.md) for details on how to access the secrets
 from the `drivers/atlas-qa`, `drivers/atlas-dev` or `drivers/atlas` vault.
 
+Per MongoDB's cloud resource tag policy, the created deployments (clusters and serverless
+instances) are tagged with `mongodb-owner=client-libraries-managers@mongodb.com` and
+`mongodb-env=dev`. Override the tag values with `MONGODB_OWNER_TAG` and `MONGODB_ENV_TAG`.
+
 ## Usage
 
 It is recommended that you use the cluster's task group to ensure the cluster is shut down properly.

@@ -106,4 +106,7 @@ export MONGODB_URI="$URI"
 export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authMechanismProperties=ENVIRONMENT:k8s&authSource=%24external"
 EOF
 
+# Verify the deployment's tags when requested (DRIVERS-3712).
+verify_deployment_tags
+
 popd

@@ -27,6 +27,23 @@ create_deployment ()
 
   ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
   TYPE=${DEPLOYMENT_TYPE:-"clusters"}
+
+  # Tag the deployment per the MongoDB Cloud Tag Policy (DRIVERS-3712).
+  # Must be local: handle-paths.sh leaves allexport on, so plain assignments
+  # leak into child processes and break GCP label creation.
+  local MONGODB_OWNER_TAG="${MONGODB_OWNER_TAG:-client-libraries-managers@mongodb.com}"
+  local MONGODB_ENV_TAG="${MONGODB_ENV_TAG:-dev}"
+  ensure_uv || exit 1
+  DEPLOYMENT_DATA=$(uv run --no-project python -c '
+import json, sys
+data = json.loads(sys.argv[1])
+data["tags"] = [
+    {"key": "mongodb-owner", "value": sys.argv[2]},
+    {"key": "mongodb-env", "value": sys.argv[3]},
+]
+print(json.dumps(data))
+' "$DEPLOYMENT_DATA" "$MONGODB_OWNER_TAG" "$MONGODB_ENV_TAG")
+
   echo "Creating new Atlas Deployment in Group $ATLAS_GROUP_ID..." 1>&2
   echo "Using Atlas base url: $ATLAS_BASE_URL" 1>&2
   RESP=$(curl -sS -L \
@@ -101,4 +118,23 @@ check_deployment ()
     echo $SRV_ADDRESS
   fi
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
+}
+
+# Verify the deployment's tags when requested (DRIVERS-3712). Fetches the
+# deployment from the Atlas API and checks its tags array; requires
+# ATLAS_PUBLIC_API_KEY, ATLAS_PRIVATE_API_KEY, ATLAS_GROUP_ID, and
+# DEPLOYMENT_NAME. verify-tags.sh resolves from this checkout rather than the
+# ambient DRIVERS_TOOLS, and exits the shell on failure.
+verify_deployment_tags ()
+{
+  if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+    local UTILS_DIR
+    UTILS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
+    . "$UTILS_DIR/../verify-tags.sh"
+    verify_atlas_tags "Atlas deployment ${DEPLOYMENT_NAME}" \
+      "$(curl -sS \
+        --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+        "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE:-clusters}/${DEPLOYMENT_NAME}")" "tags"
+  fi
 }
