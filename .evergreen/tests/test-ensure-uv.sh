@@ -77,7 +77,7 @@ reset_env() {
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
   py_user_base="$(to_py_path "$user_base")"
   export PYTHONUSERBASE="$py_user_base"
-  unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
+  unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV UV_PYTHON
   # A failing uv stub forces an install while keeping co-located tools visible.
   local stub_dir="$WORK/stub"
   mkdir -p "$stub_dir"
@@ -190,7 +190,10 @@ make_prerelease_py() { # path
 }
 
 make_recording_stub() {
-  STUB_LOG="$WORK/stub-log"
+  # Exported for the stub, which runs as a child process. Truncated here so
+  # each case's assertions read only that case's calls.
+  export STUB_LOG="$WORK/stub-log"
+  : >"$STUB_LOG"
   cat >"$WORK/stub/uv" <<'EOF'
 #!/usr/bin/env bash
 {
@@ -276,6 +279,9 @@ test_fallback_to_managed() { # fake_path floor_ok label
     fi
     local fake_dir
     fake_dir="$(dirname "$1")"
+    # Shadow both interpreter names: ensure_uv probes python3, then python,
+    # and a host qualifying through the other name would mask the fallback.
+    cp "$1" "$fake_dir/python"
     export PATH="$fake_dir:$PATH"
     # shellcheck source=../ensure-uv.sh
     . "$ENSURE_UV"
@@ -303,10 +309,9 @@ test_root_survives_cd() {
     . ../ensure-uv.sh
     cd "$WORK"
     ensure_uv
-    local pinned
-    # The last line: earlier ones precede the pin, from the version checks.
-    pinned="$(sed -n 's/^uv-python=//p' "$STUB_LOG" | tail -n1)"
-    [ -n "$pinned" ] || { echo "expected the floor to parse after the directory change" >&2; return 1; }
+    # Assert the environment: the stub only logs when uv runs, and nothing
+    # runs uv after the bootstrap, so a log read cannot see the pin.
+    [ -n "${UV_PYTHON:-}" ] || { echo "expected the floor to parse and pin after the directory change" >&2; return 1; }
   )
   echo "Testing ensure_uv after changing directories ... done."
 }
