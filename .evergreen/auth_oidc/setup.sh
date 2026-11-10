@@ -103,6 +103,16 @@ export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authSource=%24extern
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF
+
+  # Verify the deployment's tags when requested (DRIVERS-3712).
+  if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+    ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
+    . "$DRIVERS_TOOLS"/.evergreen/verify-tags.sh
+    verify_atlas_tags "Atlas deployment ${DEPLOYMENT_NAME}" \
+      "$(curl -sS \
+        --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+        "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/clusters/${DEPLOYMENT_NAME}")" "tags"
+  fi
 fi
 
 popd
