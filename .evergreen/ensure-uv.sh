@@ -57,6 +57,72 @@ _ensure_uv_scope_paths() {
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
 }
 
+# _ensure_uv_min_python (internal)
+#
+# Print the workspace's minimum supported CPython version (e.g. "3.11") from
+# requires-python in the root pyproject.toml. Prints nothing and fails if it
+# cannot be determined, so callers fall back to uv's interpreter handling.
+_ensure_uv_min_python() {
+  declare root
+  root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || return 1
+  # awk-scoped so another table's requires-python key cannot match (the same
+  # pattern install-cli.sh uses to read the [project] name).
+  awk '
+    /^[[:space:]]*\[/ {
+      in_project = ($0 ~ /^\[[[:space:]]*project[[:space:]]*\][[:space:]]*$/)
+    }
+    in_project && $0 ~ /^[[:space:]]*requires-python[[:space:]]*=/ {
+      if (match($0, /[0-9]+\.[0-9]+/)) {
+        print substr($0, RSTART, RLENGTH)
+        exit
+      }
+    }
+  ' "$root/pyproject.toml" 2>/dev/null
+}
+
+# _ensure_uv_meets_floor (internal)
+#
+# Succeed if interpreter $1 is a final CPython release of at least $2.$3
+# (the workspace floor). Pre-release interpreters never qualify, so a
+# toolchain shipping one is not selected for reuse. Prints nothing.
+_ensure_uv_meets_floor() {
+  declare py="${1:?}" major="${2:?}" minor="${3:?}"
+  "$py" -c "import sys; sys.exit(0 if sys.version_info >= ($major, $minor) and sys.version_info.releaselevel == 'final' else 1)" >/dev/null 2>&1
+}
+
+# _ensure_uv_floor_bootstrap (internal)
+#
+# Make later uv invocations reuse a host interpreter that satisfies the
+# workspace floor, and bootstrap a uv-managed interpreter only when none
+# qualifies. Called on both of ensure_uv's success paths. A no-op when no
+# floor was parsed (empty $1).
+_ensure_uv_floor_bootstrap() {
+  declare major="${1:-}" minor="${2:-}" floor_py="${3:-}"
+  [ -n "$major" ] || return 0
+
+  if [ -n "$floor_py" ]; then
+    # A qualifying host interpreter exists, so prefer system interpreters over
+    # uv-managed ones. When no system install satisfies requires-python, uv
+    # downloads a managed interpreter. With the PATH entry below, a qualifying
+    # host interpreter (the toolchain ones included) is reused instead of
+    # re-downloaded on every task.
+    export UV_PYTHON_PREFERENCE="${UV_PYTHON_PREFERENCE:-system}"
+
+    # Put the qualifying interpreter on PATH so uv's system discovery finds
+    # it. Toolchain locations like /opt/python/Current/bin are neither on
+    # PATH by default nor standard discovery locations. A /cygdrive/... PATH
+    # entry is fine (only uv arguments need native Windows paths).
+    _ensure_uv_add_path "$(dirname "$floor_py")"
+    return 0
+  fi
+
+  # No host interpreter qualifies, so install a uv-managed one and leave uv
+  # at its default managed preference. Preferring system here would steer uv
+  # back to the undersized host interpreter.
+  echo "No host interpreter satisfies the workspace floor (CPython >= $major.$minor). Installing a uv-managed interpreter..." >&2
+  uv python install "$major.$minor" || true
+}
+
 # _ensure_uv_add_path (internal)
 #
 # Prepend $1 to PATH unless it is already there, which keeps repeated ensure_uv
@@ -182,10 +248,16 @@ _ensure_uv_install() {
 # - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
+# - UV_PYTHON_PREFERENCE (when the workspace floor is known)
 #
 # Looks everywhere uv may already be, and only then hands off to
 # _ensure_uv_install, which tries the active venv, then `pip install --user`,
 # then a fallback venv.
+#
+# On success, also steers uv's interpreter discovery. A final-release host
+# interpreter satisfying the workspace floor (the root pyproject.toml's
+# requires-python) is preferred, and a uv-managed interpreter is installed
+# only when none qualifies. See _ensure_uv_floor_bootstrap.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -209,12 +281,24 @@ ensure_uv() {
   # Use the active venv's interpreter so uv installs into it; see the in-venv
   # branch of _ensure_uv_install. Otherwise prefer the toolchain interpreters
   # over the system python3, which can be old (rhel82-arm64: 3.6) or absent.
-  declare py="" current_py toolchain_py
+  declare py="" current_py="" toolchain_py="" candidate=""
+  # The workspace's Python floor (e.g. "3.11") from the root pyproject.toml's
+  # requires-python. Fails soft, falling back to uv's own interpreter
+  # handling when it cannot be parsed.
+  declare floor="" floor_major="" floor_minor="" floor_py=""
+  floor="$(_ensure_uv_min_python || true)"
+  if [ -n "$floor" ]; then
+    floor_major="${floor%%.*}"
+    floor_minor="${floor#*.}"
+  fi
   if [ -n "${VIRTUAL_ENV:-}" ]; then
     if [ -x "$VIRTUAL_ENV/bin/python" ]; then
       py="$VIRTUAL_ENV/bin/python"
     elif [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
       py="$VIRTUAL_ENV/Scripts/python.exe"
+    fi
+    if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+      floor_py="$py"
     fi
   fi
   if [ -z "$py" ]; then
@@ -226,15 +310,41 @@ ensure_uv() {
     if [ -x "$current_py" ] &&
       "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
       py="$current_py"
+      if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+        floor_py="$py"
+      fi
     else
       toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
       if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
         py="$toolchain_py"
+        if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+          floor_py="$py"
+        fi
       elif command -v python3 >/dev/null 2>&1; then
         py="$(command -v python3)"
       elif command -v python >/dev/null 2>&1; then
         py="$(command -v python)"
       fi
+    fi
+  fi
+
+  # Prefer a floor-qualifying interpreter for uv's own discovery even when
+  # the bootstrap pick above settled for an older one (e.g. current_py is
+  # 3.10 while the toolchain has 3.13).
+  if [ -n "$floor" ] && [ -z "$floor_py" ]; then
+    if [ -n "$py" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+      floor_py="$py"
+    else
+      for candidate in "$current_py" \
+        "$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" \
+        "$(command -v python3 2>/dev/null || true)" \
+        "$(command -v python 2>/dev/null || true)"; do
+        if [ -n "$candidate" ] && [ -x "$candidate" ] &&
+          _ensure_uv_meets_floor "$candidate" "$floor_major" "$floor_minor"; then
+          floor_py="$candidate"
+          break
+        fi
+      done
     fi
   fi
 
@@ -249,6 +359,7 @@ ensure_uv() {
 
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_floor_bootstrap "$floor_major" "$floor_minor" "$floor_py"
     return 0
   fi
 
@@ -267,6 +378,7 @@ ensure_uv() {
   hash -r
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_floor_bootstrap "$floor_major" "$floor_minor" "$floor_py"
     return 0
   fi
 
