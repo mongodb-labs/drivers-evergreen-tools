@@ -101,18 +101,14 @@ _ensure_uv_floor_bootstrap() {
   [ -n "$major" ] || return 0
 
   if [ -n "$floor_py" ]; then
-    # A qualifying host interpreter exists, so prefer system interpreters over
-    # uv-managed ones. When no system install satisfies requires-python, uv
-    # downloads a managed interpreter. With the PATH entry below, a qualifying
-    # host interpreter (the toolchain ones included) is reused instead of
-    # re-downloaded on every task.
-    export UV_PYTHON_PREFERENCE="${UV_PYTHON_PREFERENCE:-system}"
-
-    # Put the qualifying interpreter on PATH so uv's system discovery finds
-    # it. Toolchain locations like /opt/python/Current/bin are neither on
-    # PATH by default nor standard discovery locations. A /cygdrive/... PATH
-    # entry is fine (only uv arguments need native Windows paths).
-    _ensure_uv_add_path "$(dirname "$floor_py")"
+    # Pin uv to the qualifying interpreter: discovery can settle below the
+    # floor (tool installs included), and a PATH entry would shadow an
+    # active venv. A pre-set UV_PYTHON wins.
+    if [ "${OSTYPE:-}" = cygwin ]; then
+      # uv wants native Windows paths; see _ensure_uv_scope_paths.
+      floor_py="$(cygpath -m "$floor_py")"
+    fi
+    export UV_PYTHON="${UV_PYTHON:-$floor_py}"
     return 0
   fi
 
@@ -248,16 +244,15 @@ _ensure_uv_install() {
 # - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
-# - UV_PYTHON_PREFERENCE (when the workspace floor is known)
+# - UV_PYTHON (when the workspace floor is known and a qualifying interpreter exists)
 #
 # Looks everywhere uv may already be, and only then hands off to
 # _ensure_uv_install, which tries the active venv, then `pip install --user`,
 # then a fallback venv.
 #
-# On success, also steers uv's interpreter discovery. A final-release host
-# interpreter satisfying the workspace floor (the root pyproject.toml's
-# requires-python) is preferred, and a uv-managed interpreter is installed
-# only when none qualifies. See _ensure_uv_floor_bootstrap.
+# On success, also pins uv's interpreter to a floor-qualifying host
+# interpreter, or installs a uv-managed one when none qualifies. See
+# _ensure_uv_floor_bootstrap.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -278,10 +273,21 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
-  # Use the active venv's interpreter so uv installs into it; see the in-venv
-  # branch of _ensure_uv_install. Otherwise prefer the toolchain interpreters
-  # over the system python3, which can be old (rhel82-arm64: 3.6) or absent.
   declare py="" current_py="" toolchain_py="" candidate=""
+  # The platform-specific "Current" path, set even when a venv is active:
+  # the venv may sit below the floor while Current does not, and only the
+  # fallback loop looks there.
+  case "${OSTYPE:-}" in
+  cygwin) current_py="C:/python/Current/python.exe" ;;
+  darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
+  *) current_py="/opt/python/Current/bin/python3" ;;
+  esac
+
+  # Use the active venv's interpreter so uv installs into it; see the in-venv
+  # branch of _ensure_uv_install. Otherwise prefer the Current and toolchain
+  # interpreters over the system python3, which can be old (rhel82-arm64: 3.6)
+  # or absent.
+  #
   # The workspace's Python floor (e.g. "3.11") from the root pyproject.toml's
   # requires-python. Fails soft, falling back to uv's own interpreter
   # handling when it cannot be parsed.
@@ -302,11 +308,6 @@ ensure_uv() {
     fi
   fi
   if [ -z "$py" ]; then
-    case "${OSTYPE:-}" in
-    cygwin) current_py="C:/python/Current/python.exe" ;;
-    darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
-    *) current_py="/opt/python/Current/bin/python3" ;;
-    esac
     if [ -x "$current_py" ] &&
       "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
       py="$current_py"
@@ -328,9 +329,8 @@ ensure_uv() {
     fi
   fi
 
-  # Prefer a floor-qualifying interpreter for uv's own discovery even when
-  # the bootstrap pick above settled for an older one (e.g. current_py is
-  # 3.10 while the toolchain has 3.13).
+  # Find a pin target even when the bootstrap pick settled for an older
+  # interpreter (current_py 3.10, toolchain 3.13).
   if [ -n "$floor" ] && [ -z "$floor_py" ]; then
     if [ -n "$py" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
       floor_py="$py"
