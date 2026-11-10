@@ -2,10 +2,7 @@
 
 The live red/green Evergreen runs prove the gates' behavior; the live runs
 cannot catch a missing or disarmed gate, so these tests pin gate
-completeness and wiring structurally: every Atlas-consuming setup gates on
-VERIFY_MONGODB_TAGS, the cluster-and-serverless endpoints fetch with
-${DEPLOYMENT_TYPE}, create_deployment injects the tags, and this PR's
-touched scripts parse.
+completeness and wiring structurally.
 """
 
 import subprocess
@@ -34,9 +31,8 @@ class AtlasGatePresenceTest(unittest.TestCase):
                 self.assertIn("verify_atlas_tags", text)
 
     def test_endpoints_use_deployment_type(self):
-        # These two serve clusters and serverless instances alike; the other
-        # gated scripts only create cluster-type deployments, so they hardcode
-        # "clusters" in the endpoint.
+        # These two also serve serverless instances; the rest only create
+        # clusters.
         for relpath in (
             ".evergreen/atlas/setup-atlas-cluster.sh",
             ".evergreen/auth_oidc/azure_func/setup.sh",
