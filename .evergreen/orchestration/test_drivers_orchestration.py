@@ -271,17 +271,11 @@ class TestVersionFromMongodOutput(unittest.TestCase):
 
 
 class TestMongodbRunnerHost(unittest.TestCase):
-    def test_runner_config_pins_host_to_ipv4_loopback(self):
-        """The config handed to mongodb-runner must pin the IPv4 loopback.
+    def start_and_capture(self, data, topology):
+        """Run start_mongodb_runner against a fake runner process.
 
-        mongodb-runner 8.4.6 gives every server -- including config servers --
-        the configured host (the 8.4.3 releases ignored it for config
-        servers). A mongos builds --configdb from the config server's member
-        host and pins the first address that name resolves to; with
-        "localhost" that is ::1, which a config server without bind_ip does
-        not listen on, so the mongos never opens its own listener and
-        `mongodb-runner start` never returns (DRIVERS-3673 patch build
-        6aeba4170569900007601158).
+        Returns the config handed to the runner and the URI it rendered, so
+        tests assert on the real hand-off point.
         """
         with tempfile.TemporaryDirectory() as tmp:
             captured = {}
@@ -299,8 +293,13 @@ class TestMongodbRunnerHost(unittest.TestCase):
                 config = json.loads((Path(tmp) / "config.json").read_text())
                 captured["config"] = config
                 cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+                # The runner derives every advertised host from config["host"],
+                # so render the fake output from it too: the URI assertions
+                # then verify the configured host's pass-through.
                 cluster_file.write_text(
-                    json.dumps({"connectionString": "mongodb://127.0.0.1:27017/"})
+                    json.dumps(
+                        {"connectionString": f"mongodb://{config['host']}:27017/"}
+                    )
                 )
                 return FakeProc()
 
@@ -308,7 +307,7 @@ class TestMongodbRunnerHost(unittest.TestCase):
                 mongo_orchestration_home=tmp,
                 mongodb_binaries=tmp,
                 version="8.0",
-                topology="standalone",
+                topology=topology,
                 auth=False,
             )
             with unittest.mock.patch.object(
@@ -316,10 +315,41 @@ class TestMongodbRunnerHost(unittest.TestCase):
             ), unittest.mock.patch.object(
                 mongodb_runner.subprocess, "Popen", side_effect=fake_popen
             ), unittest.mock.patch.object(mongodb_runner, "TMPDIR", Path(tmp)):
-                uri = mongodb_runner.start_mongodb_runner(opts, {})
+                uri = mongodb_runner.start_mongodb_runner(opts, data)
+            return captured["config"], uri
 
-            self.assertEqual(captured["config"]["host"], "127.0.0.1")
-            self.assertEqual(uri, "mongodb://127.0.0.1:27017/")
+    def test_runner_config_advertises_localhost(self):
+        """Non-sharded deployments must advertise localhost, not 127.0.0.1.
+
+        Driver SDAM and DNS seedlist tests assume the loopback name.
+        """
+        config, uri = self.start_and_capture({}, "standalone")
+        self.assertEqual(config["host"], "localhost")
+        self.assertEqual(uri, "mongodb://localhost:27017/")
+
+    def test_runner_config_pins_config_server_to_ipv4_loopback(self):
+        """Only the config server shard may pin 127.0.0.1.
+
+        Since 8.4.5 the runner applies host to the config server too: a
+        mongos pins the first address "localhost" resolves to (::1 here),
+        which an IPv4-only config server does not listen on, so start hangs
+        (DRIVERS-3720). The per-shard override restores the carve-out.
+        """
+        data = {
+            "shards": [
+                {
+                    "shardParams": {
+                        "members": [{"procParams": {"shardsvr": True, "port": 27217}}]
+                    }
+                }
+            ],
+            "routers": [{"port": 27017}],
+        }
+        config, _ = self.start_and_capture(data, "sharded_cluster")
+        self.assertEqual(config["topology"], "sharded")
+        self.assertEqual(config["host"], "localhost")
+        self.assertEqual(config["shards"][0]["host"], "127.0.0.1")
+        self.assertNotIn("host", config["shards"][1])
 
 
 if __name__ == "__main__":

@@ -243,14 +243,14 @@ def start_mongodb_runner(opts, data):
     config = _get_cluster_options(data, opts)
     config["runnerDir"] = config["tmpDir"]
     config["logDir"] = _normalize_path(mo_home / "logs")
-    # The IPv4 loopback, never a name: the runner applies the configured host to
-    # every server since 8.4.6 (8.4.3 ignored it for config servers). A mongos
-    # builds --configdb from the config server's member host and pins the first
-    # address that name resolves to -- with "localhost" that is ::1, which a
-    # config server without bind_ip does not listen on, so the mongos never
-    # opens its own listener and 'mongodb-runner start' never returns
-    # (DRIVERS-3673).
-    config["host"] = "127.0.0.1"
+    config["host"] = "localhost"
+    if config["topology"] == "sharded":
+        # Since 8.4.5 the runner applies host to the config server too: a
+        # mongos pins the first address "localhost" resolves to (::1 here),
+        # which an IPv4-only config server does not listen on, so start
+        # hangs (DRIVERS-3720). Shard 0 is always the config server; drop
+        # the pin once fixed upstream.
+        config["shards"][0]["host"] = "127.0.0.1"
     # Write the config file.
     config_file = mo_home / "config.json"
     config_file.write_text(json.dumps(config, indent=2))
