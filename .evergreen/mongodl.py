@@ -110,6 +110,10 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     "ubuntu": {
+        # Newer releases (9.0.4 and later) publish ubuntu2604 archives, but
+        # older versions never will, and mongodl must download any version.
+        # Version-aware target selection: DRIVERS-3731.
+        "26.*": "ubuntu2404",
         "24.*": "ubuntu2404",
         "22.*": "ubuntu2204",
         "20.*": "ubuntu2004",

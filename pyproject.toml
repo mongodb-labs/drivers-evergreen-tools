@@ -72,8 +72,6 @@ azurekms = [
 ]
 
 [tool.uv]
-exclude-newer = "1 week"
-
 # Fail fast rather than building pydantic-core from source when no wheel
 # exists for the interpreter (DRIVERS-3649).
 no-build-package = ["pydantic-core"]

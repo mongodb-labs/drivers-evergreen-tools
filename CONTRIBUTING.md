@@ -37,38 +37,31 @@ The only remaining individual `requirements.txt` is deployed with the Azure
 Functions app, which requires the file; it is not managed by the workspace
 (see: [DRIVERS-3564](https://jira.mongodb.org/browse/DRIVERS-3564)).
 
-The weekly "uv Lock Update" workflow runs `uv lock --upgrade` and opens a single
-pull request that updates `uv.lock`. Dependabot handles Python security updates,
-plus version updates for everything else: GitHub Actions, the Go modules
+Dependabot fully manages the top-level `uv.lock`: one grouped pull request
+each week updates all Python dependencies, direct and transitive, and each
+security update opens its own immediate pull request. The 7-day cooldown in
+[`.github/dependabot.yml`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml)
+skips releases younger than one week for version updates; security updates
+are not delayed. Dependabot also covers GitHub Actions, the Go modules
 (`mongoproxy`, `perfcomp`), and the `github_app` and `mongodb-runner` npm
-projects, each as one grouped pull request. Dependabot does not group
-security updates, so each uv security update opens its own pull request; see
-[`.github/dependabot.yml`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.github/dependabot.yml).
-The Azure Functions `requirements.txt` is the one manifest not covered: the
-function has expired and its test is disabled (see
-[`.evergreen/auth_oidc/azure_func/README.md`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/auth_oidc/azure_func/README.md)).
-If the app becomes active again, add a `pip` ecosystem entry for
-`.evergreen/auth_oidc/azure_func/self-test` to Dependabot.
-Both Dependabot's security updates and the weekly lock update ignore releases
-younger than one week (`exclude-newer = "1 week"` in `pyproject.toml`), so an
-urgent vulnerability patch can take up to a week to land. For an urgent update,
-exempt the package until its release is at least a week old:
+projects, one grouped pull request each. The one manifest not covered is the
+Azure Functions `requirements.txt`: the function is expired and its test
+disabled (see
+[`.evergreen/auth_oidc/azure_func/README.md`](https://github.com/mongodb-labs/drivers-evergreen-tools/blob/master/.evergreen/auth_oidc/azure_func/README.md));
+if the app becomes active again, add a `pip` entry for
+`.evergreen/auth_oidc/azure_func/self-test`.
 
-```toml
-[tool.uv.exclude-newer-package]
-# `false` lifts the cutoff; an RFC 3339 timestamp also works.
-idna = false
-```
-
-The exemption lives in `pyproject.toml`, which both Dependabot and the weekly
-workflow read, so the next weekly run cannot downgrade the pin. A one-off
-`uv lock --upgrade --exclude-newer-package 'idna=false'` works too, but the
-next weekly run drops it while the release is still young
-([example](https://github.com/mongodb/mongo-cxx-driver/pull/1723)). Dependabot
-has no equivalent option and cannot resolve versions beyond the cutoff
-([dependabot-core#14156](https://github.com/dependabot/dependabot-core/issues/14156));
-[DRIVERS-3711](https://jira.mongodb.org/browse/DRIVERS-3711) tracks the fix in
-the lock update action.
+Never set `exclude-newer` under `[tool.uv]`: Dependabot resolves with it and
+produces pull requests that remove or downgrade packages
+([dependabot-core#14156](https://github.com/dependabot/dependabot-core/issues/14156)).
+To pull a routine update forward past the cooldown, list the package under
+the cooldown's `exclude` key until its release is old enough. Set
+`[tool.uv] required-version` only when a needed uv feature requires it, and
+keep it satisfiable by the uv version
+[Dependabot ships](https://github.com/dependabot/dependabot-core/blob/main/uv/Dockerfile),
+which cannot update the lockfile if older than the pin.
+`.evergreen/install-cli.sh` pins the installed uv CLI to the same minor
+series.
 
 If a [recent release](https://pymongo.readthedocs.io/en/stable/changelog.html) of PyMongo drops support for an old
 server version that is still in use by downstream projects, add a dependency override to
