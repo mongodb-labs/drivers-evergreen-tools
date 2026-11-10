@@ -25,6 +25,11 @@ The URN may be passed as `AZUREKMS_IMAGE`.
 
 If you need a larger Azure VM, set `AZUREKMS_MACHINESIZE` to a larger [size](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview).
 
+The created VM and its supporting resources (OS disk, NIC, public IP, NSG) are
+tagged `mongodb-owner=client-libraries-managers@mongodb.com`, `mongodb-env=dev`.
+Override with `MONGODB_OWNER_TAG`/`MONGODB_ENV_TAG`. Set `VERIFY_MONGODB_TAGS=1`
+to verify after creation.
+
 # Usage with AWS Vault
 
 See [Secrets Handling](../../secrets_handling/README.md) for details on how to access the secrets
