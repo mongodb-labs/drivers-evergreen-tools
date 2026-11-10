@@ -119,3 +119,22 @@ check_deployment ()
   fi
   echo "Waiting for Deployment $DEPLOYMENT_NAME in Group $ATLAS_GROUP_ID... done." 1>&2
 }
+
+# Verify the deployment's tags when requested (DRIVERS-3712). Fetches the
+# deployment from the Atlas API and checks its tags array; requires
+# ATLAS_PUBLIC_API_KEY, ATLAS_PRIVATE_API_KEY, ATLAS_GROUP_ID, and
+# DEPLOYMENT_NAME. verify-tags.sh resolves from this checkout rather than the
+# ambient DRIVERS_TOOLS, and exits the shell on failure.
+verify_deployment_tags ()
+{
+  if [ -n "${VERIFY_MONGODB_TAGS:-}" ]; then
+    local UTILS_DIR
+    UTILS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    ATLAS_BASE_URL=${ATLAS_BASE_URL:-"https://account-dev.mongodb.com/api/atlas/v1.0"}
+    . "$UTILS_DIR/../verify-tags.sh"
+    verify_atlas_tags "Atlas deployment ${DEPLOYMENT_NAME}" \
+      "$(curl -sS \
+        --digest -u "${ATLAS_PUBLIC_API_KEY}:${ATLAS_PRIVATE_API_KEY}" \
+        "${ATLAS_BASE_URL}/groups/${ATLAS_GROUP_ID}/${DEPLOYMENT_TYPE:-clusters}/${DEPLOYMENT_NAME}")" "tags"
+  fi
+}
