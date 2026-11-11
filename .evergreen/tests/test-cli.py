@@ -229,6 +229,7 @@ class RefreshFullJsonRetryTest(unittest.TestCase):
 
     def tearDown(self):
         mongodl.time.sleep = self.saved_sleep
+        self.cache.db._db.close()  # Windows cannot delete an open data.db file
         self.tmp.cleanup()
 
     def _fail_times(self, failures):
