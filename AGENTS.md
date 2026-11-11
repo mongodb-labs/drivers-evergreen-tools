@@ -16,7 +16,7 @@ for the CI that runs it.
 ## Repo layout
 
 - Root: `Makefile`, `CONTRIBUTING.md`, `README.md`, `ruff.toml`, `.pre-commit-config.yaml`,
-  `pyproject.toml` (uv workspace root + shared `[dependency-groups]` + the `requires-python` floor), and `uv.lock`
+  `pyproject.toml` (uv workspace root + shared `[dependency-groups]` + the `requires-python` range: EOL-based floor, newest-stable-plus-one ceiling), and `uv.lock`
   (the single lockfile for the workspace members, fully managed by Dependabot. The
   one remaining per-feature `requirements.txt` is deployed with the inactive Azure
   Functions app, so not covered by Dependabot).

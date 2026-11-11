@@ -19,6 +19,9 @@ The floor is declared exactly once, as `project.requires-python` in the root `py
 Workspace members must not declare it. `uv` locks the whole workspace against that single value
 (the weekly Dependabot `uv` job included), so a package release that has dropped the minimum
 cannot wedge the lockfile (DRIVERS-3732).
+The range is also capped: the ceiling is the newest stable CPython release plus one (currently
+`<3.16`), raised in the same October review, so uv never downloads an interpreter or resolves
+the lock against a CPython whose dependency wheels have not been verified (DRIVERS-3706).
 `uv` reuses whichever host interpreter satisfies `requires-python` rather than downloading one,
 so raising the floor also forces an interpreter upgrade on hosts sitting at the old floor.
 Most scripts source `ensure-uv.sh` and run Python using `uv run`, which resolves and manages the
