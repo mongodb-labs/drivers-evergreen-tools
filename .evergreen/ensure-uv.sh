@@ -111,6 +111,18 @@ _ensure_uv_floor_bootstrap() {
     # Pin uv to the qualifying interpreter: discovery can settle below the
     # floor (tool installs included), and a PATH entry would shadow an
     # active venv. A pre-set UV_PYTHON wins.
+    # Pin absolutely: a relative pin (a relative PATH entry, or a relative
+    # VIRTUAL_ENV) would resolve against whatever directory uv runs from
+    # later.
+    case "$floor_py" in
+    /*|[A-Za-z]:/*) ;;
+    *)
+      declare abs_dir
+      if abs_dir="$(cd "$(dirname "$floor_py")" 2>/dev/null && pwd)"; then
+        floor_py="$abs_dir/${floor_py##*/}"
+      fi
+      ;;
+    esac
     if [ "${OSTYPE:-}" = cygwin ]; then
       # uv wants native Windows paths; see _ensure_uv_scope_paths.
       floor_py="$(cygpath -m "$floor_py")"

@@ -72,6 +72,9 @@ reset_env() {
   local tools_dir
   tools_dir="$(mktemp -d "$WORK/tools.XXXXXX")"
   export DRIVERS_TOOLS="$tools_dir"
+  # Exercise scope_paths' CI branch in every case: it only runs under CI=1,
+  # and nothing else would.
+  export CI=1
   # Isolate pip's user install dir too; it is %APPDATA% on Windows, not HOME.
   local user_base py_user_base
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
@@ -270,7 +273,8 @@ test_pin_qualifying_host() {
     }
     # With no hidden qualifier, the PATH interpreter is the one selected.
     if ! host_hides_qualifier; then
-      [ "$pinned" = "$fake/python3" ] || { echo "expected the PATH interpreter pinned, got $pinned" >&2; return 1; }
+      # to_py_path: the pin comes back in native form on Cygwin.
+      [ "$pinned" = "$(to_py_path "$fake/python3")" ] || { echo "expected the PATH interpreter pinned, got $pinned" >&2; return 1; }
     fi
   )
   echo "Testing ensure_uv pins a qualifying host interpreter ... done."
@@ -334,10 +338,37 @@ test_root_survives_cd() {
   echo "Testing ensure_uv after changing directories ... done."
 }
 
+# The pin must be absolute: a relative PATH entry would otherwise pin a
+# path that only resolves from the directory ensure_uv ran in.
+test_pin_absolute() {
+  if host_hides_qualifier; then
+    echo "Testing ensure_uv pins an absolute interpreter path ... skipped (the host has a hidden qualifier)."
+    return 0
+  fi
+  echo "Testing ensure_uv pins an absolute interpreter path ..."
+  (
+    reset_env
+    make_recording_stub
+    mkdir -p "$WORK/relbin"
+    make_fake_py "$WORK/relbin/python3" 0
+    export PATH="relbin:$PATH"
+    cd "$WORK"
+    # shellcheck source=../ensure-uv.sh
+    . "$ENSURE_UV"
+    ensure_uv
+    case "${UV_PYTHON:-}" in
+    /*|[A-Za-z]:/*) ;;
+    *) echo "expected an absolute pin, got ${UV_PYTHON:-<unset>}" >&2; return 1 ;;
+    esac
+  )
+  echo "Testing ensure_uv pins an absolute interpreter path ... done."
+}
+
 test_pin_qualifying_host
 test_fallback_to_managed "$WORK/belowfloor/bin/python3" final "falls back to a managed python below the floor"
 test_fallback_to_managed "$WORK/prerelease/bin/python3" prerelease "falls back to a managed python on a prerelease"
 test_fallback_to_managed "$WORK/pypy/bin/python3" pypy "falls back to a managed python on PyPy"
 test_root_survives_cd
+test_pin_absolute
 
 make -C "$DRIVERS_TOOLS" test
