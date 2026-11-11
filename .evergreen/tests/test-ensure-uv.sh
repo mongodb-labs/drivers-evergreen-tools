@@ -189,6 +189,22 @@ make_prerelease_py() { # path
   chmod +x "$1"
 }
 
+# A PyPy-like interpreter: meets the floor's version and release level, so
+# only the implementation check can reject it.
+make_pypy_py() { # path
+  cat >"$1" <<'EOF'
+#!/usr/bin/env bash
+code="${2:-}"
+case "$code" in
+*sysconfig*) exit 0 ;;
+*implementation*) exit 1 ;;
+*releaselevel*) exit 0 ;;
+*) exit 0 ;;
+esac
+EOF
+  chmod +x "$1"
+}
+
 make_recording_stub() {
   # Exported for the stub, which runs as a child process. Truncated here so
   # each case's assertions read only that case's calls.
@@ -213,7 +229,7 @@ EOF
 host_hides_qualifier() {
   local c
   for c in "$CURRENT_PY" $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr); do
-    if [ -x "$c" ] && "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) and sys.version_info.releaselevel == "final" else 1)' >/dev/null 2>&1; then
+    if [ -x "$c" ] && "$c" -c 'import sys; sys.exit(0 if sys.implementation.name == "cpython" and sys.version_info >= (3, 11) and sys.version_info.releaselevel == "final" else 1)' >/dev/null 2>&1; then
       return 0
     fi
   done
@@ -274,6 +290,8 @@ test_fallback_to_managed() { # fake_path floor_ok label
     mkdir -p "$(dirname "$1")"
     if [ "$2" = prerelease ]; then
       make_prerelease_py "$1"
+    elif [ "$2" = pypy ]; then
+      make_pypy_py "$1"
     else
       make_fake_py "$1" 1
     fi
@@ -319,6 +337,7 @@ test_root_survives_cd() {
 test_pin_qualifying_host
 test_fallback_to_managed "$WORK/belowfloor/bin/python3" final "falls back to a managed python below the floor"
 test_fallback_to_managed "$WORK/prerelease/bin/python3" prerelease "falls back to a managed python on a prerelease"
+test_fallback_to_managed "$WORK/pypy/bin/python3" pypy "falls back to a managed python on PyPy"
 test_root_survives_cd
 
 make -C "$DRIVERS_TOOLS" test

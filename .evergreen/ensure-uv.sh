@@ -89,10 +89,12 @@ _ensure_uv_min_python() {
 #
 # Succeed if interpreter $1 is a final CPython release of at least $2.$3
 # (the workspace floor). Pre-release interpreters never qualify, so a
-# toolchain shipping one is not selected for reuse. Prints nothing.
+# toolchain shipping one is not selected for reuse, and neither do other
+# implementations: PyPy satisfies the version probe but the workspace
+# supports only CPython. Prints nothing.
 _ensure_uv_meets_floor() {
   declare py="${1:?}" major="${2:?}" minor="${3:?}"
-  "$py" -c "import sys; sys.exit(0 if sys.version_info >= ($major, $minor) and sys.version_info.releaselevel == 'final' else 1)" >/dev/null 2>&1
+  "$py" -c "import sys; sys.exit(0 if sys.implementation.name == 'cpython' and sys.version_info >= ($major, $minor) and sys.version_info.releaselevel == 'final' else 1)" >/dev/null 2>&1
 }
 
 # _ensure_uv_floor_bootstrap (internal)
