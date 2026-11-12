@@ -46,7 +46,7 @@ run_and_expect() {
     echo "FAIL: $desc: expected exit 0, got $rc" >&2
     return 1
   fi
-  if ! grep -q "$want" <<<"$out"; then
+  if ! grep -q -- "$want" <<<"$out"; then
     echo "FAIL: $desc: expected output to contain '$want'" >&2
     return 1
   fi
@@ -255,6 +255,49 @@ for VARIANT in eks gke aks; do
   fi
 done
 echo "PASS: per-variant kubeconfigs are gitignored"
+
+# 14. Environment-based AKS setup (env supplies the vault variables, so no
+#     secrets write happens): setup must still persist the cluster, resource
+#     group, and namespace it used, or teardown crashes on unbound variables
+#     in shells that do not inherit the setup environment (the group
+#     backstop) and the pod leaks.
+mkdir -p "$FAKE/.evergreen/csfle/azurekms"
+cp "$DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh" "$FAKE/.evergreen/csfle/azurekms/"
+cp "$DRIVERS_TOOLS/.evergreen/k8s/aks/setup.sh" "$FAKE/.evergreen/k8s/aks/"
+# configure-pod.sh's pod setup is out of scope here; its kubectl/jq plumbing
+# would need the whole retry machinery mocked.
+printf '#!/usr/bin/env bash\necho "FAKE-CONFIGURE-POD: $*"\n' > "$FAKE/.evergreen/k8s/configure-pod.sh"
+cat <<'EOF' > "$WORK/bin/az"
+#!/usr/bin/env bash
+case "$1 $2" in
+  "version -o") echo "2.30.0" ;;
+esac
+exit 0
+EOF
+chmod +x "$WORK/bin/az"
+cat <<'EOF' > "$WORK/bin/kubectl"
+#!/usr/bin/env bash
+cat > /dev/null
+echo "FAKE-KUBECTL: kubectl $* (KUBECONFIG=${KUBECONFIG:-unset})"
+exit 0
+EOF
+chmod +x "$WORK/bin/kubectl"
+rm "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
+env DRIVERS_TOOLS="$FAKE" \
+  AZUREKMS_TENANTID=env-tenant AZUREKMS_CLIENTID=env-client AZUREKMS_SECRET=env-secret \
+  AKS_CLUSTER_NAME=env-cluster AKS_RESOURCE_GROUP=env-group \
+  AKS_SERVICE_ACCOUNT_NAMESPACE=env-ns AKS_SERVICE_ACCOUNT_NAME=env-sa \
+  bash "$FAKE/.evergreen/k8s/aks/setup.sh" > /dev/null
+if ! grep -q "export AKS_CLUSTER_NAME=env-cluster" "$FAKE/.evergreen/k8s/aks/secrets-export.sh" ||
+  ! grep -q "export AKS_RESOURCE_GROUP=env-group" "$FAKE/.evergreen/k8s/aks/secrets-export.sh" ||
+  ! grep -q "export AKS_SERVICE_ACCOUNT_NAMESPACE=env-ns" "$FAKE/.evergreen/k8s/aks/secrets-export.sh"; then
+  echo "FAIL: aks setup did not persist the cluster settings teardown needs" >&2
+  exit 1
+fi
+echo "PASS: env-based aks setup persists the cluster settings"
+run_and_expect "aks teardown deletes the env-based pod from its persisted namespace" \
+  "--namespace env-ns --ignore-not-found --timeout=60s" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/aks/teardown.sh"
 
 make -C "$DRIVERS_TOOLS" test
 

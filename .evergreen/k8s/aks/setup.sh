@@ -28,7 +28,15 @@ fi
 
 # Create the pod with a random name.
 POD_NAME="test-aks-$RANDOM"
-echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
+# Persist the effective settings with the pod name: teardown may run in a
+# shell that does not inherit this environment (the group backstop), and an
+# env-based setup skips the vault write that would otherwise record them.
+cat <<EOF >> ./secrets-export.sh
+export AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}
+export AKS_RESOURCE_GROUP=${AKS_RESOURCE_GROUP}
+export AKS_SERVICE_ACCOUNT_NAMESPACE=${AKS_SERVICE_ACCOUNT_NAMESPACE}
+export K8S_POD_NAME=$POD_NAME
+EOF
 export K8S_POD_NAME=$POD_NAME
 
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
