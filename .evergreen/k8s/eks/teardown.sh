@@ -10,4 +10,8 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
   source $SCRIPT_DIR/secrets-export.sh
 fi
 
-kubectl delete pod ${K8S_POD_NAME}
+if [ -z "${K8S_POD_NAME:-}" ]; then
+  echo "Skipping eks pod teardown: no pod was created (K8S_POD_NAME is not set)."
+else
+  kubectl delete pod ${K8S_POD_NAME} --ignore-not-found
+fi
