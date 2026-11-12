@@ -467,6 +467,10 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          # Each stage writes its cloud credentials to its own kubeconfig
+          # (the cloud CLIs below honor $KUBECONFIG), so the group backstop
+          # can retry any stage's pod independently of the later stages.
+          export KUBECONFIG=${DRIVERS_TOOLS}/.evergreen/k8s/${VARIANT}/kubeconfig
           # Tag-policy gate on the pod flow: aks checks cluster, node
           # resources, and identity; eks the cluster. gke ignores the flag.
           export VERIFY_MONGODB_TAGS=1
@@ -496,6 +500,8 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          # See "run oidc k8s atlas test" for the per-stage kubeconfig scope.
+          export KUBECONFIG=${DRIVERS_TOOLS}/.evergreen/k8s/${VARIANT}/kubeconfig
           # See "run oidc k8s atlas test" for the gate's per-variant scope.
           export VERIFY_MONGODB_TAGS=1
           # See "run oidc k8s atlas test" for the per-stage pod teardown trap.
@@ -1301,16 +1307,18 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
-      # Backstop for stages killed before their trap fired, bounded at 60s so
-      # a stalled provider auth or Kubernetes API call cannot eat the group's
-      # 180s before the Atlas teardown below runs. The AWS credentials drive
-      # the kubeconfig's aws eks get-token, without which EKS pod deletion
-      # fails authentication.
+      # Backstop for stages killed before their trap fired or whose in-stage
+      # deletion failed: retries EVERY variant's pod, each against its own
+      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
+      # API call cannot eat the group's 180s before the Atlas teardown below
+      # runs. The AWS credentials drive the kubeconfig's aws eks get-token,
+      # without which EKS pod deletion fails authentication.
       - command: subprocess.exec
         params:
           binary: timeout
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh"]
+          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/k8s/teardown-all-pods.sh"]
       - command: subprocess.exec
         params:
           binary: bash
@@ -1339,14 +1347,16 @@ task_groups:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
     teardown_group:
-      # Backstop for stages killed before their trap fired, bounded at 60s
-      # so a stalled provider auth or Kubernetes API call cannot eat the
-      # group's 180s.
+      # Backstop for stages killed before their trap fired or whose in-stage
+      # deletion failed: retries EVERY variant's pod, each against its own
+      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
+      # API call cannot eat the group's 180s.
       - command: subprocess.exec
         params:
           binary: timeout
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh"]
+          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/k8s/teardown-all-pods.sh"]
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
