@@ -8,17 +8,25 @@ set -eu -o pipefail
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 . "$SCRIPT_DIR/../handle-paths.sh"
 
-K8S_DIR="$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s"
-ATLAS_SECRETS="$DRIVERS_TOOLS/.evergreen/atlas/secrets-export.sh"
-EKS_SECRETS="$DRIVERS_TOOLS/.evergreen/k8s/eks/secrets-export.sh"
-
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/k8s-teardown-test.XXXXXX")
 cleanup() {
-  rm -f "$K8S_DIR/secrets-export.sh" "$ATLAS_SECRETS" "$EKS_SECRETS"
   rm -rf "$WORK"
 }
 trap cleanup EXIT
-rm -f "$K8S_DIR/secrets-export.sh" "$ATLAS_SECRETS" "$EKS_SECRETS"
+
+# The fixtures run against an isolated copy of the scripts under $WORK, never
+# against this checkout: a checkout can hold the cleanup state of a live
+# deployment (the secrets-export.sh files are gitignored), and overwriting or
+# deleting it here would leave that deployment unidentifiable for teardown.
+FAKE="$WORK/drivers-tools"
+K8S_DIR="$FAKE/.evergreen/auth_oidc/k8s"
+ATLAS_SECRETS="$FAKE/.evergreen/atlas/secrets-export.sh"
+EKS_SECRETS="$FAKE/.evergreen/k8s/eks/secrets-export.sh"
+mkdir -p "$K8S_DIR" "$FAKE/.evergreen/k8s/eks" "$FAKE/.evergreen/atlas"
+cp "$DRIVERS_TOOLS/.evergreen/handle-paths.sh" "$FAKE/.evergreen/"
+cp "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown-pod.sh" \
+  "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown.sh" "$K8S_DIR/"
+cp "$DRIVERS_TOOLS/.evergreen/k8s/eks/teardown.sh" "$FAKE/.evergreen/k8s/eks/"
 
 # run_and_expect <description> <expected-substring> <command...>
 run_and_expect() {
@@ -42,8 +50,10 @@ run_and_expect() {
 }
 
 # 1. setup.sh never ran: no secrets files anywhere.
-run_and_expect "teardown-pod.sh with no setup" "Skipping pod teardown" bash "$K8S_DIR/teardown-pod.sh"
-run_and_expect "teardown.sh with no setup" "Skipping Atlas teardown" bash "$K8S_DIR/teardown.sh"
+run_and_expect "teardown-pod.sh with no setup" "Skipping pod teardown" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+run_and_expect "teardown.sh with no setup" "Skipping Atlas teardown" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
 # 2. setup.sh fetched secrets and failed at create_deployment (the evidence
 #    case): k8s secrets exist, but no CLUSTER_NAME was recorded.
@@ -55,17 +65,21 @@ export OIDC_ATLAS_GROUP_ID=fake
 export OIDC_ADMIN_USER=bob
 export OIDC_ADMIN_PWD=pwd123
 EOF
-run_and_expect "teardown-pod.sh after setup.sh failure" "Skipping pod teardown" bash "$K8S_DIR/teardown-pod.sh"
-run_and_expect "teardown.sh after setup.sh failure" "never created" bash "$K8S_DIR/teardown.sh"
+run_and_expect "teardown-pod.sh after setup.sh failure" "Skipping pod teardown" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+run_and_expect "teardown.sh after setup.sh failure" "never created" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
 # 3. setup-pod.sh started but the variant setup failed before creating the
 #    pod: the variant is recorded, but there is no K8S_POD_NAME.
 cat <<EOF >> "$K8S_DIR/secrets-export.sh"
 export K8S_VARIANT=eks
-export K8S_VARIANT_DIR=$DRIVERS_TOOLS/.evergreen/k8s/eks
+export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/eks
 EOF
-run_and_expect "teardown-pod.sh after variant setup failure" "no pod was created" bash "$K8S_DIR/teardown-pod.sh"
-run_and_expect "teardown.sh after variant setup failure" "never created" bash "$K8S_DIR/teardown.sh"
+run_and_expect "teardown-pod.sh after variant setup failure" "no pod was created" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+run_and_expect "teardown.sh after variant setup failure" "never created" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
 # 4. The pod was recorded but is already gone: kubectl reports NotFound, and
 #    teardown must still succeed (--ignore-not-found).
@@ -82,6 +96,20 @@ EOF
 chmod +x "$WORK/bin/kubectl"
 export PATH="$WORK/bin:$PATH"
 echo "export K8S_POD_NAME=test-eks-1" > "$EKS_SECRETS"
-run_and_expect "teardown-pod.sh with a missing pod" "Tearing down eks pod... done." bash "$K8S_DIR/teardown-pod.sh"
+run_and_expect "teardown-pod.sh with a missing pod" "Tearing down eks pod... done." \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+
+# 5. The deployment was created but the k8s secrets file carries no Atlas API
+#    keys: teardown cannot delete it, so it must name the deployment that
+#    needs manual cleanup (the task group's final cleanup step deletes the
+#    secrets file the warning points at).
+cat <<EOF > "$K8S_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+EOF
+cat <<EOF > "$ATLAS_SECRETS"
+export CLUSTER_NAME=regression-test-cluster
+EOF
+run_and_expect "teardown.sh without credentials names the deployment" "regression-test-cluster" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
 make -C "$DRIVERS_TOOLS" test
