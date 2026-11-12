@@ -592,6 +592,15 @@ def _strip_presigned_query(url: str) -> str:
     return parsed._replace(query="").geturl()
 
 
+def _is_missing_artifact_error(exc: BaseException) -> bool:
+    """Tell whether a download failure is an HTTP 404 for the artifact itself.
+
+    Cache.download_file wraps the urllib HTTPError as __cause__.
+    """
+    cause = exc.__cause__
+    return isinstance(cause, urllib.error.HTTPError) and cause.code == 404
+
+
 class Cache:
     """
     Abstraction over a mongodl downloads cache directory.
@@ -1064,6 +1073,18 @@ def _dl_component(
             raise
         except Exception as e:
             LOGGER.exception(e)
+            if version in ("latest-build", "latest") and _is_missing_artifact_error(e):
+                branch_folder = (
+                    "mongodb-mongo-master-nightly"
+                    if latest_build_branch is None or latest_build_branch == "master"
+                    else f"mongodb-mongo-{latest_build_branch}-staging"
+                )
+                raise RuntimeError(
+                    f"No {version} build is published for {target}-{arch} under "
+                    f"{branch_folder} (edition: {edition}); the platform may not "
+                    "be supported by that branch. Use a published version or "
+                    "'latest-stable' instead."
+                ) from e
             if not retrier.retry():
                 raise
 

@@ -1379,7 +1379,7 @@ axes:
 
       - id: ubuntu-22.04
         display_name: "Ubuntu 22.04"
-        run_on: ubuntu2004-test
+        run_on: ubuntu2204-small
 
       - id: amazon-2023-x64
         display_name: "Amazon Linux 2023 x64"
@@ -1669,6 +1669,17 @@ buildvariants:
         add_tasks:
           - "test-ocsp"
           - "test-csfle"
+    # Master nightlies no longer publish builds for these hosts, so "latest"
+    # has nothing to download (the legacy symlinks are frozen at 8.0.0-alpha).
+    - if:
+        auth: "*"
+        ssl: "*"
+        os-requires-50: ["debian11", "ubuntu-20.04", "ubuntu2004-arm64", "rhel7"]
+      then:
+        remove_tasks:
+          - "test-latest-replica_set"
+          - "test-latest-sharded_cluster"
+          - "test-latest-standalone"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
