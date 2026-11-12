@@ -682,18 +682,29 @@ class Cache:
         )
         return DownloadResult(True, dest)
 
-    def refresh_full_json(self) -> None:
+    def refresh_full_json(self, retries: int) -> None:
         """
         Sync the content of the MongoDB full.json downloads list.
+
+        Retries failed attempts up to ``retries`` times, with backoff.
         """
         default_source = "https://downloads.mongodb.org/full.json"
         download_source = os.environ.get("MONGODB_DOWNLOAD_SOURCE", default_source)
-        with self._db.transaction():
-            dl = self.download_file(download_source)
-            if not dl.is_changed:
-                # We still have a good cache
-                return
-            self._db.import_json_file(dl.path)
+        retrier = DownloadRetrier(retries)
+        while True:
+            try:
+                # Retry outside the transaction, so each attempt starts clean.
+                with self._db.transaction():
+                    dl = self.download_file(download_source)
+                    if not dl.is_changed:
+                        # We still have a good cache
+                        return
+                    self._db.import_json_file(dl.path)
+                    return
+            except Exception as e:
+                LOGGER.exception(e)
+                if not retrier.retry():
+                    raise
 
 
 def _mkdir(dirpath: Path) -> None:
@@ -1354,7 +1365,12 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
-    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
+    dl_grp.add_argument(
+        "--retries",
+        help="The number of times to retry a failed download "
+        "(both the full.json version list and the component)",
+        default=0,
+    )
     args = parser.parse_args(argv)
 
     if args.verbose:
@@ -1363,7 +1379,7 @@ def main(argv=None):
         LOGGER.setLevel(logging.WARNING)
 
     cache = Cache.open_in(args.cache_dir)
-    cache.refresh_full_json()
+    cache.refresh_full_json(retries=int(args.retries))
 
     version = args.version
     # Translate perf version if applicable:
