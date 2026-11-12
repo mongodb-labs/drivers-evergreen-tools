@@ -149,11 +149,9 @@ run_and_expect "teardown-pod.sh deletes the aks pod from its namespace" \
 
 make -C "$DRIVERS_TOOLS" test
 
-# Report the result where Evergreen attaches it: the project's post-task
-# "upload test results" attaches ${PROJECT_DIRECTORY}/test-results.json,
-# which the pre-task setup seeds with a failing placeholder. Overwrite it on
-# success so a green run does not carry that placeholder failure; a failing
-# run exits above and leaves the placeholder in place. PROJECT_DIRECTORY is
-# only set in CI, so local runs report into the drivers-tools copy instead.
+# upload test results attaches ${PROJECT_DIRECTORY}/test-results.json, which
+# the pre-task setup seeds with a failing placeholder: overwrite it on
+# success (a failing run exits above). PROJECT_DIRECTORY is CI-only, so
+# local runs fall back to the drivers-tools copy.
 RESULTS_FILE="${PROJECT_DIRECTORY:-$DRIVERS_TOOLS}/test-results.json"
 echo '{"results": [{ "status": "PASS", "test_file": "test-auth-oidc-k8s-teardown", "log_raw": "all teardown regression scenarios passed" }]}' > "$RESULTS_FILE"
