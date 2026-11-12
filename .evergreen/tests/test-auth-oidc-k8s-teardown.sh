@@ -172,6 +172,18 @@ run_and_expect "teardown.sh deletes the recorded deployment" \
   "FAKE-ATLAS-TEARDOWN: atlas-pub/atlas-grp/regression-test-cluster" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
+# 9. AKS setup failed before fetching vault secrets: neither the pod nor the
+#    namespace was ever recorded. Teardown must skip cleanly, not fail on the
+#    missing namespace.
+rm -f "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
+cat <<EOF > "$K8S_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+export K8S_VARIANT=aks
+export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/aks
+EOF
+run_and_expect "teardown-pod.sh with no aks state skips" "no pod was created" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+
 make -C "$DRIVERS_TOOLS" test
 
 # upload test results attaches ${PROJECT_DIRECTORY}/test-results.json, which

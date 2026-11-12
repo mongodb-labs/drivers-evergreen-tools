@@ -9,11 +9,15 @@
 set -eu
 
 PROVIDER=${1:?provider name is required}
-NAMESPACE=${2:?pod namespace is required}
 
+# Skip before validating the namespace: a setup that failed before fetching
+# vault secrets recorded neither the pod nor the namespace, and the missing
+# namespace must not turn the skip into a failure.
 if [ -z "${K8S_POD_NAME:-}" ]; then
   echo "Skipping $PROVIDER pod teardown: no pod was created (K8S_POD_NAME is not set)."
   exit 0
 fi
+
+NAMESPACE=${2:?pod namespace is required}
 
 kubectl delete pod "${K8S_POD_NAME}" --namespace "$NAMESPACE" --ignore-not-found --timeout=60s
