@@ -154,6 +154,23 @@ run_and_expect "teardown-pod.sh deletes the gke pod from its namespace" \
   "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
+# 8. The deployment is recorded and the credentials are present: teardown must
+#    hand them to teardown-atlas-cluster.sh. The real script talks to the Atlas
+#    API, so the isolated tree gets a stub that records what it was handed.
+cat <<'EOF' > "$FAKE/.evergreen/atlas/teardown-atlas-cluster.sh"
+#!/usr/bin/env bash
+echo "FAKE-ATLAS-TEARDOWN: ${DRIVERS_ATLAS_PUBLIC_API_KEY}/${DRIVERS_ATLAS_GROUP_ID}/${CLUSTER_NAME}"
+EOF
+cat <<EOF > "$K8S_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+export OIDC_ATLAS_PUBLIC_API_KEY=atlas-pub
+export OIDC_ATLAS_PRIVATE_API_KEY=atlas-priv
+export OIDC_ATLAS_GROUP_ID=atlas-grp
+EOF
+run_and_expect "teardown.sh deletes the recorded deployment" \
+  "FAKE-ATLAS-TEARDOWN: atlas-pub/atlas-grp/regression-test-cluster" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
+
 make -C "$DRIVERS_TOOLS" test
 
 # upload test results attaches ${PROJECT_DIRECTORY}/test-results.json, which
