@@ -1301,15 +1301,16 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
-      # Backstop for stages killed before their trap fired. The AWS
-      # credentials drive the kubeconfig's aws eks get-token, without which
-      # EKS pod deletion fails authentication.
+      # Backstop for stages killed before their trap fired, bounded at 60s so
+      # a stalled provider auth or Kubernetes API call cannot eat the group's
+      # 180s before the Atlas teardown below runs. The AWS credentials drive
+      # the kubeconfig's aws eks get-token, without which EKS pod deletion
+      # fails authentication.
       - command: subprocess.exec
         params:
-          binary: bash
+          binary: timeout
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
+          args: [60, bash, "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh"]
       - command: subprocess.exec
         params:
           binary: bash
@@ -1338,15 +1339,14 @@ task_groups:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
     teardown_group:
-      # Backstop for stages killed before their trap fired. The AWS
-      # credentials drive the kubeconfig's aws eks get-token, without which
-      # EKS pod deletion fails authentication.
+      # Backstop for stages killed before their trap fired, bounded at 60s
+      # so a stalled provider auth or Kubernetes API call cannot eat the
+      # group's 180s.
       - command: subprocess.exec
         params:
-          binary: bash
+          binary: timeout
           include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-          args:
-            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
+          args: [60, bash, "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh"]
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
