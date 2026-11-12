@@ -245,6 +245,17 @@ run_and_expect "backstop loop retries the last variant too" \
   "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
   env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
 
+# 13. The kubeconfigs the stages write hold cluster credentials: they must
+#     be gitignored like the secrets files, or a git add of the checkout
+#     stages them.
+for VARIANT in eks gke aks; do
+  if ! git -C "$DRIVERS_TOOLS" check-ignore -q ".evergreen/k8s/$VARIANT/kubeconfig"; then
+    echo "FAIL: .evergreen/k8s/$VARIANT/kubeconfig is not gitignored" >&2
+    exit 1
+  fi
+done
+echo "PASS: per-variant kubeconfigs are gitignored"
+
 make -C "$DRIVERS_TOOLS" test
 
 # upload test results attaches ${PROJECT_DIRECTORY}/test-results.json, which

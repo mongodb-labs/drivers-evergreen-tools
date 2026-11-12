@@ -5,9 +5,10 @@
 # in-stage deletion failed. Each stage writes its own kubeconfig, so every
 # stage stays retryable here after later stages run.
 #
-# 20s per variant keeps all three inside the group step's 60s wrapper (the
-# trap already gave each pod a 60s-bounded window); a failing variant only
-# logs a warning, so the variants after it still run.
+# 15s per variant keeps all three, plus overhead, inside the group step's
+# 60s wrapper, so the wrapper can never kill the final variant's warning
+# (the trap already gave each pod a 60s-bounded window); a failing variant
+# only logs a warning, so the variants after it still run.
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -35,7 +36,7 @@ for VARIANT in eks gke aks; do
   unset K8S_POD_NAME
   # shellcheck source=/dev/null
   . "$VARIANT_DIR/secrets-export.sh"
-  if ! KUBECONFIG="$VARIANT_DIR/kubeconfig" timeout 20 bash "$VARIANT_DIR/teardown.sh"; then
+  if ! KUBECONFIG="$VARIANT_DIR/kubeconfig" timeout 15 bash "$VARIANT_DIR/teardown.sh"; then
     echo "WARNING: ${VARIANT} pod teardown failed; pod ${K8S_POD_NAME:-unknown} may need manual cleanup"
   fi
 done
