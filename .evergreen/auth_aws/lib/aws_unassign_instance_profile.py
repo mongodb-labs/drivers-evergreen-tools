@@ -69,13 +69,17 @@ def _unassign_instance_policy():
             Filters=[{"Name": "instance-id", "Values": [instance_id]}]
         )
         associations = response["IamInstanceProfileAssociations"]
-        if associations:
-            print("disassociating")
-            ec2_client.disassociate_iam_instance_profile(
-                AssociationId=associations[0]["AssociationId"]
-            )
+        if not associations:
+            if _has_instance_profile():
+                print("WARNING: no instance profile association, leaving the host role")
+            return
 
-        # Wait for the instance profile to be assigned by polling the local instance metadata service
+        print("disassociating")
+        ec2_client.disassociate_iam_instance_profile(
+            AssociationId=associations[0]["AssociationId"]
+        )
+
+        # Wait for the instance profile to be removed by polling the local instance metadata service
         _wait_no_instance_profile()
 
     except botocore.exceptions.ClientError as ce:

@@ -9,6 +9,7 @@ import os
 import random
 import subprocess
 import sys
+import urllib.error
 from functools import partial
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -24,12 +25,11 @@ def join(*parts):
 
 sys.path.insert(0, str(HERE / "lib"))
 from util import get_key as _get_key
+from util import imds_get
 
 ASSUMED_ROLE = "arn:aws:sts::557821124784:assumed-role/authtest_user_assume_role/*"
 ASSUMED_WEB_ROLE = "arn:aws:sts::857654397073:assumed-role/webIdentityTestRole/*"
 
-# This varies based on hosting EC2 as the account id and role name can vary
-AWS_ACCOUNT_ARN = "arn:aws:sts::557821124784:assumed-role/evergreen_task_hosts_instance_role_production/*"
 _USE_AWS_SECRETS = False
 
 try:
@@ -69,6 +69,22 @@ def create_user(user, kwargs):
     client.close()
 
 
+def drop_user(user):
+    """Drop a user, if it exists."""
+
+    from pymongo import MongoClient
+    from pymongo.errors import OperationFailure
+
+    LOGGER.info("Dropping user %s", user)
+    client = MongoClient(username="bob", password="pwd123")
+    try:
+        client["$external"].command(dict(dropUser=user))
+    except OperationFailure as e:
+        if e.code != 11:  # UserNotFound
+            raise
+    client.close()
+
+
 def setup_assume_role():
     from aws_assume_role import _assume_role
 
@@ -101,14 +117,41 @@ def setup_assume_role():
     )
 
 
+def assumed_role_pattern(caller_arn: str) -> str:
+    """Turn .../assumed-role/<role>/<session> into .../assumed-role/<role>/*."""
+    if ":assumed-role/" not in caller_arn:
+        raise ValueError(f"Expected an assumed-role ARN, got {caller_arn!r}")
+    return caller_arn.rsplit("/", 1)[0] + "/*"
+
+
+def get_host_account_arn():
+    """Get the MongoDB user name for the role of this host, which varies by host.
+
+    Uses the host role credentials explicitly, so env credentials are ignored.
+    """
+    import boto3
+
+    base_path = "/latest/meta-data/iam/security-credentials/"
+    role_name = imds_get(base_path).splitlines()[0]
+    creds = json.loads(imds_get(base_path + role_name))
+    sts_client = boto3.client(
+        "sts",
+        region_name="us-east-1",
+        aws_access_key_id=creds["AccessKeyId"],
+        aws_secret_access_key=creds["SecretAccessKey"],
+        aws_session_token=creds["Token"],
+    )
+    return assumed_role_pattern(sts_client.get_caller_identity()["Arn"])
+
+
 def setup_ec2():
     # Create the user.
     from aws_assign_instance_profile import _assign_instance_policy
 
     _assign_instance_policy()
-    os.environ.pop("AWS_ACCESS_KEY_ID", None)
-    os.environ.pop("AWS_SECRET_ACCESS_KEY", None)
-    create_user(AWS_ACCOUNT_ARN, dict())
+    for name in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"):
+        os.environ.pop(name, None)
+    create_user(get_host_account_arn(), dict())
     return dict()
 
 
@@ -234,6 +277,16 @@ def setup_web_identity():
         raise RuntimeError(
             "Failed to unassign an instance profile from the current machine"
         )
+
+    # If the host role could not be detached (macOS), drop its user so that a
+    # driver falling back to the host role cannot authenticate.
+    try:
+        host_user = get_host_account_arn()
+    except (urllib.error.URLError, RuntimeError):
+        LOGGER.info("No host role found, not dropping a host role user")
+        host_user = None
+    if host_user:
+        drop_user(host_user)
 
     token_file = os.environ.get(
         "AWS_WEB_IDENTITY_TOKEN_FILE", CONFIG[get_key("iam_web_identity_token_file")]
