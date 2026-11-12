@@ -476,7 +476,6 @@ functions:
           bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
           export K8S_TEST_CMD="echo 'hello'"
           bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
-          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -496,7 +495,6 @@ functions:
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/start-server.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
-          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
           # Generate a test results file
           cd ${PROJECT_DIRECTORY}
           make test
@@ -1295,6 +1293,13 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
+      # In the group teardown rather than the test commands, so the pod is
+      # deleted even when setup or the test fails after creating it.
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
       - command: subprocess.exec
         params:
           binary: bash
@@ -1323,6 +1328,13 @@ task_groups:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
     teardown_group:
+      # In the group teardown rather than the test commands, so the pod is
+      # deleted even when setup or the test fails after creating it.
+      - command: subprocess.exec
+        params:
+          binary: bash
+          args:
+            - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
