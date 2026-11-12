@@ -1096,6 +1096,7 @@ tasks:
         - func: "run ensure uv test"
 
     - name: "test-auth-oidc-k8s-teardown"
+      tags: ["pr"]
       commands:
         - func: "run auth oidc k8s teardown test"
 
