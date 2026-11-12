@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Shared helpers for setup.sh and teardown.sh
 
+# HOSTS_MARKER, LOGS_FILE and LOGS_PID_FILE are used by the scripts that source this file.
+# shellcheck disable=SC2034
+
 ECR_ROOT="664315256653.dkr.ecr.us-east-1.amazonaws.com"
 STATE_DIR="${SCRIPT_DIR}/.slslocal"
 AWS_DIR="${STATE_DIR}/aws"
