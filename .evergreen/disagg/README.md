@@ -87,3 +87,15 @@ Evergreen's process cleanup removes Docker containers, images and networks betwe
 deployment is running, rather than `teardown.sh` collecting them.
 
 Downloading `crypt_shared` for the `latest` version requires AWS credentials (see DRIVERS-3628).
+
+## Future improvements
+
+Start the deployment with `mongodb-runner`, which `orchestration/` already uses, instead of `slslocal`. `mongodb-runner`
+can run DSC deployments: it runs the SLS services in containers and starts the mongods on the host. The members would
+then advertise host-resolvable names, which removes the `/etc/hosts` mapping. This needs:
+
+- A DSC-capable mongod build (with the atlas module) that CI can download. `mongodl.py` only fetches published
+    releases and `latest` builds, and stock builds reject `disaggregatedStorageConfig`.
+- The SLS compose file, `manifest.json` and proto files from `buildscripts/modules/atlas` in the private 10gen/mongo
+    repository.
+- Node.js on the host.
