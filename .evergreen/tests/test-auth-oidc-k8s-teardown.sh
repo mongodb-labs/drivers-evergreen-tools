@@ -30,6 +30,7 @@ cp "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown-pod.sh" \
 cp "$DRIVERS_TOOLS/.evergreen/k8s/eks/teardown.sh" "$FAKE/.evergreen/k8s/eks/"
 cp "$DRIVERS_TOOLS/.evergreen/k8s/aks/teardown.sh" "$FAKE/.evergreen/k8s/aks/"
 cp "$DRIVERS_TOOLS/.evergreen/k8s/gke/teardown.sh" "$FAKE/.evergreen/k8s/gke/"
+cp "$DRIVERS_TOOLS/.evergreen/k8s/delete-pod.sh" "$FAKE/.evergreen/k8s/"
 
 # run_and_expect <description> <expected-substring> <command...>
 run_and_expect() {
@@ -103,7 +104,7 @@ chmod +x "$WORK/bin/kubectl"
 export PATH="$WORK/bin:$PATH"
 echo "export K8S_POD_NAME=test-eks-1" > "$EKS_SECRETS"
 run_and_expect "teardown-pod.sh deletes the eks pod from its namespace" \
-  "FAKE-KUBECTL: kubectl delete pod test-eks-1 --namespace default --ignore-not-found" \
+  "FAKE-KUBECTL: kubectl delete pod test-eks-1 --namespace default --ignore-not-found --timeout=60s" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 # 5. The deployment was created but the k8s secrets file carries no Atlas API
@@ -137,7 +138,7 @@ export K8S_VARIANT=aks
 export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/aks
 EOF
 run_and_expect "teardown-pod.sh deletes the aks pod from its namespace" \
-  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found" \
+  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 # 7. GKE: the pod is created in the default namespace; deletion must name it
@@ -151,7 +152,7 @@ export K8S_VARIANT=gke
 export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/gke
 EOF
 run_and_expect "teardown-pod.sh deletes the gke pod from its namespace" \
-  "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found" \
+  "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found --timeout=60s" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 # 8. The deployment is recorded and the credentials are present: teardown must

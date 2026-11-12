@@ -10,13 +10,13 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
   source $SCRIPT_DIR/secrets-export.sh
 fi
 
-if [ -z "${K8S_POD_NAME:-}" ]; then
-  echo "Skipping aks pod teardown: no pod was created (K8S_POD_NAME is not set)."
-else
+# The credentials and kubeconfig are only needed when there is a pod to
+# delete; AKS_SERVICE_ACCOUNT_NAMESPACE is guaranteed recorded when the pod
+# is (both come from the same vault write).
+DELETE_POD="$SCRIPT_DIR/../delete-pod.sh"
+if [ -n "${K8S_POD_NAME:-}" ]; then
   az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+  # Sourced: it overwrites SCRIPT_DIR, so resolve the helper path above first.
   . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
-  # Name the pod's namespace explicitly: the kubeconfig's current namespace
-  # is not where setup.sh created it, and --ignore-not-found would turn a
-  # wrong-namespace lookup into reported success while the pod keeps running.
-  kubectl delete pod ${K8S_POD_NAME} --namespace "${AKS_SERVICE_ACCOUNT_NAMESPACE}" --ignore-not-found
 fi
+bash "$DELETE_POD" aks "${AKS_SERVICE_ACCOUNT_NAMESPACE:-}"

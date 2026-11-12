@@ -10,10 +10,4 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
   source $SCRIPT_DIR/secrets-export.sh
 fi
 
-if [ -z "${K8S_POD_NAME:-}" ]; then
-  echo "Skipping eks pod teardown: no pod was created (K8S_POD_NAME is not set)."
-else
-  # Name the namespace setup.sh created the pod in: --ignore-not-found would
-  # otherwise mask a wrong-namespace lookup and leak the pod.
-  kubectl delete pod ${K8S_POD_NAME} --namespace default --ignore-not-found
-fi
+bash $SCRIPT_DIR/../delete-pod.sh eks default
