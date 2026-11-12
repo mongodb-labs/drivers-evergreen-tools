@@ -22,11 +22,13 @@ FAKE="$WORK/drivers-tools"
 K8S_DIR="$FAKE/.evergreen/auth_oidc/k8s"
 ATLAS_SECRETS="$FAKE/.evergreen/atlas/secrets-export.sh"
 EKS_SECRETS="$FAKE/.evergreen/k8s/eks/secrets-export.sh"
-mkdir -p "$K8S_DIR" "$FAKE/.evergreen/k8s/eks" "$FAKE/.evergreen/atlas"
+mkdir -p "$K8S_DIR" "$FAKE/.evergreen/k8s/eks" "$FAKE/.evergreen/k8s/aks" "$FAKE/.evergreen/atlas"
 cp "$DRIVERS_TOOLS/.evergreen/handle-paths.sh" "$FAKE/.evergreen/"
+cp "$DRIVERS_TOOLS/.evergreen/ensure-binary.sh" "$FAKE/.evergreen/"
 cp "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown-pod.sh" \
   "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown.sh" "$K8S_DIR/"
 cp "$DRIVERS_TOOLS/.evergreen/k8s/eks/teardown.sh" "$FAKE/.evergreen/k8s/eks/"
+cp "$DRIVERS_TOOLS/.evergreen/k8s/aks/teardown.sh" "$FAKE/.evergreen/k8s/aks/"
 
 # run_and_expect <description> <expected-substring> <command...>
 run_and_expect() {
@@ -111,5 +113,38 @@ export CLUSTER_NAME=regression-test-cluster
 EOF
 run_and_expect "teardown.sh without credentials names the deployment" "regression-test-cluster" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
+
+# 6. AKS: the pod is created in AKS_SERVICE_ACCOUNT_NAMESPACE, not the
+#    kubeconfig's current namespace. Deletion must name that namespace
+#    explicitly, or --ignore-not-found turns a wrong-namespace NotFound into
+#    reported success while the pod keeps running.
+printf '#!/usr/bin/env bash\nexit 0\n' > "$WORK/bin/az"
+chmod +x "$WORK/bin/az"
+cat <<EOF > "$WORK/bin/kubectl"
+#!/usr/bin/env bash
+# Record the invocation and emulate the pod: deleting a pod that lives in a
+# custom namespace only works when that namespace is passed explicitly.
+echo "FAKE-KUBECTL: kubectl \$*"
+case " \$* " in
+  *" --ignore-not-found "*|*" -n aks-test-ns "*|*" --namespace aks-test-ns "*) exit 0 ;;
+esac
+echo 'Error from server (NotFound): pods "test-aks-1" not found' >&2
+exit 1
+EOF
+chmod +x "$WORK/bin/kubectl"
+cat <<EOF > "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
+export AKS_CLUSTER_NAME=fake-cluster
+export AKS_RESOURCE_GROUP=fake-group
+export AKS_SERVICE_ACCOUNT_NAMESPACE=aks-test-ns
+export K8S_POD_NAME=test-aks-1
+EOF
+cat <<EOF > "$K8S_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+export K8S_VARIANT=aks
+export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/aks
+EOF
+run_and_expect "teardown-pod.sh deletes the aks pod from its namespace" \
+  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 make -C "$DRIVERS_TOOLS" test
