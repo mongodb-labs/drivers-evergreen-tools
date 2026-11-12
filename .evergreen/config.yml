@@ -472,8 +472,10 @@ functions:
           export VERIFY_MONGODB_TAGS=1
           # Delete this stage's pod when the stage ends, success or failure,
           # while the kubeconfig and recorded variant still belong to it: the
-          # next stage's setup overwrites both.
-          trap 'rc=$?; bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh; exit $rc' EXIT
+          # next stage's setup overwrites both. Absolute and guarded, so the
+          # trap (which also fires after the cd below) can neither skip
+          # cleanup nor mask the stage's status.
+          trap 'rc=$?; bash "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh" || true; exit $rc' EXIT
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
@@ -497,7 +499,7 @@ functions:
           # See "run oidc k8s atlas test" for the gate's per-variant scope.
           export VERIFY_MONGODB_TAGS=1
           # See "run oidc k8s atlas test" for the per-stage pod teardown trap.
-          trap 'rc=$?; bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh; exit $rc' EXIT
+          trap 'rc=$?; bash "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh" || true; exit $rc' EXIT
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/start-server.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
