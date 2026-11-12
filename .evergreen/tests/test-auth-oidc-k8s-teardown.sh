@@ -225,6 +225,26 @@ run_and_expect "backstop loop still deletes later variants after a failure" \
   "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
   env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
 
+# 12. A kubeconfig without a secrets file (environment-supplied credentials
+#    let setup reach the credential fetch, which then failed before any pod
+#    was recorded): the backstop must skip that variant and still retry the
+#    later ones, not die on the unguarded source.
+cat <<'EOF' > "$WORK/bin/kubectl"
+#!/usr/bin/env bash
+echo "FAKE-KUBECTL: kubectl $* (KUBECONFIG=${KUBECONFIG:-unset})"
+exit 0
+EOF
+rm "$EKS_SECRETS"
+run_and_expect "backstop loop skips a variant with no secrets file" \
+  "Skipping eks pod teardown: no secrets file" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+run_and_expect "backstop loop still retries later variants" \
+  "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/gke/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+run_and_expect "backstop loop retries the last variant too" \
+  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+
 make -C "$DRIVERS_TOOLS" test
 
 # upload test results attaches ${PROJECT_DIRECTORY}/test-results.json, which

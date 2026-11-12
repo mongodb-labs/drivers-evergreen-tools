@@ -23,6 +23,13 @@ for VARIANT in eks gke aks; do
     echo "Skipping $VARIANT pod teardown: no kubeconfig (setup never reached the credential fetch)."
     continue
   fi
+  # A kubeconfig can exist without a secrets file (environment-supplied
+  # credentials, or a failure between the credential fetch and the pod
+  # record); skip rather than abort the variants after it.
+  if [ ! -f "$VARIANT_DIR/secrets-export.sh" ]; then
+    echo "Skipping $VARIANT pod teardown: no secrets file (no pod was recorded)."
+    continue
+  fi
   # Name the pod in the warning even when timeout kills kubectl first; unset
   # it per variant so a variant without secrets cannot inherit the last one's.
   unset K8S_POD_NAME
