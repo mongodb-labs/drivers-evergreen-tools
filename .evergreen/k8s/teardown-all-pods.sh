@@ -1,21 +1,13 @@
 #!/usr/bin/env bash
 #
-# Group-teardown backstop for the auth_oidc k8s pod lifecycle: retries the
-# pod deletion for EVERY provider variant, not just the last stage's. The
-# per-stage trap in the test functions deletes each pod while its own
-# kubeconfig is still current; this backstop covers stages killed before
-# their trap fired and stages whose in-stage deletion failed. Each stage
-# writes its cloud credentials to its own kubeconfig (the stage body
-# exports KUBECONFIG before setup runs), and each variant records its pod
-# name in its own secrets-export.sh, so every stage is independently
-# retryable here.
+# Group-teardown backstop: retries the pod deletion for every variant, not
+# just the last stage's. Covers stages whose trap never fired or whose
+# in-stage deletion failed. Each stage writes its own kubeconfig, so every
+# stage stays retryable here after later stages run.
 #
-# Each variant is bounded and tolerated: one stalled or failing variant
-# must neither eat the group budget the Atlas teardown after this needs
-# nor mask the variants after it. The bound is tighter than the primary
-# path's (20s per variant vs the trap's 60s-bounded delete) because this
-# is a retry: the trap already gave the pod its full window, and all
-# three variants must fit the group step's 60s wrapper.
+# 20s per variant keeps all three inside the group step's 60s wrapper (the
+# trap already gave each pod a 60s-bounded window); a failing variant only
+# logs a warning, so the variants after it still run.
 set -eu
 
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
@@ -26,15 +18,13 @@ for VARIANT in eks gke aks; do
   if [ ! -d "$VARIANT_DIR" ]; then
     continue
   fi
-  # A stage whose setup never reached the credential fetch has no
-  # kubeconfig and could not have created a pod.
+  # No kubeconfig means setup never fetched credentials, so no pod exists.
   if [ ! -f "$VARIANT_DIR/kubeconfig" ]; then
     echo "Skipping $VARIANT pod teardown: no kubeconfig (setup never reached the credential fetch)."
     continue
   fi
-  # The pod name is recorded per variant; include it in the warning so the
-  # identity survives in the uploaded task log even when a timeout kills
-  # the delete before kubectl can name the pod itself.
+  # Name the pod in the warning even when timeout kills kubectl first; unset
+  # it per variant so a variant without secrets cannot inherit the last one's.
   unset K8S_POD_NAME
   # shellcheck source=/dev/null
   . "$VARIANT_DIR/secrets-export.sh"
