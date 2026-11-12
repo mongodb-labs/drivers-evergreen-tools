@@ -134,6 +134,9 @@ RAW_URI=$(check_deployment)
 URI=$(echo $RAW_URI | grep -Eo "[^(\/\/)]*$" | cat)
 MONGODB_URI="mongodb+srv://${DRIVERS_ATLAS_USER}:${DRIVERS_ATLAS_PASSWORD}@${URI}"
 
+# Verify the cluster's tags when requested (DRIVERS-3712).
+verify_deployment_tags
+
 # Put the MONGODB_URI in an expansions yml and secrets file.
 echo 'MONGODB_URI: "'$MONGODB_URI'"' > $CURRENT_DIR/atlas-expansion.yml
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh

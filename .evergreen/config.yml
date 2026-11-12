@@ -467,6 +467,9 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          # Tag-policy gate on the pod flow: aks checks cluster, node
+          # resources, and identity; eks the cluster. gke ignores the flag.
+          export VERIFY_MONGODB_TAGS=1
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
@@ -488,6 +491,8 @@ functions:
           set -o errexit
           cd ${DRIVERS_TOOLS}
           export K8S_VARIANT=${VARIANT}
+          # See "run oidc k8s atlas test" for the gate's per-variant scope.
+          export VERIFY_MONGODB_TAGS=1
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/start-server.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
@@ -1374,7 +1379,7 @@ axes:
 
       - id: ubuntu-22.04
         display_name: "Ubuntu 22.04"
-        run_on: ubuntu2004-test
+        run_on: ubuntu2204-small
 
       - id: amazon-2023-x64
         display_name: "Amazon Linux 2023 x64"
@@ -1469,10 +1474,6 @@ axes:
   - id: storage-engine
     display_name: Storage
     values:
-      - id: mmapv1
-        display_name: MMAPv1
-        variables:
-           STORAGE_ENGINE: "mmapv1"
       - id: wiredtiger
         display_name: WiredTiger
         variables:
@@ -1552,6 +1553,7 @@ buildvariants:
     - "test-cli-partial"
     - "test-mongodb-runner-partial"
     - "test-csfle"
+    - "test-auth-aws"
 
 # Both Windows hosts have a python toolchain; the suites run on each variant
 # to make sure they pass on both. MongoDB 8.3+ does not run on the vsCurrent
@@ -1567,6 +1569,20 @@ buildvariants:
     - "test-cli-partial"
     - "test-mongodb-runner-partial"
     - "test-csfle"
+    - "test-auth-aws"
+
+# The rolling amazon2023-arm64-latest image is what driver repos' amazon2023
+# variants run on, and it can diverge from the pinned amazon2023.3 images
+# (e.g. it still ships gnupg2-minimal without gpg-agent — DEVPROD-44314).
+# Exercise the latest-download signature path here so pinned/rolling image
+# skew cannot pass DET CI while breaking drivers, as #910 did.
+- name: tests-amazon2023-rolling
+  display_name: "Amazon Linux 2023 arm64 (rolling image)"
+  run_on:
+    - amazon2023-arm64-latest-large-m8g
+  tasks:
+    - "test-cli-full"
+    - "test-latest-standalone"
 
 - matrix_name: "tests-all"
   matrix_spec: {"os-fully-featured": "*", auth: "*", ssl: "*" }
@@ -1649,6 +1665,17 @@ buildvariants:
         add_tasks:
           - "test-ocsp"
           - "test-csfle"
+    # Master nightlies no longer publish builds for these hosts, so "latest"
+    # has nothing to download (the legacy symlinks are frozen at 8.0.0-alpha).
+    - if:
+        auth: "*"
+        ssl: "*"
+        os-requires-50: ["debian11", "ubuntu-20.04", "ubuntu2004-arm64", "rhel7"]
+      then:
+        remove_tasks:
+          - "test-latest-replica_set"
+          - "test-latest-sharded_cluster"
+          - "test-latest-standalone"
 
 - matrix_name: "tests-os-requires-70"
   matrix_spec: {"os-requires-70": "*", auth: "*", ssl: "*" }
@@ -1696,12 +1723,6 @@ buildvariants:
   matrix_spec: {"os-fully-featured": "rhel8", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
-    - if:
-        os-fully-featured: "*"
-        storage-engine: ["mmapv1"]
-      then:
-        add_tasks:
-          - "test-4.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: ["inmemory"]

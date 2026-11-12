@@ -4,10 +4,17 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
 
 import mongodl
 from server_artifacts import GpgEnvironmentError, _gpg_path, _verify_gpg_signature
+
+# TODO (DRIVERS-3666): remove the amazon2023 skip markers and
+# Amazon2023HostTest once DEVPROD-44314 ships full gnupg2.
+IS_AMAZON2023 = mongodl._is_amazon2023_host()
+# amazon2023 images still on gnupg2-minimal (no gpg-agent) cannot verify.
+GPG_CANNOT_VERIFY = IS_AMAZON2023 and shutil.which("gpg-agent") is None
 
 
 def _write_archive(directory):
@@ -16,6 +23,7 @@ def _write_archive(directory):
     return archive
 
 
+@unittest.skipIf(GPG_CANNOT_VERIFY, "amazon2023 hosts cannot verify signatures")
 class VerifySignatureRejectionTest(unittest.TestCase):
     """A working gpg must reject signatures it cannot trust."""
 
@@ -83,6 +91,19 @@ class VerifySignatureRejectionTest(unittest.TestCase):
                 tempfile.tempdir = old_tempdir
 
 
+class Amazon2023HostTest(unittest.TestCase):
+    """amazon2023 images ship gnupg2-minimal, which cannot verify."""
+
+    @unittest.skipUnless(
+        GPG_CANNOT_VERIFY, "only meaningful on amazon2023 hosts without gpg-agent"
+    )
+    def test_verification_raises_gpg_environment_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = _write_archive(tmp)
+            with self.assertRaises(GpgEnvironmentError):
+                _verify_gpg_signature("gpg", archive, b"not really a signature")
+
+
 class _FakeDownloadedFile:
     def __init__(self, path):
         self.path = path
@@ -96,16 +117,17 @@ class _FakeCache:
         return _FakeDownloadedFile(self._path)
 
 
-class VerificationErrorHandlingTest(unittest.TestCase):
+class VerificationToleranceTest(unittest.TestCase):
     """
-    _dl_component fails fast on GpgEnvironmentError on every host (a broken
-    gpg environment is never retried), and retries other download errors.
+    _dl_component tolerates GpgEnvironmentError on amazon2023 (with a
+    DEVPROD-44314 note), fails it fast elsewhere, and retries other errors.
     """
 
     def setUp(self):
         self.saved = (
             mongodl.verify_latest_build,
             mongodl._latest_build_url,
+            mongodl._is_amazon2023_host,
             mongodl._expand_archive,
             mongodl.time.sleep,
         )
@@ -120,11 +142,12 @@ class VerificationErrorHandlingTest(unittest.TestCase):
         (
             mongodl.verify_latest_build,
             mongodl._latest_build_url,
+            mongodl._is_amazon2023_host,
             mongodl._expand_archive,
             mongodl.time.sleep,
         ) = self.saved
 
-    def _drive(self, error):
+    def _drive(self, error, amazon_host, expect_raise):
         """Drive _dl_component with an always-raising verifier; return attempts."""
         attempts = []
 
@@ -133,6 +156,7 @@ class VerificationErrorHandlingTest(unittest.TestCase):
             raise error
 
         mongodl.verify_latest_build = verify
+        mongodl._is_amazon2023_host = lambda: amazon_host
         with tempfile.TemporaryDirectory() as tmp:
             raised = None
             try:
@@ -153,16 +177,169 @@ class VerificationErrorHandlingTest(unittest.TestCase):
                 )
             except type(error) as raised_exc:
                 raised = raised_exc
-        self.assertIsNotNone(raised, "expected the error to propagate")
+        if expect_raise:
+            self.assertIsNotNone(raised, "expected the error to propagate")
         return attempts
 
-    def test_gpg_environment_error_fails_fast(self):
-        attempts = self._drive(GpgEnvironmentError("no agent"))
+    def test_amazon_host_tolerates_gpg_environment_error(self):
+        with self.assertLogs("mongodl", level="WARNING") as logs:
+            attempts = self._drive(
+                GpgEnvironmentError("no agent"),
+                amazon_host=True,
+                expect_raise=False,
+            )
+        self.assertEqual(len(attempts), 1)
+        self.assertTrue(
+            any("DEVPROD-44314" in line for line in logs.output),
+            f"no DEVPROD-44314 note in {logs.output}",
+        )
+
+    def test_amazon_host_retries_bad_signatures(self):
+        attempts = self._drive(
+            ValueError("bad signature"),
+            amazon_host=True,
+            expect_raise=True,
+        )
+        self.assertEqual(len(attempts), 6)
+
+    def test_gpg_environment_error_fails_fast_on_other_hosts(self):
+        attempts = self._drive(
+            GpgEnvironmentError("no agent"),
+            amazon_host=False,
+            expect_raise=True,
+        )
         self.assertEqual(len(attempts), 1)
 
-    def test_other_errors_retry(self):
-        attempts = self._drive(ValueError("bad download"))
+    def test_other_hosts_retry_other_errors(self):
+        attempts = self._drive(
+            ValueError("bad download"),
+            amazon_host=False,
+            expect_raise=True,
+        )
         self.assertEqual(len(attempts), 6)
+
+
+class LatestBuildNotFoundTest(unittest.TestCase):
+    """A 404 for a latest/latest-build artifact is permanent: fail fast, no retry."""
+
+    def setUp(self):
+        self.saved = (
+            mongodl._latest_build_url,
+            mongodl._expand_archive,
+            mongodl.time.sleep,
+        )
+        mongodl._latest_build_url = lambda *args, **kwargs: (
+            "http://x/archive.tgz",
+            "http://x/archive.tgz.sig",
+        )
+        mongodl._expand_archive = lambda *args, **kwargs: None
+        mongodl.time.sleep = lambda seconds: None
+
+    def tearDown(self):
+        (
+            mongodl._latest_build_url,
+            mongodl._expand_archive,
+            mongodl.time.sleep,
+        ) = self.saved
+
+    def _drive(self, error, retries):
+        """Drive _dl_component with an always-raising cache; return (attempts, message)."""
+        attempts = []
+
+        def download_file(url):
+            attempts.append(1)
+            raise error
+
+        cache = _FakeCache(Path("unused"))
+        cache.download_file = download_file
+        message = None
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                mongodl._dl_component(
+                    cache=cache,
+                    out_dir=Path(tmp),
+                    version="latest",
+                    target="debian11",
+                    arch="x86_64",
+                    edition="enterprise",
+                    component="archive",
+                    pattern=None,
+                    strip_components=0,
+                    test=True,
+                    no_download=False,
+                    latest_build_branch=None,
+                    retries=retries,
+                )
+            except Exception as raised_exc:
+                message = str(raised_exc)
+        return attempts, message
+
+    @staticmethod
+    def _download_error(code):
+        """Build the error Cache.download_file raises for an HTTP failure."""
+        cause = urllib.error.HTTPError(
+            "http://x/archive.tgz", code, "failure", {}, None
+        )
+        error = RuntimeError("Failed to download [http://x/archive.tgz]")
+        error.__cause__ = cause
+        return error
+
+    def test_missing_latest_build_fails_fast(self):
+        attempts, message = self._drive(self._download_error(404), retries=5)
+        self.assertEqual(len(attempts), 1, "a 404 must not be retried")
+        self.assertIn("No latest build is published", message)
+        self.assertIn("debian11-x86_64", message)
+        self.assertIn("mongodb-mongo-master-nightly", message)
+
+    def test_latest_build_retries_other_errors(self):
+        attempts, message = self._drive(self._download_error(500), retries=5)
+        self.assertEqual(len(attempts), 6, "non-404 errors keep the retry budget")
+        self.assertIn("Failed to download", message)
+
+
+class RefreshFullJsonRetryTest(unittest.TestCase):
+    """refresh_full_json retries a failed full.json download (DRIVERS-3676)."""
+
+    def setUp(self):
+        self.saved_sleep = mongodl.time.sleep
+        mongodl.time.sleep = lambda seconds: None
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cache = mongodl.Cache.open_in(Path(self.tmp.name))
+
+    def tearDown(self):
+        mongodl.time.sleep = self.saved_sleep
+        self.cache.db._db.close()  # Windows cannot delete an open data.db file
+        self.tmp.cleanup()
+
+    def _fail_times(self, failures):
+        """Make download_file fail `failures` times, then report a cache hit."""
+        attempts = []
+
+        def download_file(url):
+            attempts.append(url)
+            if len(attempts) <= failures:
+                raise RuntimeError(f"Failed to download [{url}]")
+            return mongodl.DownloadResult(False, Path(self.tmp.name) / "full.json")
+
+        self.cache.download_file = download_file
+        return attempts
+
+    def test_retries_until_success(self):
+        attempts = self._fail_times(2)
+        self.cache.refresh_full_json(retries=5)
+        self.assertEqual(len(attempts), 3)
+
+    def test_raises_when_retries_run_out(self):
+        attempts = self._fail_times(10)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=2)
+        self.assertEqual(len(attempts), 3)
+
+    def test_zero_retries_tries_once(self):
+        attempts = self._fail_times(1)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=0)
+        self.assertEqual(len(attempts), 1)
 
 
 if __name__ == "__main__":

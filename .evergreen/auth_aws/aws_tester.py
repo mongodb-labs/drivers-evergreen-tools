@@ -112,21 +112,10 @@ def setup_ec2():
     return dict()
 
 
-def resolve_server_binary(path: str) -> str:
-    """Obtain the real mongodb binary for the given path. (DRIVERS-3673)
-
-    See `_tee_wrap_server_binaries()` in mongodb_runner.py for more details.
-    """
-    real = Path(f"{path}-real")
-    if real.is_file():
-        return str(real)
-    return path
-
-
 def ecs_test_files(mongo_binaries: str, project_dir: str) -> str:
     """Construct the list of `--files` to be copied into the ECS container."""
-    mongod = resolve_server_binary(f"{mongo_binaries}/mongod")
-    mongosh = resolve_server_binary(f"{mongo_binaries}/mongosh")
+    mongod = f"{mongo_binaries}/mongod"
+    mongosh = f"{mongo_binaries}/mongosh"
     return (
         f"{mongod}:/root/mongod {mongosh}:/root/mongosh"
         " lib/ecs_hosted_test.js:/root/ecs_hosted_test.js"

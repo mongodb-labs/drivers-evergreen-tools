@@ -110,6 +110,10 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     "ubuntu": {
+        # Newer releases (9.0.4 and later) publish ubuntu2604 archives, but
+        # older versions never will, and mongodl must download any version.
+        # Version-aware target selection: DRIVERS-3731.
+        "26.*": "ubuntu2404",
         "24.*": "ubuntu2404",
         "22.*": "ubuntu2204",
         "20.*": "ubuntu2004",
@@ -229,6 +233,21 @@ def infer_target_from_os_release(osr: Path) -> str:
         f"We don't know how to map '{os_id}' version '{ver_id}' to a distribution "
         "download target. Please contribute!"
     )
+
+
+def _is_amazon2023_host() -> bool:
+    """
+    Whether the host is Amazon Linux 2023, whose gnupg2-minimal gpg cannot
+    verify signatures. Keyed to the host OS, not the download target.
+    """
+    cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
+    found = next((p for p in cands if p.is_file()), None)
+    if found is None:
+        return False
+    os_rel = found.read_text(encoding="utf-8")
+    id_mat = re.search(r'\bID=("?)(amzn)\1', os_rel)
+    ver_mat = re.search(r'\bVERSION_ID=("?)(2023)\1', os_rel)
+    return bool(id_mat and ver_mat)
 
 
 def user_caches_root() -> Path:
@@ -573,6 +592,15 @@ def _strip_presigned_query(url: str) -> str:
     return parsed._replace(query="").geturl()
 
 
+def _is_missing_artifact_error(exc: BaseException) -> bool:
+    """Tell whether a download failure is an HTTP 404 for the artifact itself.
+
+    Cache.download_file wraps the urllib HTTPError as __cause__.
+    """
+    cause = exc.__cause__
+    return isinstance(cause, urllib.error.HTTPError) and cause.code == 404
+
+
 class Cache:
     """
     Abstraction over a mongodl downloads cache directory.
@@ -663,18 +691,29 @@ class Cache:
         )
         return DownloadResult(True, dest)
 
-    def refresh_full_json(self) -> None:
+    def refresh_full_json(self, retries: int) -> None:
         """
         Sync the content of the MongoDB full.json downloads list.
+
+        Retries failed attempts up to ``retries`` times, with backoff.
         """
         default_source = "https://downloads.mongodb.org/full.json"
         download_source = os.environ.get("MONGODB_DOWNLOAD_SOURCE", default_source)
-        with self._db.transaction():
-            dl = self.download_file(download_source)
-            if not dl.is_changed:
-                # We still have a good cache
-                return
-            self._db.import_json_file(dl.path)
+        retrier = DownloadRetrier(retries)
+        while True:
+            try:
+                # Retry outside the transaction, so each attempt starts clean.
+                with self._db.transaction():
+                    dl = self.download_file(download_source)
+                    if not dl.is_changed:
+                        # We still have a good cache
+                        return
+                    self._db.import_json_file(dl.path)
+                    return
+            except Exception as e:
+                LOGGER.exception(e)
+                if not retrier.retry():
+                    raise
 
 
 def _mkdir(dirpath: Path) -> None:
@@ -1013,7 +1052,19 @@ def _dl_component(
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
             if get_sig_url is not None:
-                verify_latest_build(cached, get_sig_url)
+                try:
+                    verify_latest_build(cached, get_sig_url)
+                except GpgEnvironmentError as e:
+                    if not _is_amazon2023_host():
+                        raise
+                    # gnupg2-minimal cannot verify; tolerate exactly this
+                    # failure (DEVPROD-44314).
+                    LOGGER.warning(
+                        "Signature verification failed on amazon2023; "
+                        "continuing without a verified signature, see "
+                        "DEVPROD-44314: %s",
+                        e,
+                    )
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )
@@ -1022,6 +1073,18 @@ def _dl_component(
             raise
         except Exception as e:
             LOGGER.exception(e)
+            if version in ("latest-build", "latest") and _is_missing_artifact_error(e):
+                branch_folder = (
+                    "mongodb-mongo-master-nightly"
+                    if latest_build_branch is None or latest_build_branch == "master"
+                    else f"mongodb-mongo-{latest_build_branch}-staging"
+                )
+                raise RuntimeError(
+                    f"No {version} build is published for {target}-{arch} under "
+                    f"{branch_folder} (edition: {edition}); the platform may not "
+                    "be supported by that branch. Use a published version or "
+                    "'latest-stable' instead."
+                ) from e
             if not retrier.retry():
                 raise
 
@@ -1323,7 +1386,12 @@ def main(argv=None):
         'download the with "--version=latest-build"',
         metavar="BRANCH_NAME",
     )
-    dl_grp.add_argument("--retries", help="The number of times to retry", default=0)
+    dl_grp.add_argument(
+        "--retries",
+        help="The number of times to retry a failed download "
+        "(both the full.json version list and the component)",
+        default=0,
+    )
     args = parser.parse_args(argv)
 
     if args.verbose:
@@ -1332,7 +1400,7 @@ def main(argv=None):
         LOGGER.setLevel(logging.WARNING)
 
     cache = Cache.open_in(args.cache_dir)
-    cache.refresh_full_json()
+    cache.refresh_full_json(retries=int(args.retries))
 
     version = args.version
     # Translate perf version if applicable:

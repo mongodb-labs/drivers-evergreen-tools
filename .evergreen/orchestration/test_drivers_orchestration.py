@@ -7,10 +7,12 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mongodb_runner
 from otel import (
     OTEL_EXTERNAL_TRACING_JSON,
     OTEL_SAMPLING_JSON,
@@ -266,6 +268,88 @@ class TestVersionFromMongodOutput(unittest.TestCase):
         self.assertIsNone(
             _version_from_mongod_output("OpenSSL 1.1.1k\ndistmod: rhel88\n")
         )
+
+
+class TestMongodbRunnerHost(unittest.TestCase):
+    def start_and_capture(self, data, topology):
+        """Run start_mongodb_runner against a fake runner process.
+
+        Returns the config handed to the runner and the URI it rendered, so
+        tests assert on the real hand-off point.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            captured = {}
+
+            class FakeProc:
+                stdout = iter(())
+                returncode = 0
+
+                def wait(self):
+                    return 0
+
+            def fake_popen(cmd, **kwargs):
+                # cmd is a list on posix and a string on win32; read the config
+                # from its known path instead of parsing cmd.
+                config = json.loads((Path(tmp) / "config.json").read_text())
+                captured["config"] = config
+                cluster_file = Path(config["runnerDir"]) / f"m-{config['id']}.json"
+                # The runner derives every advertised host from config["host"],
+                # so render the fake output from it too: the URI assertions
+                # then verify the configured host's pass-through.
+                cluster_file.write_text(
+                    json.dumps(
+                        {"connectionString": f"mongodb://{config['host']}:27017/"}
+                    )
+                )
+                return FakeProc()
+
+            opts = SimpleNamespace(
+                mongo_orchestration_home=tmp,
+                mongodb_binaries=tmp,
+                version="8.0",
+                topology=topology,
+                auth=False,
+            )
+            with unittest.mock.patch.object(
+                mongodb_runner, "_install_mongodb_runner", return_value="/fake/runner"
+            ), unittest.mock.patch.object(
+                mongodb_runner.subprocess, "Popen", side_effect=fake_popen
+            ), unittest.mock.patch.object(mongodb_runner, "TMPDIR", Path(tmp)):
+                uri = mongodb_runner.start_mongodb_runner(opts, data)
+            return captured["config"], uri
+
+    def test_runner_config_advertises_localhost(self):
+        """Non-sharded deployments must advertise localhost, not 127.0.0.1.
+
+        Driver SDAM and DNS seedlist tests assume the loopback name.
+        """
+        config, uri = self.start_and_capture({}, "standalone")
+        self.assertEqual(config["host"], "localhost")
+        self.assertEqual(uri, "mongodb://localhost:27017/")
+
+    def test_runner_config_pins_config_server_to_ipv4_loopback(self):
+        """Only the config server shard may pin 127.0.0.1.
+
+        Since 8.4.5 the runner applies host to the config server too: a
+        mongos pins the first address "localhost" resolves to (::1 here),
+        which an IPv4-only config server does not listen on, so start hangs
+        (DRIVERS-3720). The per-shard override restores the carve-out.
+        """
+        data = {
+            "shards": [
+                {
+                    "shardParams": {
+                        "members": [{"procParams": {"shardsvr": True, "port": 27217}}]
+                    }
+                }
+            ],
+            "routers": [{"port": 27017}],
+        }
+        config, _ = self.start_and_capture(data, "sharded_cluster")
+        self.assertEqual(config["topology"], "sharded")
+        self.assertEqual(config["host"], "localhost")
+        self.assertEqual(config["shards"][0]["host"], "127.0.0.1")
+        self.assertNotIn("host", config["shards"][1])
 
 
 if __name__ == "__main__":
