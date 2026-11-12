@@ -129,8 +129,24 @@ function assert_runner_logs_grow() {
     exit 1
   fi
 }
+# Driver SDAM and DNS seedlist tests need localhost, not 127.0.0.1; the
+# DRIVERS-3720 workaround pins only the config server.
+function assert_uri_advertises_localhost() {
+  # mo-expansion.yml is cwd-relative; this script runs from .evergreen/.
+  if ! grep -q 'MONGODB_URI: "mongodb://[^"]*localhost' mo-expansion.yml; then
+    echo "ERROR: mo-expansion.yml has no MONGODB_URI advertising localhost"
+    cat mo-expansion.yml 2>/dev/null || true
+    exit 1
+  fi
+  if grep -q 'MONGODB_URI: "mongodb://[^"]*127\.0\.0\.1' mo-expansion.yml; then
+    echo "ERROR: the rendered MONGODB_URI advertises 127.0.0.1 instead of localhost:"
+    grep MONGODB_URI mo-expansion.yml
+    exit 1
+  fi
+}
 if [ "$started_with_runner" == "true" ]; then
   assert_runner_logs_grow
+  assert_uri_advertises_localhost
 fi
 
 bash ./run-mongodb.sh start --topology standalone --auth
@@ -145,6 +161,7 @@ bash ./run-mongodb.sh start --version "${MONGODB_VERSION:-latest-stable}" --topo
 connect_mongodb --ssl --auth
 if [ "$started_with_runner" == "true" ]; then
   assert_runner_logs_grow --ssl --auth
+  assert_uri_advertises_localhost
 fi
 
 # Verify that auth is enforced when starting with AUTH=auth SSL=yes.
@@ -181,6 +198,9 @@ done
 # if the per-version pin held.
 start_with_runner --version 4.2
 connect_mongodb
+if [ "$started_with_runner" == "true" ]; then
+  assert_uri_advertises_localhost
+fi
 
 popd > /dev/null
 make -C ${DRIVERS_TOOLS} test

@@ -103,6 +103,9 @@ export OIDC_ADMIN_USER=$GCPOIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$GCPOIDC_ATLAS_PASSWORD
 EOF
 
+# Verify the deployment's tags when requested (DRIVERS-3712).
+verify_deployment_tags
+
 ########################
 # Run the self test.
 source ./secrets-export.sh
