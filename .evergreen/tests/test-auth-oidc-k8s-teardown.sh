@@ -91,9 +91,9 @@ run_and_expect "teardown.sh after variant setup failure" "never created" \
 mkdir -p "$WORK/bin"
 cat <<'EOF' > "$WORK/bin/kubectl"
 #!/usr/bin/env bash
-# Record the invocation; emulate a missing pod: fail unless
-# --ignore-not-found is passed.
-echo "FAKE-KUBECTL: kubectl $*"
+# Record the invocation and the kubeconfig it was handed; emulate a
+# missing pod: fail unless --ignore-not-found is passed.
+echo "FAKE-KUBECTL: kubectl $* (KUBECONFIG=${KUBECONFIG:-unset})"
 case " $* " in
   *" --ignore-not-found "*) exit 0 ;;
 esac
@@ -183,6 +183,47 @@ export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/aks
 EOF
 run_and_expect "teardown-pod.sh with no aks state skips" "no pod was created" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+
+# 10. The group backstop loop: retries EVERY variant's pod, each with its
+#    own kubeconfig and namespace. Without this, an earlier stage whose
+#    in-stage deletion failed stays leaked once a later stage overwrites
+#    the shared kubeconfig — the identity survives only in the log.
+touch "$FAKE/.evergreen/k8s/eks/kubeconfig" \
+  "$FAKE/.evergreen/k8s/gke/kubeconfig" \
+  "$FAKE/.evergreen/k8s/aks/kubeconfig"
+cat <<EOF > "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
+export AKS_CLUSTER_NAME=fake-cluster
+export AKS_RESOURCE_GROUP=fake-group
+export AKS_SERVICE_ACCOUNT_NAMESPACE=aks-test-ns
+export K8S_POD_NAME=test-aks-1
+EOF
+cp "$DRIVERS_TOOLS/.evergreen/k8s/teardown-all-pods.sh" "$FAKE/.evergreen/k8s/"
+run_and_expect "backstop loop deletes the eks pod with its own kubeconfig" \
+  "FAKE-KUBECTL: kubectl delete pod test-eks-1 --namespace default --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/eks/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+run_and_expect "backstop loop deletes the gke pod with its own kubeconfig" \
+  "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/gke/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+run_and_expect "backstop loop deletes the aks pod with its own kubeconfig" \
+  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+
+# 11. One variant's deletion failing must not mask the others: the loop
+#    keeps going and says which variant needs manual cleanup.
+cat <<'EOF' > "$WORK/bin/kubectl"
+#!/usr/bin/env bash
+echo "FAKE-KUBECTL: kubectl $* (KUBECONFIG=${KUBECONFIG:-unset})"
+case "$*" in
+  *test-gke-1*) echo 'simulated gke deletion failure' >&2; exit 1 ;;
+esac
+exit 0
+EOF
+run_and_expect "backstop loop names the variant whose teardown failed" \
+  "WARNING: gke pod teardown failed" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+run_and_expect "backstop loop still deletes later variants after a failure" \
+  "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
+  env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
 
 make -C "$DRIVERS_TOOLS" test
 
