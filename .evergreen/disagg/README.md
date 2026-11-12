@@ -22,7 +22,7 @@ registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `py
 | Variable         | Description                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------- |
 | `DSC_SLS_TAG`    | SLS image tag. Default: the newest mainline tag. Pinning a known-good tag is advised. |
-| `DSC_MONGOD_TAG` | mongod image tag. Default: the one pinned by `slslocal`.                              |
+| `DSC_MONGOD_TAG` | mongod image tag. Default: the one pinned by `slslocal`. Requires an Atlas build.     |
 | `AWS_*`          | Credentials with pull access to the SLS ECR repositories (see below).                 |
 
 ## Networking
