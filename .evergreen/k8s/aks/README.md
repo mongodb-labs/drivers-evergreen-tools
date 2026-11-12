@@ -10,6 +10,53 @@ These steps must be done by an account with admin access (one time):
 2. Store the secrets in the AWS vault
 3. Run `setup-cluster.sh`
 
+`setup-cluster.sh` tags all resources it creates with
+`mongodb-owner=client-libraries-managers@mongodb.com`, `mongodb-env=dev`.
+Override with `MONGODB_OWNER_TAG`/`MONGODB_ENV_TAG`. Set `VERIFY_MONGODB_TAGS=1`
+to verify after creation.
+
+`az aks create --tags` reaches only the cluster resource: setup-cluster.sh
+also tags the AKS-created `MC_*` node resource group and each node pool, the
+billable resources. If a provisioning step fails, the partially created
+resource group is deleted so a re-run starts clean.
+
+## Tag Verification
+
+Run `verify-aks-setup.sh` against an existing cluster to re-check that the
+resource group, the cluster, its node resource group, every node pool, and
+the identity still carry the policy tags. `AKS_USER_ASSIGNED_IDENTITY_NAME`
+is required; `AKS_CLUSTER_NAME` and `AKS_RESOURCE_GROUP` fall back to
+`./secrets-export.sh` or the aks vault. It exits non-zero naming the first
+resource found lacking them.
+
+The pod flow (`setup.sh`) runs the same verification when
+`VERIFY_MONGODB_TAGS=1`.
+
+For a cluster created before the node resource group and node pools were
+tagged, run this once:
+
+```bash
+MC_RESOURCE_GROUP="$(az aks show -g "${AKS_RESOURCE_GROUP}" -n "${AKS_CLUSTER_NAME}" --query nodeResourceGroup -otsv)"
+az tag update --resource-id "$(az group show -n "${MC_RESOURCE_GROUP}" --query id -otsv)" \
+  --operation Merge --tags "mongodb-owner=client-libraries-managers@mongodb.com" "mongodb-env=dev"
+az aks nodepool list -g "${AKS_RESOURCE_GROUP}" --cluster-name "${AKS_CLUSTER_NAME}" --query '[].name' -otsv |
+  while read -r pool; do
+    az aks nodepool update -g "${AKS_RESOURCE_GROUP}" --cluster-name "${AKS_CLUSTER_NAME}" \
+      -n "$pool" --tags "mongodb-owner=client-libraries-managers@mongodb.com" "mongodb-env=dev"
+  done
+```
+
+`az tag update --operation Merge` is used rather than `az tag create`:
+the latter replaces the resource's whole tag set, which would drop any
+tags AKS put on the group.
+
+## Smoke Test
+
+`smoke-test.sh` runs `setup-cluster.sh` end to end against a throwaway
+cluster (~10 minutes), then prints the node resource group's billable
+resources with their tags and deletes the resource group. It needs vault
+access to `drivers/aks` and is not run in CI.
+
 ## Usage
 
 These steps can be run using the drivers test secrets role:

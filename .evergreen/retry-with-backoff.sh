@@ -14,17 +14,20 @@ retry_with_backoff() {
   local timeout=${TIMEOUT-1}
   local attempt=0
   local exitCode=0
+  local attempt_stdout
 
   command="$*"
   while [[ $attempt -lt $max_attempts ]]; do
     attempt_prompt=$(( attempt + 1 ))
-    echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..."
+        # Progress goes to stderr; the wrapped command owns stdout.
+    echo "retry_with_backoff: running '${command}' - attempt n. ${attempt_prompt} ..." 1>&2
 
+    # Buffer this attempt's stdout and emit it only on success: a failed attempt's
+    # partial output would concatenate with the next attempt's output inside a substitution.
     exitCode=0
-    "$@" || {
-        exitCode=$?
-    }
+    attempt_stdout=$("$@") || exitCode=$?
     if [[ $exitCode == 0 ]]; then
+      printf '%s' "${attempt_stdout}"
       break
     fi
 

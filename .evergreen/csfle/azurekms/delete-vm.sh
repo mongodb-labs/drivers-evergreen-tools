@@ -50,3 +50,10 @@ az network nsg delete \
     --resource-group "$AZUREKMS_RESOURCEGROUP" \
     -n "$AZUREKMS_VMNAME-NSG"
 echo "Delete Network Security Group $AZUREKMS_VMNAME-NSG ... end"
+
+# A missing vnet is not an error: pre-policy VMs have none.
+echo "Delete Virtual Network $AZUREKMS_VMNAME-VNET ... begin"
+az network vnet delete \
+    --resource-group "$AZUREKMS_RESOURCEGROUP" \
+    -n "$AZUREKMS_VMNAME-VNET" || true
+echo "Delete Virtual Network $AZUREKMS_VMNAME-VNET ... end"

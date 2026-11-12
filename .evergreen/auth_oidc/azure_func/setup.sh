@@ -107,4 +107,7 @@ MONGODB_URI=$(check_deployment)
 export MONGODB_URI
 echo "export MONGODB_URI=$MONGODB_URI" >> ./secrets-export.sh
 
+# Verify the deployment's tags when requested (DRIVERS-3712).
+verify_deployment_tags
+
 popd

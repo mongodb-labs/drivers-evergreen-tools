@@ -73,12 +73,9 @@ cat test-env.sh | grep -q AWS_ROLE_ARN
 cat test-env.sh | grep MONGODB_URI | grep -v -q "@"
 rm test-env.sh
 
-# The EKS pod setup relies on GNU date/xargs and kubectl, which Windows hosts lack.
-if [ "${OSTYPE:-}" != cygwin ]; then
-  echo "ls" >> $PROJECT_DIRECTORY/.evergreen/run-mongodb-aws-eks-test.sh
-  bash aws_setup.sh eks
-  rm test-env.sh
-fi
+# TODO(DRIVERS-2945): re-enable once the drivers-2945-test EKS cluster is restored.
+# The test must be skipped on Windows, which lacks kubectl.
+echo "Skipping EKS pod identity test; the drivers-2945-test EKS cluster was removed (DRIVERS-2945)"
 
 bash ./teardown.sh
 
