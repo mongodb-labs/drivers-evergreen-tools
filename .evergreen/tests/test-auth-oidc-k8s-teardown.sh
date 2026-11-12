@@ -22,13 +22,14 @@ FAKE="$WORK/drivers-tools"
 K8S_DIR="$FAKE/.evergreen/auth_oidc/k8s"
 ATLAS_SECRETS="$FAKE/.evergreen/atlas/secrets-export.sh"
 EKS_SECRETS="$FAKE/.evergreen/k8s/eks/secrets-export.sh"
-mkdir -p "$K8S_DIR" "$FAKE/.evergreen/k8s/eks" "$FAKE/.evergreen/k8s/aks" "$FAKE/.evergreen/atlas"
+mkdir -p "$K8S_DIR" "$FAKE/.evergreen/k8s/eks" "$FAKE/.evergreen/k8s/aks" "$FAKE/.evergreen/k8s/gke" "$FAKE/.evergreen/atlas"
 cp "$DRIVERS_TOOLS/.evergreen/handle-paths.sh" "$FAKE/.evergreen/"
 cp "$DRIVERS_TOOLS/.evergreen/ensure-binary.sh" "$FAKE/.evergreen/"
 cp "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown-pod.sh" \
   "$DRIVERS_TOOLS/.evergreen/auth_oidc/k8s/teardown.sh" "$K8S_DIR/"
 cp "$DRIVERS_TOOLS/.evergreen/k8s/eks/teardown.sh" "$FAKE/.evergreen/k8s/eks/"
 cp "$DRIVERS_TOOLS/.evergreen/k8s/aks/teardown.sh" "$FAKE/.evergreen/k8s/aks/"
+cp "$DRIVERS_TOOLS/.evergreen/k8s/gke/teardown.sh" "$FAKE/.evergreen/k8s/gke/"
 
 # run_and_expect <description> <expected-substring> <command...>
 run_and_expect() {
@@ -84,21 +85,25 @@ run_and_expect "teardown.sh after variant setup failure" "never created" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown.sh"
 
 # 4. The pod was recorded but is already gone: kubectl reports NotFound, and
-#    teardown must still succeed (--ignore-not-found).
+#    teardown must still succeed (--ignore-not-found), naming the namespace
+#    the pod was created in rather than the kubeconfig's current one.
 mkdir -p "$WORK/bin"
 cat <<'EOF' > "$WORK/bin/kubectl"
 #!/usr/bin/env bash
-# Emulate a missing pod: fail unless --ignore-not-found is passed.
-echo 'Error from server (NotFound): pods "test-eks-1" not found' >&2
+# Record the invocation; emulate a missing pod: fail unless
+# --ignore-not-found is passed.
+echo "FAKE-KUBECTL: kubectl $*"
 case " $* " in
   *" --ignore-not-found "*) exit 0 ;;
 esac
+echo 'Error from server (NotFound): pods "test-eks-1" not found' >&2
 exit 1
 EOF
 chmod +x "$WORK/bin/kubectl"
 export PATH="$WORK/bin:$PATH"
 echo "export K8S_POD_NAME=test-eks-1" > "$EKS_SECRETS"
-run_and_expect "teardown-pod.sh with a missing pod" "Tearing down eks pod... done." \
+run_and_expect "teardown-pod.sh deletes the eks pod from its namespace" \
+  "FAKE-KUBECTL: kubectl delete pod test-eks-1 --namespace default --ignore-not-found" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 # 5. The deployment was created but the k8s secrets file carries no Atlas API
@@ -120,18 +125,6 @@ run_and_expect "teardown.sh without credentials names the deployment" "regressio
 #    reported success while the pod keeps running.
 printf '#!/usr/bin/env bash\nexit 0\n' > "$WORK/bin/az"
 chmod +x "$WORK/bin/az"
-cat <<EOF > "$WORK/bin/kubectl"
-#!/usr/bin/env bash
-# Record the invocation and emulate the pod: deleting a pod that lives in a
-# custom namespace only works when that namespace is passed explicitly.
-echo "FAKE-KUBECTL: kubectl \$*"
-case " \$* " in
-  *" --ignore-not-found "*|*" -n aks-test-ns "*|*" --namespace aks-test-ns "*) exit 0 ;;
-esac
-echo 'Error from server (NotFound): pods "test-aks-1" not found' >&2
-exit 1
-EOF
-chmod +x "$WORK/bin/kubectl"
 cat <<EOF > "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
 export AKS_CLUSTER_NAME=fake-cluster
 export AKS_RESOURCE_GROUP=fake-group
@@ -145,6 +138,20 @@ export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/aks
 EOF
 run_and_expect "teardown-pod.sh deletes the aks pod from its namespace" \
   "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found" \
+  env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
+
+# 7. GKE: the pod is created in the default namespace; deletion must name it
+#    explicitly for the same reason as eks.
+cat <<EOF > "$FAKE/.evergreen/k8s/gke/secrets-export.sh"
+export K8S_POD_NAME=test-gke-1
+EOF
+cat <<EOF > "$K8S_DIR/secrets-export.sh"
+export OIDC_SERVER_TYPE=atlas
+export K8S_VARIANT=gke
+export K8S_VARIANT_DIR=$FAKE/.evergreen/k8s/gke
+EOF
+run_and_expect "teardown-pod.sh deletes the gke pod from its namespace" \
+  "FAKE-KUBECTL: kubectl delete pod test-gke-1 --namespace default --ignore-not-found" \
   env DRIVERS_TOOLS="$FAKE" bash "$K8S_DIR/teardown-pod.sh"
 
 make -C "$DRIVERS_TOOLS" test

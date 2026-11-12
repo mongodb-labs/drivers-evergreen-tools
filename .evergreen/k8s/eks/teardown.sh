@@ -13,5 +13,7 @@ fi
 if [ -z "${K8S_POD_NAME:-}" ]; then
   echo "Skipping eks pod teardown: no pod was created (K8S_POD_NAME is not set)."
 else
-  kubectl delete pod ${K8S_POD_NAME} --ignore-not-found
+  # Name the namespace setup.sh created the pod in: --ignore-not-found would
+  # otherwise mask a wrong-namespace lookup and leak the pod.
+  kubectl delete pod ${K8S_POD_NAME} --namespace default --ignore-not-found
 fi
