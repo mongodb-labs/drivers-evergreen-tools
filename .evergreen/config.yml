@@ -1474,10 +1474,6 @@ axes:
   - id: storage-engine
     display_name: Storage
     values:
-      - id: mmapv1
-        display_name: MMAPv1
-        variables:
-           STORAGE_ENGINE: "mmapv1"
       - id: wiredtiger
         display_name: WiredTiger
         variables:
@@ -1716,12 +1712,6 @@ buildvariants:
   matrix_spec: {"os-fully-featured": "rhel8", storage-engine: "*" }
   display_name: "${os-fully-featured} ${storage-engine}"
   rules:
-    - if:
-        os-fully-featured: "*"
-        storage-engine: ["mmapv1"]
-      then:
-        add_tasks:
-          - "test-4.2-standalone"
     - if:
         os-fully-featured: "*"
         storage-engine: ["inmemory"]
