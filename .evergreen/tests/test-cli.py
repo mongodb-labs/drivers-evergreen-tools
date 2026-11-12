@@ -297,5 +297,50 @@ class LatestBuildNotFoundTest(unittest.TestCase):
         self.assertIn("Failed to download", message)
 
 
+class RefreshFullJsonRetryTest(unittest.TestCase):
+    """refresh_full_json retries a failed full.json download (DRIVERS-3676)."""
+
+    def setUp(self):
+        self.saved_sleep = mongodl.time.sleep
+        mongodl.time.sleep = lambda seconds: None
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cache = mongodl.Cache.open_in(Path(self.tmp.name))
+
+    def tearDown(self):
+        mongodl.time.sleep = self.saved_sleep
+        self.cache.db._db.close()  # Windows cannot delete an open data.db file
+        self.tmp.cleanup()
+
+    def _fail_times(self, failures):
+        """Make download_file fail `failures` times, then report a cache hit."""
+        attempts = []
+
+        def download_file(url):
+            attempts.append(url)
+            if len(attempts) <= failures:
+                raise RuntimeError(f"Failed to download [{url}]")
+            return mongodl.DownloadResult(False, Path(self.tmp.name) / "full.json")
+
+        self.cache.download_file = download_file
+        return attempts
+
+    def test_retries_until_success(self):
+        attempts = self._fail_times(2)
+        self.cache.refresh_full_json(retries=5)
+        self.assertEqual(len(attempts), 3)
+
+    def test_raises_when_retries_run_out(self):
+        attempts = self._fail_times(10)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=2)
+        self.assertEqual(len(attempts), 3)
+
+    def test_zero_retries_tries_once(self):
+        attempts = self._fail_times(1)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=0)
+        self.assertEqual(len(attempts), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
