@@ -64,13 +64,17 @@ else
   fallback_is_expected=false
 fi
 
+# Reset per call; the log-growth asserts only run when the runner path was taken.
+started_with_runner=false
+
 # Start a deployment and fail unless mongodb-runner started it, or a fallback is
 # expected on this host class per DRIVERS-3558. A silent fallback on a host that
 # could have used mongodb-runner would hide a broken pin set.
 function start_with_runner() {
+  started_with_runner=false
   local log
   log=$(mktemp)
-  # Clean up the temp log on function return without leaving a RETURN trap installed.
+  # Remove the temp log without leaving a RETURN trap installed.
   trap 'rm -f "$log"; trap - RETURN' RETURN
 
   if ! bash ./run-mongodb.sh start "$@" 2>&1 | tee "$log"; then
@@ -79,6 +83,7 @@ function start_with_runner() {
   fi
 
   if grep -q "Running mongodb-runner using" "$log"; then
+    started_with_runner=true
     return 0
   fi
   if grep -q "mongodb-runner is not supported on this platform" "$log"; then
@@ -98,18 +103,50 @@ function start_with_runner() {
 start_with_runner
 connect_mongodb
 
-# TODO(DRIVERS-3673): assert the logDir capture instead once the upstream
-# runner honors logDir itself.
-if [ -f "${MONGODB_BINARIES}/mongod-real" ]; then
-  log_file=$(ls -t "${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log | head -n1)
-  size1=$(wc -c < "$log_file")
-  connect_mongodb
-  sleep 1
-  size2=$(wc -c < "$log_file")
-  if [ "$size2" -le "$size1" ]; then
-    echo "ERROR: mongod's log file is not being updated: $log_file"
+# The runner keeps each server's log file growing after start returns;
+# a stalled sum is the DRIVERS-3673 regression.
+# Flags pass through to connect_mongodb.
+function assert_runner_logs_grow() {
+  if ! ls "${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log > /dev/null 2>&1 &&
+    ! ls "${MONGO_ORCHESTRATION_HOME}"/logs/mongos-*.log > /dev/null 2>&1; then
+    echo "ERROR: no runner-written server logs in ${MONGO_ORCHESTRATION_HOME}/logs"
     exit 1
   fi
+  # Any single server may idle during the ping; the sum may not. nullglob keeps
+  # the unmatched mongos-* glob of a standalone start from failing cat under pipefail.
+  local logs=()
+  shopt -s nullglob
+  logs=("${MONGO_ORCHESTRATION_HOME}"/logs/mongod-*.log
+    "${MONGO_ORCHESTRATION_HOME}"/logs/mongos-*.log)
+  shopt -u nullglob
+  size1=$(cat "${logs[@]}" | wc -c)
+  connect_mongodb "$@"
+  sleep 1
+  size2=$(cat "${logs[@]}" | wc -c)
+  if [ "$size2" -le "$size1" ]; then
+    echo "ERROR: the server logs are not being updated in" \
+      "${MONGO_ORCHESTRATION_HOME}/logs"
+    exit 1
+  fi
+}
+# Driver SDAM and DNS seedlist tests need localhost, not 127.0.0.1; the
+# DRIVERS-3720 workaround pins only the config server.
+function assert_uri_advertises_localhost() {
+  # mo-expansion.yml is cwd-relative; this script runs from .evergreen/.
+  if ! grep -q 'MONGODB_URI: "mongodb://[^"]*localhost' mo-expansion.yml; then
+    echo "ERROR: mo-expansion.yml has no MONGODB_URI advertising localhost"
+    cat mo-expansion.yml 2>/dev/null || true
+    exit 1
+  fi
+  if grep -q 'MONGODB_URI: "mongodb://[^"]*127\.0\.0\.1' mo-expansion.yml; then
+    echo "ERROR: the rendered MONGODB_URI advertises 127.0.0.1 instead of localhost:"
+    grep MONGODB_URI mo-expansion.yml
+    exit 1
+  fi
+}
+if [ "$started_with_runner" == "true" ]; then
+  assert_runner_logs_grow
+  assert_uri_advertises_localhost
 fi
 
 bash ./run-mongodb.sh start --topology standalone --auth
@@ -122,6 +159,10 @@ connect_mongodb --ssl
 # tests-windows-vsCurrent, where 8.3+ cannot run); latest-stable otherwise.
 bash ./run-mongodb.sh start --version "${MONGODB_VERSION:-latest-stable}" --topology sharded_cluster --auth --ssl
 connect_mongodb --ssl --auth
+if [ "$started_with_runner" == "true" ]; then
+  assert_runner_logs_grow --ssl --auth
+  assert_uri_advertises_localhost
+fi
 
 # Verify that auth is enforced when starting with AUTH=auth SSL=yes.
 # An unauthenticated connection must be rejected, and an authenticated one must succeed.
@@ -157,6 +198,9 @@ done
 # if the per-version pin held.
 start_with_runner --version 4.2
 connect_mongodb
+if [ "$started_with_runner" == "true" ]; then
+  assert_uri_advertises_localhost
+fi
 
 popd > /dev/null
 make -C ${DRIVERS_TOOLS} test

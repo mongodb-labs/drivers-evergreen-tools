@@ -11,15 +11,23 @@ updates:
       actions:
         patterns:
           - "*"
-  # Python (uv workspace root). Version updates come from the
-  # uv-lock-update workflow; security updates are exempt from the 0 limit.
+  # Python (uv workspace root). Dependabot fully manages uv.lock: one grouped
+  # weekly pull request plus immediate, ungrouped security updates. Never set
+  # uv's exclude-newer in pyproject.toml instead: Dependabot resolves with it
+  # and produces pull requests that remove or downgrade packages
+  # (dependabot-core#14156).
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 0
+    allow:
+      - dependency-type: "all"
+    groups:
+      uv:
+        patterns:
+          - "*"
   # Go modules (mongoproxy and perfcomp), updated together in one PR.
   - package-ecosystem: "gomod"
     directories:

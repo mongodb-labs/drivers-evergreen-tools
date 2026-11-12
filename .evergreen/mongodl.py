@@ -110,6 +110,10 @@ DISTRO_VERSION_MAP = {
 #: Map distribution IDs with version fnmatch() patterns to download platform targets
 DISTRO_ID_TO_TARGET = {
     "ubuntu": {
+        # Newer releases (9.0.4 and later) publish ubuntu2604 archives, but
+        # older versions never will, and mongodl must download any version.
+        # Version-aware target selection: DRIVERS-3731.
+        "26.*": "ubuntu2404",
         "24.*": "ubuntu2404",
         "22.*": "ubuntu2204",
         "20.*": "ubuntu2004",
@@ -229,6 +233,21 @@ def infer_target_from_os_release(osr: Path) -> str:
         f"We don't know how to map '{os_id}' version '{ver_id}' to a distribution "
         "download target. Please contribute!"
     )
+
+
+def _is_amazon2023_host() -> bool:
+    """
+    Whether the host is Amazon Linux 2023, whose gnupg2-minimal gpg cannot
+    verify signatures. Keyed to the host OS, not the download target.
+    """
+    cands = (Path(p) for p in ["/etc/os-release", "/usr/lib/os-release"])
+    found = next((p for p in cands if p.is_file()), None)
+    if found is None:
+        return False
+    os_rel = found.read_text(encoding="utf-8")
+    id_mat = re.search(r'\bID=("?)(amzn)\1', os_rel)
+    ver_mat = re.search(r'\bVERSION_ID=("?)(2023)\1', os_rel)
+    return bool(id_mat and ver_mat)
 
 
 def user_caches_root() -> Path:
@@ -1013,7 +1032,19 @@ def _dl_component(
             if sha256 is not None and not _check_shasum256(cached, sha256):
                 raise ValueError("Incorrect shasum256 for %s", cached)
             if get_sig_url is not None:
-                verify_latest_build(cached, get_sig_url)
+                try:
+                    verify_latest_build(cached, get_sig_url)
+                except GpgEnvironmentError as e:
+                    if not _is_amazon2023_host():
+                        raise
+                    # gnupg2-minimal cannot verify; tolerate exactly this
+                    # failure (DEVPROD-44314).
+                    LOGGER.warning(
+                        "Signature verification failed on amazon2023; "
+                        "continuing without a verified signature, see "
+                        "DEVPROD-44314: %s",
+                        e,
+                    )
             return _expand_archive(
                 cached, out_dir, pattern, strip_components, test=test
             )

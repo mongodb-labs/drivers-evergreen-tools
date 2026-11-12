@@ -103,6 +103,9 @@ export MONGODB_URI_SINGLE="$URI/?authMechanism=MONGODB-OIDC&authSource=%24extern
 export OIDC_ADMIN_USER=$OIDC_ATLAS_USER
 export OIDC_ADMIN_PWD=$OIDC_ATLAS_PASSWORD
 EOF
+
+  # Verify the deployment's tags when requested (DRIVERS-3712).
+  verify_deployment_tags
 fi
 
 popd

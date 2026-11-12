@@ -12,6 +12,9 @@ pushd $SCRIPT_DIR >/dev/null
 if [ -f secrets-export.sh ]; then
   . $SCRIPT_DIR/../ensure-uv.sh
   ensure_uv || exit 1
+  # The assign script only applies the instance account's credentials when none are set,
+  # so clear any ambient AWS credentials first.
+  unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
   source secrets-export.sh
   # The auth_aws group is defined in the root pyproject.toml, so run from the
   # root project context. DRIVERS_TOOLS is set absolutely by handle-paths.sh.
