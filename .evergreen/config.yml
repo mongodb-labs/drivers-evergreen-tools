@@ -470,6 +470,10 @@ functions:
           # Tag-policy gate on the pod flow: aks checks cluster, node
           # resources, and identity; eks the cluster. gke ignores the flag.
           export VERIFY_MONGODB_TAGS=1
+          # Delete this stage's pod when the stage ends, success or failure,
+          # while the kubeconfig and recorded variant still belong to it: the
+          # next stage's setup overwrites both.
+          trap 'rc=$?; bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh; exit $rc' EXIT
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
           export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
@@ -492,6 +496,8 @@ functions:
           export K8S_VARIANT=${VARIANT}
           # See "run oidc k8s atlas test" for the gate's per-variant scope.
           export VERIFY_MONGODB_TAGS=1
+          # See "run oidc k8s atlas test" for the per-stage pod teardown trap.
+          trap 'rc=$?; bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh; exit $rc' EXIT
           bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
           bash ./.evergreen/auth_oidc/k8s/start-server.sh
           bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
@@ -1293,11 +1299,13 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
-      # In the group teardown rather than the test commands, so the pod is
-      # deleted even when setup or the test fails after creating it.
+      # Backstop for stages killed before their trap fired. The AWS
+      # credentials drive the kubeconfig's aws eks get-token, without which
+      # EKS pod deletion fails authentication.
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
       - command: subprocess.exec
@@ -1328,11 +1336,13 @@ task_groups:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
     teardown_group:
-      # In the group teardown rather than the test commands, so the pod is
-      # deleted even when setup or the test fails after creating it.
+      # Backstop for stages killed before their trap fired. The AWS
+      # credentials drive the kubeconfig's aws eks get-token, without which
+      # EKS pod deletion fails authentication.
       - command: subprocess.exec
         params:
           binary: bash
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh
       - func: "teardown assets"
