@@ -88,6 +88,9 @@ evergreen_config_generator/dist
 *-expansions.yml
 *-expansion.yml
 secrets-export.sh
+# The per-variant kubeconfigs the oidc k8s stages write hold cluster
+# credentials.
+.evergreen/k8s/*/kubeconfig
 token_file.txt
 test-env.sh
 

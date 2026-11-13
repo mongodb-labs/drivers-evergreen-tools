@@ -458,48 +458,26 @@ functions:
           make test
 
   "run oidc k8s atlas test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
+        binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          export K8S_VARIANT=${VARIANT}
-          # Tag-policy gate on the pod flow: aks checks cluster, node
-          # resources, and identity; eks the cluster. gke ignores the flag.
-          export VERIFY_MONGODB_TAGS=1
-          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
-          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
-          export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
-          export K8S_TEST_CMD="echo 'hello'"
-          bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
-          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/run-test.sh
+          - atlas
+          - ${VARIANT}
 
   "run oidc k8s local test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
+        binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          export K8S_VARIANT=${VARIANT}
-          # See "run oidc k8s atlas test" for the gate's per-variant scope.
-          export VERIFY_MONGODB_TAGS=1
-          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
-          bash ./.evergreen/auth_oidc/k8s/start-server.sh
-          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
-          bash ./.evergreen/auth_oidc/k8s/teardown-pod.sh
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/run-test.sh
+          - local
+          - ${VARIANT}
 
   "run install binaries test":
     - command: subprocess.exec
@@ -573,6 +551,13 @@ functions:
       params:
         binary: bash
         args: [src/.evergreen/tests/test-ensure-uv.sh]
+
+  "run auth oidc k8s teardown test":
+    - command: subprocess.exec
+      type: test
+      params:
+        binary: bash
+        args: [src/.evergreen/tests/test-auth-oidc-k8s-teardown.sh]
 
   "run mongodb runner test partial":
     - command: subprocess.exec
@@ -1088,6 +1073,11 @@ tasks:
       commands:
         - func: "run ensure uv test"
 
+    - name: "test-auth-oidc-k8s-teardown"
+      tags: ["pr"]
+      commands:
+        - func: "run auth oidc k8s teardown test"
+
     - name: "test-legacy-versions"
       commands:
         - func: "run legacy versions test"
@@ -1283,6 +1273,18 @@ task_groups:
           args:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
     teardown_group:
+      # Backstop for stages killed before their trap fired or whose in-stage
+      # deletion failed: retries EVERY variant's pod, each against its own
+      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
+      # API call cannot eat the group's 180s before the Atlas teardown below
+      # runs. The AWS credentials drive the kubeconfig's aws eks get-token,
+      # without which EKS pod deletion fails authentication.
+      - command: subprocess.exec
+        params:
+          binary: timeout
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/k8s/teardown-all-pods.sh"]
       - command: subprocess.exec
         params:
           binary: bash
@@ -1311,6 +1313,16 @@ task_groups:
             - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/setup.sh
             - local
     teardown_group:
+      # Backstop for stages killed before their trap fired or whose in-stage
+      # deletion failed: retries EVERY variant's pod, each against its own
+      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
+      # API call cannot eat the group's 180s.
+      - command: subprocess.exec
+        params:
+          binary: timeout
+          include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+          args: ["60", "bash", "${DRIVERS_TOOLS}/.evergreen/k8s/teardown-all-pods.sh"]
       - func: "teardown assets"
       - func: "upload logs"
       - func: "upload test results"
@@ -1542,6 +1554,7 @@ buildvariants:
     # - "test_oidc_azure_func_task_group"
     - "test_oidc_k8s_atlas_task_group"
     - "test_oidc_k8s_local_task_group"
+    - "test-auth-oidc-k8s-teardown"
 
 # An alternate Windows host that runs a subset of the test suites.
 - name: tests-windows-2022-latest

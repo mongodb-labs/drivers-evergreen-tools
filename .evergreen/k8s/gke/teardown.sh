@@ -10,4 +10,4 @@ if [ -f $SCRIPT_DIR/secrets-export.sh ]; then
   source $SCRIPT_DIR/secrets-export.sh
 fi
 
-kubectl delete pod ${K8S_POD_NAME}
+bash $SCRIPT_DIR/../delete-pod.sh gke default
