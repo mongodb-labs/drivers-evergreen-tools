@@ -15,7 +15,9 @@ fi
 # is (both come from the same vault write).
 DELETE_POD="$SCRIPT_DIR/../delete-pod.sh"
 if [ -n "${K8S_POD_NAME:-}" ]; then
-  az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+  # --file: older az releases ignore KUBECONFIG and write ~/.kube/config,
+  # which would leave the per-variant kubeconfig kubectl reads unpopulated.
+  az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}" --file "${KUBECONFIG:-$HOME/.kube/config}"
   # Sourced: it overwrites SCRIPT_DIR, so resolve the helper path above first.
   . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
 fi

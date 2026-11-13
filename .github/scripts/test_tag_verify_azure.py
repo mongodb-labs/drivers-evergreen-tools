@@ -214,14 +214,14 @@ class AzureParseTest(unittest.TestCase):
         self.assertIn("verify_aks_tags", text)
         self.assertIn("az group list", text)
 
-    def test_pod_flow_and_config_arm_the_gate(self):
+    def test_pod_flow_arms_the_gate(self):
         """The pod flow runs the gate when VERIFY_MONGODB_TAGS is set, and
-        config.yml sets the flag."""
+        the stage runner sets the flag."""
         setup = (REPO / ".evergreen/k8s/aks/setup.sh").read_text()
         self.assertIn("VERIFY_MONGODB_TAGS", setup)
         self.assertIn("verify_aks_tags", setup)
-        config = (REPO / ".evergreen/config.yml").read_text()
-        self.assertIn("export VERIFY_MONGODB_TAGS=1", config)
+        runner = (REPO / ".evergreen/auth_oidc/k8s/run-test.sh").read_text()
+        self.assertIn("export VERIFY_MONGODB_TAGS=1", runner)
 
     def test_ip_echo_curl_fails_fast(self):
         """The IP-echo curl calls must fail on HTTP errors and hung

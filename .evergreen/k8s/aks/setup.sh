@@ -17,7 +17,9 @@ fi
 
 # Handle credentials.
 . $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
-az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+# --file: older az releases ignore KUBECONFIG and write ~/.kube/config,
+# which would leave the per-variant kubeconfig kubectl reads unpopulated.
+az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}" --file "${KUBECONFIG:-$HOME/.kube/config}"
 
 # Verify tags when requested: the policy covers the pre-provisioned cluster
 # the tests run on, not only what this script creates.

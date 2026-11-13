@@ -113,6 +113,7 @@ run_and_expect "teardown-pod.sh with no aks state skips" "no pod was created" \
 mkdir -p "$WORK/bin"
 cat <<'EOF' > "$WORK/bin/az"
 #!/usr/bin/env bash
+echo "FAKE-AZ: az $*" >> "$WORK/az-args"
 case "$1 $2" in
   "version -o") echo "2.30.0" ;;
 esac
@@ -188,6 +189,11 @@ run_and_expect "backstop loop deletes the gke pod with its own kubeconfig" \
 run_and_expect "backstop loop deletes the aks pod with its own kubeconfig" \
   "FAKE-KUBECTL: kubectl delete pod test-aks-1 --namespace aks-test-ns --ignore-not-found --timeout=60s (KUBECONFIG=$FAKE/.evergreen/k8s/aks/kubeconfig)" \
   env DRIVERS_TOOLS="$FAKE" bash "$FAKE/.evergreen/k8s/teardown-all-pods.sh"
+grep -q -- "--file $FAKE/.evergreen/k8s/aks/kubeconfig" "$WORK/az-args" || {
+  echo "FAIL: the aks teardown must fetch credentials into the per-variant kubeconfig" >&2
+  exit 1
+}
+echo "PASS: the aks teardown fetches credentials into the per-variant kubeconfig"
 
 # 5. One variant's deletion failing must not mask the others: the loop
 #    keeps going and says which variant needs manual cleanup.
@@ -248,11 +254,31 @@ exit 0
 EOF
 chmod +x "$WORK/bin/kubectl"
 rm "$FAKE/.evergreen/k8s/aks/secrets-export.sh"
+# The stage runner always exports KUBECONFIG before setup (the production
+# shape): the per-variant file must be the target.
+rm -f "$WORK/az-args"
+env DRIVERS_TOOLS="$FAKE" KUBECONFIG="$FAKE/.evergreen/k8s/aks/kubeconfig" \
+  AZUREKMS_TENANTID=env-tenant AZUREKMS_CLIENTID=env-client AZUREKMS_SECRET=env-secret \
+  AKS_CLUSTER_NAME=env-cluster AKS_RESOURCE_GROUP=env-group \
+  AKS_SERVICE_ACCOUNT_NAMESPACE=env-ns AKS_SERVICE_ACCOUNT_NAME=env-sa \
+  bash "$FAKE/.evergreen/k8s/aks/setup.sh" > /dev/null
+grep -q -- "--file $FAKE/.evergreen/k8s/aks/kubeconfig" "$WORK/az-args" || {
+  echo "FAIL: aks setup must fetch credentials into the per-variant kubeconfig" >&2
+  exit 1
+}
+echo "PASS: aks setup fetches credentials into the per-variant kubeconfig"
+# Without a KUBECONFIG (local, env-based runs): the normal default.
+rm -f "$WORK/az-args"
 env DRIVERS_TOOLS="$FAKE" \
   AZUREKMS_TENANTID=env-tenant AZUREKMS_CLIENTID=env-client AZUREKMS_SECRET=env-secret \
   AKS_CLUSTER_NAME=env-cluster AKS_RESOURCE_GROUP=env-group \
   AKS_SERVICE_ACCOUNT_NAMESPACE=env-ns AKS_SERVICE_ACCOUNT_NAME=env-sa \
   bash "$FAKE/.evergreen/k8s/aks/setup.sh" > /dev/null
+grep -q -- "--file $HOME/.kube/config" "$WORK/az-args" || {
+  echo "FAIL: aks setup without KUBECONFIG must use the default kubeconfig" >&2
+  exit 1
+}
+echo "PASS: aks setup without KUBECONFIG uses the default kubeconfig"
 if ! grep -q "export AKS_CLUSTER_NAME=env-cluster" "$FAKE/.evergreen/k8s/aks/secrets-export.sh" ||
   ! grep -q "export AKS_RESOURCE_GROUP=env-group" "$FAKE/.evergreen/k8s/aks/secrets-export.sh" ||
   ! grep -q "export AKS_SERVICE_ACCOUNT_NAMESPACE=env-ns" "$FAKE/.evergreen/k8s/aks/secrets-export.sh"; then
