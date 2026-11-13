@@ -31,7 +31,7 @@ command -v python3 >/dev/null 2>&1 || fail "'python3' is not installed on this h
 ensure_uv || exit 1
 
 uri_py() {
-  uv run --no-project --with "pymongo~=4.0" python "${SCRIPT_DIR}/uri.py" "${STATE_DIR}" "$@"
+  uv run --project "${DRIVERS_TOOLS}" --group disagg python "${SCRIPT_DIR}/uri.py" "${STATE_DIR}" "$@"
 }
 
 mkdir -p "${STATE_DIR}"
