@@ -249,6 +249,7 @@ printf '#!/usr/bin/env bash\necho "FAKE-CONFIGURE-POD: $*"\n' > "$FAKE/.evergree
 cat <<'EOF' > "$WORK/bin/kubectl"
 #!/usr/bin/env bash
 cat > /dev/null
+echo "FAKE-KUBECTL: kubectl $*" >> "$WORK/kubectl-args"
 echo "FAKE-KUBECTL: kubectl $* (KUBECONFIG=${KUBECONFIG:-unset})"
 exit 0
 EOF
@@ -266,7 +267,13 @@ grep -q -- "--file $FAKE/.evergreen/k8s/aks/kubeconfig" "$WORK/az-args" || {
   echo "FAIL: aks setup must fetch credentials into the per-variant kubeconfig" >&2
   exit 1
 }
-echo "PASS: aks setup fetches credentials into the per-variant kubeconfig"
+# configure-pod.sh and the test scripts run namespace-less kubectl: the
+# context must point at the pod's namespace.
+grep -q -- "kubectl config set-context --current --namespace=env-ns" "$WORK/kubectl-args" || {
+  echo "FAIL: aks setup must select the pod's namespace in the kubeconfig context" >&2
+  exit 1
+}
+echo "PASS: aks setup fetches credentials and selects the pod's namespace"
 # Without a KUBECONFIG (local, env-based runs): the normal default.
 rm -f "$WORK/az-args"
 env DRIVERS_TOOLS="$FAKE" \

@@ -42,6 +42,10 @@ EOF
 export K8S_POD_NAME=$POD_NAME
 
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+# Point kubectl at the pod's namespace: configure-pod.sh and the test
+# scripts run namespace-less kubectl, and the pod is created in
+# AKS_SERVICE_ACCOUNT_NAMESPACE.
+kubectl config set-context --current --namespace="${AKS_SERVICE_ACCOUNT_NAMESPACE}"
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
