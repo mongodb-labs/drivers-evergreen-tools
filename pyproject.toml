@@ -39,6 +39,9 @@ auth_oidc = [
   "azure-identity",
   "azure-keyvault-secrets",
 ]
+# pymongo for .evergreen/disagg/uri.py, which asks a DSC mongod for the replica
+# set name and member names.
+disagg = ["pymongo~=4.0"]
 # boto3 for .evergreen/docker/login.py's ECR token flow.
 docker = [{include-group = "boto"}]
 # asn1crypto for the mock OCSP responder's ASN.1 certificate handling

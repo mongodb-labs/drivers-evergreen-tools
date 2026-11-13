@@ -1,0 +1,101 @@
+# Disaggregated storage (DSC) test deployments
+
+Scripts to start a deployment of DSC mongods backed by the SLS storage layer, using `slslocal --compose`, and to run
+driver tests against it.
+
+All server-side components (the SLS services, localstack and the mongods) run as containers pulled from a private ECR
+registry. The host needs an x86_64 Linux machine with Docker, the `aws` CLI, `python3` and `sudo`.
+
+## Scripts
+
+- [`setup.sh`](setup.sh): pulls the `slslocal` image, launches the deployment (a three-member replica set across
+    three cells) and waits for it to become healthy. Writes `dsc-expansion.yml` with `MONGODB_URI` to the working
+    directory, and streams the deployment's container logs to `sls-logs.txt` there in the background.
+- [`teardown.sh`](teardown.sh): removes the `/etc/hosts` entry, stops the log stream and compresses it to
+    `sls-logs.txt.gz`, and destroys the deployment if it still exists. Run it in the same working directory as
+    `setup.sh`. Does nothing if no deployment was started.
+- [`download-crypt.sh`](download-crypt.sh): downloads `crypt_shared` for client-side encryption tests,
+    without starting a server. Writes `crypt-shared-expansion.yml` with `CRYPT_SHARED_LIB_PATH`.
+
+`setup.sh` takes these environment variables:
+
+| Variable         | Description                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `DSC_SLS_TAG`    | SLS image tag. Default: the newest mainline tag. Pinning a known-good tag is advised. |
+| `DSC_MONGOD_TAG` | mongod image tag. Default: the one pinned by `slslocal`. Requires an Atlas build.     |
+| `AWS_*`          | Credentials with pull access to the SLS ECR repositories (see below).                 |
+
+## Networking
+
+The replica set members advertise names like `shard1-node0-mongod:<port>`, which resolve only inside the containers.
+Their ports are published on the host. `setup.sh` maps the names to `127.0.0.1` in `/etc/hosts` so that replica set
+discovery works from the host, and the URI it writes is seeded with those names. The line is tagged with a
+`# dsc-evergreen` comment, and `teardown.sh` removes it.
+
+## Replica set configuration
+
+Only the first member (`shard1-node0`) is electable. `slslocal` gives it priority 1 and every other member priority 0.
+This is a choice of the `slslocal` template, not a requirement of disaggregated storage. The consequences are ordinary
+replica set behavior:
+
+- `replSetStepDown` without `force: true` fails with `NodeNotFound` ("No replica set member is eligible for primary
+    handoff").
+- `replSetStepDown` with `force: true` succeeds, but the same member is the only one that can be elected again. The set
+    has no primary for the step down period plus the election timeout (`electionTimeoutMillis` is 10 seconds): about 40
+    seconds after `replSetStepDown: 30`.
+- `replSetStepUp` on a secondary fails with `NodeNotElectable`.
+
+Tests that step down the primary, such as the SDAM test `rediscover-quickly-after-step-down`, therefore fail or leave the
+deployment without a primary for later tests.
+
+## Integration with Evergreen
+
+The ECR images require assuming `arn:aws:iam::664315256653:role/disagg-storage-tf-project-ro`. The Evergreen project
+must be allowed to assume that role.
+
+```yaml
+functions:
+  "start dsc":
+    - command: ec2.assume_role
+      params:
+        role_arn: arn:aws:iam::664315256653:role/disagg-storage-tf-project-ro
+    - command: subprocess.exec
+      params:
+        working_dir: src
+        binary: bash
+        include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/disagg/setup.sh
+    - command: expansions.update
+      params:
+        file: src/dsc-expansion.yml
+  "stop dsc":
+    - command: subprocess.exec
+      params:
+        working_dir: src
+        binary: bash
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/disagg/teardown.sh
+```
+
+Include the `"stop dsc"` function in `post` or a `teardown_task` section so that the `/etc/hosts` entry is removed
+when the task ends. Upload `src/sls-logs.txt.gz` afterwards to keep the deployment's logs.
+
+Evergreen's process cleanup removes Docker containers, images and networks between the main task commands and `post`
+(or `teardown_task`, unless the task group sets `share_processes: true`). The containers are therefore gone when
+`teardown.sh` runs, and their logs with them. This is why `setup.sh` streams the logs to the working directory while the
+deployment is running, rather than `teardown.sh` collecting them.
+
+Downloading `crypt_shared` for the `latest` version requires AWS credentials (see DRIVERS-3628).
+
+## Future improvements
+
+Start the deployment with `mongodb-runner`, which `orchestration/` already uses, instead of `slslocal`. `mongodb-runner`
+can run DSC deployments: it runs the SLS services in containers and starts the mongods on the host. The members would
+then advertise host-resolvable names, which removes the `/etc/hosts` mapping. This needs:
+
+- A DSC-capable mongod build (with the atlas module) that CI can download. `mongodl.py` only fetches published
+    releases and `latest` builds, and stock builds reject `disaggregatedStorageConfig`.
+- The SLS compose file, `manifest.json` and proto files from `buildscripts/modules/atlas` in the private 10gen/mongo
+    repository.
+- Node.js on the host.

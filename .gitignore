@@ -85,6 +85,7 @@ evergreen_config_generator/dist
 .evergreen/auth_oidc/azure/env.sh
 .evergreen/auth_oidc/azure/keyfile
 .evergreen/auth_oidc/azure/keyfile.pub
+.evergreen/disagg/.slslocal
 *-expansions.yml
 *-expansion.yml
 secrets-export.sh
