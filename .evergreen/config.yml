@@ -458,60 +458,26 @@ functions:
           make test
 
   "run oidc k8s atlas test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
+        binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          export K8S_VARIANT=${VARIANT}
-          # Each stage writes its cloud credentials to its own kubeconfig
-          # (the cloud CLIs below honor $KUBECONFIG), so the group backstop
-          # can retry any stage's pod independently of the later stages.
-          export KUBECONFIG=${DRIVERS_TOOLS}/.evergreen/k8s/${VARIANT}/kubeconfig
-          # Tag-policy gate on the pod flow: aks checks cluster, node
-          # resources, and identity; eks the cluster. gke ignores the flag.
-          export VERIFY_MONGODB_TAGS=1
-          # Delete this stage's pod when the stage ends, success or failure,
-          # while the kubeconfig and recorded variant still belong to it: the
-          # next stage's setup overwrites both. Absolute and guarded, so the
-          # trap (which also fires after the cd below) can neither skip
-          # cleanup nor mask the stage's status.
-          trap 'rc=$?; bash "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh" || echo "WARNING: pod teardown failed; the pod above may need manual cleanup"; exit $rc' EXIT
-          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
-          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
-          export K8S_DRIVERS_TAR_FILE=/tmp/drivers-tools.tgz
-          bash ./.evergreen/make-drivers-tools-archive.sh "$K8S_DRIVERS_TAR_FILE"
-          export K8S_TEST_CMD="echo 'hello'"
-          bash ./.evergreen/auth_oidc/k8s/run-driver-test.sh
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/run-test.sh
+          - atlas
+          - ${VARIANT}
 
   "run oidc k8s local test":
-    - command: shell.exec
+    - command: subprocess.exec
       type: test
       params:
-        shell: bash
+        binary: bash
         include_expansions_in_env: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN]
-        script: |-
-          set -o errexit
-          cd ${DRIVERS_TOOLS}
-          export K8S_VARIANT=${VARIANT}
-          # See "run oidc k8s atlas test" for the per-stage kubeconfig scope.
-          export KUBECONFIG=${DRIVERS_TOOLS}/.evergreen/k8s/${VARIANT}/kubeconfig
-          # See "run oidc k8s atlas test" for the gate's per-variant scope.
-          export VERIFY_MONGODB_TAGS=1
-          # See "run oidc k8s atlas test" for the per-stage pod teardown trap.
-          trap 'rc=$?; bash "${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/teardown-pod.sh" || echo "WARNING: pod teardown failed; the pod above may need manual cleanup"; exit $rc' EXIT
-          bash ./.evergreen/auth_oidc/k8s/setup-pod.sh
-          bash ./.evergreen/auth_oidc/k8s/start-server.sh
-          bash ./.evergreen/auth_oidc/k8s/run-self-test.sh
-          # Generate a test results file
-          cd ${PROJECT_DIRECTORY}
-          make test
+        args:
+          - ${DRIVERS_TOOLS}/.evergreen/auth_oidc/k8s/run-test.sh
+          - local
+          - ${VARIANT}
 
   "run install binaries test":
     - command: subprocess.exec
