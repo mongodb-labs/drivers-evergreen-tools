@@ -1360,9 +1360,9 @@ axes:
         display_name: "RHEL 8"
         run_on: rhel8.8-small
 
-      - id: macos-14
-        display_name: "macOS 14"
-        run_on: macos-14
+      - id: macos-15-amd64
+        display_name: "macOS 15 amd64"
+        run_on: macos-15-amd64
 
       - id: windows
         display_name: "Windows 64"
@@ -1389,9 +1389,9 @@ axes:
         display_name: "Amazon Linux 2023 arm64"
         run_on: amazon2023.3-arm64-small
 
-      - id: macos-14-arm64
-        display_name: "macOS 14 arm64"
-        run_on: macos-14-arm64
+      - id: macos-15-arm64
+        display_name: "macOS 15 arm64"
+        run_on: macos-15-arm64
 
       - id: rhel8
         display_name: "RHEL 80"
