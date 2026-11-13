@@ -1,3 +1,17 @@
+[project]
+# Virtual workspace root. No build system, so uv never builds or installs
+# it. This table declares the workspace's supported CPython range in one
+# place (uv locks the intersection of all members' requires-python, and
+# only the root declares one). The floor is the oldest CPython that has
+# not reached end of life, reviewed each October. CPython 3.10 went EOL in
+# October 2026, so the floor is 3.11 (DRIVERS-3732). The ceiling is the
+# newest stable release plus one, raised in the same review, so uv's
+# managed downloads stay inside the range the lock's wheels were resolved
+# for (DRIVERS-3706).
+name = "drivers-evergreen-tools-workspace"
+version = "0.1.0"
+requires-python = ">=3.11,<3.16"
+
 [tool.uv.workspace]
 members = [
     ".evergreen",

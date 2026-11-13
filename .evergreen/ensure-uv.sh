@@ -15,6 +15,11 @@ if [ -z "$BASH" ]; then
   return 1
 fi
 
+# Absolute workspace root, resolved once at source time: BASH_SOURCE is
+# relative to the sourcing shell's working directory, and ensure_uv may later
+# run from any directory.
+_ensure_uv_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 # _ensure_uv_scope_paths (internal)
 #
 # Keeps uv's shared state out of its default home-directory locations
@@ -55,6 +60,82 @@ _ensure_uv_scope_paths() {
 
   [ -n "${DRIVERS_TOOLS:-}" ] || return 0
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
+}
+
+# _ensure_uv_min_python (internal)
+#
+# Print the workspace's minimum supported CPython version (e.g. "3.11") from
+# requires-python in the root pyproject.toml. Prints nothing and fails if it
+# cannot be determined, so callers fall back to uv's interpreter handling.
+_ensure_uv_min_python() {
+  declare root="${_ensure_uv_root:-}"
+  [ -n "$root" ] || return 1
+  # awk-scoped so another table's requires-python key cannot match (the same
+  # pattern install-cli.sh uses to read the [project] name).
+  awk '
+    /^[[:space:]]*\[/ {
+      in_project = ($0 ~ /^\[[[:space:]]*project[[:space:]]*\][[:space:]]*$/)
+    }
+    in_project && $0 ~ /^[[:space:]]*requires-python[[:space:]]*=/ {
+      if (match($0, /[0-9]+\.[0-9]+/)) {
+        print substr($0, RSTART, RLENGTH)
+        exit
+      }
+    }
+  ' "$root/pyproject.toml" 2>/dev/null
+}
+
+# _ensure_uv_meets_floor (internal)
+#
+# Succeed if interpreter $1 is a final CPython release of at least $2.$3
+# (the workspace floor). Pre-release interpreters never qualify, so a
+# toolchain shipping one is not selected for reuse, and neither do other
+# implementations: PyPy satisfies the version probe but the workspace
+# supports only CPython. Prints nothing.
+_ensure_uv_meets_floor() {
+  declare py="${1:?}" major="${2:?}" minor="${3:?}"
+  "$py" -c "import sys; sys.exit(0 if sys.implementation.name == 'cpython' and sys.version_info >= ($major, $minor) and sys.version_info.releaselevel == 'final' else 1)" >/dev/null 2>&1
+}
+
+# _ensure_uv_floor_bootstrap (internal)
+#
+# Make later uv invocations reuse a host interpreter that satisfies the
+# workspace floor, and bootstrap a uv-managed interpreter only when none
+# qualifies. Called on both of ensure_uv's success paths. A no-op when no
+# floor was parsed (empty $1).
+_ensure_uv_floor_bootstrap() {
+  declare major="${1:-}" minor="${2:-}" floor_py="${3:-}"
+  [ -n "$major" ] || return 0
+
+  if [ -n "$floor_py" ]; then
+    # Pin uv to the qualifying interpreter: discovery can settle below the
+    # floor (tool installs included), and a PATH entry would shadow an
+    # active venv. A pre-set UV_PYTHON wins.
+    # Pin absolutely: a relative pin (a relative PATH entry, or a relative
+    # VIRTUAL_ENV) would resolve against whatever directory uv runs from
+    # later.
+    case "$floor_py" in
+    /*|[A-Za-z]:/*) ;;
+    *)
+      declare abs_dir
+      if abs_dir="$(cd "$(dirname "$floor_py")" 2>/dev/null && pwd)"; then
+        floor_py="$abs_dir/${floor_py##*/}"
+      fi
+      ;;
+    esac
+    if [ "${OSTYPE:-}" = cygwin ]; then
+      # uv wants native Windows paths; see _ensure_uv_scope_paths.
+      floor_py="$(cygpath -m "$floor_py")"
+    fi
+    export UV_PYTHON="${UV_PYTHON:-$floor_py}"
+    return 0
+  fi
+
+  # No host interpreter qualifies, so install a uv-managed one and leave uv
+  # at its default managed preference. Preferring system here would steer uv
+  # back to the undersized host interpreter.
+  echo "No host interpreter satisfies the workspace floor (CPython >= $major.$minor). Installing a uv-managed interpreter..." >&2
+  uv python install "$major.$minor" || true
 }
 
 # _ensure_uv_add_path (internal)
@@ -182,10 +263,15 @@ _ensure_uv_install() {
 # - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
 # - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
 # - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
+# - UV_PYTHON (when the workspace floor is known and a qualifying interpreter exists)
 #
 # Looks everywhere uv may already be, and only then hands off to
 # _ensure_uv_install, which tries the active venv, then `pip install --user`,
 # then a fallback venv.
+#
+# On success, also pins uv's interpreter to a floor-qualifying host
+# interpreter, or installs a uv-managed one when none qualifies. See
+# _ensure_uv_floor_bootstrap.
 #
 # On success, also relocates uv's shared state; see _ensure_uv_scope_paths.
 ensure_uv() {
@@ -206,35 +292,82 @@ ensure_uv() {
   declare venv_dir="${TMPDIR:-/tmp}"
   venv_dir="${venv_dir%/}/drivers-tools-uv-venv"
 
+  declare py="" current_py="" toolchain_py="" candidate=""
+  # The platform-specific "Current" path, set even when a venv is active:
+  # the venv may sit below the floor while Current does not, and only the
+  # fallback loop looks there.
+  case "${OSTYPE:-}" in
+  cygwin) current_py="C:/python/Current/python.exe" ;;
+  darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
+  *) current_py="/opt/python/Current/bin/python3" ;;
+  esac
+
   # Use the active venv's interpreter so uv installs into it; see the in-venv
-  # branch of _ensure_uv_install. Otherwise prefer the toolchain interpreters
-  # over the system python3, which can be old (rhel82-arm64: 3.6) or absent.
-  declare py="" current_py toolchain_py
+  # branch of _ensure_uv_install. Otherwise prefer the Current and toolchain
+  # interpreters over the system python3, which can be old (rhel82-arm64: 3.6)
+  # or absent.
+  #
+  # The workspace's Python floor (e.g. "3.11") from the root pyproject.toml's
+  # requires-python. Fails soft, falling back to uv's own interpreter
+  # handling when it cannot be parsed.
+  declare floor="" floor_major="" floor_minor="" floor_py=""
+  floor="$(_ensure_uv_min_python || true)"
+  if [ -n "$floor" ]; then
+    floor_major="${floor%%.*}"
+    floor_minor="${floor#*.}"
+  fi
   if [ -n "${VIRTUAL_ENV:-}" ]; then
     if [ -x "$VIRTUAL_ENV/bin/python" ]; then
       py="$VIRTUAL_ENV/bin/python"
     elif [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
       py="$VIRTUAL_ENV/Scripts/python.exe"
     fi
+    if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+      floor_py="$py"
+    fi
   fi
   if [ -z "$py" ]; then
-    case "${OSTYPE:-}" in
-    cygwin) current_py="C:/python/Current/python.exe" ;;
-    darwin*) current_py="/Library/Frameworks/Python.Framework/Versions/Current/bin/python3" ;;
-    *) current_py="/opt/python/Current/bin/python3" ;;
-    esac
     if [ -x "$current_py" ] &&
       "$current_py" -c 'import pip; import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
       py="$current_py"
+      if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+        floor_py="$py"
+      fi
     else
       toolchain_py="$(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -V | tail -n1)" || true
       if [ -n "$toolchain_py" ] && [ -x "$toolchain_py" ]; then
         py="$toolchain_py"
+        if [ -n "$py" ] && [ -n "$floor" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+          floor_py="$py"
+        fi
       elif command -v python3 >/dev/null 2>&1; then
         py="$(command -v python3)"
       elif command -v python >/dev/null 2>&1; then
         py="$(command -v python)"
       fi
+    fi
+  fi
+
+  # Find a pin target even when the bootstrap pick settled for an older
+  # interpreter (current_py 3.10, toolchain 3.13).
+  if [ -n "$floor" ] && [ -z "$floor_py" ]; then
+    if [ -n "$py" ] && _ensure_uv_meets_floor "$py" "$floor_major" "$floor_minor"; then
+      floor_py="$py"
+    else
+      # Newest first, so a prerelease newest does not hide an older toolchain
+      # that is a final release meeting the floor.
+      declare -a candidates=("$current_py")
+      while IFS= read -r candidate; do
+        candidates+=("$candidate")
+      done < <(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr)
+      candidates+=("$(command -v python3 2>/dev/null || true)" "$(command -v python 2>/dev/null || true)")
+      for candidate in "${candidates[@]}"; do
+        if [ -n "$candidate" ] && [ -x "$candidate" ] &&
+          _ensure_uv_meets_floor "$candidate" "$floor_major" "$floor_minor"; then
+          floor_py="$candidate"
+          break
+        fi
+      done
     fi
   fi
 
@@ -249,6 +382,7 @@ ensure_uv() {
 
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_floor_bootstrap "$floor_major" "$floor_minor" "$floor_py"
     return 0
   fi
 
@@ -267,6 +401,7 @@ ensure_uv() {
   hash -r
   if uv --version >/dev/null 2>&1; then
     _ensure_uv_scope_paths
+    _ensure_uv_floor_bootstrap "$floor_major" "$floor_minor" "$floor_py"
     return 0
   fi
 

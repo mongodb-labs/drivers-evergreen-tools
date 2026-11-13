@@ -72,12 +72,15 @@ reset_env() {
   local tools_dir
   tools_dir="$(mktemp -d "$WORK/tools.XXXXXX")"
   export DRIVERS_TOOLS="$tools_dir"
+  # Exercise scope_paths' CI branch in every case: it only runs under CI=1,
+  # and nothing else would.
+  export CI=1
   # Isolate pip's user install dir too; it is %APPDATA% on Windows, not HOME.
   local user_base py_user_base
   user_base="$(mktemp -d "$WORK/pyuserbase.XXXXXX")"
   py_user_base="$(to_py_path "$user_base")"
   export PYTHONUSERBASE="$py_user_base"
-  unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV
+  unset DRIVERS_TOOLS_PYTHON VIRTUAL_ENV UV_PYTHON
   # A failing uv stub forces an install while keeping co-located tools visible.
   local stub_dir="$WORK/stub"
   mkdir -p "$stub_dir"
@@ -155,5 +158,217 @@ test_no_venv_module() {
 
 test_inside_active_venv
 test_no_venv_module
+
+# --- Interpreter-selection cases ---
+#
+# These do not install anything: a recording stub uv succeeds where the
+# failing stub above forces an install, and logs the UV_PYTHON pin and the
+# managed-install calls it sees.
+
+# A pure-bash interpreter stand-in: passes the pip probe, and the floor
+# probe exits with $2 (0 passes it).
+make_fake_py() { # path floor_rc
+  cat >"$1" <<EOF
+#!/usr/bin/env bash
+code="\${2:-}"
+case "\$code" in
+*sysconfig*) exit 0 ;;
+*releaselevel*) exit $2 ;;
+*) exit 0 ;;
+esac
+EOF
+  chmod +x "$1"
+}
+
+# A real interpreter reporting 3.14.0rc1: exercises the releaselevel
+# rejection, which a pure-bash fake cannot reach.
+make_prerelease_py() { # path
+  {
+    printf '#!%s\n' "$PY_BIN"
+    printf 'import collections, sys\n'
+    printf 'sys.version_info = collections.namedtuple("version_info", "major minor micro releaselevel serial")(3, 14, 0, "rc1", 0)\n'
+    printf 'exec(sys.argv[2])\n'
+  } >"$1"
+  chmod +x "$1"
+}
+
+# A PyPy-like interpreter: meets the floor's version and release level, so
+# only the implementation check can reject it.
+make_pypy_py() { # path
+  cat >"$1" <<'EOF'
+#!/usr/bin/env bash
+code="${2:-}"
+case "$code" in
+*sysconfig*) exit 0 ;;
+*implementation*) exit 1 ;;
+*releaselevel*) exit 0 ;;
+*) exit 0 ;;
+esac
+EOF
+  chmod +x "$1"
+}
+
+make_recording_stub() {
+  # Exported for the stub, which runs as a child process. Truncated here so
+  # each case's assertions read only that case's calls.
+  export STUB_LOG="$WORK/stub-log"
+  : >"$STUB_LOG"
+  cat >"$WORK/stub/uv" <<'EOF'
+#!/usr/bin/env bash
+{
+  printf 'uv-python=%s\n' "${UV_PYTHON:-<unset>}"
+  if [ "${1:-}" = python ] && [ "${2:-}" = install ]; then
+    printf 'uv-python-install=%s\n' "${3:-?}"
+  fi
+} >>"${STUB_LOG:?}"
+exit 0
+EOF
+  chmod +x "$WORK/stub/uv"
+}
+
+# The selection loop also probes the host's Current and toolchain
+# interpreters, which a case cannot hide from it. Cases whose outcome depends
+# on no hidden qualifier existing skip when one does.
+host_hides_qualifier() {
+  local c
+  for c in "$CURRENT_PY" $(compgen -G '/opt/mongodbtoolchain/v*/bin/python3' | sort -Vr); do
+    if [ -x "$c" ] && "$c" -c 'import sys; sys.exit(0 if sys.implementation.name == "cpython" and sys.version_info >= (3, 11) and sys.version_info.releaselevel == "final" else 1)' >/dev/null 2>&1; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# A floor-qualifying host interpreter is pinned for uv, no managed python is
+# downloaded, and the caller's command lookup is left alone.
+test_pin_qualifying_host() {
+  echo "Testing ensure_uv pins a qualifying host interpreter ..."
+  (
+    reset_env
+    make_recording_stub
+    local fake="$WORK/fakepy/bin"
+    mkdir -p "$fake"
+    make_fake_py "$fake/python3" 0
+    export PATH="$fake:$PATH"
+    local py_before
+    py_before="$(command -v python3)"
+    # shellcheck source=../ensure-uv.sh
+    . "$ENSURE_UV"
+    ensure_uv
+    # The pin lives in the environment: the stub only logs when uv runs,
+    # and nothing runs uv after the bootstrap.
+    local pinned="${UV_PYTHON:-}"
+    [ -n "$pinned" ] || { echo "expected UV_PYTHON pinned" >&2; return 1; }
+    "$pinned" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) and sys.version_info.releaselevel == "final" else 1)' >/dev/null 2>&1 || {
+      echo "expected the pinned interpreter to satisfy the floor, got $pinned" >&2
+      return 1
+    }
+    [ -z "$(grep '^uv-python-install=' "$STUB_LOG" || true)" ] || {
+      echo "expected no managed download with a qualifying host interpreter" >&2
+      return 1
+    }
+    [ "$(command -v python3)" = "$py_before" ] || {
+      echo "expected PATH lookup unchanged, python3 now resolves to $(command -v python3)" >&2
+      return 1
+    }
+    # With no hidden qualifier, the PATH interpreter is the one selected.
+    if ! host_hides_qualifier; then
+      # to_py_path: the pin comes back in native form on Cygwin.
+      [ "$pinned" = "$(to_py_path "$fake/python3")" ] || { echo "expected the PATH interpreter pinned, got $pinned" >&2; return 1; }
+    fi
+  )
+  echo "Testing ensure_uv pins a qualifying host interpreter ... done."
+}
+
+# With no interpreter meeting the floor, a uv-managed one is installed and
+# nothing is pinned. $2 makes the stand-in's floor probe; $3 names the case.
+test_fallback_to_managed() { # fake_path floor_ok label
+  if host_hides_qualifier; then
+    echo "Testing ensure_uv $3 ... skipped (the host has a hidden qualifier)."
+    return 0
+  fi
+  echo "Testing ensure_uv $3 ..."
+  (
+    reset_env
+    make_recording_stub
+    mkdir -p "$(dirname "$1")"
+    if [ "$2" = prerelease ]; then
+      make_prerelease_py "$1"
+    elif [ "$2" = pypy ]; then
+      make_pypy_py "$1"
+    else
+      make_fake_py "$1" 1
+    fi
+    local fake_dir
+    fake_dir="$(dirname "$1")"
+    # Shadow both interpreter names: ensure_uv probes python3, then python,
+    # and a host qualifying through the other name would mask the fallback.
+    cp "$1" "$fake_dir/python"
+    export PATH="$fake_dir:$PATH"
+    # shellcheck source=../ensure-uv.sh
+    . "$ENSURE_UV"
+    ensure_uv
+    grep -q '^uv-python-install=' "$STUB_LOG" || { echo "expected a managed install" >&2; return 1; }
+    grep -q '^uv-python=<unset>$' "$STUB_LOG" || { echo "expected no pin without a qualifying host interpreter" >&2; return 1; }
+  )
+  echo "Testing ensure_uv $3 ... done."
+}
+
+# The floor lookup must survive a directory change after sourcing by a
+# relative path.
+test_root_survives_cd() {
+  echo "Testing ensure_uv after changing directories ..."
+  (
+    reset_env
+    make_recording_stub
+    local fake="$WORK/fakepy/bin"
+    mkdir -p "$fake"
+    make_fake_py "$fake/python3" 0
+    export PATH="$fake:$PATH"
+    cd "$SCRIPT_DIR"
+    # Relative source path: the trigger for the stale-root case.
+    # shellcheck source=../ensure-uv.sh
+    . ../ensure-uv.sh
+    cd "$WORK"
+    ensure_uv
+    # Assert the environment: the stub only logs when uv runs, and nothing
+    # runs uv after the bootstrap, so a log read cannot see the pin.
+    [ -n "${UV_PYTHON:-}" ] || { echo "expected the floor to parse and pin after the directory change" >&2; return 1; }
+  )
+  echo "Testing ensure_uv after changing directories ... done."
+}
+
+# The pin must be absolute: a relative PATH entry would otherwise pin a
+# path that only resolves from the directory ensure_uv ran in.
+test_pin_absolute() {
+  if host_hides_qualifier; then
+    echo "Testing ensure_uv pins an absolute interpreter path ... skipped (the host has a hidden qualifier)."
+    return 0
+  fi
+  echo "Testing ensure_uv pins an absolute interpreter path ..."
+  (
+    reset_env
+    make_recording_stub
+    mkdir -p "$WORK/relbin"
+    make_fake_py "$WORK/relbin/python3" 0
+    export PATH="relbin:$PATH"
+    cd "$WORK"
+    # shellcheck source=../ensure-uv.sh
+    . "$ENSURE_UV"
+    ensure_uv
+    case "${UV_PYTHON:-}" in
+    /*|[A-Za-z]:/*) ;;
+    *) echo "expected an absolute pin, got ${UV_PYTHON:-<unset>}" >&2; return 1 ;;
+    esac
+  )
+  echo "Testing ensure_uv pins an absolute interpreter path ... done."
+}
+
+test_pin_qualifying_host
+test_fallback_to_managed "$WORK/belowfloor/bin/python3" final "falls back to a managed python below the floor"
+test_fallback_to_managed "$WORK/prerelease/bin/python3" prerelease "falls back to a managed python on a prerelease"
+test_fallback_to_managed "$WORK/pypy/bin/python3" pypy "falls back to a managed python on PyPy"
+test_root_survives_cd
+test_pin_absolute
 
 make -C "$DRIVERS_TOOLS" test
