@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
 
 import mongodl
@@ -216,6 +217,129 @@ class VerificationToleranceTest(unittest.TestCase):
             expect_raise=True,
         )
         self.assertEqual(len(attempts), 6)
+
+
+class LatestBuildNotFoundTest(unittest.TestCase):
+    """A 404 for a latest/latest-build artifact is permanent: fail fast, no retry."""
+
+    def setUp(self):
+        self.saved = (
+            mongodl._latest_build_url,
+            mongodl._expand_archive,
+            mongodl.time.sleep,
+        )
+        mongodl._latest_build_url = lambda *args, **kwargs: (
+            "http://x/archive.tgz",
+            "http://x/archive.tgz.sig",
+        )
+        mongodl._expand_archive = lambda *args, **kwargs: None
+        mongodl.time.sleep = lambda seconds: None
+
+    def tearDown(self):
+        (
+            mongodl._latest_build_url,
+            mongodl._expand_archive,
+            mongodl.time.sleep,
+        ) = self.saved
+
+    def _drive(self, error, retries):
+        """Drive _dl_component with an always-raising cache; return (attempts, message)."""
+        attempts = []
+
+        def download_file(url):
+            attempts.append(1)
+            raise error
+
+        cache = _FakeCache(Path("unused"))
+        cache.download_file = download_file
+        message = None
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                mongodl._dl_component(
+                    cache=cache,
+                    out_dir=Path(tmp),
+                    version="latest",
+                    target="debian11",
+                    arch="x86_64",
+                    edition="enterprise",
+                    component="archive",
+                    pattern=None,
+                    strip_components=0,
+                    test=True,
+                    no_download=False,
+                    latest_build_branch=None,
+                    retries=retries,
+                )
+            except Exception as raised_exc:
+                message = str(raised_exc)
+        return attempts, message
+
+    @staticmethod
+    def _download_error(code):
+        """Build the error Cache.download_file raises for an HTTP failure."""
+        cause = urllib.error.HTTPError(
+            "http://x/archive.tgz", code, "failure", {}, None
+        )
+        error = RuntimeError("Failed to download [http://x/archive.tgz]")
+        error.__cause__ = cause
+        return error
+
+    def test_missing_latest_build_fails_fast(self):
+        attempts, message = self._drive(self._download_error(404), retries=5)
+        self.assertEqual(len(attempts), 1, "a 404 must not be retried")
+        self.assertIn("No latest build is published", message)
+        self.assertIn("debian11-x86_64", message)
+        self.assertIn("mongodb-mongo-master-nightly", message)
+
+    def test_latest_build_retries_other_errors(self):
+        attempts, message = self._drive(self._download_error(500), retries=5)
+        self.assertEqual(len(attempts), 6, "non-404 errors keep the retry budget")
+        self.assertIn("Failed to download", message)
+
+
+class RefreshFullJsonRetryTest(unittest.TestCase):
+    """refresh_full_json retries a failed full.json download (DRIVERS-3676)."""
+
+    def setUp(self):
+        self.saved_sleep = mongodl.time.sleep
+        mongodl.time.sleep = lambda seconds: None
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cache = mongodl.Cache.open_in(Path(self.tmp.name))
+
+    def tearDown(self):
+        mongodl.time.sleep = self.saved_sleep
+        self.cache.db._db.close()  # Windows cannot delete an open data.db file
+        self.tmp.cleanup()
+
+    def _fail_times(self, failures):
+        """Make download_file fail `failures` times, then report a cache hit."""
+        attempts = []
+
+        def download_file(url):
+            attempts.append(url)
+            if len(attempts) <= failures:
+                raise RuntimeError(f"Failed to download [{url}]")
+            return mongodl.DownloadResult(False, Path(self.tmp.name) / "full.json")
+
+        self.cache.download_file = download_file
+        return attempts
+
+    def test_retries_until_success(self):
+        attempts = self._fail_times(2)
+        self.cache.refresh_full_json(retries=5)
+        self.assertEqual(len(attempts), 3)
+
+    def test_raises_when_retries_run_out(self):
+        attempts = self._fail_times(10)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=2)
+        self.assertEqual(len(attempts), 3)
+
+    def test_zero_retries_tries_once(self):
+        attempts = self._fail_times(1)
+        with self.assertRaises(RuntimeError):
+            self.cache.refresh_full_json(retries=0)
+        self.assertEqual(len(attempts), 1)
 
 
 if __name__ == "__main__":

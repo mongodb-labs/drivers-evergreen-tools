@@ -3,7 +3,7 @@ requires = [
     # Pinned so a new hatchling release cannot break the build the way
     # https://github.com/mongodb-labs/drivers-evergreen-tools/pull/893 did.
     # Dependabot manages the version.
-    "hatchling==1.32.4",
+    "hatchling==1.33.0",
 ]
 build-backend = "hatchling.build"
 
