@@ -1275,7 +1275,7 @@ task_groups:
     teardown_group:
       # Backstop for stages killed before their trap fired or whose in-stage
       # deletion failed: retries EVERY variant's pod, each against its own
-      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # kubeconfig and recorded pod name, bounded at 15s per variant (all
       # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
       # API call cannot eat the group's 180s before the Atlas teardown below
       # runs. The AWS credentials drive the kubeconfig's aws eks get-token,
@@ -1315,7 +1315,7 @@ task_groups:
     teardown_group:
       # Backstop for stages killed before their trap fired or whose in-stage
       # deletion failed: retries EVERY variant's pod, each against its own
-      # kubeconfig and recorded pod name, bounded at 20s per variant (all
+      # kubeconfig and recorded pod name, bounded at 15s per variant (all
       # three fit the 60s wrapper) so a stalled provider auth or Kubernetes
       # API call cannot eat the group's 180s.
       - command: subprocess.exec
