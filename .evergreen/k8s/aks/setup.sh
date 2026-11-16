@@ -17,7 +17,9 @@ fi
 
 # Handle credentials.
 . $DRIVERS_TOOLS/.evergreen/csfle/azurekms/login.sh
-az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}"
+# --file: older az releases ignore KUBECONFIG and write ~/.kube/config,
+# which would leave the per-variant kubeconfig kubectl reads unpopulated.
+az aks get-credentials --overwrite-existing -n "${AKS_CLUSTER_NAME}" -g "${AKS_RESOURCE_GROUP}" --file "${KUBECONFIG:-$HOME/.kube/config}"
 
 # Verify tags when requested: the policy covers the pre-provisioned cluster
 # the tests run on, not only what this script creates.
@@ -28,10 +30,22 @@ fi
 
 # Create the pod with a random name.
 POD_NAME="test-aks-$RANDOM"
-echo "export K8S_POD_NAME=$POD_NAME" >> ./secrets-export.sh
+# Persist the effective settings with the pod name: teardown may run in a
+# shell that does not inherit this environment (the group backstop), and an
+# env-based setup skips the vault write that would otherwise record them.
+cat <<EOF >> ./secrets-export.sh
+export AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}
+export AKS_RESOURCE_GROUP=${AKS_RESOURCE_GROUP}
+export AKS_SERVICE_ACCOUNT_NAMESPACE=${AKS_SERVICE_ACCOUNT_NAMESPACE}
+export K8S_POD_NAME=$POD_NAME
+EOF
 export K8S_POD_NAME=$POD_NAME
 
 . $DRIVERS_TOOLS/.evergreen/ensure-binary.sh kubectl
+# Point kubectl at the pod's namespace: configure-pod.sh and the test
+# scripts run namespace-less kubectl, and the pod is created in
+# AKS_SERVICE_ACCOUNT_NAMESPACE.
+kubectl config set-context --current --namespace="${AKS_SERVICE_ACCOUNT_NAMESPACE}"
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod

@@ -43,6 +43,10 @@ See the [Wiki](https://wiki.corp.mongodb.com/display/DRIVERS/Using+AWS+Secrets+M
 
 The test should use a task group to ensure the resources are cleaned up properly.
 
+The teardown scripts tolerate early setup failure: each step cleans up whatever
+setup managed to create, logs the steps it skipped, and exits 0, so a failed
+setup does not leak the Atlas deployment or mask the original failure.
+
 Note: The EKS test relies on assuming the drivers test secrets role, so ensure you are assuming that
 role prior to the EKS test and that `duration_seconds` is set to account for the full duration of the tests.
 
