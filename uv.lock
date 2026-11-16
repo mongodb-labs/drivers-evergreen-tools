@@ -51,6 +51,7 @@ csfle = [
     { name = "cryptography", specifier = ">=45.0.0" },
     { name = "pykmip", specifier = "~=0.11.0" },
 ]
+disagg = [{ name = "pymongo", specifier = "~=4.0" }]
 docker = [{ name = "boto3", specifier = ">=1.35.0" }]
 ocsp = [
     { name = "asn1crypto", specifier = "~=1.5.1" },
