@@ -1,8 +1,9 @@
 [build-system]
 requires = [
-    # Prevent https://github.com/mongodb-labs/drivers-evergreen-tools/pull/893: hatchling 1.28 requires Python 3.10+.
-    "hatchling==1.27.0; python_version < '3.10'",
-    "hatchling==1.33.0; python_version >= '3.10'",
+    # Pinned so a new hatchling release cannot break the build the way
+    # https://github.com/mongodb-labs/drivers-evergreen-tools/pull/893 did.
+    # Dependabot manages the version.
+    "hatchling==1.33.0",
 ]
 build-backend = "hatchling.build"
 
@@ -10,7 +11,6 @@ build-backend = "hatchling.build"
 name = "drivers-orchestration"
 version = "0.1.0"
 description = 'Scripts for drivers orchestration'
-requires-python = ">=3.9"
 license = "MIT"
 keywords = []
 authors = [

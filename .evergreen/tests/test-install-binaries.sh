@@ -12,7 +12,14 @@ ensure_uv || exit 1
 # uv prints a native Windows path with backslashes, which bash on a Cygwin
 # host cannot exec (DRIVERS-3626); convert it like ensure-uv.sh converts the
 # paths it owns, and drop a trailing \r as _ensure_uv_add_user_bin does.
-PYTHON_BINARY=$(uv python find | tr -d '\r')
+# Pass the pin as an explicit request: `uv python find` does not read
+# UV_PYTHON, and a bare find constrained by requires-python can otherwise
+# fail inspecting a Python 2 it finds on PATH (RHEL8's /usr/bin/python).
+if [ -n "${UV_PYTHON:-}" ]; then
+  PYTHON_BINARY=$(uv python find "$UV_PYTHON" | tr -d '\r')
+else
+  PYTHON_BINARY=$(uv python find | tr -d '\r')
+fi
 if [ "${OSTYPE:-}" = cygwin ]; then
   PYTHON_BINARY=$(cygpath -m "$PYTHON_BINARY")
 fi

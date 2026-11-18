@@ -12,18 +12,27 @@ the relevant DRIVERS ticket.
 
 ## Python Considerations
 
-This repository supports CPython 3.9+. `uv` reuses whichever interpreter the host already provides
-that satisfies `requires-python` rather than downloading a specific version, so raising the floor is
-not merely a metadata change: it forces an interpreter upgrade on hosts sitting at the old floor.
+This repository supports only CPython versions that have not reached end of life. The minimum
+is reviewed each October, after CPython's yearly release. As of November 2026 it is 3.11 (3.10
+reached end of life in October 2026).
+The floor is declared exactly once, as `project.requires-python` in the root `pyproject.toml`.
+Workspace members must not declare it. `uv` locks the whole workspace against that single value
+(the weekly Dependabot `uv` job included), so a package release that has dropped the minimum
+cannot wedge the lockfile (DRIVERS-3732).
+The range is also capped: the ceiling is the newest stable CPython release plus one (currently
+`<3.16`), raised in the same October review, so uv never downloads an interpreter or resolves
+the lock against a CPython whose dependency wheels have not been verified (DRIVERS-3706).
+`uv` reuses whichever host interpreter satisfies `requires-python` rather than downloading one,
+so raising the floor also forces an interpreter upgrade on hosts sitting at the old floor.
 Most scripts source `ensure-uv.sh` and run Python using `uv run`, which resolves and manages the
-interpreter itself; see `ensure_uv` in `ensure-uv.sh` for details.
+interpreter itself. See `ensure_uv` in `ensure-uv.sh` for details. `ensure_uv` prefers a
+floor-qualifying host interpreter (the toolchain ones included), bootstrapping a uv-managed
+interpreter only when none qualifies.
 `ensure_uv` also keeps uv's shared state out of its default home-directory locations: in CI it goes
 under the task's temp directory, and outside CI only tool installs are redirected, so a local run
 cannot overwrite globally installed tools.
 A handful of scripts under per-folder virtual environments still rely on the older
 `find_python3.sh`/`venvcreate` mechanism until they are migrated.
-The minimum supported version must also be reflected in the `project.requires-python` metadata
-in any `pyproject.toml` files in this repository.
 
 We use isolated virtual environments to run all of the python scripts.
 

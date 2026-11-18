@@ -24,11 +24,17 @@ bash ./teardown.sh
 # pick up. uv provisions 3.13/3.14 where it can; each check reuses the
 # secrets fetched by the first run.
 for PY in 3.13 3.14; do
-  if ! uv python find "$PY" > /dev/null 2>&1 && ! uv python install "$PY" > /dev/null 2>&1; then
+  # --no-bin keeps the interpreter's executables out of ~/.local/bin; uv
+  # resolves the install itself through UV_PYTHON_INSTALL_DIR.
+  if ! uv python find "$PY" > /dev/null 2>&1 && ! uv python install --no-bin "$PY" > /dev/null 2>&1; then
     echo "Python $PY unavailable; skipping its kms server check"
     continue
   fi
   echo "Checking the kms servers on Python $PY"
+  # Pin the requested version for the child scripts too: start-servers.sh
+  # re-activates the root venv, and its ensure_uv would otherwise pin the
+  # host's floor interpreter, rebuilding this check's venv on that version.
+  export UV_PYTHON="$PY"
   uv sync --project "$root" --group csfle --python "$PY" --inexact
   bash ./start-servers.sh
   bash ./teardown.sh
