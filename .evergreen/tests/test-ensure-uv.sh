@@ -218,7 +218,8 @@ make_recording_stub() {
 {
   printf 'uv-python=%s\n' "${UV_PYTHON:-<unset>}"
   if [ "${1:-}" = python ] && [ "${2:-}" = install ]; then
-    printf 'uv-python-install=%s\n' "${3:-?}"
+    shift 2
+    printf 'uv-python-install=%s\n' "$*"
   fi
 } >>"${STUB_LOG:?}"
 exit 0
@@ -310,8 +311,46 @@ test_fallback_to_managed() { # fake_path floor_ok label
     ensure_uv
     grep -q '^uv-python-install=' "$STUB_LOG" || { echo "expected a managed install" >&2; return 1; }
     grep -q '^uv-python=<unset>$' "$STUB_LOG" || { echo "expected no pin without a qualifying host interpreter" >&2; return 1; }
+    # The managed install must not drop executables into the user's bin
+    # directory, and must land in the task temp dir, not $HOME.
+    grep -q '^uv-python-install=--no-bin ' "$STUB_LOG" || { echo "expected the managed install to pass --no-bin, got: $(grep '^uv-python-install=' "$STUB_LOG")" >&2; return 1; }
+    [ "${UV_PYTHON_INSTALL_DIR:-}" = "$(to_py_path "${TMPDIR%/}/uv-python")" ] || {
+      echo "expected UV_PYTHON_INSTALL_DIR in the task temp dir, got ${UV_PYTHON_INSTALL_DIR:-<unset>}" >&2
+      return 1
+    }
   )
   echo "Testing ensure_uv $3 ... done."
+}
+
+# Outside CI the managed install is still kept out of $HOME: scope_paths
+# redirects UV_PYTHON_INSTALL_DIR to DRIVERS_TOOLS, and the install still
+# passes --no-bin. reset_env exports CI=1, so this case unsets it: the
+# non-CI branch is its entire subject.
+test_scope_python_no_ci() {
+  if host_hides_qualifier; then
+    echo "Testing ensure_uv scopes the managed install outside CI ... skipped (the host has a hidden qualifier)."
+    return 0
+  fi
+  echo "Testing ensure_uv scopes the managed install outside CI ..."
+  (
+    reset_env
+    make_recording_stub
+    local fake="$WORK/noci/bin"
+    mkdir -p "$fake"
+    make_fake_py "$fake/python3" 1
+    cp "$fake/python3" "$fake/python"
+    export PATH="$fake:$PATH"
+    unset CI
+    # shellcheck source=../ensure-uv.sh
+    . "$ENSURE_UV"
+    ensure_uv
+    [ "${UV_PYTHON_INSTALL_DIR:-}" = "$DRIVERS_TOOLS/.local/uv-python" ] || {
+      echo "expected UV_PYTHON_INSTALL_DIR under DRIVERS_TOOLS, got ${UV_PYTHON_INSTALL_DIR:-<unset>}" >&2
+      return 1
+    }
+    grep -q '^uv-python-install=--no-bin ' "$STUB_LOG" || { echo "expected a --no-bin managed install" >&2; return 1; }
+  )
+  echo "Testing ensure_uv scopes the managed install outside CI ... done."
 }
 
 # The floor lookup must survive a directory change after sourcing by a
@@ -368,6 +407,7 @@ test_pin_qualifying_host
 test_fallback_to_managed "$WORK/belowfloor/bin/python3" final "falls back to a managed python below the floor"
 test_fallback_to_managed "$WORK/prerelease/bin/python3" prerelease "falls back to a managed python on a prerelease"
 test_fallback_to_managed "$WORK/pypy/bin/python3" pypy "falls back to a managed python on PyPy"
+test_scope_python_no_ci
 test_root_survives_cd
 test_pin_absolute
 

@@ -31,10 +31,12 @@ _ensure_uv_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # $PROJECT_DIRECTORY, so uv's caches are recycled with the task and never end
 # up in the uploaded failure artifacts, which are packed from those two trees.
 #
-# Outside CI only UV_TOOL_DIR is redirected, since `uv tool install --force`
-# would otherwise overwrite a developer's globally installed tools (see
-# install-cli.sh, which pins its own uv that way). The cache is deliberately
-# left shared so local runs do not re-download everything.
+# Outside CI only UV_TOOL_DIR and UV_PYTHON_INSTALL_DIR are redirected:
+# `uv tool install --force` would otherwise overwrite a developer's globally
+# installed tools (see install-cli.sh, which pins its own uv that way), and
+# `uv python install` would otherwise write into ~/.local/share/uv/python.
+# The cache is deliberately left shared so local runs do not re-download
+# everything.
 #
 # A no-op if there is nowhere suitable to point at: this is best-effort
 # hygiene, not a correctness requirement, and ensure_uv() is reachable from
@@ -60,6 +62,9 @@ _ensure_uv_scope_paths() {
 
   [ -n "${DRIVERS_TOOLS:-}" ] || return 0
   export UV_TOOL_DIR="${DRIVERS_TOOLS}/.local/uv-tool"
+  # .local is gitignored, so a locally installed managed Python stays out of
+  # git status as well.
+  export UV_PYTHON_INSTALL_DIR="${DRIVERS_TOOLS}/.local/uv-python"
 }
 
 # _ensure_uv_min_python (internal)
@@ -134,8 +139,11 @@ _ensure_uv_floor_bootstrap() {
   # No host interpreter qualifies, so install a uv-managed one and leave uv
   # at its default managed preference. Preferring system here would steer uv
   # back to the undersized host interpreter.
+  # --no-bin: uv would otherwise install python executables into the user's
+  # bin directory (~/.local/bin), which nothing here consumes -- uv resolves
+  # managed installs through UV_PYTHON_INSTALL_DIR, not PATH.
   echo "No host interpreter satisfies the workspace floor (CPython >= $major.$minor). Installing a uv-managed interpreter..." >&2
-  uv python install "$major.$minor" || true
+  uv python install --no-bin "$major.$minor" || true
 }
 
 # _ensure_uv_add_path (internal)
@@ -261,8 +269,8 @@ _ensure_uv_install() {
 #
 # - PYENV_VERSION (only when pyenv is installed)
 # - PATH (~/.local/bin, the active venv's bin dir, pip's `--user` script directory, and a fallback venv's bin dir)
-# - UV_TOOL_DIR (only when $DRIVERS_TOOLS is set)
-# - UV_CACHE_DIR, UV_PYTHON_INSTALL_DIR (additionally require $CI to be set)
+# - UV_TOOL_DIR, UV_PYTHON_INSTALL_DIR (when $DRIVERS_TOOLS is set)
+# - UV_CACHE_DIR (additionally requires $CI to be set)
 # - UV_PYTHON (when the workspace floor is known and a qualifying interpreter exists)
 #
 # Looks everywhere uv may already be, and only then hands off to
