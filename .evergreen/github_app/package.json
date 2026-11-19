@@ -20,8 +20,8 @@
     },
     "homepage": "https://github.com/mongodb-labs/drivers-evergreen-tools#readme",
     "dependencies": {
-        "commander": "^15.0.0",
-        "minimatch": "^11.0.4",
+        "commander": "^15.1.0",
+        "minimatch": "^11.0.8",
         "octokit": "^5.0.5",
         "yaml": "^2.9.1"
     },
