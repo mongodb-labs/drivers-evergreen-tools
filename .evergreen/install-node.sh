@@ -4,7 +4,7 @@ set -o errexit  # Exit the script with error if any of the commands fail
 SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
 . $SCRIPT_DIR/handle-paths.sh
 
-DEFAULT_NODE_VERSION=20
+DEFAULT_NODE_VERSION=24
 # Check glibc version using ldd on Linux to determine Node version compatibility
 if command -v ldd >/dev/null 2>&1; then
   echo "Check glibc version using ldd on Linux to determine Node version compatibility"
@@ -32,6 +32,8 @@ elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 20 ]]; then
   NPM_VERSION=${NPM_VERSION:-10}
 elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 22 ]]; then
   NPM_VERSION=${NPM_VERSION:-11}
+elif [[ "$NODE_LTS_VERSION" =~ ^[0-9]+$ && "$NODE_LTS_VERSION" -lt 24 ]]; then
+  NPM_VERSION=${NPM_VERSION:-12}
 else
   NPM_VERSION=${NPM_VERSION:-latest}
 fi
